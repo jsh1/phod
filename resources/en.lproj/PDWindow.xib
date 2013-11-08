@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13A603" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="PDWindowController">
+            <connections>
+                <outlet property="_contentView" destination="1Ym-RE-Xke" id="f4J-jm-BQX"/>
+                <outlet property="_sidebarControl" destination="evu-pS-PWE" id="b2e-UI-wvK"/>
+                <outlet property="_sidebarView" destination="Xq2-Da-fg5" id="Qfj-NQ-DXq"/>
+                <outlet property="_splitView" destination="xhd-G3-IhX" id="zXk-tk-wpd"/>
+                <outlet property="_toolbar" destination="1hv-5R-k4a" id="qkc-TZ-gDs"/>
+                <outlet property="window" destination="eLh-I5-poU" id="g4u-JQ-Aij"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application"/>
+        <window title="Photos" allowsToolTipsWhenApplicationIsInactive="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="Phod Window" animationBehavior="default" id="eLh-I5-poU">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" unifiedTitleAndToolbar="YES"/>
+            <windowCollectionBehavior key="collectionBehavior" fullScreenPrimary="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="221" y="169" width="983" height="659"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
+            <view key="contentView" wantsLayer="YES" id="fFC-RB-lsE">
+                <rect key="frame" x="0.0" y="0.0" width="983" height="659"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <splitView dividerStyle="thin" vertical="YES" id="xhd-G3-IhX" customClass="PDSplitView">
+                        <rect key="frame" x="0.0" y="0.0" width="983" height="659"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <customView id="UqU-qP-f1I">
+                                <rect key="frame" x="0.0" y="0.0" width="288" height="659"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <subviews>
+                                    <customView id="Xq2-Da-fg5">
+                                        <rect key="frame" x="0.0" y="0.0" width="288" height="635"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    </customView>
+                                    <segmentedControl verticalHuggingPriority="750" id="evu-pS-PWE">
+                                        <rect key="frame" x="3" y="636" width="177" height="21"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                        <segmentedCell key="cell" controlSize="small" alignment="left" style="smallSquare" trackingMode="selectOne" id="aEm-Xz-BsO">
+                                            <font key="font" metaFont="smallSystem"/>
+                                            <segments>
+                                                <segment label="Library" selected="YES"/>
+                                                <segment label="Info" tag="1"/>
+                                                <segment label="Adjustments"/>
+                                            </segments>
+                                        </segmentedCell>
+                                        <connections>
+                                            <action selector="setSidebarModeAction:" target="-2" id="ApB-CU-BQm"/>
+                                        </connections>
+                                    </segmentedControl>
+                                </subviews>
+                            </customView>
+                            <customView id="1Ym-RE-Xke">
+                                <rect key="frame" x="289" y="0.0" width="694" height="659"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </customView>
+                        </subviews>
+                        <holdingPriorities>
+                            <real value="250"/>
+                            <real value="250"/>
+                        </holdingPriorities>
+                    </splitView>
+                </subviews>
+            </view>
+            <toolbar key="toolbar" implicitIdentifier="65D026C6-4F3C-4BC0-A369-6A7E8107336D" autosavesConfiguration="NO" prefersToBeShown="NO" displayMode="iconAndLabel" sizeMode="regular" id="1hv-5R-k4a">
+                <allowedToolbarItems>
+                    <toolbarItem implicitItemIdentifier="NSToolbarShowColorsItem" id="WGp-fd-DnT"/>
+                    <toolbarItem implicitItemIdentifier="NSToolbarShowFontsItem" id="B43-0C-EN5"/>
+                    <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="jKd-5T-lSi"/>
+                    <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="eT9-xQ-IGp"/>
+                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="Xb1-wT-OBC"/>
+                </allowedToolbarItems>
+                <defaultToolbarItems>
+                    <toolbarItem reference="WGp-fd-DnT"/>
+                    <toolbarItem reference="B43-0C-EN5"/>
+                    <toolbarItem reference="Xb1-wT-OBC"/>
+                    <toolbarItem reference="jKd-5T-lSi"/>
+                </defaultToolbarItems>
+            </toolbar>
+        </window>
+    </objects>
+</document>

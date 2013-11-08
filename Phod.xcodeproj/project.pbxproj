@@ -1,0 +1,422 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		577BDBF3182D792800116AF2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 577BDBF1182D792800116AF2 /* InfoPlist.strings */; };
+		577BDBF5182D792800116AF2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 577BDBF4182D792800116AF2 /* main.m */; };
+		577BDBFC182D792800116AF2 /* PDAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 577BDBFB182D792800116AF2 /* PDAppDelegate.m */; };
+		577BDC01182D792800116AF2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 577BDC00182D792800116AF2 /* Images.xcassets */; };
+		578F0FD0182D91FD001A5152 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FC2182D91FD001A5152 /* MainMenu.xib */; };
+		578F0FD1182D91FD001A5152 /* PDAdjustmentsView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FC4182D91FD001A5152 /* PDAdjustmentsView.xib */; };
+		578F0FD2182D91FD001A5152 /* PDImageListView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FC6182D91FD001A5152 /* PDImageListView.xib */; };
+		578F0FD3182D91FD001A5152 /* PDImageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FC8182D91FD001A5152 /* PDImageView.xib */; };
+		578F0FD4182D91FD001A5152 /* PDInfoView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCA182D91FD001A5152 /* PDInfoView.xib */; };
+		578F0FD5182D91FD001A5152 /* PDLibraryView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCC182D91FD001A5152 /* PDLibraryView.xib */; };
+		578F0FD6182D91FD001A5152 /* PDWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCE182D91FD001A5152 /* PDWindow.xib */; };
+		57CE6A08182D7C2B000BF04E /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 577BDBEB182D792800116AF2 /* AppKit.framework */; };
+		57CE6A09182D7C2B000BF04E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 577BDBED182D792800116AF2 /* Foundation.framework */; };
+		57CE6A0B182D7C40000BF04E /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CE6A0A182D7C40000BF04E /* ImageIO.framework */; };
+		57CE6A0D182D7C45000BF04E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CE6A0C182D7C45000BF04E /* CoreGraphics.framework */; };
+		57CE6A0F182D7C4A000BF04E /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CE6A0E182D7C4A000BF04E /* QuartzCore.framework */; };
+		57CE6A11182D7C61000BF04E /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CE6A10182D7C61000BF04E /* Accelerate.framework */; };
+		57CE6A24182D863E000BF04E /* PDAdjustmentsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A15182D863D000BF04E /* PDAdjustmentsViewController.m */; };
+		57CE6A25182D863E000BF04E /* PDImageListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A17182D863D000BF04E /* PDImageListViewController.m */; };
+		57CE6A26182D863E000BF04E /* PDImageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A19182D863E000BF04E /* PDImageViewController.m */; };
+		57CE6A27182D863E000BF04E /* PDInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A1B182D863E000BF04E /* PDInfoViewController.m */; };
+		57CE6A28182D863E000BF04E /* PDLibraryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A1D182D863E000BF04E /* PDLibraryViewController.m */; };
+		57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A1F182D863E000BF04E /* PDSplitView.m */; };
+		57CE6A2A182D863E000BF04E /* PDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A21182D863E000BF04E /* PDViewController.m */; };
+		57CE6A2B182D863E000BF04E /* PDWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A23182D863E000BF04E /* PDWindowController.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		577BDBE5182D792800116AF2 /* Phod.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Phod.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		577BDBEB182D792800116AF2 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		577BDBED182D792800116AF2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		577BDBF0182D792800116AF2 /* Phod-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Phod-Info.plist"; sourceTree = "<group>"; };
+		577BDBF2182D792800116AF2 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		577BDBF4182D792800116AF2 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		577BDBF6182D792800116AF2 /* Phod-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Phod-Prefix.pch"; sourceTree = "<group>"; };
+		577BDBFA182D792800116AF2 /* PDAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PDAppDelegate.h; sourceTree = "<group>"; };
+		577BDBFB182D792800116AF2 /* PDAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PDAppDelegate.m; sourceTree = "<group>"; };
+		577BDC00182D792800116AF2 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		578F0FC3182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = MainMenu.xib; sourceTree = "<group>"; };
+		578F0FC5182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDAdjustmentsView.xib; sourceTree = "<group>"; };
+		578F0FC7182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDImageListView.xib; sourceTree = "<group>"; };
+		578F0FC9182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDImageView.xib; sourceTree = "<group>"; };
+		578F0FCB182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDInfoView.xib; sourceTree = "<group>"; };
+		578F0FCD182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDLibraryView.xib; sourceTree = "<group>"; };
+		578F0FCF182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDWindow.xib; sourceTree = "<group>"; };
+		57CE6A0A182D7C40000BF04E /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
+		57CE6A0C182D7C45000BF04E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		57CE6A0E182D7C4A000BF04E /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		57CE6A10182D7C61000BF04E /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		57CE6A14182D863D000BF04E /* PDAdjustmentsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDAdjustmentsViewController.h; sourceTree = "<group>"; };
+		57CE6A15182D863D000BF04E /* PDAdjustmentsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDAdjustmentsViewController.m; sourceTree = "<group>"; };
+		57CE6A16182D863D000BF04E /* PDImageListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageListViewController.h; sourceTree = "<group>"; };
+		57CE6A17182D863D000BF04E /* PDImageListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageListViewController.m; sourceTree = "<group>"; };
+		57CE6A18182D863D000BF04E /* PDImageViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageViewController.h; sourceTree = "<group>"; };
+		57CE6A19182D863E000BF04E /* PDImageViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageViewController.m; sourceTree = "<group>"; };
+		57CE6A1A182D863E000BF04E /* PDInfoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDInfoViewController.h; sourceTree = "<group>"; };
+		57CE6A1B182D863E000BF04E /* PDInfoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDInfoViewController.m; sourceTree = "<group>"; };
+		57CE6A1C182D863E000BF04E /* PDLibraryViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryViewController.h; sourceTree = "<group>"; };
+		57CE6A1D182D863E000BF04E /* PDLibraryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryViewController.m; sourceTree = "<group>"; };
+		57CE6A1E182D863E000BF04E /* PDSplitView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDSplitView.h; sourceTree = "<group>"; };
+		57CE6A1F182D863E000BF04E /* PDSplitView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDSplitView.m; sourceTree = "<group>"; };
+		57CE6A20182D863E000BF04E /* PDViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDViewController.h; sourceTree = "<group>"; };
+		57CE6A21182D863E000BF04E /* PDViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDViewController.m; sourceTree = "<group>"; };
+		57CE6A22182D863E000BF04E /* PDWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDWindowController.h; sourceTree = "<group>"; };
+		57CE6A23182D863E000BF04E /* PDWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDWindowController.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		577BDBE2182D792800116AF2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				57CE6A11182D7C61000BF04E /* Accelerate.framework in Frameworks */,
+				57CE6A0D182D7C45000BF04E /* CoreGraphics.framework in Frameworks */,
+				57CE6A0B182D7C40000BF04E /* ImageIO.framework in Frameworks */,
+				57CE6A09182D7C2B000BF04E /* Foundation.framework in Frameworks */,
+				57CE6A0F182D7C4A000BF04E /* QuartzCore.framework in Frameworks */,
+				57CE6A08182D7C2B000BF04E /* AppKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		577BDBDC182D792800116AF2 = {
+			isa = PBXGroup;
+			children = (
+				577BDBEE182D792800116AF2 /* Source */,
+				578F0FC1182D91A0001A5152 /* Nibs */,
+				57CE6A13182D7D08000BF04E /* Resources */,
+				577BDBE7182D792800116AF2 /* Frameworks */,
+				577BDBE6182D792800116AF2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		577BDBE6182D792800116AF2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				577BDBE5182D792800116AF2 /* Phod.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		577BDBE7182D792800116AF2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				57CE6A10182D7C61000BF04E /* Accelerate.framework */,
+				57CE6A0E182D7C4A000BF04E /* QuartzCore.framework */,
+				57CE6A0C182D7C45000BF04E /* CoreGraphics.framework */,
+				57CE6A0A182D7C40000BF04E /* ImageIO.framework */,
+				577BDBEB182D792800116AF2 /* AppKit.framework */,
+				577BDBED182D792800116AF2 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		577BDBEE182D792800116AF2 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				577BDBFA182D792800116AF2 /* PDAppDelegate.h */,
+				577BDBFB182D792800116AF2 /* PDAppDelegate.m */,
+				57CE6A22182D863E000BF04E /* PDWindowController.h */,
+				57CE6A23182D863E000BF04E /* PDWindowController.m */,
+				57CE6A20182D863E000BF04E /* PDViewController.h */,
+				57CE6A21182D863E000BF04E /* PDViewController.m */,
+				57CE6A14182D863D000BF04E /* PDAdjustmentsViewController.h */,
+				57CE6A15182D863D000BF04E /* PDAdjustmentsViewController.m */,
+				57CE6A16182D863D000BF04E /* PDImageListViewController.h */,
+				57CE6A17182D863D000BF04E /* PDImageListViewController.m */,
+				57CE6A18182D863D000BF04E /* PDImageViewController.h */,
+				57CE6A19182D863E000BF04E /* PDImageViewController.m */,
+				57CE6A1A182D863E000BF04E /* PDInfoViewController.h */,
+				57CE6A1B182D863E000BF04E /* PDInfoViewController.m */,
+				57CE6A1C182D863E000BF04E /* PDLibraryViewController.h */,
+				57CE6A1D182D863E000BF04E /* PDLibraryViewController.m */,
+				57CE6A1E182D863E000BF04E /* PDSplitView.h */,
+				57CE6A1F182D863E000BF04E /* PDSplitView.m */,
+				577BDBF6182D792800116AF2 /* Phod-Prefix.pch */,
+				577BDBF4182D792800116AF2 /* main.m */,
+			);
+			name = Source;
+			path = src;
+			sourceTree = SOURCE_ROOT;
+		};
+		578F0FC1182D91A0001A5152 /* Nibs */ = {
+			isa = PBXGroup;
+			children = (
+				578F0FC2182D91FD001A5152 /* MainMenu.xib */,
+				578F0FC4182D91FD001A5152 /* PDAdjustmentsView.xib */,
+				578F0FC6182D91FD001A5152 /* PDImageListView.xib */,
+				578F0FC8182D91FD001A5152 /* PDImageView.xib */,
+				578F0FCA182D91FD001A5152 /* PDInfoView.xib */,
+				578F0FCC182D91FD001A5152 /* PDLibraryView.xib */,
+				578F0FCE182D91FD001A5152 /* PDWindow.xib */,
+			);
+			name = Nibs;
+			path = resources/en.lproj;
+			sourceTree = SOURCE_ROOT;
+		};
+		57CE6A13182D7D08000BF04E /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				577BDBF0182D792800116AF2 /* Phod-Info.plist */,
+				577BDBF1182D792800116AF2 /* InfoPlist.strings */,
+				577BDC00182D792800116AF2 /* Images.xcassets */,
+			);
+			name = Resources;
+			path = resources;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		577BDBE4182D792800116AF2 /* Phod */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 577BDC16182D792800116AF2 /* Build configuration list for PBXNativeTarget "Phod" */;
+			buildPhases = (
+				577BDBE1182D792800116AF2 /* Sources */,
+				577BDBE2182D792800116AF2 /* Frameworks */,
+				577BDBE3182D792800116AF2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Phod;
+			productName = Phod;
+			productReference = 577BDBE5182D792800116AF2 /* Phod.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		577BDBDD182D792800116AF2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				CLASSPREFIX = PD;
+				LastUpgradeCheck = 0500;
+				ORGANIZATIONNAME = Unfactored;
+			};
+			buildConfigurationList = 577BDBE0182D792800116AF2 /* Build configuration list for PBXProject "Phod" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 577BDBDC182D792800116AF2;
+			productRefGroup = 577BDBE6182D792800116AF2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				577BDBE4182D792800116AF2 /* Phod */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		577BDBE3182D792800116AF2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				578F0FD6182D91FD001A5152 /* PDWindow.xib in Resources */,
+				577BDBF3182D792800116AF2 /* InfoPlist.strings in Resources */,
+				577BDC01182D792800116AF2 /* Images.xcassets in Resources */,
+				578F0FD3182D91FD001A5152 /* PDImageView.xib in Resources */,
+				578F0FD0182D91FD001A5152 /* MainMenu.xib in Resources */,
+				578F0FD1182D91FD001A5152 /* PDAdjustmentsView.xib in Resources */,
+				578F0FD2182D91FD001A5152 /* PDImageListView.xib in Resources */,
+				578F0FD5182D91FD001A5152 /* PDLibraryView.xib in Resources */,
+				578F0FD4182D91FD001A5152 /* PDInfoView.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		577BDBE1182D792800116AF2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				57CE6A27182D863E000BF04E /* PDInfoViewController.m in Sources */,
+				57CE6A26182D863E000BF04E /* PDImageViewController.m in Sources */,
+				57CE6A25182D863E000BF04E /* PDImageListViewController.m in Sources */,
+				57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */,
+				57CE6A2A182D863E000BF04E /* PDViewController.m in Sources */,
+				57CE6A28182D863E000BF04E /* PDLibraryViewController.m in Sources */,
+				57CE6A24182D863E000BF04E /* PDAdjustmentsViewController.m in Sources */,
+				577BDBFC182D792800116AF2 /* PDAppDelegate.m in Sources */,
+				577BDBF5182D792800116AF2 /* main.m in Sources */,
+				57CE6A2B182D863E000BF04E /* PDWindowController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		577BDBF1182D792800116AF2 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				577BDBF2182D792800116AF2 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		578F0FC2182D91FD001A5152 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				578F0FC3182D91FD001A5152 /* en */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+		578F0FC4182D91FD001A5152 /* PDAdjustmentsView.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				578F0FC5182D91FD001A5152 /* en */,
+			);
+			name = PDAdjustmentsView.xib;
+			sourceTree = "<group>";
+		};
+		578F0FC6182D91FD001A5152 /* PDImageListView.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				578F0FC7182D91FD001A5152 /* en */,
+			);
+			name = PDImageListView.xib;
+			sourceTree = "<group>";
+		};
+		578F0FC8182D91FD001A5152 /* PDImageView.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				578F0FC9182D91FD001A5152 /* en */,
+			);
+			name = PDImageView.xib;
+			sourceTree = "<group>";
+		};
+		578F0FCA182D91FD001A5152 /* PDInfoView.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				578F0FCB182D91FD001A5152 /* en */,
+			);
+			name = PDInfoView.xib;
+			sourceTree = "<group>";
+		};
+		578F0FCC182D91FD001A5152 /* PDLibraryView.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				578F0FCD182D91FD001A5152 /* en */,
+			);
+			name = PDLibraryView.xib;
+			sourceTree = "<group>";
+		};
+		578F0FCE182D91FD001A5152 /* PDWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				578F0FCF182D91FD001A5152 /* en */,
+			);
+			name = PDWindow.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		577BDC14182D792800116AF2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				COPY_PHASE_STRIP = NO;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wall";
+			};
+			name = Debug;
+		};
+		577BDC15182D792800116AF2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wall";
+			};
+			name = Release;
+		};
+		577BDC17182D792800116AF2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "src/Phod-Prefix.pch";
+				INFOPLIST_FILE = "resources/Phod-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		577BDC18182D792800116AF2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "src/Phod-Prefix.pch";
+				INFOPLIST_FILE = "resources/Phod-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		577BDBE0182D792800116AF2 /* Build configuration list for PBXProject "Phod" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				577BDC14182D792800116AF2 /* Debug */,
+				577BDC15182D792800116AF2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		577BDC16182D792800116AF2 /* Build configuration list for PBXNativeTarget "Phod" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				577BDC17182D792800116AF2 /* Debug */,
+				577BDC18182D792800116AF2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 577BDBDD182D792800116AF2 /* Project object */;
+}
