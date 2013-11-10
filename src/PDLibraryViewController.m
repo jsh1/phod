@@ -2,6 +2,7 @@
 
 #import "PDLibraryViewController.h"
 
+#import "PDColor.h"
 #import "PDLibraryDirectory.h"
 #import "PDLibraryImage.h"
 #import "PDLibraryItem.h"
@@ -102,18 +103,24 @@
 
 - (void)outlineViewSelectionDidChange:(NSNotification *)note
 {
-  NSInteger row;
-  PDLibraryItem *item;
+  NSIndexSet *sel;
+  NSMutableArray *array;
 
-  row = [_outlineView selectedRow];
-
-  if (row >= 0)
-    {
-      item = [_outlineView itemAtRow:row];
-      [_controller setSelectedImages:[item subimages]];
-    }
+  sel = [_outlineView selectedRowIndexes];
+  if (sel == nil)
+    [_controller setImageList:[NSArray array]];
   else
-    [_controller setSelectedImages:[NSArray array]];
+    {
+      array = [NSMutableArray array];
+
+      for (NSInteger row = [sel firstIndex];
+	   row != NSNotFound; row = [sel indexGreaterThanIndex:row])
+	{
+	  [array addObjectsFromArray:[[_outlineView itemAtRow:row] subimages]];
+	}
+
+      [_controller setImageList:array];
+    }
 }
 
 @end

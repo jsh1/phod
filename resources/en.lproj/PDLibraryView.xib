@@ -6,6 +6,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PDLibraryViewController">
             <connections>
+                <outlet property="_outlineView" destination="FXk-bX-Rgc" id="59e-NB-nH5"/>
                 <outlet property="view" destination="V0E-qc-qit" id="Uza-rO-bz9"/>
             </connections>
         </customObject>
@@ -22,7 +23,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="336" height="671"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <outlineView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="firstColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="14" indentationPerLevel="10" outlineTableColumn="CLK-kg-0Tl" id="FXk-bX-Rgc">
+                            <outlineView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="firstColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" columnResizing="NO" autosaveColumns="NO" rowHeight="14" indentationPerLevel="10" outlineTableColumn="CLK-kg-0Tl" id="FXk-bX-Rgc">
                                 <rect key="frame" x="0.0" y="0.0" width="336" height="671"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <size key="intercellSpacing" width="3" height="6"/>
@@ -50,7 +51,7 @@
                                         </tableHeaderCell>
                                         <textFieldCell key="dataCell" controlSize="small" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="right" title="Text Cell" id="Cc6-ct-YBW">
                                             <font key="font" metaFont="smallSystem"/>
-                                            <color key="textColor" white="0.5" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         </textFieldCell>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>

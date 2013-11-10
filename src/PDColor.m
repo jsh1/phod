@@ -8,7 +8,7 @@
 
 + (NSColor *)windowBackgroundColor
 {
-  return [NSColor colorWithDeviceWhite:.9 alpha:1];
+  return [NSColor colorWithDeviceWhite:.85 alpha:1];
 }
 
 + (NSColor *)controlTextColor
@@ -100,6 +100,16 @@
     }
 
   return colors;
+}
+
++ (NSColor *)imageGridBackgroundColor
+{
+  static NSColor *color;
+
+  if (color == nil)
+    color = [[NSColor colorWithCalibratedHue:BG_HUE saturation:.03 brightness:.5 alpha:1] retain];
+
+  return color;
 }
 
 @end

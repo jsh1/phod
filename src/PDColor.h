@@ -18,4 +18,6 @@
 + (NSColor *)darkControlBackgroundColor;
 + (NSArray *)controlAlternatingRowBackgroundColors;
 
++ (NSColor *)imageGridBackgroundColor;
+
 @end

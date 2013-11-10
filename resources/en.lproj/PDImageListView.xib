@@ -6,7 +6,10 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PDImageListViewController">
             <connections>
-                <outlet property="view" destination="pcu-MU-YW6" id="Sj6-kr-9Xl"/>
+                <outlet property="_gridView" destination="oHo-AH-gSA" id="W4m-Ir-ZjY"/>
+                <outlet property="_scaleSlider" destination="7R0-fJ-wJc" id="Waq-Lq-gAf"/>
+                <outlet property="_scrollView" destination="MZC-31-5x1" id="uQE-mo-cAo"/>
+                <outlet property="view" destination="pcu-MU-YW6" id="q5T-1j-msf"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
@@ -14,6 +17,41 @@
         <customView id="pcu-MU-YW6">
             <rect key="frame" x="0.0" y="0.0" width="517" height="466"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="MZC-31-5x1">
+                    <rect key="frame" x="0.0" y="30" width="517" height="406"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    <clipView key="contentView" id="5hA-Fs-JXG">
+                        <rect key="frame" x="0.0" y="0.0" width="517" height="406"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <customView id="oHo-AH-gSA" customClass="PDImageGridView">
+                                <rect key="frame" x="0.0" y="0.0" width="517" height="406"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <connections>
+                                    <outlet property="_controller" destination="-2" id="uxB-xg-j6s"/>
+                                </connections>
+                            </customView>
+                        </subviews>
+                    </clipView>
+                    <scroller key="horizontalScroller" verticalHuggingPriority="750" horizontal="YES" id="WBf-Fj-IEG">
+                        <rect key="frame" x="0.0" y="390" width="517" height="16"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </scroller>
+                    <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="dsI-xR-LvJ">
+                        <rect key="frame" x="501" y="0.0" width="16" height="406"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </scroller>
+                </scrollView>
+                <slider verticalHuggingPriority="750" id="7R0-fJ-wJc">
+                    <rect key="frame" x="419" y="8" width="92" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                    <sliderCell key="cell" controlSize="small" continuous="YES" state="on" alignment="left" maxValue="1" doubleValue="0.5" tickMarkPosition="above" sliderType="linear" id="Jp5-ED-4bv"/>
+                    <connections>
+                        <action selector="controlAction:" target="-2" id="WWu-mb-Azu"/>
+                    </connections>
+                </slider>
+            </subviews>
         </customView>
     </objects>
 </document>

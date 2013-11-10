@@ -12,7 +12,7 @@
 #import "PDLibraryViewController.h"
 
 NSString *const PDImageListDidChange = @"PDImageListDidChange";
-NSString *const PDSelectedImagesDidChange = @"PDSelectedImagesDidChange";
+NSString *const PDSelectedImageIndexesDidChange = @"PDSelectedImageIndexesDidChange";
 
 @implementation PDWindowController
 
@@ -48,7 +48,7 @@ NSString *const PDSelectedImagesDidChange = @"PDSelectedImagesDidChange";
   _contentMode = PDContentMode_Nil;
 
   _imageList = [[NSArray alloc] init];
-  _selectedImages = [[NSArray alloc] init];
+  _selectedImageIndexes = [[NSIndexSet alloc] init];
 
   return self;
 }
@@ -60,7 +60,7 @@ NSString *const PDSelectedImagesDidChange = @"PDSelectedImagesDidChange";
 
   [_viewControllers release];
   [_imageList release];
-  [_selectedImages release];
+  [_selectedImageIndexes release];
 
   [super dealloc];
 }
@@ -255,20 +255,20 @@ contentClassForMode(enum PDContentMode mode)
     }
 }
 
-- (NSArray *)selectedImages
+- (NSIndexSet *)selectedImageIndexes
 {
-  return _selectedImages;
+  return _selectedImageIndexes;
 }
 
-- (void)setSelectedImages:(NSArray *)array
+- (void)setSelectedImageIndexes:(NSIndexSet *)set
 {
-  if (_selectedImages != array)
+  if (_selectedImageIndexes != set)
     {
-      [_selectedImages release];
-      _selectedImages = [array copy];
+      [_selectedImageIndexes release];
+      _selectedImageIndexes = [set copy];
 
       [[NSNotificationCenter defaultCenter]
-       postNotificationName:PDSelectedImagesDidChange object:self];
+       postNotificationName:PDSelectedImageIndexesDidChange object:self];
     }
 }
 
