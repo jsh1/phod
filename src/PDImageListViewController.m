@@ -6,7 +6,7 @@
 
 @implementation PDImageListViewController
 
-- (NSString *)viewNibName
++ (NSString *)viewNibName
 {
   return @"PDImageListView";
 }

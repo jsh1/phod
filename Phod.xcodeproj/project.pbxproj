@@ -18,6 +18,11 @@
 		578F0FD4182D91FD001A5152 /* PDInfoView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCA182D91FD001A5152 /* PDInfoView.xib */; };
 		578F0FD5182D91FD001A5152 /* PDLibraryView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCC182D91FD001A5152 /* PDLibraryView.xib */; };
 		578F0FD6182D91FD001A5152 /* PDWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCE182D91FD001A5152 /* PDWindow.xib */; };
+		57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */; };
+		57C18109182F0ED3002B8DB2 /* PDLibraryImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18105182F0ED3002B8DB2 /* PDLibraryImage.m */; };
+		57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18107182F0ED3002B8DB2 /* PDLibraryItem.m */; };
+		57C1810D182FD616002B8DB2 /* PDLibraryDirectory.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */; };
+		57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C1810F182FDCF9002B8DB2 /* PDColor.m */; };
 		57CE6A08182D7C2B000BF04E /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 577BDBEB182D792800116AF2 /* AppKit.framework */; };
 		57CE6A09182D7C2B000BF04E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 577BDBED182D792800116AF2 /* Foundation.framework */; };
 		57CE6A0B182D7C40000BF04E /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CE6A0A182D7C40000BF04E /* ImageIO.framework */; };
@@ -52,6 +57,16 @@
 		578F0FCB182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDInfoView.xib; sourceTree = "<group>"; };
 		578F0FCD182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDLibraryView.xib; sourceTree = "<group>"; };
 		578F0FCF182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDWindow.xib; sourceTree = "<group>"; };
+		57C180FF182E9644002B8DB2 /* PDAppKitExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDAppKitExtensions.h; sourceTree = "<group>"; };
+		57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDAppKitExtensions.m; sourceTree = "<group>"; };
+		57C18104182F0ED3002B8DB2 /* PDLibraryImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryImage.h; sourceTree = "<group>"; };
+		57C18105182F0ED3002B8DB2 /* PDLibraryImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryImage.m; sourceTree = "<group>"; };
+		57C18106182F0ED3002B8DB2 /* PDLibraryItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryItem.h; sourceTree = "<group>"; };
+		57C18107182F0ED3002B8DB2 /* PDLibraryItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryItem.m; sourceTree = "<group>"; };
+		57C1810B182FD616002B8DB2 /* PDLibraryDirectory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryDirectory.h; sourceTree = "<group>"; };
+		57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryDirectory.m; sourceTree = "<group>"; };
+		57C1810E182FDCF9002B8DB2 /* PDColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDColor.h; sourceTree = "<group>"; };
+		57C1810F182FDCF9002B8DB2 /* PDColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDColor.m; sourceTree = "<group>"; };
 		57CE6A0A182D7C40000BF04E /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		57CE6A0C182D7C45000BF04E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		57CE6A0E182D7C4A000BF04E /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -126,26 +141,10 @@
 		577BDBEE182D792800116AF2 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				577BDBFA182D792800116AF2 /* PDAppDelegate.h */,
-				577BDBFB182D792800116AF2 /* PDAppDelegate.m */,
-				57CE6A22182D863E000BF04E /* PDWindowController.h */,
-				57CE6A23182D863E000BF04E /* PDWindowController.m */,
-				57CE6A20182D863E000BF04E /* PDViewController.h */,
-				57CE6A21182D863E000BF04E /* PDViewController.m */,
-				57CE6A14182D863D000BF04E /* PDAdjustmentsViewController.h */,
-				57CE6A15182D863D000BF04E /* PDAdjustmentsViewController.m */,
-				57CE6A16182D863D000BF04E /* PDImageListViewController.h */,
-				57CE6A17182D863D000BF04E /* PDImageListViewController.m */,
-				57CE6A18182D863D000BF04E /* PDImageViewController.h */,
-				57CE6A19182D863E000BF04E /* PDImageViewController.m */,
-				57CE6A1A182D863E000BF04E /* PDInfoViewController.h */,
-				57CE6A1B182D863E000BF04E /* PDInfoViewController.m */,
-				57CE6A1C182D863E000BF04E /* PDLibraryViewController.h */,
-				57CE6A1D182D863E000BF04E /* PDLibraryViewController.m */,
-				57CE6A1E182D863E000BF04E /* PDSplitView.h */,
-				57CE6A1F182D863E000BF04E /* PDSplitView.m */,
-				577BDBF6182D792800116AF2 /* Phod-Prefix.pch */,
-				577BDBF4182D792800116AF2 /* main.m */,
+				57C18111182FDD0F002B8DB2 /* Controllers */,
+				57C18112182FDD33002B8DB2 /* Library */,
+				57C18113182FDD46002B8DB2 /* Controls */,
+				57C18114182FDD57002B8DB2 /* Misc */,
 			);
 			name = Source;
 			path = src;
@@ -165,6 +164,64 @@
 			name = Nibs;
 			path = resources/en.lproj;
 			sourceTree = SOURCE_ROOT;
+		};
+		57C18111182FDD0F002B8DB2 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				577BDBFA182D792800116AF2 /* PDAppDelegate.h */,
+				577BDBFB182D792800116AF2 /* PDAppDelegate.m */,
+				57CE6A22182D863E000BF04E /* PDWindowController.h */,
+				57CE6A23182D863E000BF04E /* PDWindowController.m */,
+				57CE6A20182D863E000BF04E /* PDViewController.h */,
+				57CE6A21182D863E000BF04E /* PDViewController.m */,
+				57CE6A14182D863D000BF04E /* PDAdjustmentsViewController.h */,
+				57CE6A15182D863D000BF04E /* PDAdjustmentsViewController.m */,
+				57CE6A16182D863D000BF04E /* PDImageListViewController.h */,
+				57CE6A17182D863D000BF04E /* PDImageListViewController.m */,
+				57CE6A18182D863D000BF04E /* PDImageViewController.h */,
+				57CE6A19182D863E000BF04E /* PDImageViewController.m */,
+				57CE6A1A182D863E000BF04E /* PDInfoViewController.h */,
+				57CE6A1B182D863E000BF04E /* PDInfoViewController.m */,
+				57CE6A1C182D863E000BF04E /* PDLibraryViewController.h */,
+				57CE6A1D182D863E000BF04E /* PDLibraryViewController.m */,
+			);
+			name = Controllers;
+			sourceTree = "<group>";
+		};
+		57C18112182FDD33002B8DB2 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				57C18106182F0ED3002B8DB2 /* PDLibraryItem.h */,
+				57C18107182F0ED3002B8DB2 /* PDLibraryItem.m */,
+				57C1810B182FD616002B8DB2 /* PDLibraryDirectory.h */,
+				57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */,
+				57C18104182F0ED3002B8DB2 /* PDLibraryImage.h */,
+				57C18105182F0ED3002B8DB2 /* PDLibraryImage.m */,
+			);
+			name = Library;
+			sourceTree = "<group>";
+		};
+		57C18113182FDD46002B8DB2 /* Controls */ = {
+			isa = PBXGroup;
+			children = (
+				57C180FF182E9644002B8DB2 /* PDAppKitExtensions.h */,
+				57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */,
+				57C1810E182FDCF9002B8DB2 /* PDColor.h */,
+				57C1810F182FDCF9002B8DB2 /* PDColor.m */,
+				57CE6A1E182D863E000BF04E /* PDSplitView.h */,
+				57CE6A1F182D863E000BF04E /* PDSplitView.m */,
+			);
+			name = Controls;
+			sourceTree = "<group>";
+		};
+		57C18114182FDD57002B8DB2 /* Misc */ = {
+			isa = PBXGroup;
+			children = (
+				577BDBF6182D792800116AF2 /* Phod-Prefix.pch */,
+				577BDBF4182D792800116AF2 /* main.m */,
+			);
+			name = Misc;
+			sourceTree = "<group>";
 		};
 		57CE6A13182D7D08000BF04E /* Resources */ = {
 			isa = PBXGroup;
@@ -252,9 +309,14 @@
 				57CE6A27182D863E000BF04E /* PDInfoViewController.m in Sources */,
 				57CE6A26182D863E000BF04E /* PDImageViewController.m in Sources */,
 				57CE6A25182D863E000BF04E /* PDImageListViewController.m in Sources */,
+				57C18109182F0ED3002B8DB2 /* PDLibraryImage.m in Sources */,
+				57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */,
 				57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */,
+				57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */,
+				57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */,
 				57CE6A2A182D863E000BF04E /* PDViewController.m in Sources */,
 				57CE6A28182D863E000BF04E /* PDLibraryViewController.m in Sources */,
+				57C1810D182FD616002B8DB2 /* PDLibraryDirectory.m in Sources */,
 				57CE6A24182D863E000BF04E /* PDAdjustmentsViewController.m in Sources */,
 				577BDBFC182D792800116AF2 /* PDAppDelegate.m in Sources */,
 				577BDBF5182D792800116AF2 /* main.m in Sources */,

@@ -4,6 +4,7 @@
 
 #import "PDAdjustmentsViewController.h"
 #import "PDAppDelegate.h"
+#import "PDColor.h"
 #import "PDImageViewController.h"
 #import "PDImageListViewController.h"
 #import "PDInfoViewController.h"
@@ -66,25 +67,25 @@ NSString *const PDSelectedImagesDidChange = @"PDSelectedImagesDidChange";
 
 - (void)windowDidLoad
 {
-  NSWindow *window = [self window];
+  PDViewController *controller;
+
+  [[self window] setBackgroundColor:[PDColor windowBackgroundColor]];
 
   [_splitView setIndexOfResizableSubview:1];
 
-#if 0
-  if (ActViewController *obj
-      = [[ActViewerViewController alloc] initWithController:self])
+  for (Class cls in @[[PDLibraryViewController class],
+		      [PDInfoViewController class],
+		      [PDAdjustmentsViewController class],
+		      [PDImageListViewController class],
+		      [PDImageViewController class]])
     {
-      [_viewControllers addObject:obj];
-      [obj release];
+      controller = [[cls alloc] initWithController:self];
+      if (controller != nil)
+	{
+	  [_viewControllers addObject:controller];
+	  [controller release];
+	}
     }
-
-  if (ActViewController *obj
-      = [[ActImporterViewController alloc] initWithController:self])
-    {
-      [_viewControllers addObject:obj];
-      [obj release];
-    }
-#endif
 
   // make sure we're in viewer mode before trying to restore view state
 
@@ -95,7 +96,7 @@ NSString *const PDSelectedImagesDidChange = @"PDSelectedImagesDidChange";
 
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(windowWillClose:)
-   name:NSWindowWillCloseNotification object:window];
+   name:NSWindowWillCloseNotification object:[self window]];
 }
 
 - (void)windowWillClose:(NSNotification *)note
@@ -206,7 +207,10 @@ contentClassForMode(enum PDContentMode mode)
 
       cls = sidebarClassForMode(_sidebarMode);
       controller = [self viewControllerWithClass:cls];
-      [controller addToContainerView:_contentView];
+      [controller addToContainerView:_sidebarView];
+
+      [_sidebarControl setSelectedSegment:
+       _sidebarMode - PDSidebarMode_Library];
     }
 }
 
@@ -271,7 +275,10 @@ contentClassForMode(enum PDContentMode mode)
 - (IBAction)setSidebarModeAction:(id)sender
 {
   if (sender == _sidebarControl)
-    [self setSidebarMode:[_sidebarControl selectedSegment]];
+    {
+      [self setSidebarMode:
+       PDSidebarMode_Library + [_sidebarControl selectedSegment]];
+    }
   else
     [self setSidebarMode:[sender tag]];
 }

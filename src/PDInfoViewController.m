@@ -6,7 +6,7 @@
 
 @implementation PDInfoViewController
 
-- (NSString *)viewNibName
++ (NSString *)viewNibName
 {
   return @"PDInfoView";
 }

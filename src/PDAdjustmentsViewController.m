@@ -6,7 +6,7 @@
 
 @implementation PDAdjustmentsViewController
 
-- (NSString *)viewNibName
++ (NSString *)viewNibName
 {
   return @"PDAdjustmentsView";
 }
