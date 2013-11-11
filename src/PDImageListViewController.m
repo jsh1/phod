@@ -25,6 +25,8 @@
 #import "PDImageListViewController.h"
 
 #import "PDColor.h"
+#import "PDLibraryImage.h"
+#import "PDThumbnailLayer.h"
 #import "PDWindowController.h"
 
 #define GRID_MARGIN 20
@@ -103,6 +105,13 @@
     }
 }
 
+// CALayerDelegate methods
+
+- (id)actionForLayer:(CALayer *)layer forKey:(NSString *)key
+{
+  return [NSNull null];
+}
+
 @end
 
 @implementation PDImageGridView
@@ -123,7 +132,7 @@
   return YES;
 }
 
-- (void)updateLayer
+- (void)updateFrameSize
 {
   NSRect frame = [self frame];
 
@@ -131,10 +140,11 @@
   CGFloat ideal = IMAGE_MIN_SIZE + _scale * (IMAGE_MAX_SIZE - IMAGE_MIN_SIZE);
 
   _columns = floor(width / ideal);
-  _rows = ([_images count] + (_columns - 1) / _columns);
+  _rows = ([_images count] + (_columns - 1)) / _columns;
   _size = (width - GRID_SPACING * (_columns - 1)) / _columns;
 
-  CGFloat height = GRID_MARGIN*2 + _size * _rows + GRID_SPACING * (_rows - 1);
+  CGFloat height = ceil(GRID_MARGIN*2 + _size * _rows
+			+ GRID_SPACING * (_rows - 1));
 
   if (height != frame.size.height)
     {
@@ -144,12 +154,75 @@
       if (height > [scrollView bounds].size.height)
 	[scrollView flashScrollers];
     }
+}
 
-  NSRect rect = [self visibleRect];
+- (void)updateLayersForRect:(NSRect)rect
+{
+  NSRect bounds = NSInsetRect([self bounds], GRID_MARGIN, GRID_MARGIN);
 
-  // FIXME: create and layout image layers in rect.
+  NSInteger y0 = floor((rect.origin.y - bounds.origin.y)
+		       / (_size + GRID_SPACING));
+  NSInteger y1 = ceil((rect.origin.y + rect.size.height - bounds.origin.y)
+		      / (_size + GRID_SPACING));
+  if (y0 < 0) y0 = 0;
+  if (y1 < 0) y1 = 0;
 
+  NSInteger count = [_images count];
+
+  CALayer *layer = [self layer];
+  NSArray *old_sublayers = [layer sublayers];
+  NSMutableArray *new_sublayers = [NSMutableArray array];
+
+  NSInteger y;
+  for (y = y0; y < y1; y++)
+    {
+      NSInteger x;
+      for (x = 0; x < _columns; x++)
+	{
+	  NSInteger idx = y * _columns + x;
+	  if (idx >= count)
+	    continue;
+
+	  PDLibraryImage *image = [_images objectAtIndex:idx];
+
+	  PDThumbnailLayer *sublayer = nil;
+
+	  for (PDThumbnailLayer *tem in old_sublayers)
+	    {
+	      if ([tem libraryImage] == image)
+		{
+		  sublayer = tem;
+		  break;
+		}
+	    }
+
+	  if (sublayer == nil)
+	    {
+	      sublayer = [PDThumbnailLayer layer];
+	      [sublayer setLibraryImage:image];
+	      [sublayer setDelegate:_controller];
+	      // FIXME: debug
+	      [sublayer setBackgroundColor:
+	       CGColorGetConstantColor(kCGColorWhite)];
+	    }
+
+	  [sublayer setBounds:CGRectMake(0, 0, _size, _size)];
+	  [sublayer setPosition:
+	   CGPointMake(bounds.origin.x + (_size + GRID_SPACING) * x + _size * (CGFloat) .5,
+		       bounds.origin.y + (_size + GRID_SPACING) * y + _size * (CGFloat) .5)];
+
+	  [new_sublayers addObject:sublayer];
+	}
+    }
+
+  [layer setSublayers:new_sublayers];
   [self setPreparedContentRect:rect];
+}
+
+- (void)updateLayer
+{
+  [self updateFrameSize];
+  [self updateLayersForRect:[self visibleRect]];
 }
 
 - (BOOL)isFlipped
