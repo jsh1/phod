@@ -24,18 +24,34 @@
 
 #import "PDLibraryItem.h"
 
+@protocol PDLibraryImageThumbnail;
+
 @interface PDLibraryImage : NSObject
 {
   NSString *_path;
+
+  CGImageSourceRef _imageSource;
+  CFDictionaryRef _imageProperties;
+
+  CGImageRef _thumbnailImage;
+  NSMapTable *_thumbnails;
 }
 
 - (id)initWithPath:(NSString *)path;
 
 @property(nonatomic, readonly) NSString *path;
 
-- (void)drawInContext:(CGContextRef)ctx rect:(CGRect)r
-    options:(NSDictionary *)dict;
+- (id)imagePropertyForKey:(CFStringRef)key;
 
-- (void)defineContentsOfLayer:(CALayer *)layer options:(NSDictionary *)dict;
+- (void)addThumbnail:(id<PDLibraryImageThumbnail>)obj;
+- (void)removeThumbnail:(id<PDLibraryImageThumbnail>)obj;
+- (void)updateThumbnail:(id<PDLibraryImageThumbnail>)obj;
+
+@end
+
+@protocol PDLibraryImageThumbnail <NSObject>
+
+- (CGSize)thumbnailSize;
+- (void)setThumbnailImage:(CGImageRef)im;
 
 @end

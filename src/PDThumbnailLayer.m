@@ -41,9 +41,20 @@
   return self;
 }
 
+- (void)invalidate
+{
+  if (_addedThumbnail)
+    {
+      [_libraryImage removeThumbnail:self];
+      _addedThumbnail = NO;
+    }
+}
+
 - (void)dealloc
 {
+  [self invalidate];
   [_libraryImage release];
+
   [super dealloc];
 }
 
@@ -56,16 +67,117 @@
 {
   if (_libraryImage != im)
     {
+      if (_addedThumbnail)
+	{
+	  [_libraryImage removeThumbnail:self];
+	  _addedThumbnail = NO;
+	}
+
       [_libraryImage release];
       _libraryImage = [im retain];
+
       [self setNeedsLayout];
     }
 }
 
 - (void)layoutSublayers
 {
-  if (_libraryImage != nil)
-    [_libraryImage defineContentsOfLayer:self options:nil];
+  if (_libraryImage == nil)
+    [self setContents:nil];
+  else
+    {
+      CGRect bounds = [self bounds];
+      CGFloat scale = [self contentsScale];
+
+      CGSize size = CGSizeMake(ceil(bounds.size.width * scale),
+			       ceil(bounds.size.height * scale));
+
+      if (!_addedThumbnail)
+	{
+	  _thumbnailSize = size;
+	  [_libraryImage addThumbnail:self];
+	  _addedThumbnail = YES;
+	}
+      else if (!CGSizeEqualToSize(_thumbnailSize, size))
+	{
+	  [_libraryImage updateThumbnail:self];
+	}
+    }
+}
+
+- (CGSize)thumbnailSize
+{
+  return _thumbnailSize;
+}
+
+- (void)setThumbnailImage:(CGImageRef)im
+{
+  [self setContentsGravity:kCAGravityResizeAspect];
+  [self setMasksToBounds:YES];
+
+  // Embedded JPEG thumbnails are often a fixed size and aspect ratio,
+  // so tell CA to crop them to the original image's aspect ratio.
+
+  size_t im_w = CGImageGetWidth(im);
+  size_t im_h = CGImageGetHeight(im);
+
+  size_t pix_w = [(id)[_libraryImage imagePropertyForKey:
+		       kCGImagePropertyPixelWidth] unsignedIntValue];
+  size_t pix_h = [(id)[_libraryImage imagePropertyForKey:
+		       kCGImagePropertyPixelHeight] unsignedIntValue];
+
+  CGRect cropR = CGRectMake(0, 0, 1, 1);
+
+  double im_aspect = (double)im_w / (double)im_h;
+  double pix_aspect = (double)pix_w / (double)pix_h;
+
+  if (pix_aspect > 1)
+    {
+      cropR.size.height = im_aspect / pix_aspect;
+      cropR.origin.y = (1 - cropR.size.height) * .5;
+    }
+  else
+    {
+      cropR.size.width = im_aspect / pix_aspect;
+      cropR.origin.x = (1 - cropR.size.width) * .5;
+    }
+
+  [self setContentsRect:cropR];
+
+  // Also rotate to match image orientation.
+
+  unsigned int orientation = [(id)[_libraryImage imagePropertyForKey:
+				   kCGImagePropertyOrientation]
+			      unsignedIntValue];
+  if (orientation > 1)
+    {
+      CGAffineTransform m = CGAffineTransformIdentity;
+
+      if (orientation > 4)
+	{
+	  m = CGAffineTransformRotate(m, -M_PI_2);
+	  orientation -= 4;
+	}
+
+      if (orientation == 2)
+	m = CGAffineTransformScale(m, -1, 1);
+      else if (orientation == 3)
+	m = CGAffineTransformScale(m, -1, -1);
+      else if (orientation == 4)
+	m = CGAffineTransformScale(m, 1, -1);
+
+      [self setAffineTransform:m];
+    }
+
+  // Move image decompression onto background thread.
+
+  CGImageRetain(im);
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    [self setContents:(id)im];
+    [self setBackgroundColor:NULL];
+    CGImageRelease(im);
+    [CATransaction flush];
+  });
 }
 
 @end

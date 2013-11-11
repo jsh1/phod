@@ -70,7 +70,6 @@
 
   [_scrollView setBackgroundColor:[PDColor imageGridBackgroundColor]];
 
-  [_gridView setPostsBoundsChangedNotifications:YES];
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(gridBoundsDidChange:)
    name:NSViewBoundsDidChangeNotification object:[_gridView superview]];
@@ -141,7 +140,7 @@
 
   _columns = floor(width / ideal);
   _rows = ([_images count] + (_columns - 1)) / _columns;
-  _size = (width - GRID_SPACING * (_columns - 1)) / _columns;
+  _size = floor((width - GRID_SPACING * (_columns - 1)) / _columns);
 
   CGFloat height = ceil(GRID_MARGIN*2 + _size * _rows
 			+ GRID_SPACING * (_rows - 1));
@@ -170,8 +169,8 @@
   NSInteger count = [_images count];
 
   CALayer *layer = [self layer];
-  NSArray *old_sublayers = [layer sublayers];
-  NSMutableArray *new_sublayers = [NSMutableArray array];
+  NSMutableArray *old_sublayers = [[layer sublayers] mutableCopy];
+  NSMutableArray *new_sublayers = [[NSMutableArray alloc] init];
 
   NSInteger y;
   for (y = y0; y < y1; y++)
@@ -187,13 +186,16 @@
 
 	  PDThumbnailLayer *sublayer = nil;
 
+	  NSInteger old_idx = 0;
 	  for (PDThumbnailLayer *tem in old_sublayers)
 	    {
 	      if ([tem libraryImage] == image)
 		{
+		  [old_sublayers removeObjectAtIndex:old_idx];
 		  sublayer = tem;
 		  break;
 		}
+	      old_idx++;
 	    }
 
 	  if (sublayer == nil)
@@ -201,21 +203,27 @@
 	      sublayer = [PDThumbnailLayer layer];
 	      [sublayer setLibraryImage:image];
 	      [sublayer setDelegate:_controller];
-	      // FIXME: debug
-	      [sublayer setBackgroundColor:
-	       CGColorGetConstantColor(kCGColorWhite)];
+	      [sublayer setBackgroundColor:[[NSColor darkGrayColor] CGColor]];
 	    }
 
 	  [sublayer setBounds:CGRectMake(0, 0, _size, _size)];
 	  [sublayer setPosition:
-	   CGPointMake(bounds.origin.x + (_size + GRID_SPACING) * x + _size * (CGFloat) .5,
-		       bounds.origin.y + (_size + GRID_SPACING) * y + _size * (CGFloat) .5)];
+	   CGPointMake(bounds.origin.x + (_size + GRID_SPACING) * x
+		       + _size * (CGFloat) .5, bounds.origin.y
+		       + (_size + GRID_SPACING) * y + _size * (CGFloat) .5)];
 
 	  [new_sublayers addObject:sublayer];
 	}
     }
 
   [layer setSublayers:new_sublayers];
+
+  for (PDThumbnailLayer *tem in old_sublayers)
+    [tem invalidate];
+
+  [new_sublayers release];
+  [old_sublayers release];
+
   [self setPreparedContentRect:rect];
 }
 

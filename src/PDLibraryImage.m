@@ -24,9 +24,36 @@
 
 #import "PDLibraryImage.h"
 
+CA_HIDDEN
+@interface PDThumbnailOperation : NSOperation
+{
+  CGImageSourceRef _imageSource;
+  CGSize _size;
+  void (^_handler)(CGImageRef result);
+}
+
+@property(nonatomic) CGImageSourceRef imageSource;
+@property(nonatomic) CGSize size;
+@property(nonatomic, copy) void (^handler)(CGImageRef result);
+
+@end
+
 @implementation PDLibraryImage
 
+static NSOperationQueue *_imageQueue;
+
 @synthesize path = _path;
+
++ (NSOperationQueue *)imageQueue
+{
+  if (_imageQueue == nil)
+    {
+      _imageQueue = [[NSOperationQueue alloc] init];
+      [_imageQueue setName:@"PDLibraryImage"];
+    }
+
+  return _imageQueue;
+}
 
 - (id)initWithPath:(NSString *)path
 {
@@ -35,17 +62,118 @@
     return nil;
 
   _path = [path copy];
+  _thumbnails = [[NSMapTable strongToStrongObjectsMapTable] retain];
 
   return self;
 }
 
-- (void)drawInContext:(CGContextRef)ctx rect:(CGRect)r
-    options:(NSDictionary *)dict
+- (void)dealloc
 {
+  [_path release];
+
+  if (_imageSource)
+    CFRelease(_imageSource);
+  if (_imageProperties)
+    CFRelease(_imageProperties);
+
+  [_thumbnails release];
+
+  [super dealloc];
 }
 
-- (void)defineContentsOfLayer:(CALayer *)layer options:(NSDictionary *)dict
+- (CGImageSourceRef)imageSource
 {
+  if (_imageSource == NULL)
+    {
+      NSURL *url = [[NSURL alloc] initFileURLWithPath:_path];
+      NSDictionary *opts = [[NSDictionary alloc] initWithObjectsAndKeys:
+			    (id)kCFBooleanFalse, kCGImageSourceShouldCache,
+			    nil];
+      _imageSource = CGImageSourceCreateWithURL((CFURLRef)url,
+						(CFDictionaryRef)opts);
+    }
+
+  return _imageSource;
+}
+
+- (id)imagePropertyForKey:(CFStringRef)key
+{
+  if (_imageProperties == NULL)
+    {
+      CGImageSourceRef src = [self imageSource];
+      if (src != NULL)
+	_imageProperties = CGImageSourceCopyPropertiesAtIndex(src, 0, NULL);
+    }
+
+  if (_imageProperties != NULL)
+    return (id) CFDictionaryGetValue(_imageProperties, key);
+  else
+    return nil;
+}
+
+- (void)addThumbnail:(id<PDLibraryImageThumbnail>)obj
+{
+  PDThumbnailOperation *op;
+
+  assert([_thumbnails objectForKey:obj] == nil);
+
+  op = [[PDThumbnailOperation alloc] init];
+  [op setImageSource:[self imageSource]];
+  [op setSize:[obj thumbnailSize]];
+  [op setHandler:^(CGImageRef im) {
+    [obj setThumbnailImage:im];
+    [_thumbnails setObject:[NSNull null] forKey:obj];
+  }];
+
+  [[[self class] imageQueue] addOperation:op];
+  [_thumbnails setObject:op forKey:obj];
+
+  [op release];
+}
+
+- (void)removeThumbnail:(id<PDLibraryImageThumbnail>)obj
+{
+  PDThumbnailOperation *op;
+
+  op = [_thumbnails objectForKey:obj];
+  if (op == nil)
+    return;
+
+  if ([op isKindOfClass:[PDThumbnailOperation class]])
+    [op cancel];
+
+  [_thumbnails removeObjectForKey:obj];
+}
+
+- (void)updateThumbnail:(id<PDLibraryImageThumbnail>)obj
+{
+  // FIXME: not ideal, but ok for now
+
+  [self removeThumbnail:obj];
+  [self addThumbnail:obj];
+}
+
+@end
+
+@implementation PDThumbnailOperation
+
+@synthesize imageSource = _imageSource;
+@synthesize size = _size;
+@synthesize handler = _handler;
+
+- (void)main
+{
+  CGImageRef src_im;
+
+  src_im = CGImageSourceCreateThumbnailAtIndex(_imageSource, 0, NULL);
+
+  if (src_im == NULL)
+    src_im = CGImageSourceCreateImageAtIndex(_imageSource, 0, NULL);
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    _handler(src_im);
+    CGImageRelease(src_im);
+  });
 }
 
 @end

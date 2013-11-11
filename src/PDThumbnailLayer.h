@@ -24,13 +24,17 @@
 
 #import <QuartzCore/CALayer.h>
 
-@class PDLibraryImage;
+#import "PDLibraryImage.h"
 
-@interface PDThumbnailLayer : CALayer
+@interface PDThumbnailLayer : CALayer <PDLibraryImageThumbnail>
 {
   PDLibraryImage *_libraryImage;
+  BOOL _addedThumbnail;
+  CGSize _thumbnailSize;
 }
 
 @property(nonatomic, retain) PDLibraryImage *libraryImage;
+
+- (void)invalidate;
 
 @end
