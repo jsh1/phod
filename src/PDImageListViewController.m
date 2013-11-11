@@ -121,7 +121,7 @@
   if (self == nil)
     return nil;
 
-  _scale = .2;
+  _scale = .4;
 
   return self;
 }

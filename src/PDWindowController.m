@@ -89,9 +89,9 @@ NSString *const PDSelectedImageIndexesDidChange = @"PDSelectedImageIndexesDidCha
 
 - (void)windowDidLoad
 {
-  PDViewController *controller;
+  NSWindow *window = [self window];
 
-  [[self window] setBackgroundColor:[PDColor windowBackgroundColor]];
+  [window setBackgroundColor:[PDColor windowBackgroundColor]];
 
   [_splitView setIndexOfResizableSubview:1];
 
@@ -101,7 +101,7 @@ NSString *const PDSelectedImageIndexesDidChange = @"PDSelectedImageIndexesDidCha
 		      [PDImageListViewController class],
 		      [PDImageViewController class]])
     {
-      controller = [[cls alloc] initWithController:self];
+      PDViewController *controller = [[cls alloc] initWithController:self];
       if (controller != nil)
 	{
 	  [_viewControllers addObject:controller];
@@ -118,7 +118,13 @@ NSString *const PDSelectedImageIndexesDidChange = @"PDSelectedImageIndexesDidCha
 
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(windowWillClose:)
-   name:NSWindowWillCloseNotification object:[self window]];
+   name:NSWindowWillCloseNotification object:window];
+
+  [window setInitialFirstResponder:
+   [[self viewControllerWithClass:[PDLibraryViewController class]]
+    initialFirstResponder]];
+
+  [window makeFirstResponder:[window initialFirstResponder]];
 }
 
 - (void)windowWillClose:(NSNotification *)note
