@@ -35,10 +35,8 @@ CA_HIDDEN
   void (^_handler)(CGImageRef result);
 }
 
-@property(nonatomic) CGImageSourceRef imageSource;
-@property(nonatomic) CGSize imageSize;
-@property(nonatomic) CGSize thumbnailSize;
-@property(nonatomic, copy) void (^handler)(CGImageRef result);
+- (id)initWithImageSource:(CGImageSourceRef)src imageSize:(CGSize)im_size
+    thumbnailSize:(CGSize)thumb_size handler:(void(^)(CGImageRef))block;
 
 @end
 
@@ -104,6 +102,8 @@ static NSOperationQueue *_imageQueue;
 			    nil];
       _imageSource = CGImageSourceCreateWithURL((CFURLRef)url,
 						(CFDictionaryRef)opts);
+      [opts release];
+      [url release];
     }
 
   return _imageSource;
@@ -130,18 +130,17 @@ static NSOperationQueue *_imageQueue;
 
   assert([_thumbnails objectForKey:obj] == nil);
 
-  op = [[PDThumbnailOperation alloc] init];
-  [op setImageSource:[self imageSource]];
-  [op setImageSize:
-   CGSizeMake([(id)[self imagePropertyForKey:
-		    kCGImagePropertyPixelWidth] doubleValue],
-	      [(id)[self imagePropertyForKey:
-		    kCGImagePropertyPixelHeight] doubleValue])];
-  [op setThumbnailSize:[obj thumbnailSize]];
-  [op setHandler:^(CGImageRef im) {
-    [obj setThumbnailImage:im];
-    [_thumbnails setObject:[NSNull null] forKey:obj];
-  }];
+  op = [[PDThumbnailOperation alloc]
+	initWithImageSource:[self imageSource]
+	imageSize:CGSizeMake([[self imagePropertyForKey:
+			       kCGImagePropertyPixelWidth] doubleValue],
+			     [[self imagePropertyForKey:
+			       kCGImagePropertyPixelHeight] doubleValue])
+	thumbnailSize:[obj thumbnailSize]
+	handler:^(CGImageRef im) {
+	  [obj setThumbnailImage:im];
+	  [_thumbnails setObject:[NSNull null] forKey:obj];
+	}];
 
   [[[self class] imageQueue] addOperation:op];
   [_thumbnails setObject:op forKey:obj];
@@ -175,10 +174,29 @@ static NSOperationQueue *_imageQueue;
 
 @implementation PDThumbnailOperation
 
-@synthesize imageSource = _imageSource;
-@synthesize imageSize = _imageSize;
-@synthesize thumbnailSize = _thumbnailSize;
-@synthesize handler = _handler;
+- (id)initWithImageSource:(CGImageSourceRef)src imageSize:(CGSize)im_size
+    thumbnailSize:(CGSize)thumb_size handler:(void(^)(CGImageRef))block
+{
+  self = [super init];
+  if (self == nil)
+    return nil;
+
+  _imageSource = (CGImageSourceRef)CFRetain(src);
+  _imageSize = im_size;
+  _thumbnailSize = thumb_size;
+  _handler = [block copy];
+
+  return self;
+}
+
+- (void)dealloc
+{
+  if (_imageSource)
+    CFRelease(_imageSource);
+  [_handler release];
+
+  [super dealloc];
+}
 
 - (void)main
 {
