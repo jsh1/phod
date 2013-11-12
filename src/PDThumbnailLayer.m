@@ -112,39 +112,7 @@
 
 - (void)setThumbnailImage:(CGImageRef)im
 {
-  [self setContentsGravity:kCAGravityResizeAspect];
-  [self setMasksToBounds:YES];
-
-  // Embedded JPEG thumbnails are often a fixed size and aspect ratio,
-  // so tell CA to crop them to the original image's aspect ratio.
-
-  size_t im_w = CGImageGetWidth(im);
-  size_t im_h = CGImageGetHeight(im);
-
-  size_t pix_w = [(id)[_libraryImage imagePropertyForKey:
-		       kCGImagePropertyPixelWidth] unsignedIntValue];
-  size_t pix_h = [(id)[_libraryImage imagePropertyForKey:
-		       kCGImagePropertyPixelHeight] unsignedIntValue];
-
-  CGRect cropR = CGRectMake(0, 0, 1, 1);
-
-  double im_aspect = (double)im_w / (double)im_h;
-  double pix_aspect = (double)pix_w / (double)pix_h;
-
-  if (pix_aspect > 1)
-    {
-      cropR.size.height = im_aspect / pix_aspect;
-      cropR.origin.y = (1 - cropR.size.height) * .5;
-    }
-  else
-    {
-      cropR.size.width = im_aspect / pix_aspect;
-      cropR.origin.x = (1 - cropR.size.width) * .5;
-    }
-
-  [self setContentsRect:cropR];
-
-  // Also rotate to match image orientation.
+  // Rotate layer to match image orientation.
 
   unsigned int orientation = [(id)[_libraryImage imagePropertyForKey:
 				   kCGImagePropertyOrientation]
@@ -172,6 +140,7 @@
   // Move image decompression onto background thread.
 
   CGImageRetain(im);
+
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     [self setContents:(id)im];
     [self setBackgroundColor:NULL];

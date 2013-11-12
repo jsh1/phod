@@ -202,15 +202,26 @@
 	    {
 	      sublayer = [PDThumbnailLayer layer];
 	      [sublayer setLibraryImage:image];
+	      [sublayer setContentsGravity:kCAGravityResizeAspect];
+	      [sublayer setEdgeAntialiasingMask:0];
 	      [sublayer setDelegate:_controller];
 	      [sublayer setBackgroundColor:[[NSColor darkGrayColor] CGColor]];
 	    }
 
-	  [sublayer setBounds:CGRectMake(0, 0, _size, _size)];
+	  CGFloat w = [(id)[image imagePropertyForKey:
+			    kCGImagePropertyPixelWidth] doubleValue];
+	  CGFloat h = [(id)[image imagePropertyForKey:
+			    kCGImagePropertyPixelHeight] doubleValue];
+	  CGFloat tw = w > h ? _size : floor(_size * (w/h));
+	  CGFloat th = w > h ? floor(_size*(h/w)) : _size;
+
+	  [sublayer setBounds:CGRectMake(0, 0, tw, th)];
+
+	  CGFloat px = (_size + GRID_SPACING) * x + _size * (CGFloat) .5;
+	  CGFloat py = (_size + GRID_SPACING) * y + _size * (CGFloat) .5;
+
 	  [sublayer setPosition:
-	   CGPointMake(bounds.origin.x + (_size + GRID_SPACING) * x
-		       + _size * (CGFloat) .5, bounds.origin.y
-		       + (_size + GRID_SPACING) * y + _size * (CGFloat) .5)];
+	   CGPointMake(bounds.origin.x + px, bounds.origin.y + py)];
 
 	  [new_sublayers addObject:sublayer];
 	}

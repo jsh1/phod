@@ -29,6 +29,7 @@
 @interface PDLibraryImage : NSObject
 {
   NSString *_path;
+  NSUUID *_uuid;
 
   CGImageSourceRef _imageSource;
   CFDictionaryRef _imageProperties;
@@ -40,6 +41,8 @@
 - (id)initWithPath:(NSString *)path;
 
 @property(nonatomic, readonly) NSString *path;
+
+@property(nonatomic, readonly) NSUUID *UUID;
 
 - (id)imagePropertyForKey:(CFStringRef)key;
 

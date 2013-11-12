@@ -24,16 +24,20 @@
 
 #import "PDLibraryImage.h"
 
+#import "PDUUIDManager.h"
+
 CA_HIDDEN
 @interface PDThumbnailOperation : NSOperation
 {
   CGImageSourceRef _imageSource;
-  CGSize _size;
+  CGSize _imageSize;
+  CGSize _thumbnailSize;
   void (^_handler)(CGImageRef result);
 }
 
 @property(nonatomic) CGImageSourceRef imageSource;
-@property(nonatomic) CGSize size;
+@property(nonatomic) CGSize imageSize;
+@property(nonatomic) CGSize thumbnailSize;
 @property(nonatomic, copy) void (^handler)(CGImageRef result);
 
 @end
@@ -70,6 +74,7 @@ static NSOperationQueue *_imageQueue;
 - (void)dealloc
 {
   [_path release];
+  [_uuid release];
 
   if (_imageSource)
     CFRelease(_imageSource);
@@ -79,6 +84,14 @@ static NSOperationQueue *_imageQueue;
   [_thumbnails release];
 
   [super dealloc];
+}
+
+- (NSUUID *)UUID
+{
+  if (_uuid == nil)
+    _uuid = [[PDUUIDManager sharedManager] UUIDOfFileAtPath:_path];
+
+  return _uuid;
 }
 
 - (CGImageSourceRef)imageSource
@@ -119,7 +132,12 @@ static NSOperationQueue *_imageQueue;
 
   op = [[PDThumbnailOperation alloc] init];
   [op setImageSource:[self imageSource]];
-  [op setSize:[obj thumbnailSize]];
+  [op setImageSize:
+   CGSizeMake([(id)[self imagePropertyForKey:
+		    kCGImagePropertyPixelWidth] doubleValue],
+	      [(id)[self imagePropertyForKey:
+		    kCGImagePropertyPixelHeight] doubleValue])];
+  [op setThumbnailSize:[obj thumbnailSize]];
   [op setHandler:^(CGImageRef im) {
     [obj setThumbnailImage:im];
     [_thumbnails setObject:[NSNull null] forKey:obj];
@@ -158,21 +176,52 @@ static NSOperationQueue *_imageQueue;
 @implementation PDThumbnailOperation
 
 @synthesize imageSource = _imageSource;
-@synthesize size = _size;
+@synthesize imageSize = _imageSize;
+@synthesize thumbnailSize = _thumbnailSize;
 @synthesize handler = _handler;
 
 - (void)main
 {
-  CGImageRef src_im;
+  CGImageRef im;
 
-  src_im = CGImageSourceCreateThumbnailAtIndex(_imageSource, 0, NULL);
+  // FIXME: ignoring size for now..
 
-  if (src_im == NULL)
-    src_im = CGImageSourceCreateImageAtIndex(_imageSource, 0, NULL);
+  im = CGImageSourceCreateThumbnailAtIndex(_imageSource, 0, NULL);
+
+  if (im == NULL)
+    im = CGImageSourceCreateImageAtIndex(_imageSource, 0, NULL);
+
+  /* Embedded JPEG thumbnails are often a fixed size and aspect ratio,
+     so crop them to the original image's aspect ratio. */
+
+  CGFloat im_w = CGImageGetWidth(im);
+  CGFloat im_h = CGImageGetHeight(im);
+
+  CGRect imR = CGRectMake(0, 0, im_w, im_h);
+
+  if (_imageSize.width > _imageSize.height)
+    {
+      CGFloat h = im_w * (_imageSize.height / _imageSize.width);
+      imR.origin.y = ceil((im_h - h) * (CGFloat).5);
+      imR.size.height = im_h - (imR.origin.y * 2);
+    }
+  else
+    {
+      CGFloat w = im_h * (_imageSize.width / _imageSize.height);
+      imR.origin.x = ceil((im_w - w) * (CGFloat).5);
+      imR.size.width = im_w - (imR.origin.x * 2);
+    }
+
+  if (!CGRectEqualToRect(imR, CGRectMake(0, 0, im_w, im_h)))
+    {
+      CGImageRef im_copy = CGImageCreateWithImageInRect(im, imR);
+      CGImageRelease(im);
+      im = im_copy;
+    }
 
   dispatch_async(dispatch_get_main_queue(), ^{
-    _handler(src_im);
-    CGImageRelease(src_im);
+    _handler(im);
+    CGImageRelease(im);
   });
 }
 
