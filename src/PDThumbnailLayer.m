@@ -28,7 +28,26 @@
 
 #import <QuartzCore/QuartzCore.h>
 
+CA_HIDDEN @interface PDThumbnailImageLayer : CALayer
+@end
+
 @implementation PDThumbnailLayer
+
++ (id)defaultValueForKey:(NSString *)key
+{
+  if ([key isEqualToString:@"backgroundColor"])
+    return (id)[[NSColor darkGrayColor] CGColor];
+  else if ([key isEqualToString:@"shadowOpacity"])
+    return [NSNumber numberWithDouble:.6];
+  else if ([key isEqualToString:@"shadowOffset"])
+    return [NSValue valueWithSize:NSMakeSize(0, 3)];
+  else if ([key isEqualToString:@"shadowRadius"])
+    return [NSNumber numberWithFloat:2];
+  else if ([key isEqualToString:@"shadowPathIsBounds"])
+    return [NSNumber numberWithBool:YES];
+  else
+    return [super defaultValueForKey:key];
+}
 
 - (id)initWithLayer:(PDThumbnailLayer *)src
 {
@@ -83,7 +102,7 @@
 - (void)layoutSublayers
 {
   if (_libraryImage == nil)
-    [self setContents:nil];
+    [self setSublayers:[NSArray array]];
   else
     {
       CGRect bounds = [self bounds];
@@ -102,6 +121,11 @@
 	{
 	  [_libraryImage updateThumbnail:self];
 	}
+
+      CALayer *sublayer = [[self sublayers] firstObject];
+
+      if (sublayer != nil)
+	[sublayer setFrame:[self bounds]];
     }
 }
 
@@ -112,11 +136,20 @@
 
 - (void)setThumbnailImage:(CGImageRef)im
 {
-  // Rotate layer to match image orientation.
+  CALayer *sublayer = [[self sublayers] firstObject];
 
-  unsigned int orientation = [(id)[_libraryImage imagePropertyForKey:
-				   kCGImagePropertyOrientation]
-			      unsignedIntValue];
+  /* Need to isolate image in its own layer so it can be rotated without
+     also rotating the shadow. */
+
+  if (sublayer == nil)
+    {
+      sublayer = [PDThumbnailImageLayer layer];
+      [sublayer setDelegate:[self delegate]];
+      [self addSublayer:sublayer];
+    }
+
+  unsigned int orientation = [[_libraryImage imagePropertyForKey:
+			       kCGImagePropertyOrientation] unsignedIntValue];
   if (orientation > 1)
     {
       CGAffineTransform m = CGAffineTransformIdentity;
@@ -134,19 +167,34 @@
       else if (orientation == 4)
 	m = CGAffineTransformScale(m, 1, -1);
 
-      [self setAffineTransform:m];
+      [sublayer setAffineTransform:m];
     }
 
-  // Move image decompression onto background thread.
+  [sublayer setFrame:[self bounds]];
+
+  /* Move image decompression onto background thread. */
 
   CGImageRetain(im);
 
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    [self setContents:(id)im];
-    [self setBackgroundColor:NULL];
+    [sublayer setContents:(id)im];
     CGImageRelease(im);
     [CATransaction flush];
   });
+}
+
+@end
+
+@implementation PDThumbnailImageLayer
+
++ (id)defaultValueForKey:(NSString *)key
+{
+  if ([key isEqualToString:@"contentsGravity"])
+    return kCAGravityResizeAspect;
+  else if ([key isEqualToString:@"edgeAntialiasingMask"])
+    return [NSNumber numberWithInt:0];
+  else
+    return [super defaultValueForKey:key];
 }
 
 @end

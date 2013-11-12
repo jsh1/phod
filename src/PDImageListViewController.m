@@ -202,18 +202,23 @@
 	    {
 	      sublayer = [PDThumbnailLayer layer];
 	      [sublayer setLibraryImage:image];
-	      [sublayer setContentsGravity:kCAGravityResizeAspect];
-	      [sublayer setEdgeAntialiasingMask:0];
 	      [sublayer setDelegate:_controller];
-	      [sublayer setBackgroundColor:[[NSColor darkGrayColor] CGColor]];
 	    }
 
-	  CGFloat w = [(id)[image imagePropertyForKey:
-			    kCGImagePropertyPixelWidth] doubleValue];
-	  CGFloat h = [(id)[image imagePropertyForKey:
-			    kCGImagePropertyPixelHeight] doubleValue];
+	  CGFloat w = [[image imagePropertyForKey:
+			kCGImagePropertyPixelWidth] doubleValue];
+	  CGFloat h = [[image imagePropertyForKey:
+			kCGImagePropertyPixelHeight] doubleValue];
 	  CGFloat tw = w > h ? _size : floor(_size * (w/h));
 	  CGFloat th = w > h ? floor(_size*(h/w)) : _size;
+
+	  if ([[image imagePropertyForKey:
+		kCGImagePropertyOrientation] intValue] > 4)
+	    {
+	      CGFloat t = tw;
+	      tw = th;
+	      th = t;
+	    }
 
 	  [sublayer setBounds:CGRectMake(0, 0, tw, th)];
 
