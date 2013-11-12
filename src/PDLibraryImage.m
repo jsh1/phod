@@ -92,6 +92,11 @@ static NSOperationQueue *_imageQueue;
   return _uuid;
 }
 
+- (NSString *)title
+{
+  return [[_path lastPathComponent] stringByDeletingPathExtension];
+}
+
 - (CGImageSourceRef)imageSource
 {
   if (_imageSource == NULL)

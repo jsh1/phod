@@ -24,12 +24,26 @@
 
 #import "PDThumbnailLayer.h"
 
+#import "PDColor.h"
 #import "PDLibraryImage.h"
 
 #import <QuartzCore/QuartzCore.h>
 
-CA_HIDDEN @interface PDThumbnailImageLayer : CALayer
+#define TITLE_SPACING 4
+
+CA_HIDDEN
+@interface PDThumbnailImageLayer : CALayer
 @end
+
+CA_HIDDEN
+@interface PDThumbnailTitleLayer : CATextLayer
+@end
+
+enum
+{
+  IMAGE_SUBLAYER,
+  TITLE_SUBLAYER
+};
 
 @implementation PDThumbnailLayer
 
@@ -102,31 +116,49 @@ CA_HIDDEN @interface PDThumbnailImageLayer : CALayer
 - (void)layoutSublayers
 {
   if (_libraryImage == nil)
-    [self setSublayers:[NSArray array]];
-  else
+    return;
+
+  if ([[self sublayers] count] == 0)
     {
-      CGRect bounds = [self bounds];
-      CGFloat scale = [self contentsScale];
+      CALayer *image_layer = [PDThumbnailImageLayer layer];
+      [image_layer setDelegate:[self delegate]];
+      [self addSublayer:image_layer];
 
-      CGSize size = CGSizeMake(ceil(bounds.size.width * scale),
-			       ceil(bounds.size.height * scale));
-
-      if (!_addedThumbnail)
-	{
-	  _thumbnailSize = size;
-	  [_libraryImage addThumbnail:self];
-	  _addedThumbnail = YES;
-	}
-      else if (!CGSizeEqualToSize(_thumbnailSize, size))
-	{
-	  [_libraryImage updateThumbnail:self];
-	}
-
-      CALayer *sublayer = [[self sublayers] firstObject];
-
-      if (sublayer != nil)
-	[sublayer setFrame:[self bounds]];
+      CALayer *title_layer = [PDThumbnailTitleLayer layer];
+      [title_layer setDelegate:[self delegate]];
+      [self addSublayer:title_layer];
     }
+
+  CGRect bounds = [self bounds];
+  CGFloat scale = [self contentsScale];
+
+  CGSize size = CGSizeMake(ceil(bounds.size.width * scale),
+			   ceil(bounds.size.height * scale));
+
+  if (!_addedThumbnail)
+    {
+      _thumbnailSize = size;
+      [_libraryImage addThumbnail:self];
+      _addedThumbnail = YES;
+    }
+  else if (!CGSizeEqualToSize(_thumbnailSize, size))
+    {
+      [_libraryImage updateThumbnail:self];
+    }
+
+  NSArray *sublayers = [self sublayers];
+
+  CALayer *image_layer = [sublayers objectAtIndex:IMAGE_SUBLAYER];
+  CATextLayer *title_layer = [sublayers objectAtIndex:TITLE_SUBLAYER];
+
+  [image_layer setFrame:bounds];
+
+  [title_layer setString:[_libraryImage title]];
+  [title_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
+				       + bounds.size.height + TITLE_SPACING)];
+
+  CGSize text_size = [title_layer preferredFrameSize];
+  [title_layer setBounds:CGRectMake(0, 0, text_size.width, text_size.height)];
 }
 
 - (CGSize)thumbnailSize
@@ -136,17 +168,7 @@ CA_HIDDEN @interface PDThumbnailImageLayer : CALayer
 
 - (void)setThumbnailImage:(CGImageRef)im
 {
-  CALayer *sublayer = [[self sublayers] firstObject];
-
-  /* Need to isolate image in its own layer so it can be rotated without
-     also rotating the shadow. */
-
-  if (sublayer == nil)
-    {
-      sublayer = [PDThumbnailImageLayer layer];
-      [sublayer setDelegate:[self delegate]];
-      [self addSublayer:sublayer];
-    }
+  CALayer *image_layer = [[self sublayers] objectAtIndex:IMAGE_SUBLAYER];
 
   unsigned int orientation = [[_libraryImage imagePropertyForKey:
 			       kCGImagePropertyOrientation] unsignedIntValue];
@@ -167,17 +189,15 @@ CA_HIDDEN @interface PDThumbnailImageLayer : CALayer
       else if (orientation == 4)
 	m = CGAffineTransformScale(m, 1, -1);
 
-      [sublayer setAffineTransform:m];
+      [image_layer setAffineTransform:m];
     }
-
-  [sublayer setFrame:[self bounds]];
 
   /* Move image decompression onto background thread. */
 
   CGImageRetain(im);
 
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    [sublayer setContents:(id)im];
+    [image_layer setContents:(id)im];
     CGImageRelease(im);
     [CATransaction flush];
   });
@@ -193,6 +213,24 @@ CA_HIDDEN @interface PDThumbnailImageLayer : CALayer
     return kCAGravityResizeAspect;
   else if ([key isEqualToString:@"edgeAntialiasingMask"])
     return [NSNumber numberWithInt:0];
+  else
+    return [super defaultValueForKey:key];
+}
+
+@end
+
+@implementation PDThumbnailTitleLayer
+
++ (id)defaultValueForKey:(NSString *)key
+{
+  if ([key isEqualToString:@"font"])
+    return [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]];
+  if ([key isEqualToString:@"fontSize"])
+    return [NSNumber numberWithDouble:[NSFont smallSystemFontSize]];
+  else if ([key isEqualToString:@"truncationMode"])
+    return @"start";
+  else if ([key isEqualToString:@"anchorPoint"])
+    return [NSValue valueWithPoint:NSZeroPoint];
   else
     return [super defaultValueForKey:key];
 }

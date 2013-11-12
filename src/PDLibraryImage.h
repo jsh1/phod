@@ -44,6 +44,8 @@
 
 @property(nonatomic, readonly) NSUUID *UUID;
 
+@property(nonatomic, readonly) NSString *title;
+
 - (id)imagePropertyForKey:(CFStringRef)key;
 
 - (void)addThumbnail:(id<PDLibraryImageThumbnail>)obj;

@@ -220,13 +220,12 @@
 	      th = t;
 	    }
 
-	  [sublayer setBounds:CGRectMake(0, 0, tw, th)];
+	  CGFloat px = round(bounds.origin.x + (_size + GRID_SPACING) * x
+			     + (_size - tw) * (CGFloat).5);
+	  CGFloat py = round(bounds.origin.y + (_size + GRID_SPACING) * y
+			     + (_size - th) * (CGFloat).5);
 
-	  CGFloat px = (_size + GRID_SPACING) * x + _size * (CGFloat) .5;
-	  CGFloat py = (_size + GRID_SPACING) * y + _size * (CGFloat) .5;
-
-	  [sublayer setPosition:
-	   CGPointMake(bounds.origin.x + px, bounds.origin.y + py)];
+	  [sublayer setFrame:CGRectMake(px, py, tw, th)];
 
 	  [new_sublayers addObject:sublayer];
 	}
