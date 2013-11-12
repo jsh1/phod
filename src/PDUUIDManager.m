@@ -27,16 +27,6 @@
 #import <sqlite3.h>
 #import <sys/stat.h>
 
-#define TRY(x)								\
-  do {									\
-    int err = x;							\
-    if (x != SQLITE_OK)							\
-      {									\
-	NSLog(@"SQLite error: %d: %s", err, sqlite3_errmsg(_handle));	\
-	abort();							\
-      }									\
-  } while(0)
-
 @implementation PDUUIDManager
 
 + (PDUUIDManager *)sharedManager
