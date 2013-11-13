@@ -24,6 +24,13 @@
 
 #import <AppKit/AppKit.h>
 
+@interface NSView (PDAppKitExtensions)
+
+- (void)scrollRectToVisible:(NSRect)rect animated:(BOOL)flag;
+
+@end
+
+
 @interface NSCell (PDAppKitExtensions)
 
 @property(getter=isVerticallyCentered) BOOL verticallyCentered;

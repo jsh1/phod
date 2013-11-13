@@ -24,6 +24,7 @@
 
 #import "PDImageListViewController.h"
 
+#import "PDAppKitExtensions.h"
 #import "PDColor.h"
 #import "PDLibraryImage.h"
 #import "PDThumbnailLayer.h"
@@ -33,7 +34,8 @@
 #define GRID_SPACING 30
 #define IMAGE_MIN_SIZE 80
 #define IMAGE_MAX_SIZE 300
-#define TITLE_HEIGHT 25
+#define TITLE_HEIGHT 15
+#define MAX_OUTSET 10
 
 @implementation PDImageListViewController
 
@@ -282,10 +284,12 @@
   NSRect bounds = [self bounds];
 
   NSRect rect;
-  rect.origin.x = bounds.origin.x + GRID_MARGIN + (_size + GRID_SPACING) * x;
-  rect.origin.y = bounds.origin.y + GRID_MARGIN + (_size + GRID_SPACING) * y;
-  rect.size.width = _size;
-  rect.size.height = _size + TITLE_HEIGHT;
+  rect.origin.x = (bounds.origin.x + GRID_MARGIN
+		   + (_size + GRID_SPACING) * x - MAX_OUTSET);
+  rect.origin.y = (bounds.origin.y + GRID_MARGIN
+		   + (_size + GRID_SPACING) * y - MAX_OUTSET);
+  rect.size.width = _size + MAX_OUTSET*2;
+  rect.size.height = _size + TITLE_HEIGHT + MAX_OUTSET*2;
 
   return rect;
 }
@@ -295,7 +299,7 @@
   if (_primarySelection >= 0)
     {
       [self scrollRectToVisible:
-       [self boundingRectOfItemAtIndex:_primarySelection]];
+       [self boundingRectOfItemAtIndex:_primarySelection] animated:YES];
     }
 }
 
@@ -365,6 +369,8 @@
     }
 
   [[_controller controller] setSelectedImageIndexes:sel primary:primary];
+
+  [self scrollToPrimary];
 
   [sel release];
 }

@@ -24,6 +24,38 @@
 
 #import "PDAppKitExtensions.h"
 
+@implementation NSView (PDAppKitExtensions)
+
+- (void)scrollRectToVisible:(NSRect)rect animated:(BOOL)flag
+{
+  if (!flag)
+    [self scrollRectToVisible:rect];
+  else
+    {
+      NSScrollView *scrollView = [self enclosingScrollView];
+      NSClipView *clipView = [scrollView contentView];
+
+      NSRect bounds = [clipView bounds];
+
+      if (rect.origin.x < bounds.origin.x)
+	bounds.origin.x = rect.origin.x;
+      else if (rect.origin.x + rect.size.width > bounds.origin.x + bounds.size.width)
+	bounds.origin.x = rect.origin.x + rect.size.width - bounds.size.width;
+
+      if (rect.origin.y < bounds.origin.y)
+	bounds.origin.y = rect.origin.y;
+      else if (rect.origin.y + rect.size.height > bounds.origin.y + bounds.size.height)
+	bounds.origin.y = rect.origin.y + rect.size.height - bounds.size.height;
+
+      bounds = [clipView constrainBoundsRect:bounds];
+
+      [[clipView animator] setBounds:bounds];
+      [scrollView reflectScrolledClipView:clipView];
+    }
+}
+
+@end
+
 @implementation NSCell (PDAppKitExtensions)
 
 // vCentered is private, but it's impossible to resist..
