@@ -115,10 +115,10 @@ enum
 
 - (void)invalidate
 {
-  if (_addedThumbnail)
+  if (_addedImageHost)
     {
-      [_libraryImage removeThumbnail:self];
-      _addedThumbnail = NO;
+      [_libraryImage removeImageHost:self];
+      _addedImageHost = NO;
     }
 }
 
@@ -139,10 +139,10 @@ enum
 {
   if (_libraryImage != im)
     {
-      if (_addedThumbnail)
+      if (_addedImageHost)
 	{
-	  [_libraryImage removeThumbnail:self];
-	  _addedThumbnail = NO;
+	  [_libraryImage removeImageHost:self];
+	  _addedImageHost = NO;
 	}
 
       [_libraryImage release];
@@ -180,15 +180,16 @@ enum
   CGSize size = CGSizeMake(ceil(bounds.size.width * scale),
 			   ceil(bounds.size.height * scale));
 
-  if (!_addedThumbnail)
+  if (!_addedImageHost)
     {
-      _thumbnailSize = size;
-      [_libraryImage addThumbnail:self];
-      _addedThumbnail = YES;
+      _imageSize = size;
+      [_libraryImage addImageHost:self];
+      _addedImageHost = YES;
     }
-  else if (!CGSizeEqualToSize(_thumbnailSize, size))
+  else if (!CGSizeEqualToSize(_imageSize, size))
     {
-      [_libraryImage updateThumbnail:self];
+      _imageSize = size;
+      [_libraryImage updateImageHost:self];
     }
 
   NSArray *sublayers = [self sublayers];
@@ -223,12 +224,13 @@ enum
     [selection_layer setHidden:YES];
 }
 
-- (CGSize)thumbnailSize
+- (NSDictionary *)imageHostOptions
 {
-  return _thumbnailSize;
+  return @{PDLibraryImageHost_Thumbnail: @YES,
+	   PDLibraryImageHost_Size: [NSValue valueWithSize:_imageSize]};
 }
 
-- (void)setThumbnailImage:(CGImageRef)im
+- (void)setHostedImage:(CGImageRef)im
 {
   CALayer *image_layer = [[self sublayers] objectAtIndex:IMAGE_SUBLAYER];
 

@@ -65,7 +65,7 @@
   [_scrollView setBackgroundColor:[PDColor imageGridBackgroundColor]];
 
   [[NSNotificationCenter defaultCenter]
-   addObserver:self selector:@selector(gridBoundsDidChange:)
+   addObserver:self selector:@selector(gridViewBoundsDidChange:)
    name:NSViewBoundsDidChangeNotification object:[_gridView superview]];
 
   [_scaleSlider setDoubleValue:[_gridView scale]];
@@ -75,17 +75,15 @@
 {
   [_gridView setImages:[_controller imageList]];
   [_gridView scrollPoint:NSZeroPoint];
-  [_gridView setNeedsDisplay:YES];
 }
 
 - (void)selectionDidChange:(NSNotification *)note
 {
   [_gridView setPrimarySelection:[_controller primarySelectionIndex]];
   [_gridView setSelection:[_controller selectedImageIndexes]];
-  [_gridView setNeedsDisplay:YES];
 }
 
-- (void)gridBoundsDidChange:(NSNotification *)note
+- (void)gridViewBoundsDidChange:(NSNotification *)note
 {
   [_gridView setNeedsDisplay:YES];
 }
@@ -95,7 +93,6 @@
   if (sender == _scaleSlider)
     {
       [_gridView setScale:[sender doubleValue]];
-      [_gridView setNeedsDisplay:YES];
     }
 }
 

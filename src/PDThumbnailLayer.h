@@ -26,13 +26,13 @@
 
 #import "PDLibraryImage.h"
 
-@interface PDThumbnailLayer : CALayer <PDLibraryImageThumbnail>
+@interface PDThumbnailLayer : CALayer <PDLibraryImageHost>
 {
   PDLibraryImage *_libraryImage;
   BOOL _selected;
   BOOL _primary;
-  BOOL _addedThumbnail;
-  CGSize _thumbnailSize;
+  BOOL _addedImageHost;
+  CGSize _imageSize;
 }
 
 @property(nonatomic, retain) PDLibraryImage *libraryImage;

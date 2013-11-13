@@ -27,18 +27,22 @@
 #import "PDUUIDManager.h"
 
 CA_HIDDEN
-@interface PDThumbnailOperation : NSOperation
+@interface PDImageHostOperation : NSOperation
 {
+  id<PDLibraryImageHost> _imageHost;
+  NSDictionary *_options;
+
   CGImageSourceRef _imageSource;
-  CGSize _imageSize;
-  CGSize _thumbnailSize;
-  void (^_handler)(CGImageRef result);
+  NSDictionary *_imageProperties;
 }
 
-- (id)initWithImageSource:(CGImageSourceRef)src imageSize:(CGSize)im_size
-    thumbnailSize:(CGSize)thumb_size handler:(void(^)(CGImageRef))block;
+- (id)initWithImageHost:(id<PDLibraryImageHost>)host
+    imageSource:(CGImageSourceRef)src imageProperties:(NSDictionary *)props;
 
 @end
+
+NSString * const PDLibraryImageHost_Size = @"size";
+NSString * const PDLibraryImageHost_Thumbnail = @"thumbnail";
 
 @implementation PDLibraryImage
 
@@ -64,7 +68,7 @@ static NSOperationQueue *_imageQueue;
     return nil;
 
   _path = [path copy];
-  _thumbnails = [[NSMapTable strongToStrongObjectsMapTable] retain];
+  _imageHosts = [[NSMapTable strongToStrongObjectsMapTable] retain];
 
   return self;
 }
@@ -79,7 +83,7 @@ static NSOperationQueue *_imageQueue;
   if (_imageProperties)
     CFRelease(_imageProperties);
 
-  [_thumbnails release];
+  [_imageHosts release];
 
   [super dealloc];
 }
@@ -114,102 +118,100 @@ static NSOperationQueue *_imageQueue;
   return _imageSource;
 }
 
-- (id)imagePropertyForKey:(CFStringRef)key
+- (NSDictionary *)imageProperties
 {
   if (_imageProperties == NULL)
     {
       CGImageSourceRef src = [self imageSource];
+
       if (src != NULL)
 	_imageProperties = CGImageSourceCopyPropertiesAtIndex(src, 0, NULL);
     }
 
-  if (_imageProperties != NULL)
-    return (id) CFDictionaryGetValue(_imageProperties, key);
-  else
-    return nil;
+  return (NSDictionary *)_imageProperties;
 }
 
-- (void)addThumbnail:(id<PDLibraryImageThumbnail>)obj
+- (id)imagePropertyForKey:(CFStringRef)key
 {
-  PDThumbnailOperation *op;
+  return [[self imageProperties] objectForKey:(NSString *)key];
+}
 
-  assert([_thumbnails objectForKey:obj] == nil);
+- (void)addImageHost:(id<PDLibraryImageHost>)obj
+{
+  PDImageHostOperation *op;
 
-  op = [[PDThumbnailOperation alloc]
-	initWithImageSource:[self imageSource]
-	imageSize:CGSizeMake([[self imagePropertyForKey:
-			       kCGImagePropertyPixelWidth] doubleValue],
-			     [[self imagePropertyForKey:
-			       kCGImagePropertyPixelHeight] doubleValue])
-	thumbnailSize:[obj thumbnailSize]
-	handler:^(CGImageRef im) {
-	  [obj setThumbnailImage:im];
-	  [_thumbnails setObject:[NSNull null] forKey:obj];
-	}];
+  assert([_imageHosts objectForKey:obj] == nil);
+
+  op = [[PDImageHostOperation alloc]
+	initWithImageHost:obj imageSource:[self imageSource]
+	imageProperties:[self imageProperties]];
 
   [[[self class] imageQueue] addOperation:op];
-  [_thumbnails setObject:op forKey:obj];
+  [_imageHosts setObject:op forKey:obj];
 
   [op release];
 }
 
-- (void)removeThumbnail:(id<PDLibraryImageThumbnail>)obj
+- (void)removeImageHost:(id<PDLibraryImageHost>)obj
 {
-  PDThumbnailOperation *op;
+  PDImageHostOperation *op;
 
-  op = [_thumbnails objectForKey:obj];
+  op = [_imageHosts objectForKey:obj];
   if (op == nil)
     return;
 
-  if ([op isKindOfClass:[PDThumbnailOperation class]])
-    [op cancel];
+  [op cancel];
 
-  [_thumbnails removeObjectForKey:obj];
+  [_imageHosts removeObjectForKey:obj];
 }
 
-- (void)updateThumbnail:(id<PDLibraryImageThumbnail>)obj
+- (void)updateImageHost:(id<PDLibraryImageHost>)obj
 {
   // FIXME: not ideal, but ok for now
 
-  [self removeThumbnail:obj];
-  [self addThumbnail:obj];
+  [self removeImageHost:obj];
+  [self addImageHost:obj];
 }
 
 @end
 
-@implementation PDThumbnailOperation
+@implementation PDImageHostOperation
 
-- (id)initWithImageSource:(CGImageSourceRef)src imageSize:(CGSize)im_size
-    thumbnailSize:(CGSize)thumb_size handler:(void(^)(CGImageRef))block
+- (id)initWithImageHost:(id<PDLibraryImageHost>)host
+    imageSource:(CGImageSourceRef)src imageProperties:(NSDictionary *)props;
 {
   self = [super init];
   if (self == nil)
     return nil;
 
+  _imageHost = [host retain];
+  _options = [[host imageHostOptions] copy];
+
   _imageSource = (CGImageSourceRef)CFRetain(src);
-  _imageSize = im_size;
-  _thumbnailSize = thumb_size;
-  _handler = [block copy];
+  _imageProperties = [props copy];
 
   return self;
 }
 
 - (void)dealloc
 {
+  [_imageHost release];
+  [_options release];
   if (_imageSource)
     CFRelease(_imageSource);
-  [_handler release];
+  [_imageProperties release];
 
   [super dealloc];
 }
 
 - (void)main
 {
-  CGImageRef im;
+  CGImageRef im = NULL;
 
   // FIXME: ignoring size for now..
 
-  im = CGImageSourceCreateThumbnailAtIndex(_imageSource, 0, NULL);
+  if ([[_options objectForKey:PDLibraryImageHost_Thumbnail] boolValue])
+    im = CGImageSourceCreateThumbnailAtIndex(_imageSource, 0, NULL);
 
   if (im == NULL)
     im = CGImageSourceCreateImageAtIndex(_imageSource, 0, NULL);
@@ -217,20 +219,25 @@ static NSOperationQueue *_imageQueue;
   /* Embedded JPEG thumbnails are often a fixed size and aspect ratio,
      so crop them to the original image's aspect ratio. */
 
+  CGFloat pixelWidth = [[_imageProperties objectForKey:
+			 (id)kCGImagePropertyPixelWidth] doubleValue];
+  CGFloat pixelHeight = [[_imageProperties objectForKey:
+			  (id)kCGImagePropertyPixelHeight] doubleValue];
+
   CGFloat im_w = CGImageGetWidth(im);
   CGFloat im_h = CGImageGetHeight(im);
 
   CGRect imR = CGRectMake(0, 0, im_w, im_h);
 
-  if (_imageSize.width > _imageSize.height)
+  if (pixelWidth > pixelHeight)
     {
-      CGFloat h = im_w * (_imageSize.height / _imageSize.width);
+      CGFloat h = im_w * (pixelHeight / pixelWidth);
       imR.origin.y = ceil((im_h - h) * (CGFloat).5);
       imR.size.height = im_h - (imR.origin.y * 2);
     }
   else
     {
-      CGFloat w = im_h * (_imageSize.width / _imageSize.height);
+      CGFloat w = im_h * (pixelWidth / pixelHeight);
       imR.origin.x = ceil((im_w - w) * (CGFloat).5);
       imR.size.width = im_w - (imR.origin.x * 2);
     }
@@ -243,7 +250,7 @@ static NSOperationQueue *_imageQueue;
     }
 
   dispatch_async(dispatch_get_main_queue(), ^{
-    _handler(im);
+    [_imageHost setHostedImage:im];
     CGImageRelease(im);
   });
 }

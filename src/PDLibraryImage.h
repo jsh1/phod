@@ -24,7 +24,7 @@
 
 #import "PDLibraryItem.h"
 
-@protocol PDLibraryImageThumbnail;
+@protocol PDLibraryImageHost;
 
 @interface PDLibraryImage : NSObject
 {
@@ -34,8 +34,7 @@
   CGImageSourceRef _imageSource;
   CFDictionaryRef _imageProperties;
 
-  CGImageRef _thumbnailImage;
-  NSMapTable *_thumbnails;
+  NSMapTable *_imageHosts;
 }
 
 - (id)initWithPath:(NSString *)path;
@@ -46,17 +45,24 @@
 
 @property(nonatomic, readonly) NSString *title;
 
+- (NSDictionary *)imageProperties;
 - (id)imagePropertyForKey:(CFStringRef)key;
 
-- (void)addThumbnail:(id<PDLibraryImageThumbnail>)obj;
-- (void)removeThumbnail:(id<PDLibraryImageThumbnail>)obj;
-- (void)updateThumbnail:(id<PDLibraryImageThumbnail>)obj;
+- (void)addImageHost:(id<PDLibraryImageHost>)obj;
+- (void)removeImageHost:(id<PDLibraryImageHost>)obj;
+- (void)updateImageHost:(id<PDLibraryImageHost>)obj;
 
 @end
 
-@protocol PDLibraryImageThumbnail <NSObject>
+@protocol PDLibraryImageHost <NSObject>
 
-- (CGSize)thumbnailSize;
-- (void)setThumbnailImage:(CGImageRef)im;
+- (NSDictionary *)imageHostOptions;
+
+- (void)setHostedImage:(CGImageRef)im;
 
 @end
+
+// Hosted image options
+
+extern NSString * const PDLibraryImageHost_Size;	// NSValue<Size>
+extern NSString * const PDLibraryImageHost_Thumbnail;	// NSNumber<bool>

@@ -39,11 +39,6 @@
 
 @implementation PDImageGridView
 
-@synthesize images = _images;
-@synthesize primarySelection = _primarySelection;
-@synthesize selection = _selection;
-@synthesize scale = _scale;
-
 - (id)initWithFrame:(NSRect)frame
 {
   self = [super initWithFrame:frame];
@@ -54,6 +49,68 @@
   _primarySelection = -1;
 
   return self;
+}
+
+- (NSArray *)images
+{
+  return _images;
+}
+
+- (void)setImages:(NSArray *)array
+{
+  if (_images != array)
+    {
+      [_images release];
+      _images = [array copy];
+
+      [self setNeedsDisplay:YES];
+    }
+}
+
+- (NSInteger)primarySelection
+{
+  return _primarySelection;
+}
+
+- (void)setPrimarySelection:(NSInteger)idx
+{
+  if (_primarySelection != idx)
+    {
+      _primarySelection = idx;
+
+      [self setNeedsDisplay:YES];
+    }
+}
+
+- (NSIndexSet *)selection
+{
+  return _selection;
+}
+
+- (void)setSelection:(NSIndexSet *)set
+{
+  if (_selection != set)
+    {
+      [_selection release];
+      _selection = [set copy];
+
+      [self setNeedsDisplay:YES];
+    }
+}
+
+- (CGFloat)scale
+{
+  return _scale;
+}
+
+- (void)setScale:(CGFloat)x
+{
+  if (_scale != x)
+    {
+      _scale = x;
+
+      [self setNeedsDisplay:YES];
+    }
 }
 
 - (BOOL)wantsUpdateLayer
