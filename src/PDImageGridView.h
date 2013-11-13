@@ -24,7 +24,7 @@
 
 #import "PDViewController.h"
 
-@class PDImageListViewController;
+@class PDImageListViewController, PDLibraryImage;
 
 @interface PDImageGridView : NSView
 {
@@ -44,5 +44,11 @@
 @property(nonatomic) NSInteger primarySelection;
 @property(nonatomic, copy) NSIndexSet *selection;
 @property(nonatomic) CGFloat scale;
+
+- (NSRect)boundingRectOfItemAtIndex:(NSInteger)idx;
+
+- (void)scrollToPrimaryAnimated:(BOOL)flag;
+
+- (PDLibraryImage *)imageAtSuperviewPoint:(NSPoint)p;
 
 @end

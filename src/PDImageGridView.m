@@ -197,7 +197,7 @@
   return YES;
 }
 
-- (CGRect)boundingRectOfItemAtIndex:(NSInteger)idx
+- (NSRect)boundingRectOfItemAtIndex:(NSInteger)idx
 {
   NSInteger y = idx / _columns;
   NSInteger x = idx - (y * _columns);
@@ -215,7 +215,7 @@
   return rect;
 }
 
-- (void)scrollToPrimary
+- (void)scrollToPrimaryAnimated:(BOOL)flag
 {
   if (_primarySelection >= 0)
     {
@@ -224,171 +224,45 @@
     }
 }
 
-- (void)mouseDownSelection:(NSEvent *)e
+/* 'p' is in coordinate space of our superview. */
+
+- (PDLibraryImage *)imageAtSuperviewPoint:(NSPoint)p
 {
-  NSMutableIndexSet *sel = nil;
-  NSInteger primary = -1;
-
   CALayer *layer = [self layer];
-
-  NSPoint p = [[self superview] convertPoint:
-	       [e locationInWindow] fromView:nil];
 
   CALayer *p_layer = [layer hitTest:NSPointToCGPoint(p)];
   while (p_layer != nil && ![p_layer isKindOfClass:[PDThumbnailLayer class]])
     p_layer = [p_layer superlayer];
 
   if (p_layer != nil && p_layer != layer)
-    {
-      PDLibraryImage *image = [(PDThumbnailLayer *)p_layer libraryImage];
-      NSInteger idx = [_images indexOfObjectIdenticalTo:image];
-
-      if (idx != NSNotFound)
-	{
-	  unsigned int modifiers = [e modifierFlags];
-
-	  sel = [_selection mutableCopy];
-	  if (sel == nil)
-	    sel = [[NSMutableIndexSet alloc] init];
-
-	  primary = _primarySelection;
-
-	  if (modifiers & NSCommandKeyMask)
-	    {
-	      if (![sel containsIndex:idx])
-		{
-		  [sel addIndex:idx];
-		  primary = idx;
-		}
-	      else
-		[sel removeIndex:idx];
-	    }
-	  else if (modifiers & NSShiftKeyMask)
-	    {
-	      if ([sel count] > 0 && primary >= 0)
-		{
-		  NSInteger i0 = idx < primary ? idx : primary;
-		  NSInteger i1 = idx < primary ? primary : idx;
-		  [sel addIndexesInRange:NSMakeRange(i0, i1 - i0 + 1)];
-		}
-	      else
-		[sel addIndex:idx];
-
-	      primary = idx;
-	    }
-	  else
-	    {
-	      if (![sel containsIndex:idx])
-		{
-		  [sel removeAllIndexes];
-		  [sel addIndex:idx];
-		}
-
-	      primary = idx;
-	    }
-	}
-    }
-
-  [[_controller controller] setSelectedImageIndexes:sel primary:primary];
-
-  [self scrollToPrimary];
-
-  [sel release];
+    return [(PDThumbnailLayer *)p_layer libraryImage];
+  else
+    return nil;
 }
 
 - (void)mouseDown:(NSEvent *)e
 {
   switch ([e clickCount])
     {
+      PDLibraryImage *image;
+
     case 1:
-      [self mouseDownSelection:e];
+      image = [self imageAtSuperviewPoint:
+	       [[self superview] convertPoint:
+		[e locationInWindow] fromView:nil]];
+
+      if (image != nil)
+	[[_controller controller] selectImage:image withEvent:e];
+      else
+	[[_controller controller] clearSelection];
+
+      [self scrollToPrimaryAnimated:YES];
       break;
 
     case 2:
       // FIXME: switch to viewer if selection non-empty
       break;
     }
-}
-
-static NSIndexSet *
-extendSelection(NSEvent *e, NSIndexSet *sel,
-		NSInteger oldIdx, NSInteger newIdx)
-{
-  if (!([e modifierFlags] & NSShiftKeyMask))
-    {
-      if (![sel containsIndex:newIdx])
-	sel = [NSIndexSet indexSetWithIndex:newIdx];
-    }
-  else
-    {
-      NSMutableIndexSet *set = [[sel mutableCopy] autorelease];
-      NSInteger i0 = oldIdx < newIdx ? oldIdx : newIdx;
-      NSInteger i1 = oldIdx < newIdx ? newIdx : oldIdx;
-      [set addIndexesInRange:NSMakeRange(i0, i1 - i0 + 1)];
-      sel = set;
-    }
-
-  return sel;
-}
-
-- (void)keyDown:(NSEvent *)e movePrimaryHorizontally:(NSInteger)delta
-{
-  NSInteger count = [_images count];
-  if (count == 0)
-    return;
-
-  NSInteger idx = _primarySelection;
-
-  if (idx >= 0)
-    {
-      idx = idx + delta;
-      if (idx < 0)
-	idx = 0;
-      else if (idx >= count)
-	idx = count - 1;
-    }
-  else
-    idx = delta > 0 ? 0 : count - 1;
-
-  NSIndexSet *sel = extendSelection(e, _selection, _primarySelection, idx);
-
-  [[_controller controller] setSelectedImageIndexes:sel primary:idx];
-
-  [self scrollToPrimary];
-}
-
-- (void)keyDown:(NSEvent *)e movePrimaryVertically:(NSInteger)delta
-{
-  NSInteger count = [_images count];
-  if (count == 0)
-    return;
-
-  NSInteger idx = _primarySelection;
-
-  if (idx >= 0)
-    {
-      NSInteger y = idx / _columns;
-      NSInteger x = idx - (y * _columns);
-
-      y = y + delta;
-
-      if (y < 0)
-	y = 0;
-      else if (y > _rows)
-	y = _rows;
-
-      idx = y * _columns + x;
-      if (idx >= count)
-	idx -= _columns;
-    }
-  else
-    idx = delta > 0 ? 0 : count - 1;
-    
-  NSIndexSet *sel = extendSelection(e, _selection, _primarySelection, idx);
-
-  [[_controller controller] setSelectedImageIndexes:sel primary:idx];
-
-  [self scrollToPrimary];
 }
 
 - (BOOL)acceptsFirstResponder
@@ -404,20 +278,30 @@ extendSelection(NSEvent *e, NSIndexSet *sel,
 
   switch ([chars characterAtIndex:0])
     {
-    case NSUpArrowFunctionKey:
-      [self keyDown:e movePrimaryVertically:-1];
-      break;
-
-    case NSDownArrowFunctionKey:
-      [self keyDown:e movePrimaryVertically:1];
-      break;
-
     case NSLeftArrowFunctionKey:
-      [self keyDown:e movePrimaryHorizontally:-1];
+      [[_controller controller] movePrimarySelectionRight:-1
+       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+      [self scrollToPrimaryAnimated:YES];
       break;
 
     case NSRightArrowFunctionKey:
-      [self keyDown:e movePrimaryHorizontally:1];
+      [[_controller controller] movePrimarySelectionRight:1
+       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+      [self scrollToPrimaryAnimated:YES];
+      break;
+
+    case NSUpArrowFunctionKey:
+      [[_controller controller] movePrimarySelectionDown:-1
+       rows:_rows columns:_columns
+       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+      [self scrollToPrimaryAnimated:YES];
+      break;
+
+    case NSDownArrowFunctionKey:
+      [[_controller controller] movePrimarySelectionDown:1
+       rows:_rows columns:_columns
+       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+      [self scrollToPrimaryAnimated:YES];
       break;
     }
 }

@@ -368,6 +368,147 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
     }
 }
 
+- (void)clearSelection
+{
+  [self setSelectedImageIndexes:[NSIndexSet indexSet] primary:-1];
+}
+
+- (void)selectImage:(PDLibraryImage *)image withEvent:(NSEvent *)e;
+{
+  NSInteger idx = [_imageList indexOfObjectIdenticalTo:image];
+
+  if (idx != NSNotFound)
+    {
+      NSMutableIndexSet *sel = [_selectedImageIndexes mutableCopy];
+      if (sel == nil)
+	sel = [[NSMutableIndexSet alloc] init];
+
+      NSInteger primary = _primarySelectionIndex;
+
+      unsigned int modifiers = [e modifierFlags];
+
+      if (modifiers & NSCommandKeyMask)
+	{
+	  if (![sel containsIndex:idx])
+	    {
+	      [sel addIndex:idx];
+	      primary = idx;
+	    }
+	  else
+	    [sel removeIndex:idx];
+	}
+      else if (modifiers & NSShiftKeyMask)
+	{
+	  if ([sel count] > 0 && primary >= 0)
+	    {
+	      NSInteger i0 = idx < primary ? idx : primary;
+	      NSInteger i1 = idx < primary ? primary : idx;
+	      [sel addIndexesInRange:NSMakeRange(i0, i1 - i0 + 1)];
+	    }
+	  else
+	    [sel addIndex:idx];
+
+	  primary = idx;
+	}
+      else
+	{
+	  if (![sel containsIndex:idx])
+	    {
+	      [sel removeAllIndexes];
+	      [sel addIndex:idx];
+	    }
+
+	  primary = idx;
+	}
+
+      [self setSelectedImageIndexes:sel primary:primary];
+      [sel release];
+    }
+  else
+    [self clearSelection];
+}
+
+static NSIndexSet *
+extendSelection(NSIndexSet *sel, NSInteger oldIdx,
+		NSInteger newIdx, BOOL byExtending)
+{
+  if (!byExtending)
+    {
+      if (![sel containsIndex:newIdx])
+	sel = [NSIndexSet indexSetWithIndex:newIdx];
+    }
+  else
+    {
+      NSMutableIndexSet *set = [[sel mutableCopy] autorelease];
+      NSInteger i0 = oldIdx < newIdx ? oldIdx : newIdx;
+      NSInteger i1 = oldIdx < newIdx ? newIdx : oldIdx;
+      [set addIndexesInRange:NSMakeRange(i0, i1 - i0 + 1)];
+      sel = set;
+    }
+
+  return sel;
+}
+
+- (void)movePrimarySelectionRight:(NSInteger)delta
+    byExtendingSelection:(BOOL)extend
+{
+  NSInteger count = [_imageList count];
+  if (count == 0)
+    return;
+
+  NSInteger idx = _primarySelectionIndex;
+
+  if (idx >= 0)
+    {
+      idx = idx + delta;
+      if (idx < 0)
+	idx = 0;
+      else if (idx >= count)
+	idx = count - 1;
+    }
+  else
+    idx = delta > 0 ? 0 : count - 1;
+
+  NSIndexSet *sel = extendSelection(_selectedImageIndexes,
+				    _primarySelectionIndex, idx, extend);
+
+  [self setSelectedImageIndexes:sel primary:idx];
+}
+
+- (void)movePrimarySelectionDown:(NSInteger)delta rows:(NSInteger)rows
+    columns:(NSInteger)cols byExtendingSelection:(BOOL)extend
+{
+  NSInteger count = [_imageList count];
+  if (count == 0)
+    return;
+
+  NSInteger idx = _primarySelectionIndex;
+
+  if (idx >= 0)
+    {
+      NSInteger y = idx / cols;
+      NSInteger x = idx - (y * cols);
+
+      y = y + delta;
+
+      if (y < 0)
+	y = 0;
+      else if (y > rows)
+	y = rows;
+
+      idx = y * cols + x;
+      if (idx >= count)
+	idx -= cols;
+    }
+  else
+    idx = delta > 0 ? 0 : count - 1;
+    
+  NSIndexSet *sel = extendSelection(_selectedImageIndexes,
+				    _primarySelectionIndex, idx, extend);
+
+  [self setSelectedImageIndexes:sel primary:idx];
+}
+
 - (IBAction)setSidebarModeAction:(id)sender
 {
   if (sender == _sidebarControl)
