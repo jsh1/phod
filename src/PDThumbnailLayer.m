@@ -204,6 +204,7 @@ enum
 				       + bounds.size.height + TITLE_SPACING)];
 
   CGSize text_size = [title_layer preferredFrameSize];
+  text_size.width = MIN(text_size.width, bounds.size.width);
   [title_layer setBounds:CGRectMake(0, 0, text_size.width, text_size.height)];
 
   if (_selected)
