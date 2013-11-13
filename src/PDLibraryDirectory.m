@@ -153,7 +153,8 @@
 
 - (NSString *)titleString
 {
-  return [_path lastPathComponent];
+  return [[_path lastPathComponent]
+	  stringByReplacingOccurrencesOfString:@":" withString:@"/"];
 }
 
 - (BOOL)isExpandable
