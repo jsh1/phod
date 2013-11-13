@@ -43,6 +43,7 @@
 
   NSArray *_images;
   NSIndexSet *_selection;
+  NSInteger _lastClickIndex;
   CGFloat _scale;
 
   CGFloat _size;

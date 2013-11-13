@@ -29,11 +29,14 @@
 @interface PDThumbnailLayer : CALayer <PDLibraryImageThumbnail>
 {
   PDLibraryImage *_libraryImage;
+  BOOL _selected;
   BOOL _addedThumbnail;
   CGSize _thumbnailSize;
 }
 
 @property(nonatomic, retain) PDLibraryImage *libraryImage;
+
+@property(nonatomic, getter=isSelected) BOOL selected;
 
 - (void)invalidate;
 

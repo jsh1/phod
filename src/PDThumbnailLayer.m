@@ -30,6 +30,9 @@
 #import <QuartzCore/QuartzCore.h>
 
 #define TITLE_SPACING 4
+#define SELECTION_INSET -8
+#define SELECTION_WIDTH 4
+#define SELECTION_RADIUS 6
 
 CA_HIDDEN
 @interface PDThumbnailImageLayer : CALayer
@@ -39,10 +42,15 @@ CA_HIDDEN
 @interface PDThumbnailTitleLayer : CATextLayer
 @end
 
+CA_HIDDEN
+@interface PDThumbnailSelectionLayer : CATextLayer
+@end
+
 enum
 {
   IMAGE_SUBLAYER,
-  TITLE_SUBLAYER
+  TITLE_SUBLAYER,
+  SELECTION_SUBLAYER,
 };
 
 @implementation PDThumbnailLayer
@@ -72,6 +80,20 @@ enum
   _libraryImage = [src->_libraryImage retain];
 
   return self;
+}
+
+- (void)setSelected:(BOOL)flag
+{
+  if (_selected != flag)
+    {
+      _selected = flag;
+      [self setNeedsLayout];
+    }
+}
+
+- (BOOL)isSelected
+{
+  return _selected;
 }
 
 - (void)invalidate
@@ -120,13 +142,19 @@ enum
 
   if ([[self sublayers] count] == 0)
     {
+      id delegate = [self delegate];
+
       CALayer *image_layer = [PDThumbnailImageLayer layer];
-      [image_layer setDelegate:[self delegate]];
+      [image_layer setDelegate:delegate];
       [self addSublayer:image_layer];
 
       CALayer *title_layer = [PDThumbnailTitleLayer layer];
-      [title_layer setDelegate:[self delegate]];
+      [title_layer setDelegate:delegate];
       [self addSublayer:title_layer];
+
+      CALayer *selection_layer = [PDThumbnailSelectionLayer layer];
+      [selection_layer setDelegate:delegate];
+      [self addSublayer:selection_layer];
     }
 
   CGRect bounds = [self bounds];
@@ -150,6 +178,7 @@ enum
 
   CALayer *image_layer = [sublayers objectAtIndex:IMAGE_SUBLAYER];
   CATextLayer *title_layer = [sublayers objectAtIndex:TITLE_SUBLAYER];
+  CALayer *selection_layer = [sublayers objectAtIndex:SELECTION_SUBLAYER];
 
   [image_layer setFrame:bounds];
 
@@ -159,6 +188,16 @@ enum
 
   CGSize text_size = [title_layer preferredFrameSize];
   [title_layer setBounds:CGRectMake(0, 0, text_size.width, text_size.height)];
+
+  if (_selected)
+    {
+      CGRect selR = CGRectUnion([image_layer frame], [title_layer frame]);
+      [selection_layer setFrame:
+       CGRectInset(selR, SELECTION_INSET, SELECTION_INSET)];
+      [selection_layer setHidden:NO];
+    }
+  else
+    [selection_layer setHidden:YES];
 }
 
 - (CGSize)thumbnailSize
@@ -225,12 +264,28 @@ enum
 {
   if ([key isEqualToString:@"font"])
     return [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]];
-  if ([key isEqualToString:@"fontSize"])
+  else if ([key isEqualToString:@"fontSize"])
     return [NSNumber numberWithDouble:[NSFont smallSystemFontSize]];
   else if ([key isEqualToString:@"truncationMode"])
     return @"start";
   else if ([key isEqualToString:@"anchorPoint"])
     return [NSValue valueWithPoint:NSZeroPoint];
+  else
+    return [super defaultValueForKey:key];
+}
+
+@end
+
+@implementation PDThumbnailSelectionLayer
+
++ (id)defaultValueForKey:(NSString *)key
+{
+  if ([key isEqualToString:@"borderWidth"])
+    return [NSNumber numberWithDouble:SELECTION_WIDTH];
+  else if ([key isEqualToString:@"borderColor"])
+    return (id) [[PDColor whiteColor] CGColor];
+  else if ([key isEqualToString:@"cornerRadius"])
+    return [NSNumber numberWithDouble:SELECTION_RADIUS];
   else
     return [super defaultValueForKey:key];
 }

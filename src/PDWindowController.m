@@ -280,6 +280,9 @@ contentClassForMode(enum PDContentMode mode)
 
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDImageListDidChange object:self];
+
+      if ([_selectedImageIndexes count] != 0)
+	[self setSelectedImageIndexes:nil];
     }
 }
 

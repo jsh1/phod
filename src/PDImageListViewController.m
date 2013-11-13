@@ -115,6 +115,21 @@
 
 @implementation PDImageGridView
 
+@synthesize images = _images;
+@synthesize selection = _selection;
+@synthesize scale = _scale;
+
+- (id)init
+{
+  self = [super init];
+  if (self == nil)
+    return nil;
+
+  _lastClickIndex = -1;
+
+  return self;
+}
+
 - (id)initWithFrame:(NSRect)frame
 {
   self = [super initWithFrame:frame];
@@ -227,6 +242,8 @@
 
 	  [sublayer setFrame:CGRectMake(px, py, tw, th)];
 
+	  [sublayer setSelected:[_selection containsIndex:idx]];
+
 	  [new_sublayers addObject:sublayer];
 	}
     }
@@ -251,6 +268,83 @@
 - (BOOL)isFlipped
 {
   return YES;
+}
+
+- (void)selectionEvent:(NSEvent *)e
+{
+  NSMutableIndexSet *sel = nil;
+
+  NSInteger lastIdx = _lastClickIndex;
+  _lastClickIndex = -1;
+
+  CALayer *layer = [self layer];
+
+  NSPoint p = [[self superview] convertPoint:
+	       [e locationInWindow] fromView:nil];
+
+  CALayer *p_layer = [layer hitTest:NSPointToCGPoint(p)];
+  while (p_layer != nil && ![p_layer isKindOfClass:[PDThumbnailLayer class]])
+    p_layer = [p_layer superlayer];
+
+  if (p_layer != nil && p_layer != layer)
+    {
+      PDLibraryImage *image = [(PDThumbnailLayer *)p_layer libraryImage];
+      NSInteger idx = [_images indexOfObjectIdenticalTo:image];
+
+      if (idx != NSNotFound)
+	{
+	  unsigned int modifiers = [e modifierFlags];
+	  sel = [_selection mutableCopy];
+	  if (sel == nil)
+	    sel = [[NSMutableIndexSet alloc] init];
+
+	  if (modifiers & NSCommandKeyMask)
+	    {
+	      if (![sel containsIndex:idx])
+		[sel addIndex:idx];
+	      else
+		[sel removeIndex:idx];
+	    }
+	  else if (modifiers & NSShiftKeyMask)
+	    {
+	      if ([sel count] > 0 && lastIdx >= 0)
+		{
+		  NSInteger i0 = idx < lastIdx ? idx : lastIdx;
+		  NSInteger i1 = idx < lastIdx ? lastIdx : idx;
+		  [sel addIndexesInRange:NSMakeRange(i0, i1 - i0 + 1)];
+		}
+	      else
+		[sel addIndex:idx];
+	    }
+	  else
+	    {
+	      if (![sel containsIndex:idx])
+		{
+		  [sel removeAllIndexes];
+		  [sel addIndex:idx];
+		}
+	    }
+
+	  _lastClickIndex = idx;
+	}
+    }
+
+  [[_controller controller] setSelectedImageIndexes:sel];
+  [sel release];
+}
+
+- (void)mouseDown:(NSEvent *)e
+{
+  switch ([e clickCount])
+    {
+    case 1:
+      [self selectionEvent:e];
+      break;
+
+    case 2:
+      // FIXME: switch to viewer if selection non-empty
+      break;
+    }
 }
 
 @end
