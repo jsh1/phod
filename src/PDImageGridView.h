@@ -24,15 +24,25 @@
 
 #import "PDViewController.h"
 
-@class PDImageGridView;
+@class PDImageListViewController;
 
-@interface PDImageListViewController : PDViewController
+@interface PDImageGridView : NSView
 {
-  IBOutlet NSScrollView *_scrollView;
-  IBOutlet PDImageGridView *_gridView;
-  IBOutlet NSSlider *_scaleSlider;
+  IBOutlet PDImageListViewController *_controller;
+
+  NSArray *_images;
+  NSInteger _primarySelection;
+  NSIndexSet *_selection;
+  CGFloat _scale;
+
+  CGFloat _size;
+  NSInteger _columns;
+  NSInteger _rows;
 }
 
-- (IBAction)controlAction:(id)sender;
+@property(nonatomic, copy) NSArray *images;
+@property(nonatomic) NSInteger primarySelection;
+@property(nonatomic, copy) NSIndexSet *selection;
+@property(nonatomic) CGFloat scale;
 
 @end
