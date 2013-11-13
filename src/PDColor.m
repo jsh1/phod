@@ -129,7 +129,7 @@
   static NSColor *color;
 
   if (color == nil)
-    color = [[NSColor colorWithCalibratedHue:BG_HUE saturation:.03 brightness:.5 alpha:1] retain];
+    color = [[NSColor colorWithCalibratedHue:BG_HUE saturation:.03 brightness:.4 alpha:1] retain];
 
   return color;
 }
