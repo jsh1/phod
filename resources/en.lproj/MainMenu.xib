@@ -602,6 +602,50 @@
                 <menuItem title="View" id="295">
                     <menu key="submenu" title="View" id="296">
                         <items>
+                            <menuItem title="Browser" tag="1" id="Sav-af-xPd">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="setContentModeAction:" target="-1" id="4Zi-Yf-SGo"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Viewer" tag="2" id="ZEw-mf-bgP">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="setContentModeAction:" target="-1" id="bQV-pX-xkp"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Cycle View Mode" keyEquivalent="v" id="Sk3-xV-Tar">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="cycleContentModeAction:" target="-1" id="HdI-Yp-7u8"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="Mxw-Ys-7Qy"/>
+                            <menuItem title="Library" tag="1" keyEquivalent="p" id="vlD-5w-38e">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                <connections>
+                                    <action selector="setSidebarModeAction:" target="-1" id="ZEY-iX-6ZG"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Image Info" tag="2" keyEquivalent="d" id="Xbh-O2-0bN">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                <connections>
+                                    <action selector="setSidebarModeAction:" target="-1" id="zH3-4e-eiY"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Inspector" tag="3" keyEquivalent="a" id="e1K-ph-JSl">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                <connections>
+                                    <action selector="setSidebarModeAction:" target="-1" id="g5U-0J-J99"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Cycle Sidebar Mode" keyEquivalent="w" id="W85-Cj-Cyk">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="cycleSidebarModeAction:" target="-1" id="wkG-7T-z4o"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="qQS-hS-yJa"/>
                             <menuItem title="Show Toolbar" keyEquivalent="t" id="297">
                                 <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
@@ -614,6 +658,9 @@
                                 </connections>
                             </menuItem>
                         </items>
+                        <connections>
+                            <outlet property="delegate" destination="494" id="I4c-QP-8XB"/>
+                        </connections>
                     </menu>
                 </menuItem>
                 <menuItem title="Window" id="19">
@@ -656,6 +703,7 @@
         </menu>
         <customObject id="494" customClass="PDAppDelegate">
             <connections>
+                <outlet property="_viewMenu" destination="296" id="X41-F2-AIt"/>
                 <outlet property="_windowController" destination="yai-mr-HWc" id="r0t-6v-zS7"/>
             </connections>
         </customObject>

@@ -25,7 +25,6 @@
 #import "PDImageGridView.h"
 
 #import "PDAppKitExtensions.h"
-#import "PDColor.h"
 #import "PDImageListViewController.h"
 #import "PDLibraryImage.h"
 #import "PDThumbnailLayer.h"
@@ -45,17 +44,6 @@
 @synthesize selection = _selection;
 @synthesize scale = _scale;
 
-- (id)init
-{
-  self = [super init];
-  if (self == nil)
-    return nil;
-
-  _primarySelection = -1;
-
-  return self;
-}
-
 - (id)initWithFrame:(NSRect)frame
 {
   self = [super initWithFrame:frame];
@@ -63,6 +51,7 @@
     return nil;
 
   _scale = .4;
+  _primarySelection = -1;
 
   return self;
 }
@@ -260,7 +249,8 @@
       break;
 
     case 2:
-      // FIXME: switch to viewer if selection non-empty
+      if (_primarySelection >= 0)
+	[[_controller controller] setContentMode:PDContentMode_Image];
       break;
     }
 }
@@ -303,6 +293,9 @@
        byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
       [self scrollToPrimaryAnimated:YES];
       break;
+
+    default:
+      [super keyDown:e];
     }
 }
 
@@ -318,7 +311,6 @@
 
   [[_controller controller] setSelectedImageIndexes:
    [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, count)] primary:idx];
-  
 }
 
 - (void)deselectAll:(id)sender

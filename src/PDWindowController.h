@@ -85,6 +85,9 @@ enum PDContentMode
 - (void)applySavedWindowState;
 
 - (IBAction)setSidebarModeAction:(id)sender;
+- (IBAction)cycleSidebarModeAction:(id)sender;
+
 - (IBAction)setContentModeAction:(id)sender;
+- (IBAction)cycleContentModeAction:(id)sender;
 
 @end

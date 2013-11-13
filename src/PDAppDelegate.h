@@ -29,6 +29,7 @@
 @interface PDAppDelegate : NSObject <NSApplicationDelegate>
 {
   IBOutlet PDWindowController *_windowController;
+  IBOutlet NSMenu *_viewMenu;
 }
 
 @property(readonly) PDWindowController *windowController;

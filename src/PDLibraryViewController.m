@@ -24,7 +24,6 @@
 
 #import "PDLibraryViewController.h"
 
-#import "PDColor.h"
 #import "PDLibraryDirectory.h"
 #import "PDLibraryImage.h"
 #import "PDLibraryItem.h"

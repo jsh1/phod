@@ -22,34 +22,17 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDImageViewController.h"
+#import "PDViewController.h"
 
-#import "PDColor.h"
-#import "PDWindowController.h"
+@class PDImageViewController, PDLibraryImage;
 
-@implementation PDImageViewController
-
-+ (NSString *)viewNibName
+@interface PDImageView : NSView
 {
-  return @"PDImageView";
+  IBOutlet PDImageViewController *_controller;
+
+  PDLibraryImage *_image;
 }
 
-- (id)initWithController:(PDWindowController *)controller
-{
-  self = [super initWithController:controller];
-  if (self == nil)
-    return nil;
-
-  return self;
-}
-
-- (void)viewDidLoad
-{
-  [super viewDidLoad];
-}
-
-- (IBAction)controlAction:(id)sender
-{
-}
+@property(nonatomic, retain) PDLibraryImage *image;
 
 @end

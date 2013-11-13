@@ -44,9 +44,9 @@
                                         <segmentedCell key="cell" controlSize="small" alignment="left" style="smallSquare" trackingMode="selectOne" id="aEm-Xz-BsO">
                                             <font key="font" metaFont="smallSystem"/>
                                             <segments>
-                                                <segment label="Library" selected="YES"/>
-                                                <segment label="Info" tag="1"/>
-                                                <segment label="Adjustments"/>
+                                                <segment label="Library" selected="YES" tag="1"/>
+                                                <segment label="Info" tag="2"/>
+                                                <segment label="Adjustments" tag="3"/>
                                             </segments>
                                         </segmentedCell>
                                         <connections>

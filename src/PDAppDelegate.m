@@ -65,4 +65,24 @@
   [[self windowController] showWindow:sender];
 }
 
+// NSMenuDelegate methods
+
+- (void)menuNeedsUpdate:(NSMenu *)menu
+{
+  if (menu == _viewMenu)
+    {
+      NSInteger sidebarMode = [_windowController sidebarMode];
+      NSInteger contentMode = [_windowController contentMode];
+
+      for (NSMenuItem *item in [menu itemArray])
+	{
+	  SEL sel = [item action];
+	  if (sel == @selector(setSidebarModeAction:))
+	    [item setState:sidebarMode == [item tag]];
+	  else if (sel == @selector(setContentModeAction:))
+	    [item setState:contentMode == [item tag]];
+	}
+    }
+}
+
 @end

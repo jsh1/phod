@@ -24,5 +24,13 @@
 
 #import "PDViewController.h"
 
+@class PDImageView;
+
 @interface PDImageViewController : PDViewController
+{
+  IBOutlet PDImageView *_imageView;
+}
+  
+- (IBAction)controlAction:(id)sender;
+
 @end

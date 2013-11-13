@@ -238,8 +238,7 @@ contentClassForMode(enum PDContentMode mode)
       controller = [self viewControllerWithClass:cls];
       [controller addToContainerView:_sidebarView];
 
-      [_sidebarControl setSelectedSegment:
-       _sidebarMode - PDSidebarMode_Library];
+      [_sidebarControl selectSegmentWithTag:_sidebarMode];
     }
 }
 
@@ -513,16 +512,32 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 {
   if (sender == _sidebarControl)
     {
-      [self setSidebarMode:
-       PDSidebarMode_Library + [_sidebarControl selectedSegment]];
+      [self setSidebarMode:[[_sidebarControl cell] tagForSegment:
+			    [_sidebarControl selectedSegment]]];
     }
   else
     [self setSidebarMode:[sender tag]];
 }
 
+- (IBAction)cycleSidebarModeAction:(id)sender
+{
+  NSInteger idx = _sidebarMode + 1;
+  if (idx > PDSidebarMode_Adjustments)
+    idx = PDSidebarMode_Library;
+  [self setSidebarMode:idx];
+}
+
 - (IBAction)setContentModeAction:(id)sender
 {
   [self setContentMode:[sender tag]];
+}
+
+- (IBAction)cycleContentModeAction:(id)sender
+{
+  NSInteger idx = _contentMode + 1;
+  if (idx > PDContentMode_Image)
+    idx = PDContentMode_List;
+  [self setContentMode:idx];
 }
 
 // NSSplitViewDelegate methods
