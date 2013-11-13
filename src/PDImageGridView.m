@@ -263,40 +263,40 @@
 - (void)keyDown:(NSEvent *)e
 {
   NSString *chars = [e charactersIgnoringModifiers];
-  if ([chars length] < 1)
-    return;
 
-  switch ([chars characterAtIndex:0])
+  if ([chars length] == 1)
     {
-    case NSLeftArrowFunctionKey:
-      [[_controller controller] movePrimarySelectionRight:-1
-       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
-      [self scrollToPrimaryAnimated:YES];
-      break;
+      switch ([chars characterAtIndex:0])
+	{
+	case NSLeftArrowFunctionKey:
+	  [[_controller controller] movePrimarySelectionRight:-1
+	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+	  [self scrollToPrimaryAnimated:YES];
+	  return;
 
-    case NSRightArrowFunctionKey:
-      [[_controller controller] movePrimarySelectionRight:1
-       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
-      [self scrollToPrimaryAnimated:YES];
-      break;
+	case NSRightArrowFunctionKey:
+	  [[_controller controller] movePrimarySelectionRight:1
+	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+	  [self scrollToPrimaryAnimated:YES];
+	  return;
 
-    case NSUpArrowFunctionKey:
-      [[_controller controller] movePrimarySelectionDown:-1
-       rows:_rows columns:_columns
-       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
-      [self scrollToPrimaryAnimated:YES];
-      break;
+	case NSUpArrowFunctionKey:
+	  [[_controller controller] movePrimarySelectionDown:-1
+	   rows:_rows columns:_columns
+	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+	  [self scrollToPrimaryAnimated:YES];
+	  return;
 
-    case NSDownArrowFunctionKey:
-      [[_controller controller] movePrimarySelectionDown:1
-       rows:_rows columns:_columns
-       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
-      [self scrollToPrimaryAnimated:YES];
-      break;
-
-    default:
-      [super keyDown:e];
+	case NSDownArrowFunctionKey:
+	  [[_controller controller] movePrimarySelectionDown:1
+	   rows:_rows columns:_columns
+	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+	  [self scrollToPrimaryAnimated:YES];
+	  return;
+	}
     }
+
+  [super keyDown:e];
 }
 
 - (void)selectAll:(id)sender

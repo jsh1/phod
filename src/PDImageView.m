@@ -71,38 +71,38 @@
 - (void)keyDown:(NSEvent *)e
 {
   NSString *chars = [e charactersIgnoringModifiers];
-  if ([chars length] < 1)
-    return;
 
-  switch ([chars characterAtIndex:0])
+  if ([chars length] == 1)
     {
-    case NSLeftArrowFunctionKey:
-      [[_controller controller] movePrimarySelectionRight:-1
-       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
-      break;
+      switch ([chars characterAtIndex:0])
+	{
+	case NSLeftArrowFunctionKey:
+	  [[_controller controller] movePrimarySelectionRight:-1
+	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+	  return;
 
-    case NSRightArrowFunctionKey:
-      [[_controller controller] movePrimarySelectionRight:1
-       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
-      break;
+	case NSRightArrowFunctionKey:
+	  [[_controller controller] movePrimarySelectionRight:1
+	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+	  return;
 
 #if 0
-    case NSUpArrowFunctionKey:
-      [[_controller controller] movePrimarySelectionDown:-1
-       rows:_rows columns:_columns
-       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
-      break;
+	case NSUpArrowFunctionKey:
+	  [[_controller controller] movePrimarySelectionDown:-1
+	   rows:_rows columns:_columns
+	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+	  return;
 
-    case NSDownArrowFunctionKey:
-      [[_controller controller] movePrimarySelectionDown:1
-       rows:_rows columns:_columns
-       byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
-      break;
+	case NSDownArrowFunctionKey:
+	  [[_controller controller] movePrimarySelectionDown:1
+	   rows:_rows columns:_columns
+	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
+	  return;
 #endif
-
-    default:
-      [super keyDown:e];
+	}
     }
+
+  [super keyDown:e];
 }
 
 @end
