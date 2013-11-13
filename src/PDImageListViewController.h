@@ -42,8 +42,8 @@
   IBOutlet PDImageListViewController *_controller;
 
   NSArray *_images;
+  NSInteger _primarySelection;
   NSIndexSet *_selection;
-  NSInteger _lastClickIndex;
   CGFloat _scale;
 
   CGFloat _size;
@@ -52,6 +52,7 @@
 }
 
 @property(nonatomic, copy) NSArray *images;
+@property(nonatomic) NSInteger primarySelection;
 @property(nonatomic, copy) NSIndexSet *selection;
 @property(nonatomic) CGFloat scale;
 

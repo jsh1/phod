@@ -30,6 +30,7 @@
 {
   PDLibraryImage *_libraryImage;
   BOOL _selected;
+  BOOL _primary;
   BOOL _addedThumbnail;
   CGSize _thumbnailSize;
 }
@@ -37,6 +38,7 @@
 @property(nonatomic, retain) PDLibraryImage *libraryImage;
 
 @property(nonatomic, getter=isSelected) BOOL selected;
+@property(nonatomic, getter=isPrimary) BOOL primary;
 
 - (void)invalidate;
 

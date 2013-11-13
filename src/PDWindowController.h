@@ -25,7 +25,7 @@
 #import <AppKit/AppKit.h>
 
 extern NSString *const PDImageListDidChange;
-extern NSString *const PDSelectedImageIndexesDidChange;
+extern NSString *const PDSelectionDidChange;
 
 enum PDSidebarMode
 {
@@ -58,6 +58,7 @@ enum PDContentMode
   NSInteger _contentMode;
 
   NSArray *_imageList;
+  NSInteger _primarySelectionIndex;
   NSIndexSet *_selectedImageIndexes;
 }
 
@@ -65,7 +66,10 @@ enum PDContentMode
 @property(nonatomic) NSInteger contentMode;
 
 @property(nonatomic, copy) NSArray *imageList;
+@property NSInteger primarySelectionIndex;
 @property(nonatomic, copy) NSIndexSet *selectedImageIndexes;
+
+- (void)setSelectedImageIndexes:(NSIndexSet *)set primary:(NSInteger)idx;
 
 - (PDViewController *)viewControllerWithClass:(Class)cls;
 

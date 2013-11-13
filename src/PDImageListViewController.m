@@ -33,6 +33,7 @@
 #define GRID_SPACING 30
 #define IMAGE_MIN_SIZE 80
 #define IMAGE_MAX_SIZE 300
+#define TITLE_HEIGHT 25
 
 @implementation PDImageListViewController
 
@@ -51,8 +52,8 @@
    addObserver:self selector:@selector(imageListDidChange:)
    name:PDImageListDidChange object:_controller];
   [[NSNotificationCenter defaultCenter]
-   addObserver:self selector:@selector(selectedImageIndexesDidChange:)
-   name:PDSelectedImageIndexesDidChange object:_controller];
+   addObserver:self selector:@selector(selectionDidChange:)
+   name:PDSelectionDidChange object:_controller];
 
   return self;
 }
@@ -84,8 +85,9 @@
   [_gridView setNeedsDisplay:YES];
 }
 
-- (void)selectedImageIndexesDidChange:(NSNotification *)note
+- (void)selectionDidChange:(NSNotification *)note
 {
+  [_gridView setPrimarySelection:[_controller primarySelectionIndex]];
   [_gridView setSelection:[_controller selectedImageIndexes]];
   [_gridView setNeedsDisplay:YES];
 }
@@ -116,6 +118,7 @@
 @implementation PDImageGridView
 
 @synthesize images = _images;
+@synthesize primarySelection = _primarySelection;
 @synthesize selection = _selection;
 @synthesize scale = _scale;
 
@@ -125,7 +128,7 @@
   if (self == nil)
     return nil;
 
-  _lastClickIndex = -1;
+  _primarySelection = -1;
 
   return self;
 }
@@ -158,7 +161,7 @@
   _size = floor((width - GRID_SPACING * (_columns - 1)) / _columns);
 
   CGFloat height = ceil(GRID_MARGIN*2 + _size * _rows
-			+ GRID_SPACING * (_rows - 1));
+			+ GRID_SPACING * (_rows - 1) + TITLE_HEIGHT);
 
   if (height != frame.size.height)
     {
@@ -242,6 +245,7 @@
 
 	  [sublayer setFrame:CGRectMake(px, py, tw, th)];
 
+	  [sublayer setPrimary:_primarySelection == idx];
 	  [sublayer setSelected:[_selection containsIndex:idx]];
 
 	  [new_sublayers addObject:sublayer];
@@ -270,12 +274,35 @@
   return YES;
 }
 
-- (void)selectionEvent:(NSEvent *)e
+- (CGRect)boundingRectOfItemAtIndex:(NSInteger)idx
+{
+  NSInteger y = idx / _columns;
+  NSInteger x = idx - (y * _columns);
+
+  NSRect bounds = [self bounds];
+
+  NSRect rect;
+  rect.origin.x = bounds.origin.x + GRID_MARGIN + (_size + GRID_SPACING) * x;
+  rect.origin.y = bounds.origin.y + GRID_MARGIN + (_size + GRID_SPACING) * y;
+  rect.size.width = _size;
+  rect.size.height = _size + TITLE_HEIGHT;
+
+  return rect;
+}
+
+- (void)scrollToPrimary
+{
+  if (_primarySelection >= 0)
+    {
+      [self scrollRectToVisible:
+       [self boundingRectOfItemAtIndex:_primarySelection]];
+    }
+}
+
+- (void)mouseDownSelection:(NSEvent *)e
 {
   NSMutableIndexSet *sel = nil;
-
-  NSInteger lastIdx = _lastClickIndex;
-  _lastClickIndex = -1;
+  NSInteger primary = -1;
 
   CALayer *layer = [self layer];
 
@@ -294,27 +321,35 @@
       if (idx != NSNotFound)
 	{
 	  unsigned int modifiers = [e modifierFlags];
+
 	  sel = [_selection mutableCopy];
 	  if (sel == nil)
 	    sel = [[NSMutableIndexSet alloc] init];
 
+	  primary = _primarySelection;
+
 	  if (modifiers & NSCommandKeyMask)
 	    {
 	      if (![sel containsIndex:idx])
-		[sel addIndex:idx];
+		{
+		  [sel addIndex:idx];
+		  primary = idx;
+		}
 	      else
 		[sel removeIndex:idx];
 	    }
 	  else if (modifiers & NSShiftKeyMask)
 	    {
-	      if ([sel count] > 0 && lastIdx >= 0)
+	      if ([sel count] > 0 && primary >= 0)
 		{
-		  NSInteger i0 = idx < lastIdx ? idx : lastIdx;
-		  NSInteger i1 = idx < lastIdx ? lastIdx : idx;
+		  NSInteger i0 = idx < primary ? idx : primary;
+		  NSInteger i1 = idx < primary ? primary : idx;
 		  [sel addIndexesInRange:NSMakeRange(i0, i1 - i0 + 1)];
 		}
 	      else
 		[sel addIndex:idx];
+
+	      primary = idx;
 	    }
 	  else
 	    {
@@ -323,13 +358,14 @@
 		  [sel removeAllIndexes];
 		  [sel addIndex:idx];
 		}
-	    }
 
-	  _lastClickIndex = idx;
+	      primary = idx;
+	    }
 	}
     }
 
-  [[_controller controller] setSelectedImageIndexes:sel];
+  [[_controller controller] setSelectedImageIndexes:sel primary:primary];
+
   [sel release];
 }
 
@@ -338,13 +374,146 @@
   switch ([e clickCount])
     {
     case 1:
-      [self selectionEvent:e];
+      [self mouseDownSelection:e];
       break;
 
     case 2:
       // FIXME: switch to viewer if selection non-empty
       break;
     }
+}
+
+static NSIndexSet *
+extendSelection(NSEvent *e, NSIndexSet *sel,
+		NSInteger oldIdx, NSInteger newIdx)
+{
+  if (!([e modifierFlags] & NSShiftKeyMask))
+    {
+      if (![sel containsIndex:newIdx])
+	sel = [NSIndexSet indexSetWithIndex:newIdx];
+    }
+  else
+    {
+      NSMutableIndexSet *set = [[sel mutableCopy] autorelease];
+      NSInteger i0 = oldIdx < newIdx ? oldIdx : newIdx;
+      NSInteger i1 = oldIdx < newIdx ? newIdx : oldIdx;
+      [set addIndexesInRange:NSMakeRange(i0, i1 - i0 + 1)];
+      sel = set;
+    }
+
+  return sel;
+}
+
+- (void)keyDown:(NSEvent *)e movePrimaryHorizontally:(NSInteger)delta
+{
+  NSInteger count = [_images count];
+  if (count == 0)
+    return;
+
+  NSInteger idx = _primarySelection;
+
+  if (idx >= 0)
+    {
+      idx = idx + delta;
+      if (idx < 0)
+	idx = 0;
+      else if (idx >= count)
+	idx = count - 1;
+    }
+  else
+    idx = delta > 0 ? 0 : count - 1;
+
+  NSIndexSet *sel = extendSelection(e, _selection, _primarySelection, idx);
+
+  [[_controller controller] setSelectedImageIndexes:sel primary:idx];
+
+  [self scrollToPrimary];
+}
+
+- (void)keyDown:(NSEvent *)e movePrimaryVertically:(NSInteger)delta
+{
+  NSInteger count = [_images count];
+  if (count == 0)
+    return;
+
+  NSInteger idx = _primarySelection;
+
+  if (idx >= 0)
+    {
+      NSInteger y = idx / _columns;
+      NSInteger x = idx - (y * _columns);
+
+      y = y + delta;
+
+      if (y < 0)
+	y = 0;
+      else if (y > _rows)
+	y = _rows;
+
+      idx = y * _columns + x;
+      if (idx >= count)
+	idx -= _columns;
+    }
+  else
+    idx = delta > 0 ? 0 : count - 1;
+    
+  NSIndexSet *sel = extendSelection(e, _selection, _primarySelection, idx);
+
+  [[_controller controller] setSelectedImageIndexes:sel primary:idx];
+
+  [self scrollToPrimary];
+}
+
+- (BOOL)acceptsFirstResponder
+{
+  return YES;
+}
+
+- (void)keyDown:(NSEvent *)e
+{
+  NSString *chars = [e charactersIgnoringModifiers];
+  if ([chars length] < 1)
+    return;
+
+  switch ([chars characterAtIndex:0])
+    {
+    case NSUpArrowFunctionKey:
+      [self keyDown:e movePrimaryVertically:-1];
+      break;
+
+    case NSDownArrowFunctionKey:
+      [self keyDown:e movePrimaryVertically:1];
+      break;
+
+    case NSLeftArrowFunctionKey:
+      [self keyDown:e movePrimaryHorizontally:-1];
+      break;
+
+    case NSRightArrowFunctionKey:
+      [self keyDown:e movePrimaryHorizontally:1];
+      break;
+    }
+}
+
+- (void)selectAll:(id)sender
+{
+  NSInteger count = [_images count];
+  if (count == 0)
+    return;
+
+  NSInteger idx = _primarySelection;
+  if (idx < 0)
+    idx = 0;
+
+  [[_controller controller] setSelectedImageIndexes:
+   [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, count)] primary:idx];
+  
+}
+
+- (void)deselectAll:(id)sender
+{
+  [[_controller controller] setSelectedImageIndexes:
+   [NSIndexSet indexSet] primary:-1];
 }
 
 @end

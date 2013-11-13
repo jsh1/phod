@@ -30,9 +30,12 @@
 #import <QuartzCore/QuartzCore.h>
 
 #define TITLE_SPACING 4
-#define SELECTION_INSET -8
-#define SELECTION_WIDTH 4
-#define SELECTION_RADIUS 6
+#define SELECTION_INSET -3
+#define SELECTION_WIDTH 1
+#define SELECTION_RADIUS 3
+#define PRIMARY_SELECTION_INSET -5
+#define PRIMARY_SELECTION_WIDTH 3
+#define PRIMARY_SELECTION_RADIUS 4
 
 CA_HIDDEN
 @interface PDThumbnailImageLayer : CALayer
@@ -94,6 +97,20 @@ enum
 - (BOOL)isSelected
 {
   return _selected;
+}
+
+- (void)setPrimary:(BOOL)flag
+{
+  if (_primary != flag)
+    {
+      _primary = flag;
+      [self setNeedsLayout];
+    }
+}
+
+- (BOOL)isPrimary
+{
+  return _primary;
 }
 
 - (void)invalidate
@@ -191,9 +208,14 @@ enum
 
   if (_selected)
     {
+      CGFloat inset = _primary ? PRIMARY_SELECTION_INSET : SELECTION_INSET;
+      CGFloat radius = _primary ? PRIMARY_SELECTION_RADIUS : SELECTION_RADIUS;
+      CGFloat width = _primary ? PRIMARY_SELECTION_WIDTH : SELECTION_WIDTH;
+
       CGRect selR = CGRectUnion([image_layer frame], [title_layer frame]);
-      [selection_layer setFrame:
-       CGRectInset(selR, SELECTION_INSET, SELECTION_INSET)];
+      [selection_layer setFrame:CGRectInset(selR, inset, inset)];
+      [selection_layer setCornerRadius:radius];
+      [selection_layer setBorderWidth:width];
       [selection_layer setHidden:NO];
     }
   else
@@ -280,12 +302,8 @@ enum
 
 + (id)defaultValueForKey:(NSString *)key
 {
-  if ([key isEqualToString:@"borderWidth"])
-    return [NSNumber numberWithDouble:SELECTION_WIDTH];
-  else if ([key isEqualToString:@"borderColor"])
+  if ([key isEqualToString:@"borderColor"])
     return (id) [[PDColor whiteColor] CGColor];
-  else if ([key isEqualToString:@"cornerRadius"])
-    return [NSNumber numberWithDouble:SELECTION_RADIUS];
   else
     return [super defaultValueForKey:key];
 }

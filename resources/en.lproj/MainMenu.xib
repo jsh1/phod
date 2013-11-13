@@ -165,9 +165,17 @@
                                     <action selector="delete:" target="-1" id="235"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="Vpb-Hq-TbZ">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
                             <menuItem title="Select All" keyEquivalent="a" id="198">
                                 <connections>
                                     <action selector="selectAll:" target="-1" id="232"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Deselect All" keyEquivalent="A" id="Ee3-EA-Evo">
+                                <connections>
+                                    <action selector="deselectAll:" target="-1" id="RFz-Cz-avz"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="214">

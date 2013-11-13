@@ -34,7 +34,7 @@
 #import "PDLibraryViewController.h"
 
 NSString *const PDImageListDidChange = @"PDImageListDidChange";
-NSString *const PDSelectedImageIndexesDidChange = @"PDSelectedImageIndexesDidChange";
+NSString *const PDSelectionDidChange = @"PDSelectionDidChange";
 
 @implementation PDWindowController
 
@@ -70,6 +70,7 @@ NSString *const PDSelectedImageIndexesDidChange = @"PDSelectedImageIndexesDidCha
   _contentMode = PDContentMode_Nil;
 
   _imageList = [[NSArray alloc] init];
+  _primarySelectionIndex = -1;
   _selectedImageIndexes = [[NSIndexSet alloc] init];
 
   return self;
@@ -286,6 +287,51 @@ contentClassForMode(enum PDContentMode mode)
     }
 }
 
+static NSInteger
+closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
+{
+  /* In case 'set' is nil. */
+
+  if ([set count] == 0)
+    return -1;
+
+  if ([set containsIndex:idx])
+    return idx;
+
+  NSInteger after = [set indexGreaterThanIndex:idx];
+  NSInteger before = [set indexLessThanIndex:idx];
+
+  if (after == NSNotFound)
+    {
+      if (before == NSNotFound)
+	return -1;
+      else
+	return before;
+    }
+  else if (before == NSNotFound)
+    return after;
+  else
+    return abs(after - idx) < abs(before - idx) ? after : before;
+}
+
+- (NSInteger)primarySelectionIndex
+{
+  return _primarySelectionIndex;
+}
+
+- (void)setPrimarySelectionIndex:(NSInteger)idx
+{
+  idx = closestIndexInSetToIndex(_selectedImageIndexes, idx);
+
+  if (_primarySelectionIndex != idx)
+    {
+      _primarySelectionIndex = idx;
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDSelectionDidChange object:self];
+    }
+}
+
 - (NSIndexSet *)selectedImageIndexes
 {
   return _selectedImageIndexes;
@@ -298,8 +344,27 @@ contentClassForMode(enum PDContentMode mode)
       [_selectedImageIndexes release];
       _selectedImageIndexes = [set copy];
 
+      _primarySelectionIndex
+        = closestIndexInSetToIndex(set, _primarySelectionIndex);
+
       [[NSNotificationCenter defaultCenter]
-       postNotificationName:PDSelectedImageIndexesDidChange object:self];
+       postNotificationName:PDSelectionDidChange object:self];
+    }
+}
+
+- (void)setSelectedImageIndexes:(NSIndexSet *)set primary:(NSInteger)idx
+{
+  idx = closestIndexInSetToIndex(set, idx);
+
+  if (_selectedImageIndexes != set || _primarySelectionIndex != idx)
+    {
+      [_selectedImageIndexes release];
+      _selectedImageIndexes = [set copy];
+
+      _primarySelectionIndex = idx;
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDSelectionDidChange object:self];
     }
 }
 
