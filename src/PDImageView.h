@@ -24,15 +24,28 @@
 
 #import "PDViewController.h"
 
-@class PDImageViewController, PDLibraryImage;
+@class PDImageViewController, PDLibraryImage, PDImageLayer, CALayer;
 
 @interface PDImageView : NSView
 {
   IBOutlet PDImageViewController *_controller;
 
-  PDLibraryImage *_image;
+  PDLibraryImage *_libraryImage;
+
+  CGFloat _imageScale;
+
+  CGPoint _imageOrigin;
+
+  CALayer *_clipLayer;
+  PDImageLayer *_imageLayer;
 }
 
-@property(nonatomic, retain) PDLibraryImage *image;
+@property(nonatomic, retain) PDLibraryImage *libraryImage;
+@property(nonatomic) CGFloat imageScale;
+@property(nonatomic) CGPoint imageOrigin;
+
+- (CGFloat)scaleToFitScale;
+
+- (void)setImageScale:(CGFloat)scale preserveOrigin:(BOOL)flag;
 
 @end

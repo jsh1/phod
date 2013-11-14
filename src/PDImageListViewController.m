@@ -71,6 +71,11 @@
   [_scaleSlider setDoubleValue:[_gridView scale]];
 }
 
+- (NSView *)initialFirstResponder
+{
+  return _gridView;
+}
+
 - (void)imageListDidChange:(NSNotification *)note
 {
   [_gridView setImages:[_controller imageList]];

@@ -24,6 +24,7 @@
 		57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18107182F0ED3002B8DB2 /* PDLibraryItem.m */; };
 		57C1810D182FD616002B8DB2 /* PDLibraryDirectory.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */; };
 		57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C1810F182FDCF9002B8DB2 /* PDColor.m */; };
+		57C6BAB418343FA60098F967 /* PDImageLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C6BAB318343FA60098F967 /* PDImageLayer.m */; };
 		57CE6A08182D7C2B000BF04E /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 577BDBEB182D792800116AF2 /* AppKit.framework */; };
 		57CE6A09182D7C2B000BF04E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 577BDBED182D792800116AF2 /* Foundation.framework */; };
 		57CE6A0B182D7C40000BF04E /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CE6A0A182D7C40000BF04E /* ImageIO.framework */; };
@@ -74,6 +75,8 @@
 		57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryDirectory.m; sourceTree = "<group>"; };
 		57C1810E182FDCF9002B8DB2 /* PDColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDColor.h; sourceTree = "<group>"; };
 		57C1810F182FDCF9002B8DB2 /* PDColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDColor.m; sourceTree = "<group>"; };
+		57C6BAB218343FA60098F967 /* PDImageLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageLayer.h; sourceTree = "<group>"; };
+		57C6BAB318343FA60098F967 /* PDImageLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageLayer.m; sourceTree = "<group>"; };
 		57CE6A0A182D7C40000BF04E /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		57CE6A0C182D7C45000BF04E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		57CE6A0E182D7C4A000BF04E /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -232,6 +235,8 @@
 				57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */,
 				57CE6A1E182D863E000BF04E /* PDSplitView.h */,
 				57CE6A1F182D863E000BF04E /* PDSplitView.m */,
+				57C6BAB218343FA60098F967 /* PDImageLayer.h */,
+				57C6BAB318343FA60098F967 /* PDImageLayer.m */,
 				57E053B51830576A00123059 /* PDThumbnailLayer.h */,
 				57E053B61830576A00123059 /* PDThumbnailLayer.m */,
 			);
@@ -335,6 +340,7 @@
 				57DADC0E1833C40F006D0BC1 /* PDImageGridView.m in Sources */,
 				57E053B71830576A00123059 /* PDThumbnailLayer.m in Sources */,
 				570A572A1833D21C0052A246 /* PDImageView.m in Sources */,
+				57C6BAB418343FA60098F967 /* PDImageLayer.m in Sources */,
 				57DADC0918318644006D0BC1 /* PDUUIDManager.m in Sources */,
 				57CE6A25182D863E000BF04E /* PDImageListViewController.m in Sources */,
 				57C18109182F0ED3002B8DB2 /* PDLibraryImage.m in Sources */,

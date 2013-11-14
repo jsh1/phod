@@ -48,6 +48,12 @@
 - (NSDictionary *)imageProperties;
 - (id)imagePropertyForKey:(CFStringRef)key;
 
+/* Convenience accessors image properties. */
+
+@property(nonatomic, readonly) CGSize pixelSize;
+@property(nonatomic, readonly) unsigned int orientation;
+@property(nonatomic, readonly) CGSize orientedPixelSize;
+
 - (void)addImageHost:(id<PDLibraryImageHost>)obj;
 - (void)removeImageHost:(id<PDLibraryImageHost>)obj;
 - (void)updateImageHost:(id<PDLibraryImageHost>)obj;

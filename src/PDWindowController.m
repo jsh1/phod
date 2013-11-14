@@ -216,6 +216,15 @@ contentClassForMode(enum PDContentMode mode)
     }
 }
 
+static BOOL
+wasFirstResponder(NSView *view)
+{
+  NSResponder *first = [[view window] firstResponder];
+
+  return ([first isKindOfClass:[NSView class]]
+	  && [(NSView *)first isDescendantOf:view]);
+}
+
 - (NSInteger)sidebarMode
 {
   return _sidebarMode;
@@ -230,6 +239,9 @@ contentClassForMode(enum PDContentMode mode)
     {
       cls = sidebarClassForMode(_sidebarMode);
       controller = [self viewControllerWithClass:cls];
+
+      BOOL wasFirst = wasFirstResponder([controller view]);
+
       [controller removeFromContainer];
 
       _sidebarMode = mode;
@@ -239,6 +251,9 @@ contentClassForMode(enum PDContentMode mode)
       [controller addToContainerView:_sidebarView];
 
       [_sidebarControl selectSegmentWithTag:_sidebarMode];
+
+      if (wasFirst)
+	[[self window] makeFirstResponder:[controller initialFirstResponder]];
     }
 }
 
@@ -256,6 +271,9 @@ contentClassForMode(enum PDContentMode mode)
     {
       cls = contentClassForMode(_contentMode);
       controller = [self viewControllerWithClass:cls];
+
+      BOOL wasFirst = wasFirstResponder([controller view]);
+
       [controller removeFromContainer];
 
       _contentMode = mode;
@@ -263,6 +281,9 @@ contentClassForMode(enum PDContentMode mode)
       cls = contentClassForMode(_contentMode);
       controller = [self viewControllerWithClass:cls];
       [controller addToContainerView:_contentView];
+
+      if (wasFirst)
+	[[self window] makeFirstResponder:[controller initialFirstResponder]];
     }
 }
 
@@ -538,6 +559,48 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   if (idx > PDContentMode_Image)
     idx = PDContentMode_List;
   [self setContentMode:idx];
+}
+
+- (IBAction)zoomIn:(id)sender
+{
+  if (_contentMode == PDContentMode_Image)
+    {
+      [(PDImageViewController *)[self viewControllerWithClass:
+	[PDImageViewController class]] zoomIn:sender];
+    }
+}
+
+- (IBAction)zoomOut:(id)sender
+{
+  if (_contentMode == PDContentMode_Image)
+    {
+      [(PDImageViewController *)[self viewControllerWithClass:
+	[PDImageViewController class]] zoomOut:sender];
+    }
+}
+
+- (IBAction)zoomActualSize:(id)sender
+{
+  if (_contentMode == PDContentMode_Image)
+    {
+      [(PDImageViewController *)[self viewControllerWithClass:
+	[PDImageViewController class]] zoomActualSize:sender];
+    }
+}
+
+- (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem
+{
+  SEL sel = [anItem action];
+
+  if (sel == @selector(zoomIn:)
+      || sel == @selector(zoomOut:)
+      || sel == @selector(zoomActualSize:))
+    {
+      return (_contentMode == PDContentMode_Image
+	      && _primarySelectionIndex >= 0);
+    }
+
+  return YES;
 }
 
 // NSSplitViewDelegate methods

@@ -22,19 +22,23 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDViewController.h"
+#import <QuartzCore/CALayer.h>
 
-@class PDImageView;
+#import "PDLibraryImage.h"
 
-@interface PDImageViewController : PDViewController
+@interface PDImageLayer : CALayer <PDLibraryImageHost>
 {
-  IBOutlet PDImageView *_imageView;
-}
-  
-- (IBAction)controlAction:(id)sender;
+  PDLibraryImage *_libraryImage;
+  BOOL _thumbnail;
 
-- (IBAction)zoomIn:(id)sender;
-- (IBAction)zoomOut:(id)sender;
-- (IBAction)zoomActualSize:(id)sender;
+  BOOL _addedImageHost;
+  CGSize _imageSize;
+}
+
+@property(nonatomic, retain) PDLibraryImage *libraryImage;
+
+@property(nonatomic, getter=isThumbnail) BOOL thumbnail;
+
+- (void)invalidate;
 
 @end

@@ -26,17 +26,115 @@
 
 #import "PDAppKitExtensions.h"
 #import "PDColor.h"
+#import "PDImageLayer.h"
 #import "PDImageViewController.h"
 #import "PDLibraryImage.h"
 #import "PDWindowController.h"
 
+#define IMAGE_MARGIN 10
+
 @implementation PDImageView
 
-@synthesize image = _image;
+- (void)dealloc
+{
+  [_libraryImage release];
+
+  [super dealloc];
+}
+
+- (id)initWithFrame:(NSRect)frame
+{
+  self = [super initWithFrame:frame];
+  if (self == nil)
+    return nil;
+
+  _imageScale = 1;
+
+  return self;
+}
+
+- (PDLibraryImage *)libraryImage
+{
+  return _libraryImage;
+}
+
+- (void)setLibraryImage:(PDLibraryImage *)image
+{
+  if (_libraryImage != image)
+    {
+      [_libraryImage release];
+      _libraryImage = [image retain];
+
+      [self setNeedsDisplay:YES];
+    }
+}
+
+- (CGFloat)imageScale
+{
+  return _imageScale;
+}
+
+- (void)setImageScale:(CGFloat)x
+{
+  if (_imageScale != x)
+    {
+      _imageScale = x;
+
+      [self setNeedsDisplay:YES];
+    }
+}
+
+- (CGFloat)scaleToFitScale
+{
+  if (_libraryImage == nil)
+    return 1;
+
+  CGSize pixelSize = [_libraryImage orientedPixelSize];
+
+  NSRect bounds = [[self superview] bounds];
+
+  CGFloat sx = (bounds.size.width - IMAGE_MARGIN*2) / pixelSize.width;
+  CGFloat sy = (bounds.size.height - IMAGE_MARGIN*2) / pixelSize.height;
+
+  return sx < sy ? sx : sy;
+}
+
+- (void)setImageScale:(CGFloat)scale preserveOrigin:(BOOL)flag
+{
+  if (!flag)
+    {
+      [self setImageScale:scale];
+      return;
+    }
+
+  CGFloat x = (_imageOrigin.x / _imageScale) * scale;
+  CGFloat y = (_imageOrigin.y / _imageScale) * scale;
+
+  // FIXME: center around cursor or view center?
+
+  [self setImageScale:scale];
+
+  _imageOrigin = CGPointMake(x, y);
+}
 
 - (BOOL)wantsUpdateLayer
 {
   return YES;
+}
+
+- (CGSize)scaledImageSize
+{
+  if (_libraryImage != nil)
+    {
+      CGSize pixelSize = [_libraryImage orientedPixelSize];
+
+      CGFloat width = ceil(pixelSize.width * _imageScale);
+      CGFloat height = ceil(pixelSize.height * _imageScale);
+
+      return CGSizeMake(width, height);
+    }
+  else
+    return CGSizeZero;
 }
 
 - (void)updateLayer
@@ -45,12 +143,96 @@
 
   [layer setBackgroundColor:[[PDColor imageGridBackgroundColor] CGColor]];
 
-  /* FIXME: something */
+  if (_clipLayer == nil)
+    {
+      _clipLayer = [CALayer layer];
+      [_clipLayer setMasksToBounds:YES];
+      [_clipLayer setDelegate:_controller];
+      [layer addSublayer:_clipLayer];
+
+      _imageLayer = [PDImageLayer layer];
+      [_imageLayer setDelegate:_controller];
+      [_clipLayer addSublayer:_imageLayer];
+    }
+
+  if (_libraryImage != nil)
+    {
+      CGSize scaledSize = [self scaledImageSize];
+
+      NSRect bounds = [self bounds];
+
+      CGRect clipR;
+      CGPoint origin = _imageOrigin;
+
+      if (scaledSize.width <= bounds.size.width - IMAGE_MARGIN*2)
+	{
+	  clipR.origin.x = bounds.origin.x;
+	  clipR.size.width = scaledSize.width;
+	  clipR.origin.x += floor((bounds.size.width
+				   - scaledSize.width) * (CGFloat).5);
+	  origin.x = 0;
+	}
+      else
+	{
+	  clipR.origin.x = IMAGE_MARGIN;
+	  clipR.size.width = bounds.size.width - IMAGE_MARGIN*2;
+	  if (_imageOrigin.x < 0)
+	    origin.x = 0;
+	  else if (_imageOrigin.x > scaledSize.width - bounds.size.width)
+	    origin.x = scaledSize.width - bounds.size.width;
+	  else
+	    origin.x = _imageOrigin.x;
+	}
+
+      if (scaledSize.height <= bounds.size.height - IMAGE_MARGIN*2)
+	{
+	  clipR.origin.y = bounds.origin.y;
+	  clipR.size.height = scaledSize.height;
+	  clipR.origin.y += floor((bounds.size.height
+				   - scaledSize.height) * (CGFloat).5);
+	  origin.y = 0;
+	}
+      else
+	{
+	  clipR.origin.y = IMAGE_MARGIN;
+	  clipR.size.height = bounds.size.height - IMAGE_MARGIN*2;
+	  if (_imageOrigin.y < 0)
+	    origin.y = 0;
+	  else if (_imageOrigin.y > scaledSize.height - bounds.size.height)
+	    origin.y = scaledSize.height - bounds.size.height;
+	  else
+	    origin.y = _imageOrigin.y;
+	}
+
+      [_clipLayer setFrame:clipR];
+
+      [_imageLayer setBounds:
+       CGRectMake(0, 0, scaledSize.width, scaledSize.height)];
+      [_imageLayer setPosition:
+       CGPointMake(-origin.x + scaledSize.width * (CGFloat).5,
+		   -origin.y + scaledSize.height * (CGFloat).5)];
+
+      [_imageLayer setLibraryImage:_libraryImage];
+      [_clipLayer setHidden:NO];
+    }
+  else
+    {
+      [_imageLayer setLibraryImage:nil];
+      [_clipLayer setHidden:YES];
+    }
+
+  [self setPreparedContentRect:[self visibleRect]];
 }
 
 - (BOOL)isFlipped
 {
   return YES;
+}
+
+- (void)resizeSubviewsWithOldSize:(NSSize)oldSize
+{
+  [self setNeedsDisplay:YES];
+  [super resizeSubviewsWithOldSize:oldSize];
 }
 
 - (void)mouseDown:(NSEvent *)e

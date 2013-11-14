@@ -136,6 +136,35 @@ static NSOperationQueue *_imageQueue;
   return [[self imageProperties] objectForKey:(NSString *)key];
 }
 
+- (CGSize)pixelSize
+{
+  NSDictionary *dict = [self imageProperties];
+
+  CGFloat pw = [[dict objectForKey:
+		 (id)kCGImagePropertyPixelWidth] doubleValue];
+  CGFloat ph = [[dict objectForKey:
+		 (id)kCGImagePropertyPixelHeight] doubleValue];
+
+  return CGSizeMake(pw, ph);
+}
+
+- (unsigned int)orientation
+{
+  return [[self imagePropertyForKey:
+	   kCGImagePropertyOrientation] unsignedIntValue];
+}
+
+- (CGSize)orientedPixelSize
+{
+  CGSize pixelSize = [self pixelSize];
+  unsigned int orientation = [self orientation];
+
+  if (orientation <= 4)
+    return pixelSize;
+  else
+    return CGSizeMake(pixelSize.height, pixelSize.width);
+}
+
 - (void)addImageHost:(id<PDLibraryImageHost>)obj
 {
   PDImageHostOperation *op;

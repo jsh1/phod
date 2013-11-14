@@ -192,15 +192,13 @@
 	      [sublayer setDelegate:_controller];
 	    }
 
-	  CGFloat w = [[image imagePropertyForKey:
-			kCGImagePropertyPixelWidth] doubleValue];
-	  CGFloat h = [[image imagePropertyForKey:
-			kCGImagePropertyPixelHeight] doubleValue];
+	  CGSize pixelSize = [image pixelSize];
+	  CGFloat w = pixelSize.width;
+	  CGFloat h = pixelSize.height;
 	  CGFloat tw = w > h ? _size : floor(_size * (w/h));
 	  CGFloat th = w > h ? floor(_size*(h/w)) : _size;
 
-	  if ([[image imagePropertyForKey:
-		kCGImagePropertyOrientation] intValue] > 4)
+	  if ([image orientation] > 4)
 	    {
 	      CGFloat t = tw;
 	      tw = th;

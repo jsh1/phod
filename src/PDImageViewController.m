@@ -25,6 +25,7 @@
 #import "PDImageViewController.h"
 
 #import "PDColor.h"
+#import "PDImageView.h"
 #import "PDWindowController.h"
 
 @implementation PDImageViewController
@@ -40,16 +41,136 @@
   if (self == nil)
     return nil;
 
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(imageListDidChange:)
+   name:PDImageListDidChange object:_controller];
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(selectionDidChange:)
+   name:PDSelectionDidChange object:_controller];
+
   return self;
+}
+
+- (void)dealloc
+{
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+  [super dealloc];
+}
+
+- (void)updateImage
+{
+  NSInteger idx = [_controller primarySelectionIndex];
+  NSArray *images = [_controller imageList];
+
+  if (idx >= 0 && idx < [images count])
+    {
+      PDLibraryImage *image = [images objectAtIndex:idx];
+
+      if ([_imageView libraryImage] != image)
+	{
+	  [_imageView setLibraryImage:image];
+	  [_imageView setImageScale:[_imageView scaleToFitScale]];
+	  [_imageView setImageOrigin:CGPointZero];
+	}
+    }
+  else
+    [_imageView setLibraryImage:nil];
 }
 
 - (void)viewDidLoad
 {
   [super viewDidLoad];
+
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(imageViewBoundsDidChange:)
+   name:NSViewBoundsDidChangeNotification object:_imageView];
+
+  [_imageView setPostsBoundsChangedNotifications:YES];
+
+  /* FIXME: too soon -- bounds isn't final, and we don't notice when
+     it later changes, despite the code above. */
+
+  [self updateImage];
+}
+
+- (NSView *)initialFirstResponder
+{
+  return _imageView;
+}
+
+- (void)imageListDidChange:(NSNotification *)note
+{
+  [self updateImage];
+}
+
+- (void)selectionDidChange:(NSNotification *)note
+{
+  [self updateImage];
+}
+
+- (void)imageViewBoundsDidChange:(NSNotification *)note
+{
+  [_imageView setNeedsDisplay:YES];
 }
 
 - (IBAction)controlAction:(id)sender
 {
+}
+
+- (IBAction)zoomIn:(id)sender
+{
+  CGFloat scale = [_imageView imageScale];
+
+  CGFloat x;
+  for (x = 2;; x = x + 1)
+    {
+      if (scale > 1/(x+.5))
+	{
+	  scale = 1/(x-1);
+	  break;
+	}
+    }
+
+  [_imageView setImageScale:scale preserveOrigin:YES];
+}
+
+- (IBAction)zoomOut:(id)sender
+{
+  CGFloat scale = [_imageView imageScale];
+  CGFloat fitScale = [_imageView scaleToFitScale];
+
+  CGFloat x;
+  for (x = 2;; x = x + 1)
+    {
+      if (scale > 1/(x-.5))
+	{
+	  scale = 1/x;
+	  break;
+	}
+    }
+
+  if (scale < fitScale)
+    scale = fitScale;
+
+  [_imageView setImageScale:scale preserveOrigin:YES];
+}
+
+- (IBAction)zoomActualSize:(id)sender
+{
+  CGFloat scale = [_imageView imageScale];
+  CGFloat fitScale = [_imageView scaleToFitScale];
+
+  scale = scale > fitScale ? fitScale : 1;
+
+  [_imageView setImageScale:scale preserveOrigin:YES];
+}
+
+// CALayerDelegate methods
+
+- (id)actionForLayer:(CALayer *)layer forKey:(NSString *)key
+{
+  return [NSNull null];
 }
 
 @end

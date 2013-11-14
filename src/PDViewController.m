@@ -101,7 +101,8 @@
 
 - (NSView *)initialFirstResponder
 {
-  return nil;
+  NSView *view = [self view];
+  return [view acceptsFirstResponder] ? view : nil;
 }
 
 - (void)viewDidLoad

@@ -6,7 +6,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PDImageViewController">
             <connections>
-                <outlet property="_imageView" destination="lOm-aK-mfu" id="gOH-pv-iSU"/>
+                <outlet property="_imageView" destination="yb1-Hk-xBt" id="ZrN-Bq-Yes"/>
                 <outlet property="view" destination="9tm-7j-KTe" id="FZs-Hw-2b6"/>
             </connections>
         </customObject>
@@ -16,11 +16,11 @@
             <rect key="frame" x="0.0" y="0.0" width="569" height="495"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <customView id="lOm-aK-mfu" customClass="PDImageView">
+                <customView id="yb1-Hk-xBt" customClass="PDImageView">
                     <rect key="frame" x="0.0" y="30" width="569" height="435"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <connections>
-                        <outlet property="_controller" destination="-2" id="fG8-aJ-9f8"/>
+                        <outlet property="_controller" destination="-2" id="fJ9-Bg-7ik"/>
                     </connections>
                 </customView>
             </subviews>

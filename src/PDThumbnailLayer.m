@@ -200,6 +200,27 @@ enum
 
   [image_layer setFrame:bounds];
 
+  unsigned int orientation = [_libraryImage orientation];
+  if (orientation > 1)
+    {
+      CGAffineTransform m = CGAffineTransformIdentity;
+
+      if (orientation > 4)
+	{
+	  m = CGAffineTransformRotate(m, -M_PI_2);
+	  orientation -= 4;
+	}
+
+      if (orientation == 2)
+	m = CGAffineTransformScale(m, -1, 1);
+      else if (orientation == 3)
+	m = CGAffineTransformScale(m, -1, -1);
+      else if (orientation == 4)
+	m = CGAffineTransformScale(m, 1, -1);
+
+      [image_layer setAffineTransform:m];
+    }
+
   [title_layer setString:[_libraryImage title]];
   [title_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
 				       + bounds.size.height + TITLE_SPACING)];
@@ -233,28 +254,6 @@ enum
 - (void)setHostedImage:(CGImageRef)im
 {
   CALayer *image_layer = [[self sublayers] objectAtIndex:IMAGE_SUBLAYER];
-
-  unsigned int orientation = [[_libraryImage imagePropertyForKey:
-			       kCGImagePropertyOrientation] unsignedIntValue];
-  if (orientation > 1)
-    {
-      CGAffineTransform m = CGAffineTransformIdentity;
-
-      if (orientation > 4)
-	{
-	  m = CGAffineTransformRotate(m, -M_PI_2);
-	  orientation -= 4;
-	}
-
-      if (orientation == 2)
-	m = CGAffineTransformScale(m, -1, 1);
-      else if (orientation == 3)
-	m = CGAffineTransformScale(m, -1, -1);
-      else if (orientation == 4)
-	m = CGAffineTransformScale(m, 1, -1);
-
-      [image_layer setAffineTransform:m];
-    }
 
   /* Move image decompression onto background thread. */
 
