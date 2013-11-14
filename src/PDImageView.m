@@ -31,7 +31,11 @@
 #import "PDLibraryImage.h"
 #import "PDWindowController.h"
 
+#import <QuartzCore/QuartzCore.h>
+
 #define IMAGE_MARGIN 10
+
+#define DRAG_MASK (NSLeftMouseDraggedMask | NSLeftMouseUpMask)
 
 @implementation PDImageView
 
@@ -84,6 +88,21 @@
     }
 }
 
+- (CGPoint)imageOrigin
+{
+  return _imageOrigin;
+}
+
+- (void)setImageOrigin:(CGPoint)p
+{
+  if (!CGPointEqualToPoint(_imageOrigin, p))
+    {
+      _imageOrigin = p;
+
+      [self setNeedsDisplay:YES];
+    }
+}
+
 - (CGFloat)scaleToFitScale
 {
   if (_libraryImage == nil)
@@ -107,10 +126,22 @@
       return;
     }
 
-  CGFloat x = (_imageOrigin.x / _imageScale) * scale;
-  CGFloat y = (_imageOrigin.y / _imageScale) * scale;
+  NSRect bounds = [self bounds];
 
-  // FIXME: center around cursor or view center?
+  NSPoint p = [self convertPoint:
+	       [[self window] mouseLocationOutsideOfEventStream]
+	       fromView:nil];
+
+  if (!NSPointInRect(p, bounds))
+    {
+      p = NSMakePoint(bounds.origin.x + bounds.size.width * (CGFloat).5,
+		      bounds.origin.y + bounds.size.height * (CGFloat).5);
+    }
+
+  double factor = scale / _imageScale;
+
+  CGFloat x = (_imageOrigin.x + p.x) * factor - p.x;
+  CGFloat y = (_imageOrigin.y + p.y) * factor - p.y;
 
   [self setImageScale:scale];
 
@@ -162,55 +193,45 @@
       NSRect bounds = [self bounds];
 
       CGRect clipR;
-      CGPoint origin = _imageOrigin;
-
-      if (scaledSize.width <= bounds.size.width - IMAGE_MARGIN*2)
-	{
-	  clipR.origin.x = bounds.origin.x;
-	  clipR.size.width = scaledSize.width;
-	  clipR.origin.x += floor((bounds.size.width
-				   - scaledSize.width) * (CGFloat).5);
-	  origin.x = 0;
-	}
-      else
-	{
-	  clipR.origin.x = IMAGE_MARGIN;
-	  clipR.size.width = bounds.size.width - IMAGE_MARGIN*2;
-	  if (_imageOrigin.x < 0)
-	    origin.x = 0;
-	  else if (_imageOrigin.x > scaledSize.width - bounds.size.width)
-	    origin.x = scaledSize.width - bounds.size.width;
-	  else
-	    origin.x = _imageOrigin.x;
-	}
-
-      if (scaledSize.height <= bounds.size.height - IMAGE_MARGIN*2)
-	{
-	  clipR.origin.y = bounds.origin.y;
-	  clipR.size.height = scaledSize.height;
-	  clipR.origin.y += floor((bounds.size.height
-				   - scaledSize.height) * (CGFloat).5);
-	  origin.y = 0;
-	}
-      else
-	{
-	  clipR.origin.y = IMAGE_MARGIN;
-	  clipR.size.height = bounds.size.height - IMAGE_MARGIN*2;
-	  if (_imageOrigin.y < 0)
-	    origin.y = 0;
-	  else if (_imageOrigin.y > scaledSize.height - bounds.size.height)
-	    origin.y = scaledSize.height - bounds.size.height;
-	  else
-	    origin.y = _imageOrigin.y;
-	}
-
+      clipR.origin.x = IMAGE_MARGIN;
+      clipR.origin.y = IMAGE_MARGIN;
+      clipR.size.width = bounds.size.width - IMAGE_MARGIN*2;
+      clipR.size.height = bounds.size.height - IMAGE_MARGIN*2;
       [_clipLayer setFrame:clipR];
+
+      if (scaledSize.width < clipR.size.width)
+	{
+	  _imageOrigin.x = floor((scaledSize.width
+				  - clipR.size.width) * (CGFloat).5);
+	}
+      else
+	{
+	  if (_imageOrigin.x < 0)
+	    _imageOrigin.x = 0;
+	  else if (_imageOrigin.x > scaledSize.width - clipR.size.width)
+	    _imageOrigin.x = scaledSize.width - clipR.size.width;
+	}
+
+      if (scaledSize.height < clipR.size.height)
+	{
+	  _imageOrigin.y = floor((scaledSize.height
+				  - clipR.size.height) * (CGFloat).5);
+	}
+      else
+	{
+	  if (_imageOrigin.y < 0)
+	    _imageOrigin.y = 0;
+	  else if (_imageOrigin.y > scaledSize.height - clipR.size.height)
+	    _imageOrigin.y = scaledSize.height - clipR.size.height;
+	  else
+	    _imageOrigin.y = _imageOrigin.y;
+	}
 
       [_imageLayer setBounds:
        CGRectMake(0, 0, scaledSize.width, scaledSize.height)];
       [_imageLayer setPosition:
-       CGPointMake(-origin.x + scaledSize.width * (CGFloat).5,
-		   -origin.y + scaledSize.height * (CGFloat).5)];
+       CGPointMake(-_imageOrigin.x + scaledSize.width * (CGFloat).5,
+		   -_imageOrigin.y + scaledSize.height * (CGFloat).5)];
 
       [_imageLayer setLibraryImage:_libraryImage];
       [_clipLayer setHidden:NO];
@@ -233,16 +254,6 @@
 {
   [self setNeedsDisplay:YES];
   [super resizeSubviewsWithOldSize:oldSize];
-}
-
-- (void)mouseDown:(NSEvent *)e
-{
-  switch ([e clickCount])
-    {
-    case 2:
-      [[_controller controller] setContentMode:PDContentMode_List];
-      break;
-    }
 }
 
 - (BOOL)acceptsFirstResponder
@@ -285,6 +296,51 @@
     }
 
   [super keyDown:e];
+}
+
+- (void)mouseDown:(NSEvent *)e
+{
+  if ([e clickCount] > 1)
+    {
+      [[_controller controller] setContentMode:PDContentMode_List];
+      return;
+    }
+
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+  NSPoint p0 = [self convertPoint:[e locationInWindow] fromView:nil];
+  CGPoint o0 = _imageOrigin;
+
+  while (1)
+    {
+      [CATransaction flush];
+
+      e = [[self window] nextEventMatchingMask:DRAG_MASK];
+
+      if ([e type] != NSLeftMouseDragged)
+	break;
+
+      NSPoint p1 = [self convertPoint:[e locationInWindow] fromView:nil];
+
+      _imageOrigin.x = o0.x + (p0.x - p1.x);
+      _imageOrigin.y = o0.y + (p0.y - p1.y);
+
+      [self setNeedsDisplay:YES];
+      [self displayIfNeeded];
+
+      [pool drain];
+      pool = [[NSAutoreleasePool alloc] init];
+    }
+
+  [pool drain];
+}
+
+- (void)scrollWheel:(NSEvent *)e
+{
+  _imageOrigin.x -= [e scrollingDeltaX];
+  _imageOrigin.y -= [e scrollingDeltaY];
+
+  [self setNeedsDisplay:YES];
 }
 
 @end

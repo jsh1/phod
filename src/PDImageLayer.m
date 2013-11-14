@@ -28,6 +28,9 @@
 
 #import <QuartzCore/QuartzCore.h>
 
+CA_HIDDEN @interface PDImageLayerLayer : CALayer
+@end
+
 @implementation PDImageLayer
 
 @synthesize thumbnail = _thumbnail;
@@ -123,9 +126,8 @@
 
   if (image_layer == nil)
     {
-      image_layer = [CALayer layer];
+      image_layer = [PDImageLayerLayer layer];
       [image_layer setDelegate:[self delegate]];
-      [image_layer setEdgeAntialiasingMask:0];
       [self addSublayer:image_layer];
     }
 
@@ -170,6 +172,20 @@
     CGImageRelease(im);
     [CATransaction flush];
   });
+}
+
+@end
+
+@implementation PDImageLayerLayer
+
++ (id)defaultValueForKey:(NSString *)key
+{
+  if ([key isEqualToString:@"magnificationFilter"])
+    return kCAFilterNearest;
+  else if ([key isEqualToString:@"edgeAntialiasingMask"])
+    return [NSNumber numberWithInt:0];
+  else
+    return [super defaultValueForKey:key];
 }
 
 @end

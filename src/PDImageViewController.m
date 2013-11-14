@@ -125,9 +125,14 @@
   CGFloat x;
   for (x = 2;; x = x + 1)
     {
-      if (scale > 1/(x+.5))
+      if (scale < 1 && scale > 1/(x+.5))
 	{
 	  scale = 1/(x-1);
+	  break;
+	}
+      else if (!(scale < 1) && scale < x-.5)
+	{
+	  scale = x;
 	  break;
 	}
     }
@@ -143,9 +148,14 @@
   CGFloat x;
   for (x = 2;; x = x + 1)
     {
-      if (scale > 1/(x-.5))
+      if (!(scale > 1) && scale > 1/(x-.5))
 	{
 	  scale = 1/x;
+	  break;
+	}
+      else if (scale > 1 && scale < x+.5)
+	{
+	  scale = x-1;
 	  break;
 	}
     }
