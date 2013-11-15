@@ -25,6 +25,7 @@
 #import "PDThumbnailLayer.h"
 
 #import "PDColor.h"
+#import "PDImageLayer.h"
 #import "PDLibraryImage.h"
 
 #import <QuartzCore/QuartzCore.h>
@@ -36,10 +37,6 @@
 #define PRIMARY_SELECTION_INSET -5
 #define PRIMARY_SELECTION_WIDTH 3
 #define PRIMARY_SELECTION_RADIUS 4
-
-CA_HIDDEN
-@interface PDThumbnailImageLayer : CALayer
-@end
 
 CA_HIDDEN
 @interface PDThumbnailTitleLayer : CATextLayer
@@ -115,16 +112,13 @@ enum
 
 - (void)invalidate
 {
-  if (_addedImageHost)
-    {
-      [_libraryImage removeImageHost:self];
-      _addedImageHost = NO;
-    }
+  [[[self sublayers] objectAtIndex:IMAGE_SUBLAYER] invalidate];
 }
 
 - (void)dealloc
 {
   [self invalidate];
+
   [_libraryImage release];
 
   [super dealloc];
@@ -139,12 +133,6 @@ enum
 {
   if (_libraryImage != im)
     {
-      if (_addedImageHost)
-	{
-	  [_libraryImage removeImageHost:self];
-	  _addedImageHost = NO;
-	}
-
       [_libraryImage release];
       _libraryImage = [im retain];
 
@@ -161,7 +149,8 @@ enum
     {
       id delegate = [self delegate];
 
-      CALayer *image_layer = [PDThumbnailImageLayer layer];
+      PDImageLayer *image_layer = [PDImageLayer layer];
+      [image_layer setThumbnail:YES];
       [image_layer setDelegate:delegate];
       [self addSublayer:image_layer];
 
@@ -174,59 +163,15 @@ enum
       [self addSublayer:selection_layer];
     }
 
-  CGRect bounds = [self bounds];
-  CGFloat scale = [self contentsScale];
-
-  CGSize size = CGSizeMake(ceil(bounds.size.width * scale),
-			   ceil(bounds.size.height * scale));
-
-  if (!_addedImageHost)
-    {
-      _imageSize = size;
-      [_libraryImage addImageHost:self];
-      _addedImageHost = YES;
-    }
-  else if (!CGSizeEqualToSize(_imageSize, size))
-    {
-      _imageSize = size;
-      [_libraryImage updateImageHost:self];
-    }
-
   NSArray *sublayers = [self sublayers];
-
-  CALayer *image_layer = [sublayers objectAtIndex:IMAGE_SUBLAYER];
+  PDImageLayer *image_layer = (id)[sublayers objectAtIndex:IMAGE_SUBLAYER];
   CATextLayer *title_layer = [sublayers objectAtIndex:TITLE_SUBLAYER];
   CALayer *selection_layer = [sublayers objectAtIndex:SELECTION_SUBLAYER];
 
+  CGRect bounds = [self bounds];
+
+  [image_layer setLibraryImage:_libraryImage];
   [image_layer setFrame:bounds];
-
-  unsigned int orientation = [_libraryImage orientation];
-
-  CGAffineTransform m;
-  if (orientation >= 1 && orientation <= 8)
-    {
-      static const CGFloat mat[8*4] =
-	{
-	  1, 0, 0, 1,
-	  -1, 0, 0, 1,
-	  1, 0, 0, -1,
-	  -1, 0, 0, -1,
-	  0, 1, 1, 0,
-	  0, 1, -1, 0,
-	  0, -1, -1, 0,
-	  0, -1, 1, 0
-	};
-
-      m.a = mat[(orientation-1)*4+0];
-      m.b = mat[(orientation-1)*4+1];
-      m.c = mat[(orientation-1)*4+2];
-      m.d = mat[(orientation-1)*4+3];
-      m.tx = m.ty = 0;
-    }  
-  else
-    m = CGAffineTransformIdentity;
-
-  [image_layer setAffineTransform:m];
 
   [title_layer setString:[_libraryImage title]];
   [title_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
@@ -250,41 +195,6 @@ enum
     }
   else
     [selection_layer setHidden:YES];
-}
-
-- (NSDictionary *)imageHostOptions
-{
-  return @{PDLibraryImageHost_Thumbnail: @YES,
-	   PDLibraryImageHost_Size: [NSValue valueWithSize:_imageSize]};
-}
-
-- (void)setHostedImage:(CGImageRef)im
-{
-  CALayer *image_layer = [[self sublayers] objectAtIndex:IMAGE_SUBLAYER];
-
-  /* Move image decompression onto background thread. */
-
-  CGImageRetain(im);
-
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    [image_layer setContents:(id)im];
-    CGImageRelease(im);
-    [CATransaction flush];
-  });
-}
-
-@end
-
-@implementation PDThumbnailImageLayer
-
-+ (id)defaultValueForKey:(NSString *)key
-{
-  if ([key isEqualToString:@"contentsGravity"])
-    return kCAGravityResizeAspect;
-  else if ([key isEqualToString:@"edgeAntialiasingMask"])
-    return [NSNumber numberWithInt:0];
-  else
-    return [super defaultValueForKey:key];
 }
 
 @end
