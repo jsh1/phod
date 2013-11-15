@@ -110,7 +110,7 @@
 
   CGSize pixelSize = [_libraryImage orientedPixelSize];
 
-  NSRect bounds = [[self superview] bounds];
+  NSRect bounds = [self bounds];
 
   CGFloat sx = (bounds.size.width - IMAGE_MARGIN*2) / pixelSize.width;
   CGFloat sy = (bounds.size.height - IMAGE_MARGIN*2) / pixelSize.height;
