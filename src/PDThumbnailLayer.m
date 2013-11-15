@@ -57,9 +57,7 @@ enum
 
 + (id)defaultValueForKey:(NSString *)key
 {
-  if ([key isEqualToString:@"backgroundColor"])
-    return (id)[[NSColor darkGrayColor] CGColor];
-  else if ([key isEqualToString:@"shadowOpacity"])
+  if ([key isEqualToString:@"shadowOpacity"])
     return [NSNumber numberWithDouble:.6];
   else if ([key isEqualToString:@"shadowOffset"])
     return [NSValue valueWithSize:NSMakeSize(0, 3)];
