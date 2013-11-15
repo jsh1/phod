@@ -141,6 +141,9 @@
 	}
 
       [_controller setImageList:array];
+
+      if ([array count] > 0)
+	[_controller setSelectedImageIndexes:[NSIndexSet indexSetWithIndex:0]];
     }
 }
 
