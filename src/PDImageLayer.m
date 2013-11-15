@@ -133,23 +133,29 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
   unsigned int orientation = [_libraryImage orientation];
 
-  CGAffineTransform m = CGAffineTransformIdentity;
-
-  if (orientation > 1)
+  CGAffineTransform m;
+  if (orientation >= 1 && orientation <= 8)
     {
-      if (orientation > 4)
+      static const CGFloat mat[8*4] =
 	{
-	  m = CGAffineTransformRotate(m, -M_PI_2);
-	  orientation -= 4;
-	}
+	  1, 0, 0, 1,
+	  -1, 0, 0, 1,
+	  1, 0, 0, -1,
+	  -1, 0, 0, -1,
+	  0, 1, 1, 0,
+	  0, 1, -1, 0,
+	  0, -1, -1, 0,
+	  0, -1, 1, 0
+	};
 
-      if (orientation == 2)
-	m = CGAffineTransformScale(m, -1, 1);
-      else if (orientation == 3)
-	m = CGAffineTransformScale(m, -1, -1);
-      else if (orientation == 4)
-	m = CGAffineTransformScale(m, 1, -1);
-    }
+      m.a = mat[(orientation-1)*4+0];
+      m.b = mat[(orientation-1)*4+1];
+      m.c = mat[(orientation-1)*4+2];
+      m.d = mat[(orientation-1)*4+3];
+      m.tx = m.ty = 0;
+    }  
+  else
+    m = CGAffineTransformIdentity;
 
   [image_layer setAffineTransform:m];
   [image_layer setFrame:bounds];
