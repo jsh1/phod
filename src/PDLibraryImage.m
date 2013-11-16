@@ -26,8 +26,33 @@
 
 #import "PDUUIDManager.h"
 
-CA_HIDDEN
-@interface PDImageHostOperation : NSOperation
+#import <sys/stat.h>
+
+enum
+{
+  PDLibraryImage_Tiny,			/* 256px */
+  PDLibraryImage_Small,			/* 512px */
+  PDLibraryImage_Medium,		/* 1024px */
+};
+
+enum
+{
+  PDLibraryImage_TinySize = 256,
+  PDLibraryImage_SmallSize = 512,
+  PDLibraryImage_MediumSize = 1024,
+};
+
+@interface PDLibraryImagePrefetchOperation : NSOperation
+{
+  NSString *_path;
+  NSUUID *_uuid;
+}
+
+- (id)initWithPath:(NSString *)path UUID:(NSUUID *)uuid;
+
+@end
+
+@interface PDLibraryImageHostOperation : NSOperation
 {
   id<PDLibraryImageHost> _imageHost;
   NSDictionary *_options;
@@ -44,21 +69,179 @@ CA_HIDDEN
 NSString * const PDLibraryImageHost_Size = @"size";
 NSString * const PDLibraryImageHost_Thumbnail = @"thumbnail";
 
-@implementation PDLibraryImage
+static size_t
+fileMTime(NSString *path)
+{
+  struct stat st;
 
-static NSOperationQueue *_imageQueue;
+  if (stat([path fileSystemRepresentation], &st) == 0)
+    return st.st_mtime;
+  else
+    return 0;
+}
+
+static BOOL
+fileNewerThanFile(NSString *path1, NSString *path2)
+{
+  return fileMTime(path1) > fileMTime(path2);
+}
+
+static CGImageSourceRef
+createImageSourceFromPath(NSString *path)
+{
+  NSURL *url = [[NSURL alloc] initFileURLWithPath:path];
+  NSDictionary *opts = [[NSDictionary alloc] initWithObjectsAndKeys:
+			(id)kCFBooleanFalse, kCGImageSourceShouldCache,
+			nil];
+
+  CGImageSourceRef src = CGImageSourceCreateWithURL((CFURLRef)url,
+						    (CFDictionaryRef)opts);
+
+  [opts release];
+  [url release];
+
+  return src;
+}
+
+static void
+writeImageToPath(CGImageRef im, NSString *path)
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+  NSString *dir = [path stringByDeletingLastPathComponent];
+
+  if (![fm fileExistsAtPath:dir])
+    {
+      if (![fm createDirectoryAtPath:dir withIntermediateDirectories:YES
+	    attributes:nil error:nil])
+	return;
+    }
+
+  NSURL *url = [[NSURL alloc] initFileURLWithPath:path];
+
+  CGImageDestinationRef dest = CGImageDestinationCreateWithURL((CFURLRef)url,
+						CFSTR("public.jpeg"), 1, NULL);
+
+  [url release];
+
+  if (dest != NULL)
+    {
+      CGImageDestinationAddImage(dest, im, NULL);
+      CGImageDestinationFinalize(dest);
+      CFRelease(dest);
+    }
+}
+
+static CGImageRef
+createCroppedThumbnailImage(CGImageSourceRef src)
+{
+  CGImageRef im = CGImageSourceCreateThumbnailAtIndex(src, 0, NULL);
+  if (im == NULL)
+    return NULL;
+
+  /* Embedded JPEG thumbnails are often a fixed size and aspect ratio,
+     so crop them to the original image's aspect ratio. */
+
+  CFDictionaryRef dict = CGImageSourceCopyPropertiesAtIndex(src, 0, NULL);
+  if (dict == NULL)
+    return im;
+
+  CGFloat pix_w
+   = [(id)CFDictionaryGetValue(dict, kCGImagePropertyPixelWidth) doubleValue];
+  CGFloat pix_h
+   = [(id)CFDictionaryGetValue(dict, kCGImagePropertyPixelHeight) doubleValue];
+
+  CFRelease(dict);
+
+  CGFloat im_w = CGImageGetWidth(im);
+  CGFloat im_h = CGImageGetHeight(im);
+
+  CGRect imR = CGRectMake(0, 0, im_w, im_h);
+
+  if (pix_w > pix_h)
+    {
+      CGFloat h = im_w * (pix_h / pix_w);
+      imR.origin.y = ceil((im_h - h) * (CGFloat).5);
+      imR.size.height = im_h - (imR.origin.y * 2);
+    }
+  else
+    {
+      CGFloat w = im_h * (pix_w / pix_h);
+      imR.origin.x = ceil((im_w - w) * (CGFloat).5);
+      imR.size.width = im_w - (imR.origin.x * 2);
+    }
+
+  if (!CGRectEqualToRect(imR, CGRectMake(0, 0, im_w, im_h)))
+    {
+      CGImageRef copy = CGImageCreateWithImageInRect(im, imR);
+      CGImageRelease(im);
+      im = copy;
+    }
+
+  return im;
+}
+
+static NSString *
+cachedPathForType(NSUUID *uuid, NSString *filePath, NSInteger type)
+{
+  static NSString *_cachePath;
+
+  if (_cachePath == nil)
+    {
+      NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
+							NSUserDomainMask, YES);
+      _cachePath = [[[[paths lastObject] stringByAppendingPathComponent:
+		      [[NSBundle mainBundle] bundleIdentifier]]
+		     stringByAppendingPathComponent:@"PDLibraryImageCache"]
+		    copy];
+    }
+
+  NSString *ustr = [uuid UUIDString];
+
+  NSString *path
+   = [[ustr substringToIndex:2]
+      stringByAppendingPathComponent:[ustr substringFromIndex:2]];
+
+  if (type == PDLibraryImage_Tiny)
+    path = [path stringByAppendingString:@"_tiny.jpg"];
+  else if (type == PDLibraryImage_Small)
+    path = [path stringByAppendingString:@"_small.jpg"];
+  else /* if (type == PDLibraryImage_Medium) */
+    path = [path stringByAppendingString:@"_medium.jpg"];
+
+  return [_cachePath stringByAppendingPathComponent:path];
+}
+
+@implementation PDLibraryImage
 
 @synthesize path = _path;
 
-+ (NSOperationQueue *)imageQueue
+static NSOperationQueue *
+prefetchQueue(void)
 {
-  if (_imageQueue == nil)
+  static NSOperationQueue *queue;
+
+  if (queue == nil)
     {
-      _imageQueue = [[NSOperationQueue alloc] init];
-      [_imageQueue setName:@"PDLibraryImage"];
+      queue = [[NSOperationQueue alloc] init];
+      [queue setName:@"PDLibraryImage.prefetchQueue"];
+      [queue setMaxConcurrentOperationCount:1];
     }
 
-  return _imageQueue;
+  return queue;
+}
+
+static NSOperationQueue *
+imageHostQueue(void)
+{
+  static NSOperationQueue *queue;
+
+  if (queue == nil)
+    {
+      queue = [[NSOperationQueue alloc] init];
+      [queue setName:@"PDLibraryImage"];
+    }
+
+  return queue;
 }
 
 - (id)initWithPath:(NSString *)path
@@ -85,6 +268,9 @@ static NSOperationQueue *_imageQueue;
 
   [_imageHosts release];
 
+  [_prefetchOp cancel];
+  [_prefetchOp release];
+
   [super dealloc];
 }
 
@@ -104,16 +290,7 @@ static NSOperationQueue *_imageQueue;
 - (CGImageSourceRef)imageSource
 {
   if (_imageSource == NULL)
-    {
-      NSURL *url = [[NSURL alloc] initFileURLWithPath:_path];
-      NSDictionary *opts = [[NSDictionary alloc] initWithObjectsAndKeys:
-			    (id)kCFBooleanFalse, kCGImageSourceShouldCache,
-			    nil];
-      _imageSource = CGImageSourceCreateWithURL((CFURLRef)url,
-						(CFDictionaryRef)opts);
-      [opts release];
-      [url release];
-    }
+    _imageSource = createImageSourceFromPath(_path);
 
   return _imageSource;
 }
@@ -165,17 +342,40 @@ static NSOperationQueue *_imageQueue;
     return CGSizeMake(pixelSize.height, pixelSize.width);
 }
 
+- (void)startPrefetching
+{
+  if (_prefetchOp == nil)
+    {
+      _prefetchOp = [[PDLibraryImagePrefetchOperation alloc]
+		     initWithPath:[self path] UUID:[self UUID]];
+      [_prefetchOp setQueuePriority:NSOperationQueuePriorityLow];
+      [prefetchQueue() addOperation:_prefetchOp];
+    }
+}
+
+- (void)stopPrefetching
+{
+  if (_prefetchOp != nil
+      && !([_prefetchOp isExecuting] || [_prefetchOp isFinished])
+      && [[_prefetchOp dependencies] count] == 0)
+    {
+      [_prefetchOp cancel];
+      [_prefetchOp release];
+      _prefetchOp = nil;
+    }
+}
+
 - (void)addImageHost:(id<PDLibraryImageHost>)obj
 {
-  PDImageHostOperation *op;
+  PDLibraryImageHostOperation *op;
 
   assert([_imageHosts objectForKey:obj] == nil);
 
-  op = [[PDImageHostOperation alloc]
+  op = [[PDLibraryImageHostOperation alloc]
 	initWithImageHost:obj imageSource:[self imageSource]
 	imageProperties:[self imageProperties]];
 
-  [[[self class] imageQueue] addOperation:op];
+  [imageHostQueue() addOperation:op];
   [_imageHosts setObject:op forKey:obj];
 
   [op release];
@@ -183,7 +383,7 @@ static NSOperationQueue *_imageQueue;
 
 - (void)removeImageHost:(id<PDLibraryImageHost>)obj
 {
-  PDImageHostOperation *op;
+  PDLibraryImageHostOperation *op;
 
   op = [_imageHosts objectForKey:obj];
   if (op == nil)
@@ -204,7 +404,83 @@ static NSOperationQueue *_imageQueue;
 
 @end
 
-@implementation PDImageHostOperation
+@implementation PDLibraryImagePrefetchOperation
+
+- (id)initWithPath:(NSString *)path UUID:(NSUUID *)uuid;
+{
+  self = [super init];
+  if (self == nil)
+    return nil;
+
+  _path = [path copy];
+  _uuid = [uuid copy];
+
+  return self;
+}
+
+- (void)main
+{
+  NSString *tiny_path = cachedPathForType(_uuid, _path, PDLibraryImage_Tiny);
+
+  if (fileNewerThanFile(tiny_path, _path))
+    return;
+
+  CGImageSourceRef src = createImageSourceFromPath(_path);
+  if (src == NULL)
+    return;
+
+  __block CGImageRef src_im = CGImageSourceCreateImageAtIndex(src, 0, NULL);
+
+  CFRelease(src);
+
+  if (src_im == NULL)
+    return;
+
+  CGColorSpaceRef srgb = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+
+  void (^cache_image)(NSInteger type, size_t size) =
+    ^(NSInteger type, size_t size)
+    {
+      CGFloat sw = CGImageGetWidth(src_im);
+      CGFloat sh = CGImageGetHeight(src_im);
+
+      size_t dw = sw > sh ? size : round(size * ((CGFloat)sw / (CGFloat)sh));
+      size_t dh = sh > sw ? size : round(size * ((CGFloat)sh / (CGFloat)sw));
+
+      CGContextRef ctx = CGBitmapContextCreate(NULL, dw, dh, 8, 0, srgb,
+		kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
+      if (ctx != NULL)
+	{
+	  CGContextSetBlendMode(ctx, kCGBlendModeCopy);
+	  CGContextDrawImage(ctx, CGRectMake(0, 0, dw, dh), src_im);
+
+	  CGImageRef im = CGBitmapContextCreateImage(ctx);
+
+	  CGContextRelease(ctx);
+
+	  if (im != NULL)
+	    {
+	      writeImageToPath(im, cachedPathForType(_uuid, _path, type));
+	      CGImageRelease(src_im);
+	      src_im = im;
+	    }
+	}
+    };
+
+  /* Since we're generating one image, do them all, it will probably
+     be quicker overall that way. */
+
+  cache_image(PDLibraryImage_Medium, PDLibraryImage_MediumSize);
+  cache_image(PDLibraryImage_Small, PDLibraryImage_SmallSize);
+  cache_image(PDLibraryImage_Tiny, PDLibraryImage_TinySize);
+
+  CGColorSpaceRelease(srgb);
+  CGImageRelease(src_im);
+}
+
+@end
+
+@implementation PDLibraryImageHostOperation
 
 - (id)initWithImageHost:(id<PDLibraryImageHost>)host
     imageSource:(CGImageSourceRef)src imageProperties:(NSDictionary *)props;
@@ -240,43 +516,10 @@ static NSOperationQueue *_imageQueue;
   // FIXME: ignoring size for now..
 
   if ([[_options objectForKey:PDLibraryImageHost_Thumbnail] boolValue])
-    im = CGImageSourceCreateThumbnailAtIndex(_imageSource, 0, NULL);
+    im = createCroppedThumbnailImage(_imageSource);
 
   if (im == NULL)
     im = CGImageSourceCreateImageAtIndex(_imageSource, 0, NULL);
-
-  /* Embedded JPEG thumbnails are often a fixed size and aspect ratio,
-     so crop them to the original image's aspect ratio. */
-
-  CGFloat pixelWidth = [[_imageProperties objectForKey:
-			 (id)kCGImagePropertyPixelWidth] doubleValue];
-  CGFloat pixelHeight = [[_imageProperties objectForKey:
-			  (id)kCGImagePropertyPixelHeight] doubleValue];
-
-  CGFloat im_w = CGImageGetWidth(im);
-  CGFloat im_h = CGImageGetHeight(im);
-
-  CGRect imR = CGRectMake(0, 0, im_w, im_h);
-
-  if (pixelWidth > pixelHeight)
-    {
-      CGFloat h = im_w * (pixelHeight / pixelWidth);
-      imR.origin.y = ceil((im_h - h) * (CGFloat).5);
-      imR.size.height = im_h - (imR.origin.y * 2);
-    }
-  else
-    {
-      CGFloat w = im_h * (pixelWidth / pixelHeight);
-      imR.origin.x = ceil((im_w - w) * (CGFloat).5);
-      imR.size.width = im_w - (imR.origin.x * 2);
-    }
-
-  if (!CGRectEqualToRect(imR, CGRectMake(0, 0, im_w, im_h)))
-    {
-      CGImageRef im_copy = CGImageCreateWithImageInRect(im, imR);
-      CGImageRelease(im);
-      im = im_copy;
-    }
 
   dispatch_async(dispatch_get_main_queue(), ^{
     [_imageHost setHostedImage:im];

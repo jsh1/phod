@@ -26,6 +26,8 @@
 
 @protocol PDLibraryImageHost;
 
+@class PDLibraryImagePrefetchOperation;
+
 @interface PDLibraryImage : NSObject
 {
   NSString *_path;
@@ -35,6 +37,8 @@
   CFDictionaryRef _imageProperties;
 
   NSMapTable *_imageHosts;
+
+  PDLibraryImagePrefetchOperation *_prefetchOp;
 }
 
 - (id)initWithPath:(NSString *)path;
@@ -53,6 +57,9 @@
 @property(nonatomic, readonly) CGSize pixelSize;
 @property(nonatomic, readonly) unsigned int orientation;
 @property(nonatomic, readonly) CGSize orientedPixelSize;
+
+- (void)startPrefetching;
+- (void)stopPrefetching;
 
 - (void)addImageHost:(id<PDLibraryImageHost>)obj;
 - (void)removeImageHost:(id<PDLibraryImageHost>)obj;
