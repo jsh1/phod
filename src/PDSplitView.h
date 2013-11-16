@@ -31,7 +31,7 @@
   NSView *_collapsingSubview;
 }
 
-@property NSInteger indexOfResizableSubview;
+@property(nonatomic) NSInteger indexOfResizableSubview;
 
 - (NSDictionary *)savedViewState;
 - (void)applySavedViewState:(NSDictionary *)dict;

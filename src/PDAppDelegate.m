@@ -28,6 +28,8 @@
 
 @implementation PDAppDelegate
 
+@synthesize windowController = _windowController;
+
 - (void)dealloc
 {
   [_windowController release];

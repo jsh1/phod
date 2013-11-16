@@ -32,7 +32,7 @@
   IBOutlet NSMenu *_viewMenu;
 }
 
-@property(readonly) PDWindowController *windowController;
+@property(nonatomic, readonly) PDWindowController *windowController;
 
 - (IBAction)showWindow:(id)sender;
 
