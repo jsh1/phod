@@ -96,8 +96,14 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 	  _addedImageHost = NO;
 	}
 
+      /* to make -libraryImage:setHostedImage: synchronized. */
+
+      [CATransaction lock];
+
       [_libraryImage release];
       _libraryImage = [im retain];
+
+      [CATransaction unlock];
 
       [[[self sublayers] firstObject] setContents:nil];
       [self setNeedsLayout];
@@ -208,18 +214,25 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   return dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 }
 
-- (void)setHostedImage:(CGImageRef)im
+- (void)libraryImage:(PDLibraryImage *)image setHostedImage:(CGImageRef)im
 {
   /* Due to -imageHostQueue above, will be called on a background queue. */
 
-  CALayer *image_layer = [[self sublayers] firstObject];
+  [CATransaction lock];
 
-  CGFloat scaling = _imageSize.width / (CGFloat)CGImageGetWidth(im);
+  if (_libraryImage == image)
+    {
+      CALayer *image_layer = [[self sublayers] firstObject];
 
-  [image_layer setMinificationFilter:
-   scaling < .75 ? kCAFilterTrilinear : kCAFilterLinear];
+      CGFloat scaling = _imageSize.width / (CGFloat)CGImageGetWidth(im);
 
-  [image_layer setContents:(id)im];
+      [image_layer setMinificationFilter:
+       scaling < .75 ? kCAFilterTrilinear : kCAFilterLinear];
+
+      [image_layer setContents:(id)im];
+    }
+
+  [CATransaction unlock];
 }
 
 @end

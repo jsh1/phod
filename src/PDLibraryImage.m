@@ -391,7 +391,7 @@ imageHostQueue(void)
 /* Takes ownership of 'im'. */
 
 static void
-setHostedImage(id<PDLibraryImageHost> obj, CGImageRef im)
+setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 {
   dispatch_queue_t queue;
 
@@ -401,7 +401,7 @@ setHostedImage(id<PDLibraryImageHost> obj, CGImageRef im)
     queue = dispatch_get_main_queue();
 
   dispatch_async(queue, ^{
-    [obj setHostedImage:im];
+    [obj libraryImage:self setHostedImage:im];
     CGImageRelease(im);
     [CATransaction flush];
   });
@@ -432,9 +432,10 @@ setHostedImage(id<PDLibraryImageHost> obj, CGImageRef im)
     type = PDLibraryImage_Medium;
 
   NSMutableArray *ops = [NSMutableArray array];
-  NSOperation *thumb_op = nil;
-  NSOperation *cache_op = nil;
-  NSOperation *full_op = nil;
+
+  __block NSOperation *thumb_op = nil;
+  __block NSOperation *cache_op = nil;
+  __block NSOperation *full_op = nil;
 
   /* If the proxy (tiny/small/medium) cache hasn't been built yet,
      display the embedded image thumbnail until it's ready. */
@@ -447,8 +448,8 @@ setHostedImage(id<PDLibraryImageHost> obj, CGImageRef im)
 	  {
 	    CGImageRef im = createCroppedThumbnailImage(src);
 	    CFRelease(src);
-	    if (im != NULL)
-	      setHostedImage(obj, im);
+	    if (im != NULL && ![thumb_op isCancelled])
+	      setHostedImage(self, obj, im);
 	  }
       }];
 
@@ -468,8 +469,8 @@ setHostedImage(id<PDLibraryImageHost> obj, CGImageRef im)
 
 	/* FIXME: resize proxy to requested size? */
 
-	if (im != NULL)
-	  setHostedImage(obj, im);
+	if (im != NULL && ![cache_op isCancelled])
+	  setHostedImage(self, obj, im);
       }
   }];
 
@@ -513,12 +514,16 @@ setHostedImage(id<PDLibraryImageHost> obj, CGImageRef im)
 	       lock held, both those things appear to happen when
 	       directly using the raw CGImage from ImageIO.) */
 
-	    CGImageRef im2 = copyScaledImage(im1, size,
-					     (CGColorSpaceRef)space);
-	    CGImageRelease(im1);
+	    if (![full_op isCancelled])
+	      {
+		CGImageRef im2 = copyScaledImage(im1, size,
+						 (CGColorSpaceRef)space);
 
-	    if (im2 != NULL)
-	      setHostedImage(obj, im2);
+		if (im2 != NULL && ![full_op isCancelled])
+		  setHostedImage(self, obj, im2);
+	      }
+
+	    CGImageRelease(im1);
 	  }
       }];
 

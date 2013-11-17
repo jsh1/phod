@@ -73,7 +73,7 @@
 /* Note: may be called more than once, first with low-quality, then
    with high-quality image. */
 
-- (void)setHostedImage:(CGImageRef)im;
+- (void)libraryImage:(PDLibraryImage *)im setHostedImage:(CGImageRef)im;
 
 @optional
 
