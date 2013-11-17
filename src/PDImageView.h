@@ -48,4 +48,6 @@
 
 - (void)setImageScale:(CGFloat)scale preserveOrigin:(BOOL)flag;
 
+- (void)viewDidDisappear;
+
 @end

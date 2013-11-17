@@ -232,6 +232,7 @@
       [_imageLayer setPosition:
        CGPointMake(-_imageOrigin.x + scaledSize.width * (CGFloat).5,
 		   -_imageOrigin.y + scaledSize.height * (CGFloat).5)];
+      [_imageLayer setColorSpace:[[[self window] colorSpace] CGColorSpace]];
 
       [_imageLayer setLibraryImage:_libraryImage];
       [_clipLayer setHidden:NO];
@@ -243,6 +244,11 @@
     }
 
   [self setPreparedContentRect:[self visibleRect]];
+}
+
+- (void)viewDidDisappear
+{
+  [_imageLayer removeContent];
 }
 
 - (BOOL)isFlipped

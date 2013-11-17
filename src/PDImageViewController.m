@@ -99,6 +99,11 @@
   return _imageView;
 }
 
+- (void)viewDidDisappear
+{
+  [_imageView viewDidDisappear];
+}
+
 - (void)imageListDidChange:(NSNotification *)note
 {
   [self updateImage];

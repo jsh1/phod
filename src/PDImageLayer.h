@@ -30,6 +30,7 @@
 {
   PDLibraryImage *_libraryImage;
   BOOL _thumbnail;
+  CGColorSpaceRef _colorSpace;
 
   BOOL _addedImageHost;
   CGSize _imageSize;
@@ -39,6 +40,10 @@
 
 @property(nonatomic, getter=isThumbnail) BOOL thumbnail;
 
+@property(nonatomic) CGColorSpaceRef colorSpace;
+
 - (void)invalidate;
+
+- (void)removeContent;
 
 @end

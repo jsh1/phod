@@ -44,6 +44,9 @@
 
 - (void)viewDidLoad;
 
+- (void)viewWillAppear;
+- (void)viewDidDisappear;
+
 @property(nonatomic, readonly) PDWindowController *controller;
 
 - (PDViewController *)viewControllerWithClass:(Class)cls;

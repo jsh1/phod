@@ -33,7 +33,7 @@
 #define GRID_MARGIN 20
 #define GRID_SPACING 30
 #define IMAGE_MIN_SIZE 80
-#define IMAGE_MAX_SIZE 300
+#define IMAGE_MAX_SIZE 450
 #define TITLE_HEIGHT 15
 #define MAX_OUTSET 10
 
@@ -45,7 +45,7 @@
   if (self == nil)
     return nil;
 
-  _scale = .4;
+  _scale = .3;
   _primarySelection = -1;
 
   return self;

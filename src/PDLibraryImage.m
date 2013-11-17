@@ -26,6 +26,8 @@
 
 #import "PDUUIDManager.h"
 
+#import <QuartzCore/CATransaction.h>
+
 #import <sys/stat.h>
 
 enum
@@ -52,22 +54,9 @@ enum
 
 @end
 
-@interface PDLibraryImageHostOperation : NSOperation
-{
-  id<PDLibraryImageHost> _imageHost;
-  NSDictionary *_options;
-
-  CGImageSourceRef _imageSource;
-  NSDictionary *_imageProperties;
-}
-
-- (id)initWithImageHost:(id<PDLibraryImageHost>)host
-    imageSource:(CGImageSourceRef)src imageProperties:(NSDictionary *)props;
-
-@end
-
 NSString * const PDLibraryImageHost_Size = @"size";
 NSString * const PDLibraryImageHost_Thumbnail = @"thumbnail";
+NSString * const PDLibraryImageHost_ColorSpace = @"colorSpace";
 
 static size_t
 fileMTime(NSString *path)
@@ -180,8 +169,43 @@ createCroppedThumbnailImage(CGImageSourceRef src)
   return im;
 }
 
+static CGImageRef
+copyScaledImage(CGImageRef src_im, CGSize size, CGColorSpaceRef space)
+{
+  if (src_im == NULL)
+    return NULL;
+
+  CGColorSpaceRef srgb = NULL;
+
+  if (space == NULL)
+    {
+      srgb = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+      space = srgb;
+    }
+
+  size_t dw = ceil(size.width);
+  size_t dh = ceil(size.height);
+
+  CGContextRef ctx = CGBitmapContextCreate(NULL, dw, dh, 8, 0, space,
+		kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
+
+  CGImageRef im = NULL;
+
+  if (ctx != NULL)
+    {
+      CGContextSetBlendMode(ctx, kCGBlendModeCopy);
+      CGContextDrawImage(ctx, CGRectMake(0, 0, dw, dh), src_im);
+
+      im = CGBitmapContextCreateImage(ctx);
+
+      CGContextRelease(ctx);
+    }
+
+  return im;
+}
+
 static NSString *
-cachedPathForType(NSUUID *uuid, NSString *filePath, NSInteger type)
+cachedPathForType(NSString *filePath, NSUUID *uuid, NSInteger type)
 {
   static NSString *_cachePath;
 
@@ -209,6 +233,12 @@ cachedPathForType(NSUUID *uuid, NSString *filePath, NSInteger type)
     path = [path stringByAppendingString:@"_medium.jpg"];
 
   return [_cachePath stringByAppendingPathComponent:path];
+}
+
+static BOOL
+validCachedImage(NSString *filePath, NSUUID *uuid, NSInteger type)
+{
+  return fileNewerThanFile(cachedPathForType(filePath, uuid, type), filePath);
 }
 
 @implementation PDLibraryImage
@@ -261,8 +291,6 @@ imageHostQueue(void)
   [_path release];
   [_uuid release];
 
-  if (_imageSource)
-    CFRelease(_imageSource);
   if (_imageProperties)
     CFRelease(_imageProperties);
 
@@ -287,22 +315,17 @@ imageHostQueue(void)
   return [[_path lastPathComponent] stringByDeletingPathExtension];
 }
 
-- (CGImageSourceRef)imageSource
-{
-  if (_imageSource == NULL)
-    _imageSource = createImageSourceFromPath(_path);
-
-  return _imageSource;
-}
-
 - (NSDictionary *)imageProperties
 {
   if (_imageProperties == NULL)
     {
-      CGImageSourceRef src = [self imageSource];
+      CGImageSourceRef src = createImageSourceFromPath(_path);
 
       if (src != NULL)
-	_imageProperties = CGImageSourceCopyPropertiesAtIndex(src, 0, NULL);
+	{
+	  _imageProperties = CGImageSourceCopyPropertiesAtIndex(src, 0, NULL);
+	  CFRelease(src);
+	}
     }
 
   return (NSDictionary *)_imageProperties;
@@ -365,31 +388,160 @@ imageHostQueue(void)
     }
 }
 
+/* Takes ownership of 'im'. */
+
+static void
+setHostedImage(id<PDLibraryImageHost> obj, CGImageRef im)
+{
+  dispatch_queue_t queue;
+
+  if ([obj respondsToSelector:@selector(imageHostQueue)])
+    queue = [obj imageHostQueue];
+  else
+    queue = dispatch_get_main_queue();
+
+  dispatch_async(queue, ^{
+    [obj setHostedImage:im];
+    CGImageRelease(im);
+    [CATransaction flush];
+  });
+}
+
 - (void)addImageHost:(id<PDLibraryImageHost>)obj
 {
-  PDLibraryImageHostOperation *op;
-
   assert([_imageHosts objectForKey:obj] == nil);
 
-  op = [[PDLibraryImageHostOperation alloc]
-	initWithImageHost:obj imageSource:[self imageSource]
-	imageProperties:[self imageProperties]];
+  NSUUID *uuid = [self UUID];
+  NSString *path = [self path];
 
-  [imageHostQueue() addOperation:op];
-  [_imageHosts setObject:op forKey:obj];
+  NSDictionary *opts = [obj imageHostOptions];
+  BOOL thumb = [[opts objectForKey:PDLibraryImageHost_Thumbnail] boolValue];
+  NSSize size = [[opts objectForKey:PDLibraryImageHost_Size] sizeValue];
 
-  [op release];
+  if (size.width == 0 && size.height == 0)
+    size = [self pixelSize];
+
+  CGFloat max_size = fmax(size.width, size.height);
+
+  NSInteger type;
+  if (max_size < PDLibraryImage_TinySize)
+    type = PDLibraryImage_Tiny;
+  else if (max_size < PDLibraryImage_SmallSize)
+    type = PDLibraryImage_Small;
+  else
+    type = PDLibraryImage_Medium;
+
+  NSMutableArray *ops = [NSMutableArray array];
+  NSOperation *thumb_op = nil;
+  NSOperation *cache_op = nil;
+  NSOperation *full_op = nil;
+
+  /* If the proxy (tiny/small/medium) cache hasn't been built yet,
+     display the embedded image thumbnail until it's ready. */
+
+  if (thumb && !validCachedImage(path, uuid, type))
+    {
+      thumb_op = [NSBlockOperation blockOperationWithBlock:^{
+	CGImageSourceRef src = createImageSourceFromPath(path);
+	if (src != NULL)
+	  {
+	    CGImageRef im = createCroppedThumbnailImage(src);
+	    CFRelease(src);
+	    if (im != NULL)
+	      setHostedImage(obj, im);
+	  }
+      }];
+
+      [thumb_op setQueuePriority:NSOperationQueuePriorityHigh];
+      [ops addObject:thumb_op];
+    }
+
+  /* Then access the cached proxy that's larger than the requested size. */
+
+  cache_op = [NSBlockOperation blockOperationWithBlock:^{
+    NSString *cachedPath = cachedPathForType(path, uuid, type);
+    CGImageSourceRef src = createImageSourceFromPath(cachedPath);
+    if (src != NULL)
+      {
+	CGImageRef im = CGImageSourceCreateImageAtIndex(src, 0, NULL);
+	CFRelease(src);
+
+	/* FIXME: resize proxy to requested size? */
+
+	if (im != NULL)
+	  setHostedImage(obj, im);
+      }
+  }];
+
+  /* Cached operation can't run until proxy cache is fully built for
+     this image. */
+
+  [self startPrefetching];
+  [cache_op addDependency:_prefetchOp];
+
+  if (thumb_op != nil)
+    [cache_op addDependency:thumb_op];
+
+  [ops addObject:cache_op];
+
+  /* If necessary, load the full image last.
+
+     FIXME: we should be tiling large images here. */
+
+  if (!thumb && max_size > PDLibraryImage_MediumSize)
+    {
+      /* Using 'id' so the block retains it, actually CGColorSpaceRef. */
+
+      id space = [opts objectForKey:PDLibraryImageHost_ColorSpace];
+
+      full_op = [NSBlockOperation blockOperationWithBlock:^{
+	CGImageSourceRef src = createImageSourceFromPath(path);
+	if (src != NULL)
+	  {
+	    CGImageRef im1 = CGImageSourceCreateImageAtIndex(src, 0, NULL);
+	    CFRelease(src);
+
+	    /* Scale the image to required size, this has several side-
+	       effects: (1) everything looks as good as possible, even
+	       when using a cheap GL filter, (2) uses as little memory
+	       as possible, (3) stops CA needing to decompress and
+	       color-match the image before displaying it.
+
+	       (Even though PDImageLayer tries to arrange for the
+	       decompression to happen on a background thread, and
+	       CALayer should never decompress with the CATransaction
+	       lock held, both those things appear to happen when
+	       directly using the raw CGImage from ImageIO.) */
+
+	    CGImageRef im2 = copyScaledImage(im1, size,
+					     (CGColorSpaceRef)space);
+	    CGImageRelease(im1);
+
+	    if (im2 != NULL)
+	      setHostedImage(obj, im2);
+	  }
+      }];
+
+      [full_op addDependency:cache_op];
+
+      [ops addObject:full_op];
+    }
+
+  [_imageHosts setObject:ops forKey:obj];
+
+  NSOperationQueue *q = imageHostQueue();
+  for (NSOperation *op in ops)
+    [q addOperation:op];
 }
 
 - (void)removeImageHost:(id<PDLibraryImageHost>)obj
 {
-  PDLibraryImageHostOperation *op;
-
-  op = [_imageHosts objectForKey:obj];
-  if (op == nil)
+  NSArray *ops = [_imageHosts objectForKey:obj];
+  if (ops == nil)
     return;
 
-  [op cancel];
+  for (NSOperation *op in ops)
+    [op cancel];
 
   [_imageHosts removeObjectForKey:obj];
 }
@@ -420,7 +572,7 @@ imageHostQueue(void)
 
 - (void)main
 {
-  NSString *tiny_path = cachedPathForType(_uuid, _path, PDLibraryImage_Tiny);
+  NSString *tiny_path = cachedPathForType(_path, _uuid, PDLibraryImage_Tiny);
 
   if (fileNewerThanFile(tiny_path, _path))
     return;
@@ -460,15 +612,12 @@ imageHostQueue(void)
 
 	  if (im != NULL)
 	    {
-	      writeImageToPath(im, cachedPathForType(_uuid, _path, type));
+	      writeImageToPath(im, cachedPathForType(_path, _uuid, type));
 	      CGImageRelease(src_im);
 	      src_im = im;
 	    }
 	}
     };
-
-  /* Since we're generating one image, do them all, it will probably
-     be quicker overall that way. */
 
   cache_image(PDLibraryImage_Medium, PDLibraryImage_MediumSize);
   cache_image(PDLibraryImage_Small, PDLibraryImage_SmallSize);
@@ -476,55 +625,6 @@ imageHostQueue(void)
 
   CGColorSpaceRelease(srgb);
   CGImageRelease(src_im);
-}
-
-@end
-
-@implementation PDLibraryImageHostOperation
-
-- (id)initWithImageHost:(id<PDLibraryImageHost>)host
-    imageSource:(CGImageSourceRef)src imageProperties:(NSDictionary *)props;
-{
-  self = [super init];
-  if (self == nil)
-    return nil;
-
-  _imageHost = [host retain];
-  _options = [[host imageHostOptions] copy];
-
-  _imageSource = (CGImageSourceRef)CFRetain(src);
-  _imageProperties = [props copy];
-
-  return self;
-}
-
-- (void)dealloc
-{
-  [_imageHost release];
-  [_options release];
-  if (_imageSource)
-    CFRelease(_imageSource);
-  [_imageProperties release];
-
-  [super dealloc];
-}
-
-- (void)main
-{
-  CGImageRef im = NULL;
-
-  // FIXME: ignoring size for now..
-
-  if ([[_options objectForKey:PDLibraryImageHost_Thumbnail] boolValue])
-    im = createCroppedThumbnailImage(_imageSource);
-
-  if (im == NULL)
-    im = CGImageSourceCreateImageAtIndex(_imageSource, 0, NULL);
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [_imageHost setHostedImage:im];
-    CGImageRelease(im);
-  });
 }
 
 @end

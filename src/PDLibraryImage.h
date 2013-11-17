@@ -33,7 +33,6 @@
   NSString *_path;
   NSUUID *_uuid;
 
-  CGImageSourceRef _imageSource;
   CFDictionaryRef _imageProperties;
 
   NSMapTable *_imageHosts;
@@ -71,7 +70,17 @@
 
 - (NSDictionary *)imageHostOptions;
 
+/* Note: may be called more than once, first with low-quality, then
+   with high-quality image. */
+
 - (void)setHostedImage:(CGImageRef)im;
+
+@optional
+
+/* Queue that -setHostedImage: should be invoked from. If not defined,
+   the main queue is used. */
+
+- (dispatch_queue_t)imageHostQueue;
 
 @end
 
@@ -79,3 +88,4 @@
 
 extern NSString * const PDLibraryImageHost_Size;	// NSValue<Size>
 extern NSString * const PDLibraryImageHost_Thumbnail;	// NSNumber<bool>
+extern NSString * const PDLibraryImageHost_ColorSpace;	// only a hint

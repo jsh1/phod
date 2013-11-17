@@ -96,7 +96,9 @@
   NSInteger idx = [_subviewControllers indexOfObjectIdenticalTo:controller];
 
   if (idx != NSNotFound)
-    [_subviewControllers removeObjectAtIndex:idx];
+    {
+      [_subviewControllers removeObjectAtIndex:idx];
+    }
 }
 
 - (NSView *)initialFirstResponder
@@ -117,6 +119,14 @@
 
   if ([self view] != nil)
     [self viewDidLoad];
+}
+
+- (void)viewWillAppear
+{
+}
+
+- (void)viewDidDisappear
+{
 }
 
 - (NSDictionary *)savedViewState
@@ -157,17 +167,21 @@
 
 - (void)addToContainerView:(NSView *)superview
 {
-  NSView *view;
-
-  view = [self view];
+  NSView *view = [self view];
   assert([view superview] == nil);
+
   [view setFrame:[superview bounds]];
+
+  [self viewWillAppear];
+
   [superview addSubview:view];
 }
 
 - (void)removeFromContainer
 {
   [[self view] removeFromSuperview];
+
+  [self viewDidDisappear];
 }
 
 @end

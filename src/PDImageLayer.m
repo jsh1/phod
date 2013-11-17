@@ -51,6 +51,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
   _libraryImage = [src->_libraryImage retain];
   _thumbnail = src->_thumbnail;
+  _colorSpace = CGColorSpaceRetain(src->_colorSpace);
 
   return self;
 }
@@ -62,12 +63,20 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
       [_libraryImage removeImageHost:self];
       _addedImageHost = NO;
     }
+
+  [self setSublayers:[NSArray array]];
+}
+
+- (void)removeContent
+{
+  [self invalidate];
 }
 
 - (void)dealloc
 {
   [self invalidate];
   [_libraryImage release];
+  CGColorSpaceRelease(_colorSpace);
 
   [super dealloc];
 }
@@ -95,6 +104,20 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
     }
 }
 
+- (CGColorSpaceRef)colorSpace
+{
+  return _colorSpace;
+}
+
+- (void)setColorSpace:(CGColorSpaceRef)space
+{
+  if (_colorSpace != space)
+    {
+      CGColorSpaceRelease(_colorSpace);
+      _colorSpace = CGColorSpaceRetain(space);
+    }
+}
+
 - (void)layoutSublayers
 {
   if (_libraryImage == nil)
@@ -105,18 +128,6 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
   CGSize size = CGSizeMake(ceil(bounds.size.width * scale),
 			   ceil(bounds.size.height * scale));
-
-  if (!_addedImageHost)
-    {
-      _imageSize = size;
-      [_libraryImage addImageHost:self];
-      _addedImageHost = YES;
-    }
-  else if (!CGSizeEqualToSize(_imageSize, size))
-    {
-      _imageSize = size;
-      [_libraryImage updateImageHost:self];
-    }
 
   /* Use a nested layer to host the image so we can apply the
      orientation transform to it, without the owner of this layer
@@ -129,6 +140,21 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
       image_layer = [PDImageLayerLayer layer];
       [image_layer setDelegate:[self delegate]];
       [self addSublayer:image_layer];
+    }
+
+  /* Don't call -addImageHost: etc until the image layer exists -- the
+     images are supplied asynchronously via a concurrent queue. */
+
+  if (!_addedImageHost)
+    {
+      _imageSize = size;
+      [_libraryImage addImageHost:self];
+      _addedImageHost = YES;
+    }
+  else if (!CGSizeEqualToSize(_imageSize, size))
+    {
+      _imageSize = size;
+      [_libraryImage updateImageHost:self];
     }
 
   unsigned int orientation = [_libraryImage orientation];
@@ -163,21 +189,37 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
 - (NSDictionary *)imageHostOptions
 {
-  return @{PDLibraryImageHost_Thumbnail: [NSNumber numberWithBool:_thumbnail],
-	   PDLibraryImageHost_Size: [NSValue valueWithSize:_imageSize]};
+  NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+
+  [dict setObject:[NSValue valueWithSize:_imageSize]
+   forKey:PDLibraryImageHost_Size];
+
+  [dict setObject:[NSNumber numberWithBool:_thumbnail]
+   forKey:PDLibraryImageHost_Thumbnail];
+
+  if (_colorSpace != NULL)
+    [dict setObject:(id)_colorSpace forKey:PDLibraryImageHost_ColorSpace];
+
+  return dict;
+}
+
+- (dispatch_queue_t)imageHostQueue
+{
+  return dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 }
 
 - (void)setHostedImage:(CGImageRef)im
 {
-  /* Move image decompression onto background thread. */
+  /* Due to -imageHostQueue above, will be called on a background queue. */
 
-  CGImageRetain(im);
+  CALayer *image_layer = [[self sublayers] firstObject];
 
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    [[[self sublayers] firstObject] setContents:(id)im];
-    CGImageRelease(im);
-    [CATransaction flush];
-  });
+  CGFloat scaling = _imageSize.width / (CGFloat)CGImageGetWidth(im);
+
+  [image_layer setMinificationFilter:
+   scaling < .75 ? kCAFilterTrilinear : kCAFilterLinear];
+
+  [image_layer setContents:(id)im];
 }
 
 @end
@@ -188,6 +230,8 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 {
   if ([key isEqualToString:@"magnificationFilter"])
     return kCAFilterNearest;
+  else if ([key isEqualToString:@"minificationFilterBias"])
+    return [NSNumber numberWithFloat:-.25];
   else if ([key isEqualToString:@"edgeAntialiasingMask"])
     return [NSNumber numberWithInt:0];
   else
