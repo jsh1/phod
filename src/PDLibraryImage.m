@@ -499,7 +499,11 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
   NSSize size = [[opts objectForKey:PDLibraryImageHost_Size] sizeValue];
 
   if (size.width == 0 && size.height == 0)
-    size = [self pixelSize];
+    {
+      size = [self pixelSize];
+      if (size.width == 0 && size.height == 0)
+	return;
+    }
 
   CGFloat max_size = fmax(size.width, size.height);
 
