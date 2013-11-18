@@ -49,9 +49,7 @@ enum
   NSString *_path;
   NSUUID *_uuid;
 }
-
 - (id)initWithPath:(NSString *)path UUID:(NSUUID *)uuid;
-
 @end
 
 NSString * const PDLibraryImageHost_Size = @"size";
@@ -424,18 +422,19 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
   CGFloat max_size = fmax(size.width, size.height);
 
   NSInteger type;
+  CGFloat type_size;
   if (max_size < PDLibraryImage_TinySize)
-    type = PDLibraryImage_Tiny;
+    type = PDLibraryImage_Tiny, type_size = PDLibraryImage_TinySize;
   else if (max_size < PDLibraryImage_SmallSize)
-    type = PDLibraryImage_Small;
+    type = PDLibraryImage_Small, type_size = PDLibraryImage_SmallSize;
   else
-    type = PDLibraryImage_Medium;
+    type = PDLibraryImage_Medium, type_size = PDLibraryImage_MediumSize;
 
   NSMutableArray *ops = [NSMutableArray array];
 
-  __block NSOperation *thumb_op = nil;
-  __block NSOperation *cache_op = nil;
-  __block NSOperation *full_op = nil;
+  NSOperation *thumb_op = nil;
+  NSOperation *cache_op = nil;
+  NSOperation *full_op = nil;
 
   /* If the proxy (tiny/small/medium) cache hasn't been built yet,
      display the embedded image thumbnail until it's ready. */
@@ -448,7 +447,7 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 	  {
 	    CGImageRef im = createCroppedThumbnailImage(src);
 	    CFRelease(src);
-	    if (im != NULL && ![thumb_op isCancelled])
+	    if (im != NULL)
 	      setHostedImage(self, obj, im);
 	  }
       }];
@@ -469,7 +468,7 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 
 	/* FIXME: resize proxy to requested size? */
 
-	if (im != NULL && ![cache_op isCancelled])
+	if (im != NULL)
 	  setHostedImage(self, obj, im);
       }
   }];
@@ -485,21 +484,27 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 
   [ops addObject:cache_op];
 
-  /* If necessary, load the full image last.
+  /* Finally, if necessary, downsample from the proxy or the full
+     image. I'm choosing to create yet another CGImageRef for the proxy
+     if that's the one being used, rather than trying to reuse the one
+     loaded above, ImageIO will probably cache it.
 
      FIXME: we should be tiling large images here. */
 
-  if (!thumb && max_size > PDLibraryImage_MediumSize)
+  if (!thumb && max_size != type_size)
     {
       /* Using 'id' so the block retains it, actually CGColorSpaceRef. */
 
       id space = [opts objectForKey:PDLibraryImageHost_ColorSpace];
 
       full_op = [NSBlockOperation blockOperationWithBlock:^{
-	CGImageSourceRef src = createImageSourceFromPath(path);
+	NSString *src_path = (max_size > type_size ? path
+			      : cachedPathForType(path, uuid, type));
+
+	CGImageSourceRef src = createImageSourceFromPath(src_path);
 	if (src != NULL)
 	  {
-	    CGImageRef im1 = CGImageSourceCreateImageAtIndex(src, 0, NULL);
+	    CGImageRef src_im = CGImageSourceCreateImageAtIndex(src, 0, NULL);
 	    CFRelease(src);
 
 	    /* Scale the image to required size, this has several side-
@@ -514,16 +519,12 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 	       lock held, both those things appear to happen when
 	       directly using the raw CGImage from ImageIO.) */
 
-	    if (![full_op isCancelled])
-	      {
-		CGImageRef im2 = copyScaledImage(im1, size,
-						 (CGColorSpaceRef)space);
+	    CGImageRef dst_im = copyScaledImage(src_im, size,
+					     (CGColorSpaceRef)space);
+	    CGImageRelease(src_im);
 
-		if (im2 != NULL && ![full_op isCancelled])
-		  setHostedImage(self, obj, im2);
-	      }
-
-	    CGImageRelease(im1);
+	    if (dst_im != NULL)
+	      setHostedImage(self, obj, dst_im);
 	  }
       }];
 
