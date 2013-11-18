@@ -50,7 +50,7 @@ enum
 {
   IMAGE_SUBLAYER,
   TITLE_SUBLAYER,
-  SELECTION_SUBLAYER,
+  SELECTION_SUBLAYER,			/* optional */
 };
 
 @implementation PDThumbnailLayer
@@ -145,26 +145,22 @@ enum
 
   if ([[self sublayers] count] == 0)
     {
-      id delegate = [self delegate];
-
       PDImageLayer *image_layer = [PDImageLayer layer];
       [image_layer setThumbnail:YES];
-      [image_layer setDelegate:delegate];
+      [image_layer setDelegate:[self delegate]];
       [self addSublayer:image_layer];
 
       CALayer *title_layer = [PDThumbnailTitleLayer layer];
-      [title_layer setDelegate:delegate];
+      [title_layer setDelegate:[self delegate]];
       [self addSublayer:title_layer];
-
-      CALayer *selection_layer = [PDThumbnailSelectionLayer layer];
-      [selection_layer setDelegate:delegate];
-      [self addSublayer:selection_layer];
     }
 
   NSArray *sublayers = [self sublayers];
   PDImageLayer *image_layer = (id)[sublayers objectAtIndex:IMAGE_SUBLAYER];
   CATextLayer *title_layer = [sublayers objectAtIndex:TITLE_SUBLAYER];
-  CALayer *selection_layer = [sublayers objectAtIndex:SELECTION_SUBLAYER];
+  CALayer *selection_layer = nil;
+  if (SELECTION_SUBLAYER < [sublayers count])
+    selection_layer = [sublayers objectAtIndex:SELECTION_SUBLAYER];
 
   CGRect bounds = [self bounds];
 
@@ -186,13 +182,21 @@ enum
       CGFloat width = _primary ? PRIMARY_SELECTION_WIDTH : SELECTION_WIDTH;
 
       CGRect selR = CGRectUnion([image_layer frame], [title_layer frame]);
+
+      if (selection_layer == nil)
+	{
+	  selection_layer = [PDThumbnailSelectionLayer layer];
+	  [selection_layer setDelegate:[self delegate]];
+	  [self addSublayer:selection_layer];
+	}
+
       [selection_layer setFrame:CGRectInset(selR, inset, inset)];
       [selection_layer setCornerRadius:radius];
       [selection_layer setBorderWidth:width];
       [selection_layer setHidden:NO];
     }
   else
-    [selection_layer setHidden:YES];
+    [selection_layer removeFromSuperlayer];
 }
 
 @end
