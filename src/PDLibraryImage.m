@@ -203,7 +203,7 @@ copyScaledImage(CGImageRef src_im, CGSize size, CGColorSpaceRef space)
 }
 
 static NSString *
-cachedPathForType(NSString *filePath, NSUUID *uuid, NSInteger type)
+cachedPathForType(NSUUID *uuid, NSInteger type)
 {
   static NSString *_cachePath;
 
@@ -236,7 +236,7 @@ cachedPathForType(NSString *filePath, NSUUID *uuid, NSInteger type)
 static BOOL
 validCachedImage(NSString *filePath, NSUUID *uuid, NSInteger type)
 {
-  return fileNewerThanFile(cachedPathForType(filePath, uuid, type), filePath);
+  return fileNewerThanFile(cachedPathForType(uuid, type), filePath);
 }
 
 @implementation PDLibraryImage
@@ -459,7 +459,7 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
   /* Then access the cached proxy that's larger than the requested size. */
 
   cache_op = [NSBlockOperation blockOperationWithBlock:^{
-    NSString *cachedPath = cachedPathForType(path, uuid, type);
+    NSString *cachedPath = cachedPathForType(uuid, type);
     CGImageSourceRef src = createImageSourceFromPath(cachedPath);
     if (src != NULL)
       {
@@ -499,7 +499,7 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 
       full_op = [NSBlockOperation blockOperationWithBlock:^{
 	NSString *src_path = (max_size > type_size ? path
-			      : cachedPathForType(path, uuid, type));
+			      : cachedPathForType(uuid, type));
 
 	CGImageSourceRef src = createImageSourceFromPath(src_path);
 	if (src != NULL)
@@ -578,7 +578,7 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 
 - (void)main
 {
-  NSString *tiny_path = cachedPathForType(_path, _uuid, PDLibraryImage_Tiny);
+  NSString *tiny_path = cachedPathForType(_uuid, PDLibraryImage_Tiny);
 
   if (fileNewerThanFile(tiny_path, _path))
     return;
@@ -618,7 +618,7 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 
 	  if (im != NULL)
 	    {
-	      writeImageToPath(im, cachedPathForType(_path, _uuid, type));
+	      writeImageToPath(im, cachedPathForType(_uuid, type));
 	      CGImageRelease(src_im);
 	      src_im = im;
 	    }
