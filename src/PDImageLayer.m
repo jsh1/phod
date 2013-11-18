@@ -135,6 +135,15 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   CGSize size = CGSizeMake(ceil(bounds.size.width * scale),
 			   ceil(bounds.size.height * scale));
 
+  unsigned int orientation = [_libraryImage orientation];
+
+  if (orientation > 4)
+    {
+      CGFloat t = size.width;
+      size.width = size.height;
+      size.height = t;
+    }
+
   /* Use a nested layer to host the image so we can apply the
      orientation transform to it, without the owner of this layer
      needing to care. */
@@ -162,8 +171,6 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
       _imageSize = size;
       [_libraryImage updateImageHost:self];
     }
-
-  unsigned int orientation = [_libraryImage orientation];
 
   CGAffineTransform m;
   if (orientation >= 1 && orientation <= 8)
@@ -227,7 +234,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
       CGFloat scaling = _imageSize.width / (CGFloat)CGImageGetWidth(im);
 
       [image_layer setMinificationFilter:
-       scaling < .75 ? kCAFilterTrilinear : kCAFilterLinear];
+       _thumbnail && scaling < .9 ? kCAFilterTrilinear : kCAFilterLinear];
 
       [image_layer setContents:(id)im];
     }
@@ -244,7 +251,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   if ([key isEqualToString:@"magnificationFilter"])
     return kCAFilterNearest;
   else if ([key isEqualToString:@"minificationFilterBias"])
-    return [NSNumber numberWithFloat:-.25];
+    return [NSNumber numberWithFloat:-.1];
   else if ([key isEqualToString:@"edgeAntialiasingMask"])
     return [NSNumber numberWithInt:0];
   else
