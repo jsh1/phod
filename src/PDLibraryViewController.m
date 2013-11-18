@@ -56,8 +56,6 @@
 
 - (void)dealloc
 {
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
-
   [_outlineView setDataSource:nil];
   [_outlineView setDelegate:nil];
 

@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		570A572A1833D21C0052A246 /* PDImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = 570A57291833D21C0052A246 /* PDImageView.m */; };
+		5718E86B183A661B00D73448 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 5718E869183A661B00D73448 /* md5.c */; };
+		5718E86F183A6CC700D73448 /* PDImageHash.m in Sources */ = {isa = PBXBuildFile; fileRef = 5718E86E183A6CC700D73448 /* PDImageHash.m */; };
 		577BDBF3182D792800116AF2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 577BDBF1182D792800116AF2 /* InfoPlist.strings */; };
 		577BDBF5182D792800116AF2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 577BDBF4182D792800116AF2 /* main.m */; };
 		577BDBFC182D792800116AF2 /* PDAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 577BDBFB182D792800116AF2 /* PDAppDelegate.m */; };
@@ -39,7 +41,6 @@
 		57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A1F182D863E000BF04E /* PDSplitView.m */; };
 		57CE6A2A182D863E000BF04E /* PDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A21182D863E000BF04E /* PDViewController.m */; };
 		57CE6A2B182D863E000BF04E /* PDWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A23182D863E000BF04E /* PDWindowController.m */; };
-		57DADC0918318644006D0BC1 /* PDUUIDManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 57DADC0818318644006D0BC1 /* PDUUIDManager.m */; };
 		57DADC0B1831865C006D0BC1 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 57DADC0A1831865C006D0BC1 /* libsqlite3.dylib */; };
 		57DADC0E1833C40F006D0BC1 /* PDImageGridView.m in Sources */ = {isa = PBXBuildFile; fileRef = 57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */; };
 		57E053B71830576A00123059 /* PDThumbnailLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 57E053B61830576A00123059 /* PDThumbnailLayer.m */; };
@@ -48,6 +49,11 @@
 /* Begin PBXFileReference section */
 		570A57281833D21C0052A246 /* PDImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageView.h; sourceTree = "<group>"; };
 		570A57291833D21C0052A246 /* PDImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageView.m; sourceTree = "<group>"; };
+		5718E869183A661B00D73448 /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = md5.c; sourceTree = "<group>"; };
+		5718E86A183A661B00D73448 /* md5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = md5.h; sourceTree = "<group>"; };
+		5718E86C183A669100D73448 /* getput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = getput.h; sourceTree = "<group>"; };
+		5718E86D183A6CC700D73448 /* PDImageHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageHash.h; sourceTree = "<group>"; };
+		5718E86E183A6CC700D73448 /* PDImageHash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageHash.m; sourceTree = "<group>"; };
 		577BDBE5182D792800116AF2 /* Phod.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Phod.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		577BDBEB182D792800116AF2 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		577BDBED182D792800116AF2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -97,8 +103,6 @@
 		57CE6A21182D863E000BF04E /* PDViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDViewController.m; sourceTree = "<group>"; };
 		57CE6A22182D863E000BF04E /* PDWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDWindowController.h; sourceTree = "<group>"; };
 		57CE6A23182D863E000BF04E /* PDWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDWindowController.m; sourceTree = "<group>"; };
-		57DADC0718318644006D0BC1 /* PDUUIDManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDUUIDManager.h; sourceTree = "<group>"; };
-		57DADC0818318644006D0BC1 /* PDUUIDManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDUUIDManager.m; sourceTree = "<group>"; };
 		57DADC0A1831865C006D0BC1 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		57DADC0C1833C40F006D0BC1 /* PDImageGridView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageGridView.h; sourceTree = "<group>"; };
 		57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageGridView.m; sourceTree = "<group>"; };
@@ -210,14 +214,14 @@
 		57C18112182FDD33002B8DB2 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				5718E86D183A6CC700D73448 /* PDImageHash.h */,
+				5718E86E183A6CC700D73448 /* PDImageHash.m */,
 				57C18106182F0ED3002B8DB2 /* PDLibraryItem.h */,
 				57C18107182F0ED3002B8DB2 /* PDLibraryItem.m */,
 				57C1810B182FD616002B8DB2 /* PDLibraryDirectory.h */,
 				57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */,
 				57C18104182F0ED3002B8DB2 /* PDLibraryImage.h */,
 				57C18105182F0ED3002B8DB2 /* PDLibraryImage.m */,
-				57DADC0718318644006D0BC1 /* PDUUIDManager.h */,
-				57DADC0818318644006D0BC1 /* PDUUIDManager.m */,
 			);
 			name = Library;
 			sourceTree = "<group>";
@@ -246,6 +250,9 @@
 		57C18114182FDD57002B8DB2 /* Misc */ = {
 			isa = PBXGroup;
 			children = (
+				5718E869183A661B00D73448 /* md5.c */,
+				5718E86A183A661B00D73448 /* md5.h */,
+				5718E86C183A669100D73448 /* getput.h */,
 				577BDBF6182D792800116AF2 /* Phod-Prefix.pch */,
 				577BDBF4182D792800116AF2 /* main.m */,
 			);
@@ -335,18 +342,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5718E86B183A661B00D73448 /* md5.c in Sources */,
 				57CE6A27182D863E000BF04E /* PDInfoViewController.m in Sources */,
 				57CE6A26182D863E000BF04E /* PDImageViewController.m in Sources */,
 				57DADC0E1833C40F006D0BC1 /* PDImageGridView.m in Sources */,
 				57E053B71830576A00123059 /* PDThumbnailLayer.m in Sources */,
 				570A572A1833D21C0052A246 /* PDImageView.m in Sources */,
 				57C6BAB418343FA60098F967 /* PDImageLayer.m in Sources */,
-				57DADC0918318644006D0BC1 /* PDUUIDManager.m in Sources */,
 				57CE6A25182D863E000BF04E /* PDImageListViewController.m in Sources */,
 				57C18109182F0ED3002B8DB2 /* PDLibraryImage.m in Sources */,
 				57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */,
 				57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */,
 				57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */,
+				5718E86F183A6CC700D73448 /* PDImageHash.m in Sources */,
 				57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */,
 				57CE6A2A182D863E000BF04E /* PDViewController.m in Sources */,
 				57CE6A28182D863E000BF04E /* PDLibraryViewController.m in Sources */,

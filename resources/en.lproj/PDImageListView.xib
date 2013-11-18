@@ -7,6 +7,7 @@
         <customObject id="-2" userLabel="File's Owner" customClass="PDImageListViewController">
             <connections>
                 <outlet property="_gridView" destination="oHo-AH-gSA" id="W4m-Ir-ZjY"/>
+                <outlet property="_progressIndicator" destination="Xvc-cc-PXZ" id="Ww3-7b-EwL"/>
                 <outlet property="_scaleSlider" destination="7R0-fJ-wJc" id="Waq-Lq-gAf"/>
                 <outlet property="_scrollView" destination="MZC-31-5x1" id="uQE-mo-cAo"/>
                 <outlet property="view" destination="pcu-MU-YW6" id="q5T-1j-msf"/>
@@ -51,6 +52,10 @@
                         <action selector="controlAction:" target="-2" id="WWu-mb-Azu"/>
                     </connections>
                 </slider>
+                <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="Xvc-cc-PXZ">
+                    <rect key="frame" x="6" y="8" width="16" height="16"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                </progressIndicator>
             </subviews>
         </customView>
     </objects>

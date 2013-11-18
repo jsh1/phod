@@ -24,18 +24,17 @@
 
 #import <Foundation/Foundation.h>
 
-@interface PDUUIDManager : NSObject
+@interface PDImageHash : NSObject
 {
-  NSString *_path;
-  void *_handle;
-  void *_queryStmt;
-  void *_insertStmt;
+  uintptr_t _hash1;
+  uint8_t _hash[16];
+  NSString *_str;
 }
 
-+ (PDUUIDManager *)sharedManager;
++ (PDImageHash *)fileHash:(NSString *)path;
 
-- (id)initWithPath:(NSString *)path;
+@property(nonatomic, readonly) NSString *hashString;
 
-- (NSUUID *)UUIDOfFileAtPath:(NSString *)path;
+- (NSUInteger)hash;
 
 @end

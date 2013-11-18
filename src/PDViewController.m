@@ -24,6 +24,7 @@
 
 #import "PDViewController.h"
 
+#import "PDAppDelegate.h"
 #import "PDWindowController.h"
 
 @implementation PDViewController
@@ -56,7 +57,10 @@
 
 - (void)dealloc
 {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+
   [_subviewControllers release];
+
   [super dealloc];
 }
 
@@ -109,6 +113,12 @@
 
 - (void)viewDidLoad
 {
+  if (_progressIndicator != nil)
+    {
+      [[NSNotificationCenter defaultCenter]
+       addObserver:self selector:@selector(_backgroundActivityDidChange:)
+       name:PDBackgroundActivityDidChange object:[NSApp delegate]];
+    }
 }
 
 - (void)loadView
@@ -182,6 +192,16 @@
   [[self view] removeFromSuperview];
 
   [self viewDidDisappear];
+}
+
+- (void)_backgroundActivityDidChange:(NSNotification *)note
+{
+  PDAppDelegate *delegate = [NSApp delegate];
+
+  if ([delegate backgroundActivity])
+    [_progressIndicator startAnimation:self];
+  else
+    [_progressIndicator stopAnimation:self];
 }
 
 @end

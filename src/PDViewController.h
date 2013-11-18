@@ -29,6 +29,7 @@
 @interface PDViewController : NSViewController
 {
   PDWindowController *_controller;
+  IBOutlet NSProgressIndicator *_progressIndicator;
 
 @private
   NSMutableArray *_subviewControllers;

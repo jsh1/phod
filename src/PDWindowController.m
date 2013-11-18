@@ -297,19 +297,6 @@ wasFirstResponder(NSView *view)
 {
   if (_imageList != array)
     {
-      if (_imageList != nil)
-	{
-	  NSMutableSet *set = nil;
-	  if ([array count] != 0)
-	    set = [[NSMutableSet alloc] initWithArray:array];
-
-	  for (PDLibraryImage *im in _imageList)
-	    {
-	      if (![set containsObject:im])
-		[im stopPrefetching];
-	    }
-	}
-
       [_imageList release];
       _imageList = [array copy];
 
@@ -318,9 +305,6 @@ wasFirstResponder(NSView *view)
 
       if ([_selectedImageIndexes count] != 0)
 	[self setSelectedImageIndexes:nil];
-
-      for (PDLibraryImage *im in array)
-	[im startPrefetching];
     }
 }
 

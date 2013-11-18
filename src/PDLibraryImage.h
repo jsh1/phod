@@ -25,26 +25,25 @@
 #import "PDLibraryItem.h"
 
 @protocol PDLibraryImageHost;
-
-@class PDLibraryImagePrefetchOperation;
+@class PDImageHash;
 
 @interface PDLibraryImage : NSObject
 {
   NSString *_path;
-  NSUUID *_uuid;
+  PDImageHash *_hash;
 
   CFDictionaryRef _imageProperties;
 
   NSMapTable *_imageHosts;
 
-  PDLibraryImagePrefetchOperation *_prefetchOp;
+  NSOperation *_prefetchOp;
 }
 
 - (id)initWithPath:(NSString *)path;
 
 @property(nonatomic, readonly) NSString *path;
 
-@property(nonatomic, readonly) NSUUID *UUID;
+@property(nonatomic, readonly) PDImageHash *hash;
 
 @property(nonatomic, readonly) NSString *title;
 
@@ -59,6 +58,7 @@
 
 - (void)startPrefetching;
 - (void)stopPrefetching;
+- (BOOL)isPrefetching;
 
 - (void)addImageHost:(id<PDLibraryImageHost>)obj;
 - (void)removeImageHost:(id<PDLibraryImageHost>)obj;

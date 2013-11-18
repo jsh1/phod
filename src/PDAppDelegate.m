@@ -26,6 +26,8 @@
 
 #import "PDWindowController.h"
 
+NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange";
+
 @implementation PDAppDelegate
 
 @synthesize windowController = _windowController;
@@ -33,6 +35,7 @@
 - (void)dealloc
 {
   [_windowController release];
+  [_backgroundActivity release];
 
   [super dealloc];
 }
@@ -65,6 +68,43 @@
 - (IBAction)showWindow:(id)sender
 {
   [[self windowController] showWindow:sender];
+}
+
+- (BOOL)backgroundActivity
+{
+  return [_backgroundActivity count] != 0;
+}
+
+- (void)addBackgroundActivity:(NSString *)name
+{
+  if (_backgroundActivity == nil)
+    _backgroundActivity = [[NSMutableSet alloc] init];
+
+  NSInteger count = [_backgroundActivity count];
+
+  [_backgroundActivity addObject:name];
+
+  if (count == 0)
+    {
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDBackgroundActivityDidChange object:self];
+    }
+}
+
+- (void)removeBackgroundActivity:(NSString *)name
+{
+  if (_backgroundActivity == nil)
+    return;
+
+  NSInteger count = [_backgroundActivity count];
+
+  [_backgroundActivity removeObject:name];
+
+  if (count != 0 && [_backgroundActivity count] == 0)
+    {
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDBackgroundActivityDidChange object:self];
+    }
 }
 
 // NSMenuDelegate methods

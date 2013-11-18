@@ -24,16 +24,25 @@
 
 #import <AppKit/Appkit.h>
 
+extern NSString *const PDBackgroundActivityDidChange;
+
 @class PDWindowController;
 
 @interface PDAppDelegate : NSObject <NSApplicationDelegate>
 {
   IBOutlet PDWindowController *_windowController;
   IBOutlet NSMenu *_viewMenu;
+
+  NSMutableSet *_backgroundActivity;
 }
 
 @property(nonatomic, readonly) PDWindowController *windowController;
 
 - (IBAction)showWindow:(id)sender;
+
+@property(nonatomic, readonly) BOOL backgroundActivity;
+
+- (void)addBackgroundActivity:(NSString *)name;
+- (void)removeBackgroundActivity:(NSString *)name;
 
 @end

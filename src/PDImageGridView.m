@@ -222,7 +222,10 @@
   [layer setSublayers:new_sublayers];
 
   for (PDThumbnailLayer *tem in old_sublayers)
-    [tem invalidate];
+    {
+      [tem invalidate];
+      [[tem libraryImage] stopPrefetching];
+    }
 
   [new_sublayers release];
   [old_sublayers release];
