@@ -66,6 +66,8 @@
   uint8_t digest[16];
   MD5Final(digest, &md5);
 
+  close(fd);
+
   return [[[self alloc] initWithHash:digest] autorelease];
 }
 
