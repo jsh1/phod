@@ -63,13 +63,13 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
       [_libraryImage removeImageHost:self];
       _addedImageHost = NO;
     }
-
-  [self setSublayers:[NSArray array]];
 }
 
 - (void)removeContent
 {
   [self invalidate];
+
+  [self setSublayers:[NSArray array]];
 }
 
 - (void)dealloc
