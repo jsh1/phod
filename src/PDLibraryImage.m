@@ -33,6 +33,11 @@
 
 #define CACHE_DIR "proxy-cache-v1"
 
+/* JPEG compression quality of 50% seems to be the lowest setting that
+   doesn't introduce banding in smooth gradients. */
+
+#define CACHE_QUALITY .5
+
 enum
 {
   PDLibraryImage_Tiny,			/* 256px */
@@ -86,7 +91,7 @@ createImageSourceFromPath(NSString *path)
 }
 
 static void
-writeImageToPath(CGImageRef im, NSString *path)
+writeImageToPath(CGImageRef im, NSString *path, double quality)
 {
   NSFileManager *fm = [NSFileManager defaultManager];
   NSString *dir = [path stringByDeletingLastPathComponent];
@@ -107,9 +112,16 @@ writeImageToPath(CGImageRef im, NSString *path)
 
   if (dest != NULL)
     {
-      CGImageDestinationAddImage(dest, im, NULL);
+      NSDictionary *opts = [[NSDictionary alloc] initWithObjectsAndKeys:
+			    [NSNumber numberWithDouble:quality],
+			    (id)kCGImageDestinationLossyCompressionQuality,
+			    nil];
+
+      CGImageDestinationAddImage(dest, im, (CFDictionaryRef)opts);
       CGImageDestinationFinalize(dest);
       CFRelease(dest);
+
+      [opts release];
     }
 }
 
@@ -187,6 +199,7 @@ copyScaledImage(CGImageRef src_im, CGSize size, CGColorSpaceRef space)
   if (ctx != NULL)
     {
       CGContextSetBlendMode(ctx, kCGBlendModeCopy);
+      CGContextSetInterpolationQuality(ctx, kCGInterpolationHigh);
       CGContextDrawImage(ctx, CGRectMake(0, 0, dw, dh), src_im);
 
       im = CGBitmapContextCreateImage(ctx);
@@ -430,7 +443,8 @@ static NSOperationQueue *_imageHostQueue;
 
 		if (im != NULL)
 		  {
-		    writeImageToPath(im, cachedPathForType(hash, type));
+		    NSString *cachePath = cachedPathForType(hash, type);
+		    writeImageToPath(im, cachePath, CACHE_QUALITY);
 		    CGImageRelease(src_im);
 		    src_im = im;
 		  }
