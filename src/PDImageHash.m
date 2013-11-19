@@ -79,12 +79,6 @@
 
   memcpy(_hash, ptr, 16);
 
-  _hash1 = 0;
-
-  size_t i;
-  for (i = 0; i < 16; i++)
-    _hash1 = _hash1 * 33 + ptr[i];
-
   return self;
 }
 
@@ -116,6 +110,16 @@
 
 - (NSUInteger)hash
 {
+  if (_hash1 == 0)
+    {
+      size_t i;
+      for (i = 0; i < 16; i++)
+	_hash1 = _hash1 * 33 + _hash[i];
+
+      if (_hash1 == 0)
+	_hash1 = 1;
+    }
+
   return _hash1;
 }
 
