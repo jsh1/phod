@@ -171,6 +171,13 @@
 
 	  PDLibraryImage *image = [_images objectAtIndex:idx];
 
+	  /* FIXME: hack -- without this, the method will be called
+	     from -layoutSublayers, which traverses the sublayers array
+	     in reverse order, which cause the thumbnails to update
+	     from the bottom not the top of the visible area. */
+
+	  [image startPrefetching];
+
 	  PDThumbnailLayer *sublayer = nil;
 
 	  NSInteger old_idx = 0;
@@ -267,7 +274,7 @@
   if (_primarySelection >= 0)
     {
       [self scrollRectToVisible:
-       [self boundingRectOfItemAtIndex:_primarySelection] animated:YES];
+       [self boundingRectOfItemAtIndex:_primarySelection] animated:flag];
     }
 }
 

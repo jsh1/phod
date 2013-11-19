@@ -188,6 +188,8 @@
 
   if (_libraryImage != nil)
     {
+      _imageScale = fmax(_imageScale, [self scaleToFitScale]);
+
       CGSize scaledSize = [self scaledImageSize];
 
       NSRect bounds = [self bounds];
@@ -254,12 +256,6 @@
 - (BOOL)isFlipped
 {
   return YES;
-}
-
-- (void)resizeSubviewsWithOldSize:(NSSize)oldSize
-{
-  [self setNeedsDisplay:YES];
-  [super resizeSubviewsWithOldSize:oldSize];
 }
 
 - (BOOL)acceptsFirstResponder

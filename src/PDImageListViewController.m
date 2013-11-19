@@ -57,11 +57,25 @@
 
   [_scrollView setBackgroundColor:[PDColor imageGridBackgroundColor]];
 
+  /* This is so we update when the scroll view scrolls. */
+
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(gridViewBoundsDidChange:)
    name:NSViewBoundsDidChangeNotification object:[_gridView superview]];
 
+  /* This is so we update when the grid view changes size. */
+
+  [_gridView setPostsFrameChangedNotifications:YES];
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(gridViewBoundsDidChange:)
+   name:NSViewFrameDidChangeNotification object:_gridView];
+
   [_scaleSlider setDoubleValue:[_gridView scale]];
+}
+
+- (void)viewDidAppear
+{
+  [_gridView scrollToPrimaryAnimated:NO];
 }
 
 - (NSView *)initialFirstResponder

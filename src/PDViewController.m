@@ -135,6 +135,14 @@
 {
 }
 
+- (void)viewDidAppear
+{
+}
+
+- (void)viewWillDisappear
+{
+}
+
 - (void)viewDidDisappear
 {
 }
@@ -185,10 +193,14 @@
   [self viewWillAppear];
 
   [superview addSubview:view];
+
+  [self viewDidAppear];
 }
 
 - (void)removeFromContainer
 {
+  [self viewWillDisappear];
+
   [[self view] removeFromSuperview];
 
   [self viewDidDisappear];

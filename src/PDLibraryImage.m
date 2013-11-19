@@ -508,16 +508,17 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
   PDImageHash *hash = [self hash];
   NSString *path = [self path];
 
+  NSSize imageSize = [self pixelSize];
+  if (imageSize.width == 0 || imageSize.height == 0)
+    return;
+
   NSDictionary *opts = [obj imageHostOptions];
   BOOL thumb = [[opts objectForKey:PDLibraryImageHost_Thumbnail] boolValue];
   NSSize size = [[opts objectForKey:PDLibraryImageHost_Size] sizeValue];
 
-  if (size.width == 0 && size.height == 0)
-    {
-      size = [self pixelSize];
-      if (size.width == 0 && size.height == 0)
-	return;
-    }
+  if (size.width == 0 || size.width > imageSize.width
+      || size.height == 0 || size.height > imageSize.height)
+    size = imageSize;
 
   CGFloat max_size = fmax(size.width, size.height);
 
@@ -663,7 +664,9 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 
 - (void)updateImageHost:(id<PDLibraryImageHost>)obj
 {
-  // FIXME: not ideal, but ok for now
+  /* FIXME: not ideal, but ok for now. (Actually, it's quite bad. E.g.
+     when zooming in above 100% we load the full-size image again for
+     no reason.) */
 
   [self removeImageHost:obj];
   [self addImageHost:obj];

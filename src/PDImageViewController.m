@@ -63,8 +63,12 @@
       if ([_imageView libraryImage] != image)
 	{
 	  [_imageView setLibraryImage:image];
-	  [_imageView setImageScale:[_imageView scaleToFitScale]];
-	  [_imageView setImageOrigin:CGPointZero];
+
+	  /* Scale of zero will get replaced by -scaleToFitScale by
+	     -[PDImageView updateLayer]. Using zero here avoids issues
+	     if the view size changes before then. */
+
+	  [_imageView setImageScale:0];
 	}
     }
   else
@@ -75,14 +79,10 @@
 {
   [super viewDidLoad];
 
+  [_imageView setPostsFrameChangedNotifications:YES];
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(imageViewBoundsDidChange:)
-   name:NSViewBoundsDidChangeNotification object:_imageView];
-
-  [_imageView setPostsBoundsChangedNotifications:YES];
-
-  /* FIXME: too soon -- bounds isn't final, and we don't notice when
-     it later changes, despite the code above. */
+   name:NSViewFrameDidChangeNotification object:_imageView];
 
   [self updateImage];
 }
@@ -141,7 +141,6 @@
 - (IBAction)zoomOut:(id)sender
 {
   CGFloat scale = [_imageView imageScale];
-  CGFloat fitScale = [_imageView scaleToFitScale];
 
   CGFloat x;
   for (x = 2;; x = x + 1)
@@ -158,9 +157,6 @@
 	}
     }
 
-  if (scale < fitScale)
-    scale = fitScale;
-
   [_imageView setImageScale:scale preserveOrigin:YES];
 }
 
@@ -169,7 +165,7 @@
   CGFloat scale = [_imageView imageScale];
   CGFloat fitScale = [_imageView scaleToFitScale];
 
-  scale = scale > fitScale ? fitScale : 1;
+  scale = fabs(scale - fitScale) > .001 ? fitScale : 1;
 
   [_imageView setImageScale:scale preserveOrigin:YES];
 }
