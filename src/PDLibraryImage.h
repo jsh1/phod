@@ -36,6 +36,7 @@
 
   NSMapTable *_imageHosts;
 
+  BOOL _donePrefetch;
   NSOperation *_prefetchOp;
 }
 

@@ -259,34 +259,34 @@ validCachedImage(NSString *filePath, PDImageHash *hash, NSInteger type)
 
 @synthesize path = _path;
 
-static NSOperationQueue *_prefetchQueue;
-static NSOperationQueue *_imageHostQueue;
+static NSOperationQueue *_wideQueue;
+static NSOperationQueue *_narrowQueue;
 
-- (NSOperationQueue *)prefetchQueue
+- (NSOperationQueue *)wideQueue
 {
-  if (_prefetchQueue == nil)
+  if (_wideQueue == nil)
     {
-      _prefetchQueue = [[NSOperationQueue alloc] init];
-      [_prefetchQueue setName:@"PDLibraryImage.prefetchQueue"];
-      [_prefetchQueue setMaxConcurrentOperationCount:1];
-      [_prefetchQueue addObserver:self forKeyPath:@"operationCount"
+      _wideQueue = [[NSOperationQueue alloc] init];
+      [_wideQueue setName:@"PDLibraryImage.wideQueue"];
+      [_wideQueue addObserver:self forKeyPath:@"operationCount"
        options:0 context:NULL];
     }
 
-  return _prefetchQueue;
+  return _wideQueue;
 }
 
-- (NSOperationQueue *)imageHostQueue
+- (NSOperationQueue *)narrowQueue
 {
-  if (_imageHostQueue == nil)
+  if (_narrowQueue == nil)
     {
-      _imageHostQueue = [[NSOperationQueue alloc] init];
-      [_imageHostQueue setName:@"PDLibraryImage.imageHostQueue"];
-      [_imageHostQueue addObserver:self forKeyPath:@"operationCount"
+      _narrowQueue = [[NSOperationQueue alloc] init];
+      [_narrowQueue setName:@"PDLibraryImage.narrowQueue"];
+      [_narrowQueue setMaxConcurrentOperationCount:1];
+      [_narrowQueue addObserver:self forKeyPath:@"operationCount"
        options:0 context:NULL];
     }
 
-  return _imageHostQueue;
+  return _narrowQueue;
 }
 
 - (void)observeValueForKeyPath:(NSString *)path ofObject:(id)obj
@@ -295,8 +295,8 @@ static NSOperationQueue *_imageHostQueue;
   if ([path isEqualToString:@"operationCount"])
     {
       dispatch_async(dispatch_get_main_queue(), ^{
-	NSInteger count = ([_prefetchQueue operationCount]
-			   + [_imageHostQueue operationCount]);
+	NSInteger count = ([_wideQueue operationCount]
+			   + [_narrowQueue operationCount]);
 	PDAppDelegate *delegate = [NSApp delegate];
 	if (count != 0)
 	  [delegate addBackgroundActivity:@"PDLibraryImage"];
@@ -399,19 +399,22 @@ static NSOperationQueue *_imageHostQueue;
 
 - (void)startPrefetching
 {
-  if (_prefetchOp == nil)
+  if (_prefetchOp == nil && !_donePrefetch)
     {
-      /* Avoid retaining self. */
+      /* Prevent the block retaining self. */
 
       PDImageHash *hash = [self hash];
       NSString *path = [self path];
 
-      _prefetchOp = [NSBlockOperation blockOperationWithBlock:^{
+      NSString *tiny_path = cachedPathForType(hash, PDLibraryImage_Tiny);
 
-	NSString *tiny_path = cachedPathForType(hash, PDLibraryImage_Tiny);
-
-	if (fileNewerThanFile(tiny_path, path))
+      if (fileNewerThanFile(tiny_path, path))
+	{
+	  _donePrefetch = YES;
 	  return;
+	}
+
+      _prefetchOp = [NSBlockOperation blockOperationWithBlock:^{
 
 	CGImageSourceRef src = createImageSourceFromPath(path);
 	if (src == NULL)
@@ -456,7 +459,7 @@ static NSOperationQueue *_imageHostQueue;
       }];
 
       [_prefetchOp setQueuePriority:NSOperationQueuePriorityLow];
-      [[self prefetchQueue] addOperation:_prefetchOp];
+      [[self narrowQueue] addOperation:_prefetchOp];
       [_prefetchOp retain];
     }
 }
@@ -531,6 +534,8 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 
   NSMutableArray *ops = [NSMutableArray array];
 
+  NSOperationQueuePriority next_pri = NSOperationQueuePriorityHigh;
+
   /* If the proxy (tiny/small/medium) cache hasn't been built yet,
      display the embedded image thumbnail until it's ready. */
 
@@ -547,7 +552,8 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 	  }
       }];
 
-      [thumb_op setQueuePriority:NSOperationQueuePriorityHigh];
+      [thumb_op setQueuePriority:next_pri];
+      next_pri = NSOperationQueuePriorityNormal;
       [ops addObject:thumb_op];
     }
 
@@ -580,7 +586,10 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 	 this image. */
 
       [self startPrefetching];
-      [cache_op addDependency:_prefetchOp];
+      [cache_op setQueuePriority:next_pri];
+
+      if (_prefetchOp)
+	[cache_op addDependency:_prefetchOp];
 
       [ops addObject:cache_op];
     }
@@ -634,14 +643,25 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 
   [_imageHosts setObject:ops forKey:obj];
 
-  NSOperationQueue *q = [self imageHostQueue];
+  /* First operation always goes into the maximally-concurrent queue,
+     the goal is to get something visible as soon as possible. The
+     other (more-refined and longer-running) operations go into the
+     narrow queue to prevent them blocking other higher-priority ops
+     (once they start running, they can't be preempted). */
+
+  NSOperationQueue *q1 = [self wideQueue];
+  NSOperationQueue *q2 = [self narrowQueue];
   NSOperation *pred = nil;
 
   for (NSOperation *op in ops)
     {
-      if (pred != nil)
-	[op addDependency:pred];
-      [q addOperation:op];
+      if (pred == nil)
+	[q1 addOperation:op];
+      else
+	{
+	  [op addDependency:pred];
+	  [q2 addOperation:op];
+	}
       pred = op;
     }
 }

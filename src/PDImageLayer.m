@@ -231,10 +231,13 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
     {
       CALayer *image_layer = [[self sublayers] firstObject];
 
-      CGFloat scaling = _imageSize.width / (CGFloat)CGImageGetWidth(im);
+      if (_thumbnail)
+	{
+	  CGFloat scaling = _imageSize.width / (CGFloat)CGImageGetWidth(im);
 
-      [image_layer setMinificationFilter:
-       _thumbnail && scaling < .9 ? kCAFilterTrilinear : kCAFilterLinear];
+	  [image_layer setMinificationFilter:
+	   scaling < .9 ? kCAFilterTrilinear : kCAFilterLinear];
+	}
 
       [image_layer setContents:(id)im];
     }
