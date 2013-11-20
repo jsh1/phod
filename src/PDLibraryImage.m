@@ -425,29 +425,17 @@ static NSOperationQueue *_imageHostQueue;
 	    CGFloat sw = CGImageGetWidth(src_im);
 	    CGFloat sh = CGImageGetHeight(src_im);
 
-	    size_t dw = (sw > sh ? size
-			 : round(size * ((CGFloat)sw / (CGFloat)sh)));
-	    size_t dh = (sh > sw ? size
-			 : round(size * ((CGFloat)sh / (CGFloat)sw)));
+	    CGFloat dw = sw > sh ? size : size * ((CGFloat)sw / (CGFloat)sh);
+	    CGFloat dh = sh > sw ? size : size * ((CGFloat)sh / (CGFloat)sw);
 
-	    CGContextRef ctx = CGBitmapContextCreate(NULL, dw, dh, 8, 0, srgb,
-		kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
-	    if (ctx != NULL)
+	    CGImageRef im = copyScaledImage(src_im, CGSizeMake(dw, dh), srgb);
+
+	    if (im != NULL)
 	      {
-		CGContextSetBlendMode(ctx, kCGBlendModeCopy);
-		CGContextDrawImage(ctx, CGRectMake(0, 0, dw, dh), src_im);
-
-		CGImageRef im = CGBitmapContextCreateImage(ctx);
-
-		CGContextRelease(ctx);
-
-		if (im != NULL)
-		  {
-		    NSString *cachePath = cachedPathForType(hash, type);
-		    writeImageToPath(im, cachePath, CACHE_QUALITY);
-		    CGImageRelease(src_im);
-		    src_im = im;
-		  }
+		NSString *cachePath = cachedPathForType(hash, type);
+		writeImageToPath(im, cachePath, CACHE_QUALITY);
+		CGImageRelease(src_im);
+		src_im = im;
 	      }
 	  };
 
