@@ -207,6 +207,8 @@ copyScaledImage(CGImageRef src_im, CGSize size, CGColorSpaceRef space)
       CGContextRelease(ctx);
     }
 
+  CGColorSpaceRelease(srgb);
+
   return im;
 }
 
