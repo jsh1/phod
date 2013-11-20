@@ -154,6 +154,8 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
     {
       image_layer = [PDImageLayerLayer layer];
       [image_layer setDelegate:[self delegate]];
+      [image_layer setMinificationFilter:
+       _thumbnail ? kCAFilterTrilinear : kCAFilterLinear];
       [self addSublayer:image_layer];
     }
 
@@ -230,15 +232,6 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   if (_libraryImage == image)
     {
       CALayer *image_layer = [[self sublayers] firstObject];
-
-      if (_thumbnail)
-	{
-	  CGFloat scaling = _imageSize.width / (CGFloat)CGImageGetWidth(im);
-
-	  [image_layer setMinificationFilter:
-	   scaling < .9 ? kCAFilterTrilinear : kCAFilterLinear];
-	}
-
       [image_layer setContents:(id)im];
     }
 
