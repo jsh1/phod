@@ -6,7 +6,11 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PDLibraryViewController">
             <connections>
+                <outlet property="_actionButton" destination="ZLw-gH-KnI" id="lh9-FE-sKk"/>
+                <outlet property="_addButton" destination="bv5-Rg-fp3" id="zvv-IF-TZB"/>
                 <outlet property="_outlineView" destination="FXk-bX-Rgc" id="59e-NB-nH5"/>
+                <outlet property="_removeButton" destination="eid-hj-H2P" id="dkb-D4-aWZ"/>
+                <outlet property="_searchField" destination="wy1-9V-NIi" id="EsE-cV-OJF"/>
                 <outlet property="view" destination="V0E-qc-qit" id="Uza-rO-bz9"/>
             </connections>
         </customObject>
@@ -17,14 +21,14 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="20" horizontalPageScroll="10" verticalLineScroll="20" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="9Uv-GP-qyc">
-                    <rect key="frame" x="2" y="2" width="336" height="671"/>
+                    <rect key="frame" x="2" y="2" width="336" height="648"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="YsS-RX-BQc">
-                        <rect key="frame" x="0.0" y="0.0" width="336" height="671"/>
+                        <rect key="frame" x="0.0" y="0.0" width="336" height="648"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <outlineView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="firstColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" columnResizing="NO" autosaveColumns="NO" rowHeight="14" indentationPerLevel="10" outlineTableColumn="CLK-kg-0Tl" id="FXk-bX-Rgc">
-                                <rect key="frame" x="0.0" y="0.0" width="336" height="671"/>
+                                <rect key="frame" x="0.0" y="0.0" width="336" height="648"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <size key="intercellSpacing" width="3" height="6"/>
                                 <color key="backgroundColor" red="0.2196078431372549" green="0.45882352941176469" blue="0.84313725490196079" alpha="0.0" colorSpace="deviceRGB"/>
@@ -74,7 +78,76 @@
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                 </scrollView>
+                <searchField toolTip="Search library." verticalHuggingPriority="750" id="wy1-9V-NIi">
+                    <rect key="frame" x="2" y="652" width="246" height="19"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search Library" usesSingleLineMode="YES" bezelStyle="round" recentsAutosaveName="PDLibraryViewController.searches" id="cs9-Rs-aYE">
+                        <font key="font" metaFont="smallSystem"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </searchFieldCell>
+                    <connections>
+                        <action selector="searchAction:" target="-2" id="e3U-y1-BSX"/>
+                        <outlet property="delegate" destination="-2" id="tmv-fH-WQL"/>
+                        <outlet property="searchMenuTemplate" destination="mpd-k3-BTo" id="8kH-2T-S9T"/>
+                    </connections>
+                </searchField>
+                <button toolTip="Show library action menu." verticalHuggingPriority="750" id="ZLw-gH-KnI">
+                    <rect key="frame" x="314" y="651" width="22" height="22"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSActionTemplate" imagePosition="only" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="6PR-NE-Y7X">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="smallSystem"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="controlAction:" target="-2" id="oq8-95-QKK"/>
+                    </connections>
+                </button>
+                <button toolTip="Remove library directory." verticalHuggingPriority="750" id="eid-hj-H2P">
+                    <rect key="frame" x="290" y="651" width="22" height="22"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSRemoveTemplate" imagePosition="only" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="FUb-bs-M5w">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="smallSystem"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="controlAction:" target="-2" id="uHR-0p-IYM"/>
+                    </connections>
+                </button>
+                <button toolTip="Add library directory." verticalHuggingPriority="750" id="bv5-Rg-fp3">
+                    <rect key="frame" x="266" y="651" width="22" height="22"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSAddTemplate" imagePosition="only" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="dQ8-lV-cxD">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="smallSystem"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="controlAction:" target="-2" id="ZHk-db-lwf"/>
+                    </connections>
+                </button>
             </subviews>
         </customView>
+        <menu id="mpd-k3-BTo">
+            <items>
+                <menuItem title="No Recent Searches" tag="1003" id="mKI-uM-qOq">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem title="Recent Searches" tag="1000" id="zcN-Te-SWo">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem title="Search Placeholder" tag="1001" id="3us-qw-ou7">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" tag="1000" id="yAc-mH-Wcr"/>
+                <menuItem title="Clear Recent Searches" tag="1002" id="lIK-xQ-Wzf">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+            </items>
+        </menu>
     </objects>
+    <resources>
+        <image name="NSActionTemplate" width="14" height="14"/>
+        <image name="NSAddTemplate" width="8" height="8"/>
+        <image name="NSRemoveTemplate" width="8" height="8"/>
+    </resources>
 </document>

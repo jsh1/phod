@@ -141,14 +141,21 @@
 	    }
 	}
 
-      for (PDLibraryDirectory *item in [self subitems])
-	[array addObjectsFromArray:[item subimages]];
-
       _subimages = [array copy];
       [array release];
     }
 
-  return _subimages;
+  NSMutableArray *images = [NSMutableArray array];
+
+  [images addObjectsFromArray:_subimages];
+
+  for (PDLibraryDirectory *item in [self subitems])
+    {
+      if (![item isHidden])
+	[images addObjectsFromArray:[item subimages]];
+    }
+
+  return images;
 }
 
 - (NSString *)titleString
@@ -159,7 +166,7 @@
 
 - (BOOL)isExpandable
 {
-  return [self numberOfSubitems] != 0;
+  return [[self subitems] count] != 0;
 }
 
 - (BOOL)hasBadge

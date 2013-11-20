@@ -28,14 +28,50 @@
 
 @implementation PDLibraryItem
 
+@synthesize hidden = _hidden;
+
+- (BOOL)applySearchString:(NSString *)str
+{
+  BOOL matches = NO;
+
+  for (PDLibraryItem *item in [self subitems])
+    {
+      if ([item applySearchString:str])
+	matches = YES;
+    }
+
+  NSString *title = [self titleString];
+
+  if (title != nil)
+    {
+      if ([title rangeOfString:str options:NSCaseInsensitiveSearch].length > 0)
+	matches = YES;
+    }
+
+  [self setHidden:!matches];
+
+  return matches;
+}
+
+- (void)resetSearchState
+{
+  [self setHidden:NO];
+
+  for (PDLibraryItem *item in [self subitems])
+    [item resetSearchState];
+}
+
+- (void)recursivelyClearHiddenState
+{
+  [self setHidden:NO];
+
+  for (PDLibraryItem *item in [self subitems])
+    [item recursivelyClearHiddenState];
+}
+
 - (NSArray *)subitems
 {
   return [NSArray array];
-}
-
-- (NSInteger)numberOfSubitems
-{
-  return [[self subitems] count];
 }
 
 - (NSArray *)subimages

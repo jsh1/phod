@@ -25,20 +25,29 @@
 #import <Foundation/Foundation.h>
 
 @interface PDLibraryItem : NSObject
+{
+  BOOL _hidden;
+}
 
-// Array of PDLibraryItem
+@property(nonatomic, getter=isHidden) BOOL hidden;
+
+/* Returns true if item or any subitem matches 'str'. */
+
+- (BOOL)applySearchString:(NSString *)str;
+
+- (void)resetSearchState;
+
+/* Array of PDLibraryItem. Includes hidden items. */
 
 - (NSArray *)subitems;
 
-- (NSInteger)numberOfSubitems;
-
-// Array of PDLibraryImage, all images recursively under self.
+/* Array of PDLibraryImage, all images recursively under self. */
 
 - (NSArray *)subimages;
 
 - (NSInteger)numberOfSubimages;
 
-// For outline view
+/* For outline view. */
 
 - (NSImage *)titleImage;
 - (NSString *)titleString;
@@ -48,8 +57,8 @@
 - (BOOL)hasBadge;
 - (NSInteger)badgeValue;
 
-// Should [recursively] check if anything has changed, return YES if
-// something has.
+/* Should [recursively] check if anything has changed, return YES if
+   something has. */
 
 - (BOOL)needsUpdate;
 

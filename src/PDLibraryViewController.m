@@ -68,6 +68,8 @@
 {
   [super viewDidLoad];
 
+  [[_searchField cell] setBackgroundColor:[NSColor grayColor]];
+
   for (NSTableColumn *col in [_outlineView tableColumns])
     [[col dataCell] setVerticallyCentered:YES];
 }
@@ -77,22 +79,53 @@
   return _outlineView;
 }
 
+- (IBAction)controlAction:(id)sender
+{
+}
+
+- (IBAction)searchAction:(id)sender
+{
+  NSString *str = [_searchField stringValue];
+
+  for (PDLibraryItem *item in _items)
+    {
+      if ([str length] != 0)
+	[item applySearchString:str];
+      else
+	[item resetSearchState];
+    }
+
+  [_outlineView reloadData];
+}
+
 // NSOutlineViewDataSource methods
 
 - (NSInteger)outlineView:(NSOutlineView *)ov numberOfChildrenOfItem:(id)item
 {
-  if (item == nil)
-    return [_items count];
-  else
-    return [(PDLibraryItem *)item numberOfSubitems];
+  NSArray *array = item == nil ? _items : [(PDLibraryItem *)item subitems];
+  NSInteger count = 0;
+
+  for (PDLibraryItem *item in array)
+    {
+      if (![item isHidden])
+	count++;
+    }
+
+  return count;
 }
 
 - (id)outlineView:(NSOutlineView *)ov child:(NSInteger)index ofItem:(id)item
 {
-  if (item == nil)
-    return [_items objectAtIndex:index];
-  else
-    return [[(PDLibraryItem *)item subitems] objectAtIndex:index];
+  NSArray *array = item == nil ? _items : [(PDLibraryItem *)item subitems];
+  NSInteger count = 0;
+
+  for (PDLibraryItem *item in array)
+    {
+      if (![item isHidden] && count++ == index)
+	return item;
+    }
+
+  return nil;
 }
 
 - (BOOL)outlineView:(NSOutlineView *)ov isItemExpandable:(id)item

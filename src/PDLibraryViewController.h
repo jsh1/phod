@@ -28,8 +28,15 @@
     <NSOutlineViewDataSource, NSOutlineViewDelegate>
 {
   IBOutlet NSOutlineView *_outlineView;
+  IBOutlet NSSearchField *_searchField;
+  IBOutlet NSButton *_addButton;
+  IBOutlet NSButton *_removeButton;
+  IBOutlet NSButton *_actionButton;
 
   NSMutableArray *_items;
 }
+
+- (IBAction)controlAction:(id)sender;
+- (IBAction)searchAction:(id)sender;
 
 @end
