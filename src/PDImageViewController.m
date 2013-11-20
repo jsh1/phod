@@ -26,6 +26,7 @@
 
 #import "PDColor.h"
 #import "PDImageView.h"
+#import "PDLibraryImage.h"
 #import "PDWindowController.h"
 
 @implementation PDImageViewController
@@ -55,8 +56,9 @@
 {
   NSInteger idx = [_controller primarySelectionIndex];
   NSArray *images = [_controller imageList];
+  NSInteger count = [images count];
 
-  if (idx >= 0 && idx < [images count])
+  if (idx >= 0 && idx < count)
     {
       PDLibraryImage *image = [images objectAtIndex:idx];
 
@@ -70,6 +72,13 @@
 
 	  [_imageView setImageScale:0];
 	}
+
+      /* Prefetch images either side of this one. */
+
+      if (idx > 0)
+	[[images objectAtIndex:idx-1] startPrefetching];
+      if (idx + 1 < count)
+	[[images objectAtIndex:idx+1] startPrefetching];
     }
   else
     [_imageView setLibraryImage:nil];
