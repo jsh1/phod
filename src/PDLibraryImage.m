@@ -210,20 +210,26 @@ copyScaledImage(CGImageRef src_im, CGSize size, CGColorSpaceRef space)
   return im;
 }
 
+static NSString *_cachePath;
+static dispatch_once_t _cachePathOnce;
+
+static void
+cachePathInit(void *unused_arg)
+{
+  NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
+						       NSUserDomainMask, YES);
+  _cachePath = [[[[paths lastObject] stringByAppendingPathComponent:
+		  [[NSBundle mainBundle] bundleIdentifier]]
+		 stringByAppendingPathComponent:@CACHE_DIR]
+		copy];
+}
+
 static NSString *
 cachedPathForType(PDImageHash *hash, NSInteger type)
 {
-  static NSString *_cachePath;
+  /* This function may be called from multiple threads, so serialize. */
 
-  if (_cachePath == nil)
-    {
-      NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
-							NSUserDomainMask, YES);
-      _cachePath = [[[[paths lastObject] stringByAppendingPathComponent:
-		      [[NSBundle mainBundle] bundleIdentifier]]
-		     stringByAppendingPathComponent:@CACHE_DIR]
-		    copy];
-    }
+  dispatch_once_f(&_cachePathOnce, NULL, cachePathInit);
 
   NSString *hstr = [hash hashString];
 
