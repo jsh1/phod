@@ -52,12 +52,53 @@ enum
   PDImage_MediumSize = 1024,
 };
 
-NSString * const PDImageHost_Size = @"size";
-NSString * const PDImageHost_Thumbnail = @"thumbnail";
-NSString * const PDImageHost_ColorSpace = @"colorSpace";
+NSString * const PDImage_FileSize = @"FileSize";
+
+NSString * const PDImage_PixelWidth = @"PixelWidth";
+NSString * const PDImage_PixelHeight = @"PixelHeight";
+NSString * const PDImage_Orientation = @"Orientation";
+NSString * const PDImage_ColorModel = @"ColorModel";
+NSString * const PDImage_ProfileName = @"ProfileName";
+
+NSString * const PDImage_Title = @"Title";
+NSString * const PDImage_Caption = @"Caption";
+NSString * const PDImage_Keywords = @"Keywords";
+NSString * const PDImage_Copyright = @"Copyright";
+NSString * const PDImage_Rating = @"Rating";
+
+NSString * const PDImage_Aperture = @"Aperture";
+NSString * const PDImage_CameraMake = @"CameraMake";
+NSString * const PDImage_CameraModel = @"CameraModel";
+NSString * const PDImage_CameraSoftware = @"CameraSoftware";
+NSString * const PDImage_Contrast = @"Contrast";
+NSString * const PDImage_DigitizedDate = @"DigitizedDate";
+NSString * const PDImage_ExposureBias = @"ExposureBias";
+NSString * const PDImage_ExposureLength = @"ExposureLength";
+NSString * const PDImage_ExposureMode = @"ExposureMode";
+NSString * const PDImage_ExposureProgram = @"ExposureProgram";
+NSString * const PDImage_Flash = @"Flash";
+NSString * const PDImage_FlashCompensation = @"FlashCompensation";
+NSString * const PDImage_FNumber = @"FNumber";
+NSString * const PDImage_FocalLength = @"FocalLength";
+NSString * const PDImage_FocalLength35mm = @"FocalLength35mm";
+NSString * const PDImage_ISOSpeed = @"ISOSpeed";
+NSString * const PDImage_ImageStabilization = @"ImageStabilization";
+NSString * const PDImage_LightSource = @"LightSource";
+NSString * const PDImage_MaxAperture = @"MaxAperture";
+NSString * const PDImage_MeteringMode = @"MeteringMode";
+NSString * const PDImage_OriginalDate = @"OriginalDate";
+NSString * const PDImage_Saturation = @"Saturation";
+NSString * const PDImage_SceneCaptureType = @"SceneCaptureType";
+NSString * const PDImage_SceneType = @"SceneType";
+NSString * const PDImage_Sharpness = @"Sharpness";
+NSString * const PDImage_WhiteBalance = @"WhiteBalance";
+
+NSString * const PDImageHost_Size = @"Size";
+NSString * const PDImageHost_Thumbnail = @"Thumbnail";
+NSString * const PDImageHost_ColorSpace = @"ColorSpace";
 
 static size_t
-fileMTime(NSString *path)
+file_mtime(NSString *path)
 {
   struct stat st;
 
@@ -68,13 +109,13 @@ fileMTime(NSString *path)
 }
 
 static BOOL
-fileNewerThanFile(NSString *path1, NSString *path2)
+file_newer_than(NSString *path1, NSString *path2)
 {
-  return fileMTime(path1) > fileMTime(path2);
+  return file_mtime(path1) > file_mtime(path2);
 }
 
 static CGImageSourceRef
-createImageSourceFromPath(NSString *path)
+create_image_source_from_path(NSString *path)
 {
   NSURL *url = [[NSURL alloc] initFileURLWithPath:path];
   NSDictionary *opts = [[NSDictionary alloc] initWithObjectsAndKeys:
@@ -91,7 +132,7 @@ createImageSourceFromPath(NSString *path)
 }
 
 static void
-writeImageToPath(CGImageRef im, NSString *path, double quality)
+write_image_to_path(CGImageRef im, NSString *path, double quality)
 {
   NSFileManager *fm = [NSFileManager defaultManager];
   NSString *dir = [path stringByDeletingLastPathComponent];
@@ -126,7 +167,7 @@ writeImageToPath(CGImageRef im, NSString *path, double quality)
 }
 
 static CGImageRef
-createCroppedThumbnailImage(CGImageSourceRef src)
+create_cropped_thumbnail_image(CGImageSourceRef src)
 {
   CGImageRef im = CGImageSourceCreateThumbnailAtIndex(src, 0, NULL);
   if (im == NULL)
@@ -175,7 +216,7 @@ createCroppedThumbnailImage(CGImageSourceRef src)
 }
 
 static CGImageRef
-copyScaledImage(CGImageRef src_im, CGSize size, CGColorSpaceRef space)
+copy_scaled_image(CGImageRef src_im, CGSize size, CGColorSpaceRef space)
 {
   if (src_im == NULL)
     return NULL;
@@ -212,27 +253,216 @@ copyScaledImage(CGImageRef src_im, CGSize size, CGColorSpaceRef space)
   return im;
 }
 
-static NSString *_cachePath;
-static dispatch_once_t _cachePathOnce;
+static CFDictionaryRef
+property_map(void)
+{
+  static CFDictionaryRef map;
+  
+  if (map == NULL)
+    {
+      const void *exif_keys[] =
+	{
+	  kCGImagePropertyExifApertureValue,
+	  kCGImagePropertyExifContrast,
+	  kCGImagePropertyExifDateTimeDigitized,
+	  kCGImagePropertyExifExposureBiasValue,
+	  kCGImagePropertyExifExposureTime,
+	  kCGImagePropertyExifExposureMode,
+	  kCGImagePropertyExifExposureProgram,
+	  kCGImagePropertyExifFlash,
+	  kCGImagePropertyExifFNumber,
+	  kCGImagePropertyExifFocalLength,
+	  kCGImagePropertyExifFocalLenIn35mmFilm,
+	  kCGImagePropertyExifISOSpeed,
+	  kCGImagePropertyExifLightSource,
+	  kCGImagePropertyExifMaxApertureValue,
+	  kCGImagePropertyExifMeteringMode,
+	  kCGImagePropertyExifDateTimeOriginal,
+	  kCGImagePropertyExifSaturation,
+	  kCGImagePropertyExifSceneCaptureType,
+	  kCGImagePropertyExifSceneType,
+	  kCGImagePropertyExifSharpness,
+	  kCGImagePropertyExifWhiteBalance,
+ 	};
+      const void *exif_values[] =
+	{
+	  PDImage_Aperture,
+	  PDImage_Contrast,
+	  PDImage_DigitizedDate,
+	  PDImage_ExposureBias,
+	  PDImage_ExposureLength,
+	  PDImage_ExposureMode,
+	  PDImage_ExposureProgram,
+	  PDImage_Flash,
+	  PDImage_FNumber,
+	  PDImage_FocalLength,
+	  PDImage_FocalLength35mm,
+	  PDImage_ISOSpeed,
+	  PDImage_LightSource,
+	  PDImage_MaxAperture,
+	  PDImage_MeteringMode,
+	  PDImage_OriginalDate,
+	  PDImage_Saturation,
+	  PDImage_SceneCaptureType,
+	  PDImage_SceneType,
+	  PDImage_Sharpness,
+	  PDImage_WhiteBalance,
+	};
+
+      const void *exif_aux_keys[] =
+	{
+	  kCGImagePropertyExifAuxFlashCompensation,
+	  CFSTR("ImageStabilization"),
+	};
+      const void *exif_aux_values[] =
+	{
+	  PDImage_FlashCompensation,
+	  PDImage_ImageStabilization,
+	};
+
+      const void *tiff_keys[] =
+	{
+	  kCGImagePropertyTIFFMake,
+	  kCGImagePropertyTIFFModel,
+	  kCGImagePropertyTIFFSoftware,
+	};
+      const void *tiff_values[] =
+	{
+	  PDImage_CameraMake,
+	  PDImage_CameraModel,
+	  PDImage_CameraSoftware,
+	};
+
+      CFDictionaryRef tiff_map;
+      CFDictionaryRef exif_map;
+      CFDictionaryRef exif_aux_map;
+
+      tiff_map = CFDictionaryCreate(NULL, tiff_keys, tiff_values,
+	sizeof(tiff_keys) / sizeof(tiff_keys[0]), &kCFTypeDictionaryKeyCallBacks,
+	&kCFTypeDictionaryValueCallBacks);
+      exif_map = CFDictionaryCreate(NULL, exif_keys, exif_values,
+	sizeof(exif_keys) / sizeof(exif_keys[0]), &kCFTypeDictionaryKeyCallBacks,
+	&kCFTypeDictionaryValueCallBacks);
+      exif_aux_map = CFDictionaryCreate(NULL, exif_aux_keys, exif_aux_values,
+	sizeof(exif_aux_keys) / sizeof(exif_aux_keys[0]),
+	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
+      const void *keys[] =
+	{
+	  kCGImagePropertyFileSize,
+	  kCGImagePropertyPixelWidth,
+	  kCGImagePropertyPixelHeight,
+	  kCGImagePropertyOrientation,
+	  kCGImagePropertyColorModel,
+	  kCGImagePropertyProfileName,
+	  kCGImagePropertyTIFFDictionary,
+	  kCGImagePropertyExifDictionary,
+	  kCGImagePropertyExifAuxDictionary,
+	};
+      const void *values[] =
+	{
+	  PDImage_FileSize,
+	  PDImage_PixelWidth,
+	  PDImage_PixelHeight,
+	  PDImage_Orientation,
+	  PDImage_ColorModel,
+	  PDImage_ProfileName,
+	  tiff_map,
+	  exif_map,
+	  exif_aux_map,
+	};
+      
+      map = CFDictionaryCreate(NULL, keys, values, sizeof(keys) / sizeof(keys[0]),
+	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
+      CFRelease(tiff_map);
+      CFRelease(exif_map);
+      CFRelease(exif_aux_map);
+    }
+
+  return map;
+}
+
+struct map_closure
+{
+  CFDictionaryRef map;
+  NSMutableDictionary *dict;
+};
 
 static void
-cachePathInit(void *unused_arg)
+map_property(const void *key, const void *value, void *ctx)
+{
+  struct map_closure *c = ctx;
+
+  const void *mapped_key = CFDictionaryGetValue(c->map, key);
+
+  if (mapped_key != NULL)
+    {
+      if (CFGetTypeID(mapped_key) == CFDictionaryGetTypeID())
+	{
+	  struct map_closure cc;
+
+	  cc.map = mapped_key;
+	  cc.dict = c->dict;
+
+	  CFDictionaryApplyFunction((CFDictionaryRef)value, map_property, &cc);
+	}
+      else
+	{
+	  [c->dict setObject:(id)value forKey:(id)mapped_key];
+	}
+    }
+  else
+    {
+      /* Manual fix-ups. */
+
+      if (CFEqual(key, kCGImagePropertyExifISOSpeedRatings)
+	  && CFGetTypeID(value) == CFArrayGetTypeID()
+	  && CFArrayGetCount(value) >= 1
+	  && [c->dict objectForKey:PDImage_ISOSpeed] == nil)
+	{
+	  [c->dict setObject:CFArrayGetValueAtIndex(value, 0)
+	   forKey:PDImage_ISOSpeed];
+	}
+    }
+}
+
+static NSDictionary *
+copy_image_properties(CGImageSourceRef src)
+{
+  CFDictionaryRef dict = CGImageSourceCopyPropertiesAtIndex(src, 0, NULL);
+  if (dict == NULL)
+    return [[NSDictionary alloc] init];
+
+  struct map_closure c;
+
+  c.map = property_map();
+  c.dict = [[NSMutableDictionary alloc] init];
+
+  CFDictionaryApplyFunction(dict, map_property, &c);
+
+  CFRelease(dict);
+
+  return c.dict;
+}
+
+static NSString *cache_path;
+static dispatch_once_t cache_path_once;
+
+static void
+cache_path_init(void *unused_arg)
 {
   NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
 						       NSUserDomainMask, YES);
-  _cachePath = [[[[paths lastObject] stringByAppendingPathComponent:
+  cache_path = [[[[paths lastObject] stringByAppendingPathComponent:
 		  [[NSBundle mainBundle] bundleIdentifier]]
 		 stringByAppendingPathComponent:@CACHE_DIR]
 		copy];
 }
 
 static NSString *
-cachedPathForType(PDImageHash *hash, NSInteger type)
+cache_path_for_type(PDImageHash *hash, NSInteger type)
 {
-  /* This function may be called from multiple threads, so serialize. */
-
-  dispatch_once_f(&_cachePathOnce, NULL, cachePathInit);
-
   NSString *hstr = [hash hashString];
 
   NSString *path
@@ -246,13 +476,15 @@ cachedPathForType(PDImageHash *hash, NSInteger type)
   else /* if (type == PDImage_Medium) */
     path = [path stringByAppendingString:@"_medium.jpg"];
 
-  return [_cachePath stringByAppendingPathComponent:path];
+  dispatch_once_f(&cache_path_once, NULL, cache_path_init);
+
+  return [cache_path stringByAppendingPathComponent:path];
 }
 
 static BOOL
-validCachedImage(NSString *filePath, PDImageHash *hash, NSInteger type)
+valid_cache_image(NSString *filePath, PDImageHash *hash, NSInteger type)
 {
-  return fileNewerThanFile(cachedPathForType(hash, type), filePath);
+  return file_newer_than(cache_path_for_type(hash, type), filePath);
 }
 
 @implementation PDImage
@@ -323,8 +555,8 @@ static NSOperationQueue *_narrowQueue;
   [_path release];
   [_hash release];
 
-  if (_imageProperties)
-    CFRelease(_imageProperties);
+  [_explicitProperties release];
+  [_implicitProperties release];
 
   assert([_imageHosts count] == 0);
   [_imageHosts release];
@@ -348,36 +580,48 @@ static NSOperationQueue *_narrowQueue;
   return [[_path lastPathComponent] stringByDeletingPathExtension];
 }
 
-- (id)imagePropertyForKey:(CFStringRef)key
+- (id)imagePropertyForKey:(NSString *)key
 {
-  if (_imageProperties == NULL)
+  if (_implicitProperties == nil)
     {
-      CGImageSourceRef src = createImageSourceFromPath(_path);
+      CGImageSourceRef src = create_image_source_from_path(_path);
 
       if (src != NULL)
 	{
-	  _imageProperties = CGImageSourceCopyPropertiesAtIndex(src, 0, NULL);
+	  _implicitProperties = copy_image_properties(src);
 	  CFRelease(src);
 	}
     }
 
-  return (id)CFDictionaryGetValue(_imageProperties, key);
+  id value = [_explicitProperties objectForKey:key];
+
+  if (value == nil)
+    value = [_implicitProperties objectForKey:key];
+
+  return value;
+}
+
+- (void)setImageProperty:(id)obj forKey:(NSString *)key
+{
+  if (_explicitProperties == nil)
+    _explicitProperties = [[NSMutableDictionary alloc] init];
+
+  /* FIXME: persist this? */
+
+  [_explicitProperties setObject:obj forKey:key];
 }
 
 - (CGSize)pixelSize
 {
-  CGFloat pw = [[self imagePropertyForKey:
-		 kCGImagePropertyPixelWidth] doubleValue];
-  CGFloat ph = [[self imagePropertyForKey:
-		 kCGImagePropertyPixelHeight] doubleValue];
+  CGFloat pw = [[self imagePropertyForKey:PDImage_PixelWidth] doubleValue];
+  CGFloat ph = [[self imagePropertyForKey:PDImage_PixelHeight] doubleValue];
 
   return CGSizeMake(pw, ph);
 }
 
 - (unsigned int)orientation
 {
-  return [[self imagePropertyForKey:
-	   kCGImagePropertyOrientation] unsignedIntValue];
+  return [[self imagePropertyForKey:PDImage_Orientation] unsignedIntValue];
 }
 
 - (CGSize)orientedPixelSize
@@ -400,9 +644,9 @@ static NSOperationQueue *_narrowQueue;
       PDImageHash *hash = [self hash];
       NSString *path = [self path];
 
-      NSString *tiny_path = cachedPathForType(hash, PDImage_Tiny);
+      NSString *tiny_path = cache_path_for_type(hash, PDImage_Tiny);
 
-      if (fileNewerThanFile(tiny_path, path))
+      if (file_newer_than(tiny_path, path))
 	{
 	  _donePrefetch = YES;
 	  return;
@@ -410,7 +654,7 @@ static NSOperationQueue *_narrowQueue;
 
       _prefetchOp = [NSBlockOperation blockOperationWithBlock:^{
 
-	CGImageSourceRef src = createImageSourceFromPath(path);
+	CGImageSourceRef src = create_image_source_from_path(path);
 	if (src == NULL)
 	  return;
 
@@ -433,12 +677,12 @@ static NSOperationQueue *_narrowQueue;
 	    CGFloat dw = sw > sh ? size : size * ((CGFloat)sw / (CGFloat)sh);
 	    CGFloat dh = sh > sw ? size : size * ((CGFloat)sh / (CGFloat)sw);
 
-	    CGImageRef im = copyScaledImage(src_im, CGSizeMake(dw, dh), srgb);
+	    CGImageRef im = copy_scaled_image(src_im, CGSizeMake(dw, dh), srgb);
 
 	    if (im != NULL)
 	      {
-		NSString *cachePath = cachedPathForType(hash, type);
-		writeImageToPath(im, cachePath, CACHE_QUALITY);
+		NSString *cachePath = cache_path_for_type(hash, type);
+		write_image_to_path(im, cachePath, CACHE_QUALITY);
 		CGImageRelease(src_im);
 		src_im = im;
 	      }
@@ -524,7 +768,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
   else
     type = PDImage_Medium, type_size = PDImage_MediumSize;
 
-  BOOL cache_is_valid = validCachedImage(path, hash, type);
+  BOOL cache_is_valid = valid_cache_image(path, hash, type);
 
   NSMutableArray *ops = [NSMutableArray array];
 
@@ -536,10 +780,10 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
   if (thumb && !cache_is_valid)
     {
       NSOperation *thumb_op = [NSBlockOperation blockOperationWithBlock:^{
-	CGImageSourceRef src = createImageSourceFromPath(path);
+	CGImageSourceRef src = create_image_source_from_path(path);
 	if (src != NULL)
 	  {
-	    CGImageRef im = createCroppedThumbnailImage(src);
+	    CGImageRef im = create_cropped_thumbnail_image(src);
 	    CFRelease(src);
 	    if (im != NULL)
 	      setHostedImage(self, obj, im);
@@ -564,8 +808,8 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
   if (cache_is_valid || thumb)
     {
       NSOperation *cache_op = [NSBlockOperation blockOperationWithBlock:^{
-	NSString *cachedPath = cachedPathForType(hash, type);
-	CGImageSourceRef src = createImageSourceFromPath(cachedPath);
+	NSString *cachedPath = cache_path_for_type(hash, type);
+	CGImageSourceRef src = create_image_source_from_path(cachedPath);
 	if (src != NULL)
 	  {
 	    CGImageRef im = CGImageSourceCreateImageAtIndex(src, 0, NULL);
@@ -603,9 +847,9 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
       NSOperation *full_op = [NSBlockOperation blockOperationWithBlock:^{
 	NSString *src_path = (max_size > type_size || !cache_is_valid
-			      ? path : cachedPathForType(hash, type));
+			      ? path : cache_path_for_type(hash, type));
 
-	CGImageSourceRef src = createImageSourceFromPath(src_path);
+	CGImageSourceRef src = create_image_source_from_path(src_path);
 	if (src != NULL)
 	  {
 	    CGImageRef src_im = CGImageSourceCreateImageAtIndex(src, 0, NULL);
@@ -623,8 +867,8 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 	       lock held, both those things appear to happen when
 	       directly using the raw CGImage from ImageIO.) */
 
-	    CGImageRef dst_im = copyScaledImage(src_im, size,
-					     (CGColorSpaceRef)space);
+	    CGImageRef dst_im = copy_scaled_image(src_im, size,
+						  (CGColorSpaceRef)space);
 	    CGImageRelease(src_im);
 
 	    if (dst_im != NULL)

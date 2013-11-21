@@ -32,7 +32,8 @@
   NSString *_path;
   PDImageHash *_hash;
 
-  CFDictionaryRef _imageProperties;
+  NSMutableDictionary *_explicitProperties;
+  NSDictionary *_implicitProperties;
 
   NSMapTable *_imageHosts;
 
@@ -48,7 +49,9 @@
 
 @property(nonatomic, readonly) NSString *title;
 
-- (id)imagePropertyForKey:(CFStringRef)key;
+- (id)imagePropertyForKey:(NSString *)key;
+
+- (void)setImageProperty:(id)obj forKey:(NSString *)key;
 
 /* Convenience accessors image properties. */
 
@@ -83,6 +86,48 @@
 - (dispatch_queue_t)imageHostQueue;
 
 @end
+
+/* Image properties. */
+
+extern NSString * const PDImage_FileSize;	// NSNumber
+extern NSString * const PDImage_PixelWidth;	// NSNumber
+extern NSString * const PDImage_PixelHeight;	// NSNumber
+extern NSString * const PDImage_Orientation;	// NSNumber
+extern NSString * const PDImage_ColorModel;	// NSString
+extern NSString * const PDImage_ProfileName;	// NSString
+
+extern NSString * const PDImage_Title;		// NSString
+extern NSString * const PDImage_Caption;	// NSString
+extern NSString * const PDImage_Keywords;	// NSArray
+extern NSString * const PDImage_Copyright;	// NSString
+extern NSString * const PDImage_Rating;		// NSNumber 1..5
+
+extern NSString * const PDImage_Aperture;	// NSNumber
+extern NSString * const PDImage_CameraMake;	// NSString
+extern NSString * const PDImage_CameraModel;	// NSString
+extern NSString * const PDImage_CameraSoftware;	// NSString
+extern NSString * const PDImage_Contrast;	// NSNumber
+extern NSString * const PDImage_DigitizedDate;	// NSNumber
+extern NSString * const PDImage_ExposureBias;	// NSNumber
+extern NSString * const PDImage_ExposureLength;	// NSNumber
+extern NSString * const PDImage_ExposureMode;	// NSNumber
+extern NSString * const PDImage_ExposureProgram; // NSNumber
+extern NSString * const PDImage_Flash;		// NSNumber
+extern NSString * const PDImage_FlashCompensation; // NSNumber
+extern NSString * const PDImage_FNumber;	// NSNumber
+extern NSString * const PDImage_FocalLength;	// NSNumber
+extern NSString * const PDImage_FocalLength35mm; // NSNumber
+extern NSString * const PDImage_ISOSpeed;	// NSNumber
+extern NSString * const PDImage_ImageStabilization; // NSNumber
+extern NSString * const PDImage_LightSource;	// NSNumber
+extern NSString * const PDImage_MaxAperture;	// NSNumber
+extern NSString * const PDImage_MeteringMode;	// NSNumber
+extern NSString * const PDImage_OriginalDate;	// NSNumber
+extern NSString * const PDImage_Saturation;	// NSNumber
+extern NSString * const PDImage_SceneCaptureType; // NSNumber
+extern NSString * const PDImage_SceneType;	// NSNumber
+extern NSString * const PDImage_Sharpness;	// NSNumber
+extern NSString * const PDImage_WhiteBalance;	// NSNumber
 
 /* Hosted image options */
 
