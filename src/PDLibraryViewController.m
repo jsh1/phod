@@ -276,4 +276,18 @@
     }
 }
 
+- (NSString *)outlineView:(NSOutlineView *)ov toolTipForCell:(NSCell *)cell
+    rect:(NSRectPointer)rect tableColumn:(NSTableColumn *)col item:(id)item
+    mouseLocation:(NSPoint)p
+{
+  if ([[col identifier] isEqualToString:@"name"]
+      && [item isKindOfClass:[PDLibraryDirectory class]])
+    {
+      return [[(PDLibraryDirectory *)item path]
+	      stringByAbbreviatingWithTildeInPath];
+    }
+
+  return nil;
+}
+
 @end
