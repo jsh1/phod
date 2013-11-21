@@ -22,12 +22,12 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDLibraryItem.h"
+#import <Foundation/Foundation.h>
 
-@protocol PDLibraryImageHost;
+@protocol PDImageHost;
 @class PDImageHash;
 
-@interface PDLibraryImage : NSObject
+@interface PDImage : NSObject
 {
   NSString *_path;
   PDImageHash *_hash;
@@ -48,7 +48,6 @@
 
 @property(nonatomic, readonly) NSString *title;
 
-- (NSDictionary *)imageProperties;
 - (id)imagePropertyForKey:(CFStringRef)key;
 
 /* Convenience accessors image properties. */
@@ -61,20 +60,20 @@
 - (void)stopPrefetching;
 - (BOOL)isPrefetching;
 
-- (void)addImageHost:(id<PDLibraryImageHost>)obj;
-- (void)removeImageHost:(id<PDLibraryImageHost>)obj;
-- (void)updateImageHost:(id<PDLibraryImageHost>)obj;
+- (void)addImageHost:(id<PDImageHost>)obj;
+- (void)removeImageHost:(id<PDImageHost>)obj;
+- (void)updateImageHost:(id<PDImageHost>)obj;
 
 @end
 
-@protocol PDLibraryImageHost <NSObject>
+@protocol PDImageHost <NSObject>
 
 - (NSDictionary *)imageHostOptions;
 
 /* Note: may be called more than once, first with low-quality, then
    with high-quality image. */
 
-- (void)libraryImage:(PDLibraryImage *)im setHostedImage:(CGImageRef)im;
+- (void)image:(PDImage *)im setHostedImage:(CGImageRef)im;
 
 @optional
 
@@ -85,8 +84,8 @@
 
 @end
 
-// Hosted image options
+/* Hosted image options */
 
-extern NSString * const PDLibraryImageHost_Size;	// NSValue<Size>
-extern NSString * const PDLibraryImageHost_Thumbnail;	// NSNumber<bool>
-extern NSString * const PDLibraryImageHost_ColorSpace;	// only a hint
+extern NSString * const PDImageHost_Size;	// NSValue<Size>
+extern NSString * const PDImageHost_Thumbnail;	// NSNumber<bool>
+extern NSString * const PDImageHost_ColorSpace;	// only a hint

@@ -41,7 +41,7 @@
 
 - (NSArray *)subitems;
 
-/* Array of PDLibraryImage, all images recursively under self. */
+/* Array of PDImage, all images recursively under self. */
 
 - (NSArray *)subimages;
 

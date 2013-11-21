@@ -24,13 +24,13 @@
 
 #import "PDViewController.h"
 
-@class PDImageViewController, PDLibraryImage, PDImageLayer, CALayer;
+@class PDImageViewController, PDImage, PDImageLayer, CALayer;
 
 @interface PDImageView : NSView
 {
   IBOutlet PDImageViewController *_controller;
 
-  PDLibraryImage *_libraryImage;
+  PDImage *_image;
 
   CGFloat _imageScale;
 
@@ -40,7 +40,7 @@
   PDImageLayer *_imageLayer;
 }
 
-@property(nonatomic, retain) PDLibraryImage *libraryImage;
+@property(nonatomic, retain) PDImage *image;
 @property(nonatomic) CGFloat imageScale;
 @property(nonatomic) CGPoint imageOrigin;
 

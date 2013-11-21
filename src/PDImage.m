@@ -22,7 +22,7 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDLibraryImage.h"
+#import "PDImage.h"
 
 #import "PDAppDelegate.h"
 #import "PDImageHash.h"
@@ -40,21 +40,21 @@
 
 enum
 {
-  PDLibraryImage_Tiny,			/* 256px */
-  PDLibraryImage_Small,			/* 512px */
-  PDLibraryImage_Medium,		/* 1024px */
+  PDImage_Tiny,				/* 256px */
+  PDImage_Small,			/* 512px */
+  PDImage_Medium,			/* 1024px */
 };
 
 enum
 {
-  PDLibraryImage_TinySize = 256,
-  PDLibraryImage_SmallSize = 512,
-  PDLibraryImage_MediumSize = 1024,
+  PDImage_TinySize = 256,
+  PDImage_SmallSize = 512,
+  PDImage_MediumSize = 1024,
 };
 
-NSString * const PDLibraryImageHost_Size = @"size";
-NSString * const PDLibraryImageHost_Thumbnail = @"thumbnail";
-NSString * const PDLibraryImageHost_ColorSpace = @"colorSpace";
+NSString * const PDImageHost_Size = @"size";
+NSString * const PDImageHost_Thumbnail = @"thumbnail";
+NSString * const PDImageHost_ColorSpace = @"colorSpace";
 
 static size_t
 fileMTime(NSString *path)
@@ -239,11 +239,11 @@ cachedPathForType(PDImageHash *hash, NSInteger type)
    = [[hstr substringToIndex:2]
       stringByAppendingPathComponent:[hstr substringFromIndex:2]];
 
-  if (type == PDLibraryImage_Tiny)
+  if (type == PDImage_Tiny)
     path = [path stringByAppendingString:@"_tiny.jpg"];
-  else if (type == PDLibraryImage_Small)
+  else if (type == PDImage_Small)
     path = [path stringByAppendingString:@"_small.jpg"];
-  else /* if (type == PDLibraryImage_Medium) */
+  else /* if (type == PDImage_Medium) */
     path = [path stringByAppendingString:@"_medium.jpg"];
 
   return [_cachePath stringByAppendingPathComponent:path];
@@ -255,7 +255,7 @@ validCachedImage(NSString *filePath, PDImageHash *hash, NSInteger type)
   return fileNewerThanFile(cachedPathForType(hash, type), filePath);
 }
 
-@implementation PDLibraryImage
+@implementation PDImage
 
 @synthesize path = _path;
 
@@ -267,7 +267,7 @@ static NSOperationQueue *_narrowQueue;
   if (_wideQueue == nil)
     {
       _wideQueue = [[NSOperationQueue alloc] init];
-      [_wideQueue setName:@"PDLibraryImage.wideQueue"];
+      [_wideQueue setName:@"PDImage.wideQueue"];
       [_wideQueue addObserver:(id)[self class]
        forKeyPath:@"operationCount" options:0 context:NULL];
     }
@@ -280,7 +280,7 @@ static NSOperationQueue *_narrowQueue;
   if (_narrowQueue == nil)
     {
       _narrowQueue = [[NSOperationQueue alloc] init];
-      [_narrowQueue setName:@"PDLibraryImage.narrowQueue"];
+      [_narrowQueue setName:@"PDImage.narrowQueue"];
       [_narrowQueue setMaxConcurrentOperationCount:1];
       [_narrowQueue addObserver:(id)[self class]
        forKeyPath:@"operationCount" options:0 context:NULL];
@@ -299,9 +299,9 @@ static NSOperationQueue *_narrowQueue;
 			   + [_narrowQueue operationCount]);
 	PDAppDelegate *delegate = [NSApp delegate];
 	if (count != 0)
-	  [delegate addBackgroundActivity:@"PDLibraryImage"];
+	  [delegate addBackgroundActivity:@"PDImage"];
 	else
-	  [delegate removeBackgroundActivity:@"PDLibraryImage"];
+	  [delegate removeBackgroundActivity:@"PDImage"];
       });
     }
 }
@@ -348,7 +348,7 @@ static NSOperationQueue *_narrowQueue;
   return [[_path lastPathComponent] stringByDeletingPathExtension];
 }
 
-- (NSDictionary *)imageProperties
+- (id)imagePropertyForKey:(CFStringRef)key
 {
   if (_imageProperties == NULL)
     {
@@ -361,22 +361,15 @@ static NSOperationQueue *_narrowQueue;
 	}
     }
 
-  return (NSDictionary *)_imageProperties;
-}
-
-- (id)imagePropertyForKey:(CFStringRef)key
-{
-  return [[self imageProperties] objectForKey:(NSString *)key];
+  return (id)CFDictionaryGetValue(_imageProperties, key);
 }
 
 - (CGSize)pixelSize
 {
-  NSDictionary *dict = [self imageProperties];
-
-  CGFloat pw = [[dict objectForKey:
-		 (id)kCGImagePropertyPixelWidth] doubleValue];
-  CGFloat ph = [[dict objectForKey:
-		 (id)kCGImagePropertyPixelHeight] doubleValue];
+  CGFloat pw = [[self imagePropertyForKey:
+		 kCGImagePropertyPixelWidth] doubleValue];
+  CGFloat ph = [[self imagePropertyForKey:
+		 kCGImagePropertyPixelHeight] doubleValue];
 
   return CGSizeMake(pw, ph);
 }
@@ -407,7 +400,7 @@ static NSOperationQueue *_narrowQueue;
       PDImageHash *hash = [self hash];
       NSString *path = [self path];
 
-      NSString *tiny_path = cachedPathForType(hash, PDLibraryImage_Tiny);
+      NSString *tiny_path = cachedPathForType(hash, PDImage_Tiny);
 
       if (fileNewerThanFile(tiny_path, path))
 	{
@@ -451,9 +444,9 @@ static NSOperationQueue *_narrowQueue;
 	      }
 	  };
 
-	cache_image(PDLibraryImage_Medium, PDLibraryImage_MediumSize);
-	cache_image(PDLibraryImage_Small, PDLibraryImage_SmallSize);
-	cache_image(PDLibraryImage_Tiny, PDLibraryImage_TinySize);
+	cache_image(PDImage_Medium, PDImage_MediumSize);
+	cache_image(PDImage_Small, PDImage_SmallSize);
+	cache_image(PDImage_Tiny, PDImage_TinySize);
 
 	CGColorSpaceRelease(srgb);
 	CGImageRelease(src_im);
@@ -485,7 +478,7 @@ static NSOperationQueue *_narrowQueue;
 /* Takes ownership of 'im'. */
 
 static void
-setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
+setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 {
   dispatch_queue_t queue;
 
@@ -495,13 +488,13 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
     queue = dispatch_get_main_queue();
 
   dispatch_async(queue, ^{
-    [obj libraryImage:self setHostedImage:im];
+    [obj image:self setHostedImage:im];
     CGImageRelease(im);
     [CATransaction flush];
   });
 }
 
-- (void)addImageHost:(id<PDLibraryImageHost>)obj
+- (void)addImageHost:(id<PDImageHost>)obj
 {
   assert([_imageHosts objectForKey:obj] == nil);
 
@@ -513,8 +506,8 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
     return;
 
   NSDictionary *opts = [obj imageHostOptions];
-  BOOL thumb = [[opts objectForKey:PDLibraryImageHost_Thumbnail] boolValue];
-  NSSize size = [[opts objectForKey:PDLibraryImageHost_Size] sizeValue];
+  BOOL thumb = [[opts objectForKey:PDImageHost_Thumbnail] boolValue];
+  NSSize size = [[opts objectForKey:PDImageHost_Size] sizeValue];
 
   if (size.width == 0 || size.width > imageSize.width
       || size.height == 0 || size.height > imageSize.height)
@@ -524,12 +517,12 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
 
   NSInteger type;
   CGFloat type_size;
-  if (max_size < PDLibraryImage_TinySize)
-    type = PDLibraryImage_Tiny, type_size = PDLibraryImage_TinySize;
-  else if (max_size < PDLibraryImage_SmallSize)
-    type = PDLibraryImage_Small, type_size = PDLibraryImage_SmallSize;
+  if (max_size < PDImage_TinySize)
+    type = PDImage_Tiny, type_size = PDImage_TinySize;
+  else if (max_size < PDImage_SmallSize)
+    type = PDImage_Small, type_size = PDImage_SmallSize;
   else
-    type = PDLibraryImage_Medium, type_size = PDLibraryImage_MediumSize;
+    type = PDImage_Medium, type_size = PDImage_MediumSize;
 
   BOOL cache_is_valid = validCachedImage(path, hash, type);
 
@@ -606,7 +599,7 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
     {
       /* Using 'id' so the block retains it, actually CGColorSpaceRef. */
 
-      id space = [opts objectForKey:PDLibraryImageHost_ColorSpace];
+      id space = [opts objectForKey:PDImageHost_ColorSpace];
 
       NSOperation *full_op = [NSBlockOperation blockOperationWithBlock:^{
 	NSString *src_path = (max_size > type_size || !cache_is_valid
@@ -667,7 +660,7 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
     }
 }
 
-- (void)removeImageHost:(id<PDLibraryImageHost>)obj
+- (void)removeImageHost:(id<PDImageHost>)obj
 {
   NSArray *ops = [_imageHosts objectForKey:obj];
   if (ops == nil)
@@ -679,7 +672,7 @@ setHostedImage(PDLibraryImage *self, id<PDLibraryImageHost> obj, CGImageRef im)
   [_imageHosts removeObjectForKey:obj];
 }
 
-- (void)updateImageHost:(id<PDLibraryImageHost>)obj
+- (void)updateImageHost:(id<PDImageHost>)obj
 {
   /* FIXME: not ideal, but ok for now. (Actually, it's quite bad. E.g.
      when zooming in above 100% we load the full-size image again for

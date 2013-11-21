@@ -24,11 +24,11 @@
 
 #import <QuartzCore/CALayer.h>
 
-#import "PDLibraryImage.h"
+#import "PDImage.h"
 
-@interface PDImageLayer : CALayer <PDLibraryImageHost>
+@interface PDImageLayer : CALayer <PDImageHost>
 {
-  PDLibraryImage *_libraryImage;
+  PDImage *_image;
   BOOL _thumbnail;
   CGColorSpaceRef _colorSpace;
 
@@ -36,7 +36,7 @@
   CGSize _imageSize;
 }
 
-@property(nonatomic, retain) PDLibraryImage *libraryImage;
+@property(nonatomic, retain) PDImage *image;
 
 @property(nonatomic, getter=isThumbnail) BOOL thumbnail;
 

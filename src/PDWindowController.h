@@ -42,7 +42,7 @@ enum PDContentMode
   PDContentMode_Image,
 };
 
-@class PDViewController, PDSplitView, PDLibraryImage;
+@class PDViewController, PDSplitView, PDImage;
 
 @interface PDWindowController : NSWindowController <NSSplitViewDelegate>
 {
@@ -72,7 +72,7 @@ enum PDContentMode
 - (void)setSelectedImageIndexes:(NSIndexSet *)set primary:(NSInteger)idx;
 
 - (void)clearSelection;
-- (void)selectImage:(PDLibraryImage *)image withEvent:(NSEvent *)e;
+- (void)selectImage:(PDImage *)image withEvent:(NSEvent *)e;
 
 - (void)movePrimarySelectionRight:(NSInteger)delta
     byExtendingSelection:(BOOL)extend;

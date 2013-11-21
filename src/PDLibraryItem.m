@@ -24,8 +24,6 @@
 
 #import "PDLibraryItem.h"
 
-#import "PDLibraryImage.h"
-
 @implementation PDLibraryItem
 
 @synthesize hidden = _hidden;

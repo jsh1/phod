@@ -27,7 +27,6 @@
 #import "PDAppKitExtensions.h"
 #import "PDImageTextCell.h"
 #import "PDLibraryDirectory.h"
-#import "PDLibraryImage.h"
 #import "PDLibraryItem.h"
 #import "PDWindowController.h"
 

@@ -24,16 +24,16 @@
 
 #import <QuartzCore/CALayer.h>
 
-#import "PDLibraryImage.h"
+#import "PDImage.h"
 
 @interface PDThumbnailLayer : CALayer
 {
-  PDLibraryImage *_libraryImage;
+  PDImage *_image;
   BOOL _selected;
   BOOL _primary;
 }
 
-@property(nonatomic, retain) PDLibraryImage *libraryImage;
+@property(nonatomic, retain) PDImage *image;
 
 @property(nonatomic, getter=isSelected) BOOL selected;
 @property(nonatomic, getter=isPrimary) BOOL primary;

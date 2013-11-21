@@ -24,7 +24,7 @@
 
 #import "PDViewController.h"
 
-@class PDImageListViewController, PDLibraryImage;
+@class PDImageListViewController, PDImage;
 
 @interface PDImageGridView : NSView
 {
@@ -49,6 +49,6 @@
 
 - (void)scrollToPrimaryAnimated:(BOOL)flag;
 
-- (PDLibraryImage *)imageAtSuperviewPoint:(NSPoint)p;
+- (PDImage *)imageAtSuperviewPoint:(NSPoint)p;
 
 @end

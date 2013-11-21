@@ -25,8 +25,8 @@
 #import "PDImageGridView.h"
 
 #import "PDAppKitExtensions.h"
+#import "PDImage.h"
 #import "PDImageListViewController.h"
-#import "PDLibraryImage.h"
 #import "PDThumbnailLayer.h"
 #import "PDWindowController.h"
 
@@ -169,7 +169,7 @@
 	  if (idx >= count)
 	    continue;
 
-	  PDLibraryImage *image = [_images objectAtIndex:idx];
+	  PDImage *image = [_images objectAtIndex:idx];
 
 	  /* FIXME: hack -- without this, the method will be called
 	     from -layoutSublayers, which traverses the sublayers array
@@ -183,7 +183,7 @@
 	  NSInteger old_idx = 0;
 	  for (PDThumbnailLayer *tem in old_sublayers)
 	    {
-	      if ([tem libraryImage] == image)
+	      if ([tem image] == image)
 		{
 		  [old_sublayers removeObjectAtIndex:old_idx];
 		  sublayer = tem;
@@ -195,7 +195,7 @@
 	  if (sublayer == nil)
 	    {
 	      sublayer = [PDThumbnailLayer layer];
-	      [sublayer setLibraryImage:image];
+	      [sublayer setImage:image];
 	      [sublayer setDelegate:_controller];
 	    }
 
@@ -231,7 +231,7 @@
   for (PDThumbnailLayer *tem in old_sublayers)
     {
       [tem invalidate];
-      [[tem libraryImage] stopPrefetching];
+      [[tem image] stopPrefetching];
     }
 
   [new_sublayers release];
@@ -280,7 +280,7 @@
 
 /* 'p' is in coordinate space of our superview. */
 
-- (PDLibraryImage *)imageAtSuperviewPoint:(NSPoint)p
+- (PDImage *)imageAtSuperviewPoint:(NSPoint)p
 {
   CALayer *layer = [self layer];
 
@@ -289,7 +289,7 @@
     p_layer = [p_layer superlayer];
 
   if (p_layer != nil && p_layer != layer)
-    return [(PDThumbnailLayer *)p_layer libraryImage];
+    return [(PDThumbnailLayer *)p_layer image];
   else
     return nil;
 }
@@ -298,7 +298,7 @@
 {
   switch ([e clickCount])
     {
-      PDLibraryImage *image;
+      PDImage *image;
 
     case 1:
       image = [self imageAtSuperviewPoint:

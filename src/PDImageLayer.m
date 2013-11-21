@@ -24,7 +24,7 @@
 
 #import "PDImageLayer.h"
 
-#import "PDLibraryImage.h"
+#import "PDImage.h"
 
 #import <QuartzCore/QuartzCore.h>
 
@@ -49,7 +49,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   if (self == nil)
     return nil;
 
-  _libraryImage = [src->_libraryImage retain];
+  _image = [src->_image retain];
   _thumbnail = src->_thumbnail;
   _colorSpace = CGColorSpaceRetain(src->_colorSpace);
 
@@ -60,7 +60,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 {
   if (_addedImageHost)
     {
-      [_libraryImage removeImageHost:self];
+      [_image removeImageHost:self];
       _addedImageHost = NO;
     }
 }
@@ -75,33 +75,33 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 - (void)dealloc
 {
   [self invalidate];
-  [_libraryImage release];
+  [_image release];
   CGColorSpaceRelease(_colorSpace);
 
   [super dealloc];
 }
 
-- (PDLibraryImage *)libraryImage
+- (PDImage *)image
 {
-  return _libraryImage;
+  return _image;
 }
 
-- (void)setLibraryImage:(PDLibraryImage *)im
+- (void)setImage:(PDImage *)im
 {
-  if (_libraryImage != im)
+  if (_image != im)
     {
       if (_addedImageHost)
 	{
-	  [_libraryImage removeImageHost:self];
+	  [_image removeImageHost:self];
 	  _addedImageHost = NO;
 	}
 
-      /* to make -libraryImage:setHostedImage: synchronized. */
+      /* to make -image:setHostedImage: synchronized. */
 
       [CATransaction lock];
 
-      [_libraryImage release];
-      _libraryImage = [im retain];
+      [_image release];
+      _image = [im retain];
 
       [CATransaction unlock];
 
@@ -126,7 +126,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
 - (void)layoutSublayers
 {
-  if (_libraryImage == nil)
+  if (_image == nil)
     return;
 
   CGRect bounds = [self bounds];
@@ -135,7 +135,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   CGSize size = CGSizeMake(ceil(bounds.size.width * scale),
 			   ceil(bounds.size.height * scale));
 
-  unsigned int orientation = [_libraryImage orientation];
+  unsigned int orientation = [_image orientation];
 
   if (orientation > 4)
     {
@@ -175,13 +175,13 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   if (!_addedImageHost)
     {
       _imageSize = size;
-      [_libraryImage addImageHost:self];
+      [_image addImageHost:self];
       _addedImageHost = YES;
     }
   else if (!CGSizeEqualToSize(_imageSize, size))
     {
       _imageSize = size;
-      [_libraryImage updateImageHost:self];
+      [_image updateImageHost:self];
     }
 
   CGAffineTransform m;
@@ -216,14 +216,13 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 {
   NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
-  [dict setObject:[NSValue valueWithSize:_imageSize]
-   forKey:PDLibraryImageHost_Size];
+  [dict setObject:[NSValue valueWithSize:_imageSize] forKey:PDImageHost_Size];
 
-  [dict setObject:[NSNumber numberWithBool:_thumbnail]
-   forKey:PDLibraryImageHost_Thumbnail];
+  if (_thumbnail)
+    [dict setObject:[NSNumber numberWithBool:YES] forKey:PDImageHost_Thumbnail];
 
   if (_colorSpace != NULL)
-    [dict setObject:(id)_colorSpace forKey:PDLibraryImageHost_ColorSpace];
+    [dict setObject:(id)_colorSpace forKey:PDImageHost_ColorSpace];
 
   return dict;
 }
@@ -233,13 +232,13 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   return dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 }
 
-- (void)libraryImage:(PDLibraryImage *)image setHostedImage:(CGImageRef)im
+- (void)image:(PDImage *)image setHostedImage:(CGImageRef)im
 {
   /* Due to -imageHostQueue above, will be called on a background queue. */
 
   [CATransaction lock];
 
-  if (_libraryImage == image)
+  if (_image == image)
     {
       CALayer *image_layer = [[self sublayers] firstObject];
       [image_layer setContents:(id)im];

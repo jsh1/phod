@@ -26,9 +26,9 @@
 
 #import "PDAppKitExtensions.h"
 #import "PDColor.h"
+#import "PDImage.h"
 #import "PDImageLayer.h"
 #import "PDImageViewController.h"
-#import "PDLibraryImage.h"
 #import "PDWindowController.h"
 
 #import <QuartzCore/QuartzCore.h>
@@ -41,7 +41,7 @@
 
 - (void)dealloc
 {
-  [_libraryImage release];
+  [_image release];
 
   [super dealloc];
 }
@@ -57,17 +57,17 @@
   return self;
 }
 
-- (PDLibraryImage *)libraryImage
+- (PDImage *)image
 {
-  return _libraryImage;
+  return _image;
 }
 
-- (void)setLibraryImage:(PDLibraryImage *)image
+- (void)setImage:(PDImage *)image
 {
-  if (_libraryImage != image)
+  if (_image != image)
     {
-      [_libraryImage release];
-      _libraryImage = [image retain];
+      [_image release];
+      _image = [image retain];
 
       [self setNeedsDisplay:YES];
     }
@@ -105,10 +105,10 @@
 
 - (CGFloat)scaleToFitScale
 {
-  if (_libraryImage == nil)
+  if (_image == nil)
     return 1;
 
-  CGSize pixelSize = [_libraryImage orientedPixelSize];
+  CGSize pixelSize = [_image orientedPixelSize];
 
   NSRect bounds = [self bounds];
 
@@ -157,9 +157,9 @@
 
 - (CGSize)scaledImageSize
 {
-  if (_libraryImage != nil)
+  if (_image != nil)
     {
-      CGSize pixelSize = [_libraryImage orientedPixelSize];
+      CGSize pixelSize = [_image orientedPixelSize];
 
       CGFloat width = ceil(pixelSize.width * _imageScale);
       CGFloat height = ceil(pixelSize.height * _imageScale);
@@ -188,7 +188,7 @@
       [_clipLayer addSublayer:_imageLayer];
     }
 
-  if (_libraryImage != nil)
+  if (_image != nil)
     {
       _imageScale = fmax(_imageScale, [self scaleToFitScale]);
 
@@ -238,12 +238,12 @@
 		   -_imageOrigin.y + scaledSize.height * (CGFloat).5)];
       [_imageLayer setColorSpace:[[[self window] colorSpace] CGColorSpace]];
 
-      [_imageLayer setLibraryImage:_libraryImage];
+      [_imageLayer setImage:_image];
       [_clipLayer setHidden:NO];
     }
   else
     {
-      [_imageLayer setLibraryImage:nil];
+      [_imageLayer setImage:nil];
       [_clipLayer setHidden:YES];
     }
 

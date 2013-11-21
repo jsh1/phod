@@ -25,8 +25,8 @@
 #import "PDThumbnailLayer.h"
 
 #import "PDColor.h"
+#import "PDImage.h"
 #import "PDImageLayer.h"
-#import "PDLibraryImage.h"
 
 #import <QuartzCore/QuartzCore.h>
 
@@ -75,7 +75,7 @@ enum
   if (self == nil)
     return nil;
 
-  _libraryImage = [src->_libraryImage retain];
+  _image = [src->_image retain];
 
   return self;
 }
@@ -117,22 +117,22 @@ enum
 {
   [self invalidate];
 
-  [_libraryImage release];
+  [_image release];
 
   [super dealloc];
 }
 
-- (PDLibraryImage *)libraryImage
+- (PDImage *)image
 {
-  return _libraryImage;
+  return _image;
 }
 
-- (void)setLibraryImage:(PDLibraryImage *)im
+- (void)setImage:(PDImage *)im
 {
-  if (_libraryImage != im)
+  if (_image != im)
     {
-      [_libraryImage release];
-      _libraryImage = [im retain];
+      [_image release];
+      _image = [im retain];
 
       [self setNeedsLayout];
     }
@@ -140,7 +140,7 @@ enum
 
 - (void)layoutSublayers
 {
-  if (_libraryImage == nil)
+  if (_image == nil)
     return;
 
   if ([[self sublayers] count] == 0)
@@ -164,10 +164,10 @@ enum
 
   CGRect bounds = [self bounds];
 
-  [image_layer setLibraryImage:_libraryImage];
+  [image_layer setImage:_image];
   [image_layer setFrame:bounds];
 
-  [title_layer setString:[_libraryImage title]];
+  [title_layer setString:[_image title]];
   [title_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
 				       + bounds.size.height + TITLE_SPACING)];
 

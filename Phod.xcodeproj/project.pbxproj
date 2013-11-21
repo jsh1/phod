@@ -22,7 +22,7 @@
 		578F0FD5182D91FD001A5152 /* PDLibraryView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCC182D91FD001A5152 /* PDLibraryView.xib */; };
 		578F0FD6182D91FD001A5152 /* PDWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCE182D91FD001A5152 /* PDWindow.xib */; };
 		57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */; };
-		57C18109182F0ED3002B8DB2 /* PDLibraryImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18105182F0ED3002B8DB2 /* PDLibraryImage.m */; };
+		57C18109182F0ED3002B8DB2 /* PDImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18105182F0ED3002B8DB2 /* PDImage.m */; };
 		57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18107182F0ED3002B8DB2 /* PDLibraryItem.m */; };
 		57C1810D182FD616002B8DB2 /* PDLibraryDirectory.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */; };
 		57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C1810F182FDCF9002B8DB2 /* PDColor.m */; };
@@ -75,8 +75,8 @@
 		578F0FCF182D91FD001A5152 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDWindow.xib; sourceTree = "<group>"; };
 		57C180FF182E9644002B8DB2 /* PDAppKitExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDAppKitExtensions.h; sourceTree = "<group>"; };
 		57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDAppKitExtensions.m; sourceTree = "<group>"; };
-		57C18104182F0ED3002B8DB2 /* PDLibraryImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryImage.h; sourceTree = "<group>"; };
-		57C18105182F0ED3002B8DB2 /* PDLibraryImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryImage.m; sourceTree = "<group>"; };
+		57C18104182F0ED3002B8DB2 /* PDImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImage.h; sourceTree = "<group>"; };
+		57C18105182F0ED3002B8DB2 /* PDImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImage.m; sourceTree = "<group>"; };
 		57C18106182F0ED3002B8DB2 /* PDLibraryItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryItem.h; sourceTree = "<group>"; };
 		57C18107182F0ED3002B8DB2 /* PDLibraryItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryItem.m; sourceTree = "<group>"; };
 		57C1810B182FD616002B8DB2 /* PDLibraryDirectory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryDirectory.h; sourceTree = "<group>"; };
@@ -133,6 +133,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		57626D7A183E4D110080A34E /* Imaging */ = {
+			isa = PBXGroup;
+			children = (
+				57C18104182F0ED3002B8DB2 /* PDImage.h */,
+				57C18105182F0ED3002B8DB2 /* PDImage.m */,
+				5718E86D183A6CC700D73448 /* PDImageHash.h */,
+				5718E86E183A6CC700D73448 /* PDImageHash.m */,
+			);
+			name = Imaging;
+			sourceTree = "<group>";
+		};
 		577BDBDC182D792800116AF2 = {
 			isa = PBXGroup;
 			children = (
@@ -171,6 +182,7 @@
 			children = (
 				57C18111182FDD0F002B8DB2 /* Controllers */,
 				57C18112182FDD33002B8DB2 /* Library */,
+				57626D7A183E4D110080A34E /* Imaging */,
 				57C18113182FDD46002B8DB2 /* Controls */,
 				57C18114182FDD57002B8DB2 /* Misc */,
 			);
@@ -219,14 +231,10 @@
 		57C18112182FDD33002B8DB2 /* Library */ = {
 			isa = PBXGroup;
 			children = (
-				5718E86D183A6CC700D73448 /* PDImageHash.h */,
-				5718E86E183A6CC700D73448 /* PDImageHash.m */,
 				57C18106182F0ED3002B8DB2 /* PDLibraryItem.h */,
 				57C18107182F0ED3002B8DB2 /* PDLibraryItem.m */,
 				57C1810B182FD616002B8DB2 /* PDLibraryDirectory.h */,
 				57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */,
-				57C18104182F0ED3002B8DB2 /* PDLibraryImage.h */,
-				57C18105182F0ED3002B8DB2 /* PDLibraryImage.m */,
 			);
 			name = Library;
 			sourceTree = "<group>";
@@ -234,22 +242,22 @@
 		57C18113182FDD46002B8DB2 /* Controls */ = {
 			isa = PBXGroup;
 			children = (
+				570A57281833D21C0052A246 /* PDImageView.h */,
+				570A57291833D21C0052A246 /* PDImageView.m */,
+				57C6BAB218343FA60098F967 /* PDImageLayer.h */,
+				57C6BAB318343FA60098F967 /* PDImageLayer.m */,
+				57DADC0C1833C40F006D0BC1 /* PDImageGridView.h */,
+				57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */,
+				57E053B51830576A00123059 /* PDThumbnailLayer.h */,
+				57E053B61830576A00123059 /* PDThumbnailLayer.m */,
 				57C180FF182E9644002B8DB2 /* PDAppKitExtensions.h */,
 				57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */,
 				57C1810E182FDCF9002B8DB2 /* PDColor.h */,
 				57C1810F182FDCF9002B8DB2 /* PDColor.m */,
-				570A57281833D21C0052A246 /* PDImageView.h */,
-				570A57291833D21C0052A246 /* PDImageView.m */,
-				57DADC0C1833C40F006D0BC1 /* PDImageGridView.h */,
-				57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */,
 				57CE6A1E182D863E000BF04E /* PDSplitView.h */,
 				57CE6A1F182D863E000BF04E /* PDSplitView.m */,
-				57C6BAB218343FA60098F967 /* PDImageLayer.h */,
-				57C6BAB318343FA60098F967 /* PDImageLayer.m */,
 				57CC532D183D0771009D6E19 /* PDImageTextCell.h */,
 				57CC532E183D0771009D6E19 /* PDImageTextCell.m */,
-				57E053B51830576A00123059 /* PDThumbnailLayer.h */,
-				57E053B61830576A00123059 /* PDThumbnailLayer.m */,
 			);
 			name = Controls;
 			sourceTree = "<group>";
@@ -360,7 +368,7 @@
 				570A572A1833D21C0052A246 /* PDImageView.m in Sources */,
 				57C6BAB418343FA60098F967 /* PDImageLayer.m in Sources */,
 				57CE6A25182D863E000BF04E /* PDImageListViewController.m in Sources */,
-				57C18109182F0ED3002B8DB2 /* PDLibraryImage.m in Sources */,
+				57C18109182F0ED3002B8DB2 /* PDImage.m in Sources */,
 				57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */,
 				57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */,
 				57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */,

@@ -25,7 +25,7 @@
 #import "PDLibraryDirectory.h"
 
 #import "PDAppKitExtensions.h"
-#import "PDLibraryImage.h"
+#import "PDImage.h"
 
 @implementation PDLibraryDirectory
 
@@ -133,8 +133,7 @@
 
 	  if (!dir)
 	    {
-	      PDLibraryImage *image
-	        = [[PDLibraryImage alloc] initWithPath:path];
+	      PDImage *image = [[PDImage alloc] initWithPath:path];
 
 	      if (image != nil)
 		{

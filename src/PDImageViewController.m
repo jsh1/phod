@@ -25,8 +25,8 @@
 #import "PDImageViewController.h"
 
 #import "PDColor.h"
+#import "PDImage.h"
 #import "PDImageView.h"
-#import "PDLibraryImage.h"
 #import "PDWindowController.h"
 
 @implementation PDImageViewController
@@ -60,11 +60,11 @@
 
   if (idx >= 0 && idx < count)
     {
-      PDLibraryImage *image = [images objectAtIndex:idx];
+      PDImage *image = [images objectAtIndex:idx];
 
-      if ([_imageView libraryImage] != image)
+      if ([_imageView image] != image)
 	{
-	  [_imageView setLibraryImage:image];
+	  [_imageView setImage:image];
 
 	  /* Scale of zero will get replaced by -scaleToFitScale by
 	     -[PDImageView updateLayer]. Using zero here avoids issues
@@ -81,7 +81,7 @@
 	[[images objectAtIndex:idx+1] startPrefetching];
     }
   else
-    [_imageView setLibraryImage:nil];
+    [_imageView setImage:nil];
 }
 
 - (void)viewDidLoad

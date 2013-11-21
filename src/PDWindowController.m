@@ -27,10 +27,10 @@
 #import "PDAdjustmentsViewController.h"
 #import "PDAppDelegate.h"
 #import "PDColor.h"
+#import "PDImage.h"
 #import "PDImageViewController.h"
 #import "PDImageListViewController.h"
 #import "PDInfoViewController.h"
-#import "PDLibraryImage.h"
 #import "PDSplitView.h"
 #import "PDLibraryViewController.h"
 
@@ -394,7 +394,7 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
   [self setSelectedImageIndexes:[NSIndexSet indexSet] primary:-1];
 }
 
-- (void)selectImage:(PDLibraryImage *)image withEvent:(NSEvent *)e;
+- (void)selectImage:(PDImage *)image withEvent:(NSEvent *)e;
 {
   NSInteger idx = [_imageList indexOfObjectIdenticalTo:image];
 
