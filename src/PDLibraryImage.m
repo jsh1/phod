@@ -268,8 +268,8 @@ static NSOperationQueue *_narrowQueue;
     {
       _wideQueue = [[NSOperationQueue alloc] init];
       [_wideQueue setName:@"PDLibraryImage.wideQueue"];
-      [_wideQueue addObserver:self forKeyPath:@"operationCount"
-       options:0 context:NULL];
+      [_wideQueue addObserver:(id)[self class]
+       forKeyPath:@"operationCount" options:0 context:NULL];
     }
 
   return _wideQueue;
@@ -282,14 +282,14 @@ static NSOperationQueue *_narrowQueue;
       _narrowQueue = [[NSOperationQueue alloc] init];
       [_narrowQueue setName:@"PDLibraryImage.narrowQueue"];
       [_narrowQueue setMaxConcurrentOperationCount:1];
-      [_narrowQueue addObserver:self forKeyPath:@"operationCount"
-       options:0 context:NULL];
+      [_narrowQueue addObserver:(id)[self class]
+       forKeyPath:@"operationCount" options:0 context:NULL];
     }
 
   return _narrowQueue;
 }
 
-- (void)observeValueForKeyPath:(NSString *)path ofObject:(id)obj
++ (void)observeValueForKeyPath:(NSString *)path ofObject:(id)obj
     change:(NSDictionary *)dict context:(void *)ctx
 {
   if ([path isEqualToString:@"operationCount"])
@@ -326,6 +326,7 @@ static NSOperationQueue *_narrowQueue;
   if (_imageProperties)
     CFRelease(_imageProperties);
 
+  assert([_imageHosts count] == 0);
   [_imageHosts release];
 
   [_prefetchOp cancel];
