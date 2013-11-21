@@ -35,13 +35,13 @@
                                 <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
                                     <customView id="Xq2-Da-fg5">
-                                        <rect key="frame" x="0.0" y="0.0" width="288" height="635"/>
+                                        <rect key="frame" x="4" y="0.0" width="284" height="632"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     </customView>
                                     <segmentedControl verticalHuggingPriority="750" id="evu-pS-PWE">
-                                        <rect key="frame" x="3" y="636" width="177" height="21"/>
+                                        <rect key="frame" x="5" y="632" width="212" height="23"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                        <segmentedCell key="cell" controlSize="small" alignment="left" style="smallSquare" trackingMode="selectOne" id="aEm-Xz-BsO">
+                                        <segmentedCell key="cell" alignment="left" style="smallSquare" trackingMode="selectOne" id="aEm-Xz-BsO">
                                             <font key="font" metaFont="smallSystem"/>
                                             <segments>
                                                 <segment label="Library" selected="YES" tag="1"/>
