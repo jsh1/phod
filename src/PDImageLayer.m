@@ -153,9 +153,19 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   if (image_layer == nil)
     {
       image_layer = [PDImageLayerLayer layer];
+
       [image_layer setDelegate:[self delegate]];
-      [image_layer setMinificationFilter:
-       _thumbnail ? kCAFilterTrilinear : kCAFilterLinear];
+
+      /* FIXME: leaving mag filter as nearest for thumbnails looks
+	 hideous even though the images are downsampled with trilinear
+	 enabled!? But setting mag=linear looks great. */
+
+      if (_thumbnail)
+	{
+	  [image_layer setMinificationFilter:kCAFilterTrilinear];
+	  [image_layer setMagnificationFilter:kCAFilterLinear];
+	}
+
       [self addSublayer:image_layer];
     }
 
