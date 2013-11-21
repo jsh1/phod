@@ -83,6 +83,24 @@
   return _gridView;
 }
 
+- (NSDictionary *)savedViewState
+{
+  return [NSDictionary dictionaryWithObjectsAndKeys:
+	  [NSNumber numberWithDouble:[_scaleSlider doubleValue]],
+	  @"Scale", nil];
+}
+
+- (void)applySavedViewState:(NSDictionary *)state
+{
+  id value = [state objectForKey:@"Scale"];
+
+  if (value != nil)
+    {
+      [_scaleSlider setDoubleValue:[value doubleValue]];
+      [self controlAction:_scaleSlider];
+    }
+}
+
 - (void)imageListDidChange:(NSNotification *)note
 {
   [_gridView setImages:[_controller imageList]];
