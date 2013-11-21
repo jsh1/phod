@@ -22,35 +22,45 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import <AppKit/AppKit.h>
+#import "PDImageTextCell.h"
 
-@interface NSView (PDAppKitExtensions)
+#define BORDER 1
+#define SPACING 2
 
-- (void)scrollRectToVisible:(NSRect)rect animated:(BOOL)flag;
+@implementation PDImageTextCell
 
-@end
+@synthesize image = _image;
 
-
-@interface NSCell (PDAppKitExtensions)
-
-@property(getter=isVerticallyCentered) BOOL verticallyCentered;
-  
-@end
-
-
-@interface NSTableView (PDAppKitExtensions)
-
-- (void)reloadDataForRow:(NSInteger)row;
-
-@end
-
-enum
+- (CGFloat)imageWidthForHeight:(CGFloat)h
 {
-  PDImage_Computer,
-  PDImage_GenericFolder,
-  PDImage_GenericHardDisk,
-  PDImage_GenericRemovableDisk,
-  PDImageCount,
-};
+  NSSize size = [_image size];
+  return size.width * (h / size.height);
+}
 
-extern NSImage *PDImageWithName(NSInteger name);
+- (NSSize)cellSize
+{
+  NSSize size = [super cellSize];
+  if (_image != nil)
+    size.width += BORDER + [self imageWidthForHeight:size.height] + SPACING;
+  return size;
+}
+
+- (void)drawWithFrame:(NSRect)frame inView:(NSView *)view
+{
+  if (_image != nil)
+    {
+      NSRect imageFrame = frame;
+      CGFloat width = [self imageWidthForHeight:frame.size.height];
+      imageFrame.origin.x += BORDER;
+      imageFrame.size.width = fmin(width, imageFrame.size.width);
+      frame.origin.x += BORDER + width + SPACING;
+      frame.size.width -= width + SPACING;
+      [_image drawInRect:imageFrame fromRect:NSZeroRect operation:
+       NSCompositeSourceOver fraction:1 respectFlipped:YES hints:nil];
+    }
+
+  if (frame.size.width > 0)
+    [super drawWithFrame:frame inView:view];
+}
+
+@end

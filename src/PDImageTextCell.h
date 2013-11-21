@@ -24,33 +24,11 @@
 
 #import <AppKit/AppKit.h>
 
-@interface NSView (PDAppKitExtensions)
-
-- (void)scrollRectToVisible:(NSRect)rect animated:(BOOL)flag;
-
-@end
-
-
-@interface NSCell (PDAppKitExtensions)
-
-@property(getter=isVerticallyCentered) BOOL verticallyCentered;
-  
-@end
-
-
-@interface NSTableView (PDAppKitExtensions)
-
-- (void)reloadDataForRow:(NSInteger)row;
-
-@end
-
-enum
+@interface PDImageTextCell : NSTextFieldCell
 {
-  PDImage_Computer,
-  PDImage_GenericFolder,
-  PDImage_GenericHardDisk,
-  PDImage_GenericRemovableDisk,
-  PDImageCount,
-};
+  NSImage *_image;
+}
 
-extern NSImage *PDImageWithName(NSInteger name);
+@property(nonatomic, retain) NSImage *image;
+
+@end

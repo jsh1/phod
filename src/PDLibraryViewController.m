@@ -24,6 +24,8 @@
 
 #import "PDLibraryViewController.h"
 
+#import "PDAppKitExtensions.h"
+#import "PDImageTextCell.h"
 #import "PDLibraryDirectory.h"
 #import "PDLibraryImage.h"
 #import "PDLibraryItem.h"
@@ -36,20 +38,29 @@
   return @"PDLibraryView";
 }
 
+- (void)addDirectoryItem:(NSString *)dir
+{
+  PDLibraryDirectory *item = [[PDLibraryDirectory alloc] initWithPath:
+			      [dir stringByExpandingTildeInPath]];
+
+  [item setTitleImageName:PDImage_GenericHardDisk];
+  [_items addObject:item];
+  [item release];
+}
+
 - (id)initWithController:(PDWindowController *)controller
 {
-  PDLibraryItem *item;
-
   self = [super initWithController:controller];
   if (self == nil)
     return nil;
 
-  _items = [[NSMutableArray alloc] init];
+  _folders = [[[NSUserDefaults standardUserDefaults]
+	       arrayForKey:@"PDLibraryDirectories"] mutableCopy];
 
-  item = [[PDLibraryDirectory alloc] initWithPath:
-	  [@"~/Pictures/Photos" stringByExpandingTildeInPath]];
-  [_items addObject:item];
-  [item release];
+  _items = [[NSMutableArray alloc] init];
+  
+  for (NSString *dir in _folders)
+    [self addDirectoryItem:dir];
 
   return self;
 }
@@ -79,8 +90,81 @@
   return _outlineView;
 }
 
-- (IBAction)controlAction:(id)sender
+- (IBAction)addFolderAction:(id)sender
 {
+  NSOpenPanel *panel = [NSOpenPanel openPanel];
+
+  [panel setCanChooseDirectories:YES];
+  [panel setCanChooseFiles:NO];
+  [panel setAllowsMultipleSelection:YES];
+  [panel setPrompt:@"Add Folder"];
+  [panel setTitle:@"Select folder to add to library"];
+
+  [panel beginWithCompletionHandler:
+   ^(NSInteger status) {
+     if (status == NSFileHandlingPanelOKButton)
+       {
+	 BOOL changed = NO;
+	 NSArray *urls = [panel URLs];
+
+	 for (NSURL *url in urls)
+	   {
+	     if (![url isFileURL])
+	       continue;
+
+	     NSString *dir = [[url path] stringByAbbreviatingWithTildeInPath];
+	     if ([_folders containsObject:dir])
+	       continue;
+
+	     [_folders addObject:dir];
+	     [self addDirectoryItem:dir];
+	     changed = YES;
+	   }
+
+	 if (changed)
+	   {
+	     [[NSUserDefaults standardUserDefaults] setObject:_folders
+	      forKey:@"PDLibraryDirectories"];
+
+	     [_outlineView reloadData];
+	   }
+       }
+   }];
+}
+
+- (IBAction)removeFolderAction:(id)sender
+{
+  BOOL changed = NO;
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+  NSInteger idx;
+
+  for (idx = [sel lastIndex]; idx != NSNotFound;
+       idx = [sel indexLessThanIndex:idx])
+    {
+      PDLibraryItem *item = [_outlineView itemAtRow:idx];
+
+      if ([_outlineView parentForItem:item] == nil
+	  && [item isKindOfClass:[PDLibraryDirectory class]])
+	{
+	  NSInteger idx = [_items indexOfObjectIdenticalTo:item];
+	  if (idx != NSNotFound)
+	    {
+	      [_folders removeObjectAtIndex:idx];
+	      [_items removeObjectAtIndex:idx];
+	      changed = YES;
+	    }
+	}
+    }
+
+  if (changed)
+    {
+      [[NSUserDefaults standardUserDefaults] setObject:_folders
+       forKey:@"PDLibraryDirectories"];
+
+      [_outlineView reloadData];
+    }
+
+  [self outlineViewSelectionDidChange:nil];
 }
 
 - (IBAction)searchAction:(id)sender
@@ -96,6 +180,10 @@
     }
 
   [_outlineView reloadData];
+}
+
+- (IBAction)controlAction:(id)sender
+{
 }
 
 // NSOutlineViewDataSource methods
@@ -152,6 +240,17 @@
 }
 
 // NSOutlineViewDelegate methods
+
+- (void)outlineView:(NSOutlineView *)ov willDisplayCell:(id)cell
+    forTableColumn:(NSTableColumn *)col item:(id)item
+{
+  NSString *ident = [col identifier];
+
+  if ([ident isEqualToString:@"name"])
+    {
+      [(PDImageTextCell *)cell setImage:[item titleImage]];
+    }
+}
 
 - (void)outlineViewSelectionDidChange:(NSNotification *)note
 {

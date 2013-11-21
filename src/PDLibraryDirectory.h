@@ -31,10 +31,14 @@
   NSArray *_images;
   NSInteger _imageCount;
   NSArray *_subimages;
+  BOOL _toplevel;
+  NSInteger _titleImageName;
 }
 
 - (id)initWithPath:(NSString *)path;
 
 @property(nonatomic, readonly) NSString *path;
+
+@property(nonatomic) NSInteger titleImageName;
 
 @end

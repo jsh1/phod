@@ -33,10 +33,15 @@
   IBOutlet NSButton *_removeButton;
   IBOutlet NSButton *_actionButton;
 
+  NSMutableArray *_folders;
   NSMutableArray *_items;
 }
 
-- (IBAction)controlAction:(id)sender;
+- (IBAction)addFolderAction:(id)sender;
+- (IBAction)removeFolderAction:(id)sender;
+
 - (IBAction)searchAction:(id)sender;
+
+- (IBAction)controlAction:(id)sender;
 
 @end

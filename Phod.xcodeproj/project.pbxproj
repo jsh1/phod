@@ -27,6 +27,8 @@
 		57C1810D182FD616002B8DB2 /* PDLibraryDirectory.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */; };
 		57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C1810F182FDCF9002B8DB2 /* PDColor.m */; };
 		57C6BAB418343FA60098F967 /* PDImageLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C6BAB318343FA60098F967 /* PDImageLayer.m */; };
+		57CC532F183D0771009D6E19 /* PDImageTextCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CC532E183D0771009D6E19 /* PDImageTextCell.m */; };
+		57CC5331183D1395009D6E19 /* defaults.plist in Resources */ = {isa = PBXBuildFile; fileRef = 57CC5330183D1395009D6E19 /* defaults.plist */; };
 		57CE6A08182D7C2B000BF04E /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 577BDBEB182D792800116AF2 /* AppKit.framework */; };
 		57CE6A09182D7C2B000BF04E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 577BDBED182D792800116AF2 /* Foundation.framework */; };
 		57CE6A0B182D7C40000BF04E /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CE6A0A182D7C40000BF04E /* ImageIO.framework */; };
@@ -83,6 +85,9 @@
 		57C1810F182FDCF9002B8DB2 /* PDColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDColor.m; sourceTree = "<group>"; };
 		57C6BAB218343FA60098F967 /* PDImageLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageLayer.h; sourceTree = "<group>"; };
 		57C6BAB318343FA60098F967 /* PDImageLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageLayer.m; sourceTree = "<group>"; };
+		57CC532D183D0771009D6E19 /* PDImageTextCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageTextCell.h; sourceTree = "<group>"; };
+		57CC532E183D0771009D6E19 /* PDImageTextCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageTextCell.m; sourceTree = "<group>"; };
+		57CC5330183D1395009D6E19 /* defaults.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = defaults.plist; sourceTree = "<group>"; };
 		57CE6A0A182D7C40000BF04E /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		57CE6A0C182D7C45000BF04E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		57CE6A0E182D7C4A000BF04E /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -241,6 +246,8 @@
 				57CE6A1F182D863E000BF04E /* PDSplitView.m */,
 				57C6BAB218343FA60098F967 /* PDImageLayer.h */,
 				57C6BAB318343FA60098F967 /* PDImageLayer.m */,
+				57CC532D183D0771009D6E19 /* PDImageTextCell.h */,
+				57CC532E183D0771009D6E19 /* PDImageTextCell.m */,
 				57E053B51830576A00123059 /* PDThumbnailLayer.h */,
 				57E053B61830576A00123059 /* PDThumbnailLayer.m */,
 			);
@@ -262,6 +269,7 @@
 		57CE6A13182D7D08000BF04E /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				57CC5330183D1395009D6E19 /* defaults.plist */,
 				577BDBF0182D792800116AF2 /* Phod-Info.plist */,
 				577BDBF1182D792800116AF2 /* InfoPlist.strings */,
 				577BDC00182D792800116AF2 /* Images.xcassets */,
@@ -325,6 +333,7 @@
 			files = (
 				578F0FD6182D91FD001A5152 /* PDWindow.xib in Resources */,
 				577BDBF3182D792800116AF2 /* InfoPlist.strings in Resources */,
+				57CC5331183D1395009D6E19 /* defaults.plist in Resources */,
 				577BDC01182D792800116AF2 /* Images.xcassets in Resources */,
 				578F0FD3182D91FD001A5152 /* PDImageView.xib in Resources */,
 				578F0FD0182D91FD001A5152 /* MainMenu.xib in Resources */,
@@ -344,6 +353,7 @@
 			files = (
 				5718E86B183A661B00D73448 /* md5.c in Sources */,
 				57CE6A27182D863E000BF04E /* PDInfoViewController.m in Sources */,
+				57CC532F183D0771009D6E19 /* PDImageTextCell.m in Sources */,
 				57CE6A26182D863E000BF04E /* PDImageViewController.m in Sources */,
 				57DADC0E1833C40F006D0BC1 /* PDImageGridView.m in Sources */,
 				57E053B71830576A00123059 /* PDThumbnailLayer.m in Sources */,

@@ -85,3 +85,47 @@
 }
 
 @end
+
+NSImage *
+PDImageWithName(NSInteger name)
+{
+  static NSImage *_images[PDImageCount];
+
+  if (name >= 0 && name < PDImageCount)
+    {
+      if (_images[name] == nil)
+	{
+	  NSString *imageName = nil;
+	  OSType typeCode = 0;
+
+	  switch (name)
+	    {
+	    case PDImage_Computer:
+	      typeCode = kComputerIcon;
+	      break;
+
+	    case PDImage_GenericFolder:
+	      imageName = NSImageNameFolder;
+	      break;
+
+	    case PDImage_GenericHardDisk:
+	      typeCode = kGenericHardDiskIcon;
+	      break;
+
+	    case PDImage_GenericRemovableDisk:
+	      typeCode = kGenericRemovableMediaIcon;
+	      break;
+	    }
+
+	  if (imageName != nil)
+	    _images[name] = [[NSImage imageNamed:imageName] retain];
+	  else if (typeCode != 0)
+	    _images[name] = [[[NSWorkspace sharedWorkspace] iconForFileType:
+			      NSFileTypeForHFSTypeCode(typeCode)] retain];
+	}
+
+      return _images[name];
+    }
+
+  return nil;
+}

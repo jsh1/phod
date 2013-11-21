@@ -24,11 +24,13 @@
 
 #import "PDLibraryDirectory.h"
 
+#import "PDAppKitExtensions.h"
 #import "PDLibraryImage.h"
 
 @implementation PDLibraryDirectory
 
 @synthesize path = _path;
+@synthesize titleImageName = _titleImageName;
 
 + (NSSet *)imagePathExtensions
 {
@@ -52,6 +54,7 @@
     return nil;
 
   _path = [path copy];
+  _titleImageName = PDImage_GenericFolder;
 
   return self;
 }
@@ -156,6 +159,11 @@
     }
 
   return images;
+}
+
+- (NSImage *)titleImage
+{
+  return PDImageWithName(_titleImageName);
 }
 
 - (NSString *)titleString
