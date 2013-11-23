@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		570701D818400506008D39D4 /* app-icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 570701D718400506008D39D4 /* app-icon.icns */; };
 		570A572A1833D21C0052A246 /* PDImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = 570A57291833D21C0052A246 /* PDImageView.m */; };
 		5718E86B183A661B00D73448 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 5718E869183A661B00D73448 /* md5.c */; };
 		5718E86F183A6CC700D73448 /* PDImageHash.m in Sources */ = {isa = PBXBuildFile; fileRef = 5718E86E183A6CC700D73448 /* PDImageHash.m */; };
@@ -49,6 +50,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		570701D718400506008D39D4 /* app-icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "app-icon.icns"; sourceTree = "<group>"; };
 		570A57281833D21C0052A246 /* PDImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageView.h; sourceTree = "<group>"; };
 		570A57291833D21C0052A246 /* PDImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageView.m; sourceTree = "<group>"; };
 		5718E869183A661B00D73448 /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = md5.c; sourceTree = "<group>"; };
@@ -277,6 +279,7 @@
 		57CE6A13182D7D08000BF04E /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				570701D718400506008D39D4 /* app-icon.icns */,
 				57CC5330183D1395009D6E19 /* defaults.plist */,
 				577BDBF0182D792800116AF2 /* Phod-Info.plist */,
 				577BDBF1182D792800116AF2 /* InfoPlist.strings */,
@@ -343,6 +346,7 @@
 				577BDBF3182D792800116AF2 /* InfoPlist.strings in Resources */,
 				57CC5331183D1395009D6E19 /* defaults.plist in Resources */,
 				577BDC01182D792800116AF2 /* Images.xcassets in Resources */,
+				570701D818400506008D39D4 /* app-icon.icns in Resources */,
 				578F0FD3182D91FD001A5152 /* PDImageView.xib in Resources */,
 				578F0FD0182D91FD001A5152 /* MainMenu.xib in Resources */,
 				578F0FD1182D91FD001A5152 /* PDAdjustmentsView.xib in Resources */,
@@ -498,7 +502,6 @@
 		577BDC17182D792800116AF2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/Phod-Prefix.pch";
@@ -511,7 +514,6 @@
 		577BDC18182D792800116AF2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/Phod-Prefix.pch";
