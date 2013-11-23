@@ -30,6 +30,7 @@
 {
   IBOutlet NSScrollView *_scrollView;
   IBOutlet PDImageGridView *_gridView;
+  IBOutlet NSTextField *_titleLabel;
   IBOutlet NSSlider *_scaleSlider;
 }
 

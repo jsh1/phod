@@ -28,6 +28,7 @@
 
 @interface PDImageViewController : PDViewController
 {
+  IBOutlet NSTextField *_titleLabel;
   IBOutlet PDImageView *_imageView;
 }
   

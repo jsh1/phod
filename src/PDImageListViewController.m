@@ -70,6 +70,8 @@
    addObserver:self selector:@selector(gridViewBoundsDidChange:)
    name:NSViewFrameDidChangeNotification object:_gridView];
 
+  [_titleLabel setTextColor:[PDColor controlTextColor]];
+
   [_scaleSlider setDoubleValue:[_gridView scale]];
 }
 
@@ -103,8 +105,34 @@
 
 - (void)imageListDidChange:(NSNotification *)note
 {
-  [_gridView setImages:[_controller imageList]];
+  NSArray *images = [_controller imageList];
+
+  [_gridView setImages:images];
   [_gridView scrollPoint:NSZeroPoint];
+
+  if ([images count] != 0)
+    {
+      NSMutableSet *paths = [NSMutableSet set];
+
+      for (PDImage *image in images)
+	[paths addObject:[[image path] stringByDeletingLastPathComponent]];
+
+      NSMutableString *str = [NSMutableString string];
+
+      for (NSString *path in [[paths allObjects]
+			      sortedArrayUsingSelector:@selector(compare:)])
+	{
+	  path = [[path lastPathComponent]
+		  stringByReplacingOccurrencesOfString:@":" withString:@"/"];
+	  if ([str length] != 0)
+	    [str appendString:@" & "];
+	  [str appendString:path];
+	}
+
+      [_titleLabel setStringValue:str];
+    }
+  else
+    [_titleLabel setStringValue:@""];
 }
 
 - (void)selectionDidChange:(NSNotification *)note

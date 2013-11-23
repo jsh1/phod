@@ -79,9 +79,28 @@
 	[[images objectAtIndex:idx-1] startPrefetching];
       if (idx + 1 < count)
 	[[images objectAtIndex:idx+1] startPrefetching];
+
+      static NSString *em_dash;
+      if (em_dash == nil)
+	{
+	  unichar c = 0x2014;
+	  em_dash = [[NSString alloc] initWithCharacters:&c length:1];
+	}
+
+      NSString *dir = [[[[image path] stringByDeletingLastPathComponent]
+			lastPathComponent]
+		       stringByReplacingOccurrencesOfString:@":"
+		       withString:@"/"];
+      NSString *title = [image title];
+
+      [_titleLabel setStringValue:
+       [NSString stringWithFormat:@"%@ %@ %@", dir, em_dash, title]];
     }
   else
-    [_imageView setImage:nil];
+    {
+      [_imageView setImage:nil];
+      [_titleLabel setStringValue:@""];
+    }
 }
 
 - (void)viewDidLoad
@@ -92,6 +111,8 @@
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(imageViewBoundsDidChange:)
    name:NSViewFrameDidChangeNotification object:_imageView];
+
+  [_titleLabel setTextColor:[PDColor controlTextColor]];
 
   [self updateImage];
 }

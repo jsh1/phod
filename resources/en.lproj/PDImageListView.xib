@@ -10,6 +10,7 @@
                 <outlet property="_progressIndicator" destination="Xvc-cc-PXZ" id="Ww3-7b-EwL"/>
                 <outlet property="_scaleSlider" destination="7R0-fJ-wJc" id="Waq-Lq-gAf"/>
                 <outlet property="_scrollView" destination="MZC-31-5x1" id="uQE-mo-cAo"/>
+                <outlet property="_titleLabel" destination="SYa-hn-mNZ" id="t2Z-wB-d1b"/>
                 <outlet property="view" destination="pcu-MU-YW6" id="q5T-1j-msf"/>
             </connections>
         </customObject>
@@ -56,6 +57,15 @@
                     <rect key="frame" x="6" y="8" width="16" height="16"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                 </progressIndicator>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="SYa-hn-mNZ">
+                    <rect key="frame" x="108" y="444" width="300" height="14"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="center" title="Title" id="eGl-Ha-i1Z">
+                        <font key="font" metaFont="smallSystemBold"/>
+                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
             </subviews>
         </customView>
     </objects>
