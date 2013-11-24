@@ -113,6 +113,7 @@
    name:NSViewFrameDidChangeNotification object:_imageView];
 
   [_titleLabel setTextColor:[PDColor controlTextColor]];
+  [_titleLabel setStringValue:@""];
 
   [self updateImage];
 }

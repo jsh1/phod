@@ -71,6 +71,7 @@
    name:NSViewFrameDidChangeNotification object:_gridView];
 
   [_titleLabel setTextColor:[PDColor controlTextColor]];
+  [_titleLabel setStringValue:@""];
 
   [_scaleSlider setDoubleValue:[_gridView scale]];
 }
