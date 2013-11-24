@@ -52,8 +52,10 @@ enum
   PDImage_MediumSize = 1024,
 };
 
-NSString * const PDImage_FileSize = @"FileSize";
+NSString * const PDImage_Name = @"Name";
+NSString * const PDImage_Path = @"Path";
 
+NSString * const PDImage_FileSize = @"FileSize";
 NSString * const PDImage_PixelWidth = @"PixelWidth";
 NSString * const PDImage_PixelHeight = @"PixelHeight";
 NSString * const PDImage_Orientation = @"Orientation";
@@ -84,6 +86,7 @@ NSString * const PDImage_FlashCompensation = @"FlashCompensation";
 NSString * const PDImage_FNumber = @"FNumber";
 NSString * const PDImage_FocalLength = @"FocalLength";
 NSString * const PDImage_FocalLength35mm = @"FocalLength35mm";
+NSString * const PDImage_FocusMode = @"FocusMode";
 NSString * const PDImage_ISOSpeed = @"ISOSpeed";
 NSString * const PDImage_ImageStabilization = @"ImageStabilization";
 NSString * const PDImage_Latitude = @"Latitude";

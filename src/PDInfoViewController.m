@@ -24,6 +24,8 @@
 
 #import "PDInfoViewController.h"
 
+#import "PDImage.h"
+#import "PDMetadataView.h"
 #import "PDWindowController.h"
 
 @implementation PDInfoViewController
@@ -42,9 +44,96 @@
   return self;
 }
 
+- (void)dealloc
+{
+  [_metadataGroups release];
+  [_metadataGroupOrder release];
+  [_activeGroup release];
+  [super dealloc];
+}
+
 - (void)viewDidLoad
 {
   [super viewDidLoad];
+
+  _metadataGroups = [[[NSUserDefaults standardUserDefaults]
+		      objectForKey:@"PDMetadataGroups"] copy];
+  _metadataGroupOrder = [[[NSUserDefaults standardUserDefaults]
+			  objectForKey:@"PDMetadataGroupOrder"] copy];
+
+  if ([_metadataGroupOrder count] > 0)
+    {
+      [_popupMenu removeAllItems];
+
+      for (NSString *name in _metadataGroupOrder)
+	{
+	  NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:name
+		action:@selector(popupMenuAction:) keyEquivalent:@""];
+	  [item setTarget:self];
+	  [item setRepresentedObject:name];
+	  [_popupMenu addItem:item];
+	  [item release];
+	}
+
+      if (_activeGroup == nil)
+	[self setActiveGroup:[_metadataGroupOrder firstObject]];
+      else
+	[self setActiveGroup:_activeGroup];
+    }
+
+  [_metadataView viewDidLoad];
+}
+
+- (NSString *)activeGroup
+{
+  return _activeGroup;
+}
+
+- (void)setActiveGroup:(NSString *)name
+{
+  [_activeGroup release];
+  _activeGroup = [name copy];
+
+  [_metadataView setImageProperties:[_metadataGroups objectForKey:name]];
+
+  [_popupButton selectItemAtIndex:
+   [_popupMenu indexOfItemWithRepresentedObject:name]];
+}
+
+- (NSDictionary *)savedViewState
+{
+  return @{@"ActiveGroup": _activeGroup};
+}
+
+- (void)applySavedViewState:(NSDictionary *)dict
+{
+  id value = [dict objectForKey:@"ActiveGroup"];
+  if (value != nil)
+    [self setActiveGroup:value];
+}
+
+- (NSString *)formattedImagePropertyForKey:(NSString *)key
+{
+  PDImage *image = [[self controller] primaryImage];
+  if (image == nil)
+      return nil;
+
+  id value = [image imagePropertyForKey:key];
+  if (value == nil)
+    return nil;
+
+  // FIXME: implement this
+
+  return [NSString stringWithFormat:@"%@", value];
+}
+
+- (IBAction)controlAction:(id)sender
+{
+}
+
+- (IBAction)popupMenuAction:(id)sender
+{
+  [self setActiveGroup:[sender representedObject]];
 }
 
 @end

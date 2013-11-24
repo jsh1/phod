@@ -39,13 +39,13 @@
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     </customView>
                                     <segmentedControl verticalHuggingPriority="750" id="evu-pS-PWE">
-                                        <rect key="frame" x="5" y="632" width="212" height="23"/>
+                                        <rect key="frame" x="5" y="632" width="222" height="23"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                         <segmentedCell key="cell" alignment="left" style="smallSquare" trackingMode="selectOne" id="aEm-Xz-BsO">
                                             <font key="font" metaFont="smallSystem"/>
                                             <segments>
                                                 <segment label="Library" selected="YES" tag="1"/>
-                                                <segment label="Info" tag="2"/>
+                                                <segment label="Properties" tag="2"/>
                                                 <segment label="Adjustments" tag="3"/>
                                             </segments>
                                         </segmentedCell>

@@ -6,6 +6,9 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PDInfoViewController">
             <connections>
+                <outlet property="_metadataView" destination="jA4-mf-ZhG" id="eTb-kU-leg"/>
+                <outlet property="_popupButton" destination="ntG-gT-Ivg" id="Avf-l0-TJf"/>
+                <outlet property="_popupMenu" destination="EUz-hT-aaz" id="zqD-fe-Lql"/>
                 <outlet property="view" destination="FIi-22-GmQ" id="mZG-LA-XaJ"/>
             </connections>
         </customObject>
@@ -14,6 +17,45 @@
         <customView id="FIi-22-GmQ">
             <rect key="frame" x="0.0" y="0.0" width="309" height="620"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <popUpButton verticalHuggingPriority="750" id="ntG-gT-Ivg">
+                    <rect key="frame" x="1" y="595" width="110" height="23"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" alignment="center" controlSize="small" lineBreakMode="truncatingTail" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Zrf-8k-bWo">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="smallSystem"/>
+                        <menu key="menu" title="OtherViews" id="EUz-hT-aaz"/>
+                    </popUpButtonCell>
+                    <connections>
+                        <action selector="controlAction:" target="-2" id="g09-5p-PJo"/>
+                    </connections>
+                </popUpButton>
+                <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasVerticalScroller="NO" usesPredominantAxisScrolling="NO" id="inc-LA-nLI">
+                    <rect key="frame" x="0.0" y="0.0" width="309" height="595"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="C5D-0s-bQA">
+                        <rect key="frame" x="0.0" y="0.0" width="309" height="595"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <customView id="jA4-mf-ZhG" customClass="PDMetadataView">
+                                <rect key="frame" x="0.0" y="0.0" width="309" height="595"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <connections>
+                                    <outlet property="_controller" destination="-2" id="FJ1-y6-JVi"/>
+                                </connections>
+                            </customView>
+                        </subviews>
+                    </clipView>
+                    <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="ai4-tq-Pi5">
+                        <rect key="frame" x="0.0" y="579" width="309" height="16"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </scroller>
+                    <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="R1c-bU-zu7">
+                        <rect key="frame" x="-100" y="-100" width="16" height="595"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </scroller>
+                </scrollView>
+            </subviews>
         </customView>
     </objects>
 </document>

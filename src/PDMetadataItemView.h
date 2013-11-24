@@ -22,25 +22,27 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDViewController.h"
+#import <AppKit/AppKit.h>
 
 @class PDMetadataView;
 
-@interface PDInfoViewController : PDViewController
+@interface PDMetadataItemView : NSView <NSTextFieldDelegate>
 {
-  IBOutlet PDMetadataView *_metadataView;
-  IBOutlet NSPopUpButton *_popupButton;
-  IBOutlet NSMenu *_popupMenu;
+  PDMetadataView *_metadataView;
 
-  NSDictionary *_metadataGroups;
-  NSArray *_metadataGroupOrder;
-  NSString *_activeGroup;
+  NSTextField *_labelField;
+  NSTextField *_valueField;
+
+  NSString *_imageProperty;
 }
 
-@property(nonatomic, copy) NSString *activeGroup;
+@property(nonatomic, assign) PDMetadataView *metadataView;
 
-- (NSString *)formattedImagePropertyForKey:(NSString *)key;
+@property(nonatomic, copy) NSString *imageProperty;
 
-- (IBAction)controlAction:(id)sender;
+- (void)update;
 
+- (CGFloat)preferredHeight;
+- (void)layoutSubviews;
+  
 @end

@@ -353,6 +353,17 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
     }
 }
 
+- (PDImage *)primaryImage
+{
+  if (_primarySelectionIndex >= 0
+      && _primarySelectionIndex < [_imageList count])
+    {
+      return [_imageList objectAtIndex:_primarySelectionIndex];
+    }
+  else
+    return nil;
+}
+
 - (NSIndexSet *)selectedImageIndexes
 {
   return _selectedImageIndexes;
@@ -371,6 +382,25 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDSelectionDidChange object:self];
     }
+}
+
+- (NSArray *)selectedImages
+{
+  if ([_selectedImageIndexes count] == 0)
+    return [NSArray array];
+
+  NSMutableArray *array = [NSMutableArray array];
+  NSInteger count = [_imageList count];
+
+  NSInteger idx;
+  for (idx = [_selectedImageIndexes firstIndex]; idx != NSNotFound;
+       idx = [_selectedImageIndexes indexGreaterThanIndex:idx])
+    {
+      if (idx >= 0 && idx < count)
+	[array addObject:[_imageList objectAtIndex:idx]];
+    }
+
+  return array;
 }
 
 - (void)setSelectedImageIndexes:(NSIndexSet *)set primary:(NSInteger)idx

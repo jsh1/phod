@@ -69,6 +69,9 @@ enum PDContentMode
 @property NSInteger primarySelectionIndex;
 @property(nonatomic, copy) NSIndexSet *selectedImageIndexes;
 
+@property(nonatomic, readonly) PDImage *primaryImage;
+@property(nonatomic, readonly) NSArray *selectedImages;
+
 - (void)setSelectedImageIndexes:(NSIndexSet *)set primary:(NSInteger)idx;
 
 - (void)clearSelection;

@@ -6,5 +6,55 @@
 	<array>
 		<string>~/Pictures/Photos</string>
 	</array>
+	<key>PDMetadataGroups</key>
+	<dict>
+		<key>General</key>
+		<array>
+			<string>Name</string>
+			<string>Rating</string>
+			<string>Title</string>
+			<string>Caption</string>
+			<string>Keywords</string>
+			<string>Copyright</string>
+			<string>DigitizedDate</string>
+			<string>PixelSize</string>
+			<string>FileSize</string>
+			<string>Path</string>
+		</array>
+		<key>Photo</key>
+		<array>
+			<string>Name</string>
+			<string>DigitizedDate</string>
+			<string>CameraMake</string>
+			<string>CameraModel</string>
+			<string>ISOSpeed</string>
+			<string>FocalLength</string>
+			<string>FocalLength35mm</string>
+			<string>ExposureBias</string>
+			<string>FNumber</string>
+			<string>ExposureLength</string>
+			<string>Flash</string>
+			<string>WhiteBalance</string>
+			<string>ExposureProgram</string>
+			<string>MeteringMode</string>
+			<string>ExposureMode</string>
+			<string>FocusMode</string>
+			<string>ProfileName</string>
+			<string>PixelSize</string>
+		</array>
+		<key>GPS</key>
+		<array>
+			<string>Latitude</string>
+			<string>Longitude</string>
+			<string>Altitude</string>
+			<string>Direction</string>
+		</array>
+	</dict>
+	<key>PDMetadataGroupOrder</key>
+	<array>
+		<string>General</string>
+		<string>Photo</string>
+		<string>GPS</string>
+	</array>
 </dict>
 </plist>

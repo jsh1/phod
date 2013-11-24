@@ -22,22 +22,21 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDViewController.h"
+#import <AppKit/AppKit.h>
 
-@class PDMetadataView;
+@class PDInfoViewController;
 
-@interface PDInfoViewController : PDViewController
+@interface PDMetadataView : NSView
 {
-  IBOutlet PDMetadataView *_metadataView;
-  IBOutlet NSPopUpButton *_popupButton;
-  IBOutlet NSMenu *_popupMenu;
-
-  NSDictionary *_metadataGroups;
-  NSArray *_metadataGroupOrder;
-  NSString *_activeGroup;
+  IBOutlet PDInfoViewController *_controller;
 }
 
-@property(nonatomic, copy) NSString *activeGroup;
+@property(nonatomic, copy) NSArray *imageProperties;
+
+- (void)viewDidLoad;
+
+- (CGFloat)heightForWidth:(CGFloat)width;
+- (void)layoutSubviews;
 
 - (NSString *)formattedImagePropertyForKey:(NSString *)key;
 

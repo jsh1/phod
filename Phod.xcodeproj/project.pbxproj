@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		570701D818400506008D39D4 /* app-icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 570701D718400506008D39D4 /* app-icon.icns */; };
 		570A572A1833D21C0052A246 /* PDImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = 570A57291833D21C0052A246 /* PDImageView.m */; };
+		5717B44D18424A6000149627 /* PDMetadataItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5717B44A18424A6000149627 /* PDMetadataItemView.m */; };
+		5717B44E18424A6000149627 /* PDMetadataView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5717B44C18424A6000149627 /* PDMetadataView.m */; };
 		5718E86B183A661B00D73448 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 5718E869183A661B00D73448 /* md5.c */; };
 		5718E86F183A6CC700D73448 /* PDImageHash.m in Sources */ = {isa = PBXBuildFile; fileRef = 5718E86E183A6CC700D73448 /* PDImageHash.m */; };
 		577BDBF3182D792800116AF2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 577BDBF1182D792800116AF2 /* InfoPlist.strings */; };
@@ -53,6 +55,10 @@
 		570701D718400506008D39D4 /* app-icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "app-icon.icns"; sourceTree = "<group>"; };
 		570A57281833D21C0052A246 /* PDImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageView.h; sourceTree = "<group>"; };
 		570A57291833D21C0052A246 /* PDImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageView.m; sourceTree = "<group>"; };
+		5717B44918424A6000149627 /* PDMetadataItemView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDMetadataItemView.h; sourceTree = "<group>"; };
+		5717B44A18424A6000149627 /* PDMetadataItemView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDMetadataItemView.m; sourceTree = "<group>"; };
+		5717B44B18424A6000149627 /* PDMetadataView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDMetadataView.h; sourceTree = "<group>"; };
+		5717B44C18424A6000149627 /* PDMetadataView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDMetadataView.m; sourceTree = "<group>"; };
 		5718E869183A661B00D73448 /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = md5.c; sourceTree = "<group>"; };
 		5718E86A183A661B00D73448 /* md5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = md5.h; sourceTree = "<group>"; };
 		5718E86C183A669100D73448 /* getput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = getput.h; sourceTree = "<group>"; };
@@ -252,6 +258,10 @@
 				57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */,
 				57E053B51830576A00123059 /* PDThumbnailLayer.h */,
 				57E053B61830576A00123059 /* PDThumbnailLayer.m */,
+				5717B44B18424A6000149627 /* PDMetadataView.h */,
+				5717B44C18424A6000149627 /* PDMetadataView.m */,
+				5717B44918424A6000149627 /* PDMetadataItemView.h */,
+				5717B44A18424A6000149627 /* PDMetadataItemView.m */,
 				57C180FF182E9644002B8DB2 /* PDAppKitExtensions.h */,
 				57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */,
 				57C1810E182FDCF9002B8DB2 /* PDColor.h */,
@@ -369,10 +379,12 @@
 				57CE6A26182D863E000BF04E /* PDImageViewController.m in Sources */,
 				57DADC0E1833C40F006D0BC1 /* PDImageGridView.m in Sources */,
 				57E053B71830576A00123059 /* PDThumbnailLayer.m in Sources */,
+				5717B44D18424A6000149627 /* PDMetadataItemView.m in Sources */,
 				570A572A1833D21C0052A246 /* PDImageView.m in Sources */,
 				57C6BAB418343FA60098F967 /* PDImageLayer.m in Sources */,
 				57CE6A25182D863E000BF04E /* PDImageListViewController.m in Sources */,
 				57C18109182F0ED3002B8DB2 /* PDImage.m in Sources */,
+				5717B44E18424A6000149627 /* PDMetadataView.m in Sources */,
 				57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */,
 				57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */,
 				57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */,

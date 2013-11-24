@@ -89,6 +89,7 @@
 
 /* Image properties. */
 
+extern NSString * const PDImage_Name;		// NSString
 extern NSString * const PDImage_FileSize;	// NSNumber
 extern NSString * const PDImage_PixelWidth;	// NSNumber
 extern NSString * const PDImage_PixelHeight;	// NSNumber
@@ -120,6 +121,7 @@ extern NSString * const PDImage_FlashCompensation; // NSNumber
 extern NSString * const PDImage_FNumber;	// NSNumber
 extern NSString * const PDImage_FocalLength;	// NSNumber
 extern NSString * const PDImage_FocalLength35mm; // NSNumber
+extern NSString * const PDImage_FocusMode;	// NSNumber
 extern NSString * const PDImage_ISOSpeed;	// NSNumber
 extern NSString * const PDImage_ImageStabilization; // NSNumber
 extern NSString * const PDImage_Latitude;	// NSNumber (degrees)
