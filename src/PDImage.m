@@ -66,12 +66,15 @@ NSString * const PDImage_Keywords = @"Keywords";
 NSString * const PDImage_Copyright = @"Copyright";
 NSString * const PDImage_Rating = @"Rating";
 
+NSString * const PDImage_Altitude = @"Altitude";
 NSString * const PDImage_Aperture = @"Aperture";
 NSString * const PDImage_CameraMake = @"CameraMake";
 NSString * const PDImage_CameraModel = @"CameraModel";
 NSString * const PDImage_CameraSoftware = @"CameraSoftware";
 NSString * const PDImage_Contrast = @"Contrast";
 NSString * const PDImage_DigitizedDate = @"DigitizedDate";
+NSString * const PDImage_Direction = @"Direction";
+NSString * const PDImage_DirectionRef = @"DirectionRef";
 NSString * const PDImage_ExposureBias = @"ExposureBias";
 NSString * const PDImage_ExposureLength = @"ExposureLength";
 NSString * const PDImage_ExposureMode = @"ExposureMode";
@@ -83,7 +86,9 @@ NSString * const PDImage_FocalLength = @"FocalLength";
 NSString * const PDImage_FocalLength35mm = @"FocalLength35mm";
 NSString * const PDImage_ISOSpeed = @"ISOSpeed";
 NSString * const PDImage_ImageStabilization = @"ImageStabilization";
+NSString * const PDImage_Latitude = @"Latitude";
 NSString * const PDImage_LightSource = @"LightSource";
+NSString * const PDImage_Longitude = @"Longitude";
 NSString * const PDImage_MaxAperture = @"MaxAperture";
 NSString * const PDImage_MeteringMode = @"MeteringMode";
 NSString * const PDImage_OriginalDate = @"OriginalDate";
@@ -260,6 +265,19 @@ property_map(void)
   
   if (map == NULL)
     {
+      const void *tiff_keys[] =
+	{
+	  kCGImagePropertyTIFFMake,
+	  kCGImagePropertyTIFFModel,
+	  kCGImagePropertyTIFFSoftware,
+	};
+      const void *tiff_values[] =
+	{
+	  PDImage_CameraMake,
+	  PDImage_CameraModel,
+	  PDImage_CameraSoftware,
+	};
+
       const void *exif_keys[] =
 	{
 	  kCGImagePropertyExifApertureValue,
@@ -274,6 +292,7 @@ property_map(void)
 	  kCGImagePropertyExifFocalLength,
 	  kCGImagePropertyExifFocalLenIn35mmFilm,
 	  kCGImagePropertyExifISOSpeed,
+	  kCGImagePropertyExifISOSpeedRatings,
 	  kCGImagePropertyExifLightSource,
 	  kCGImagePropertyExifMaxApertureValue,
 	  kCGImagePropertyExifMeteringMode,
@@ -298,6 +317,7 @@ property_map(void)
 	  PDImage_FocalLength,
 	  PDImage_FocalLength35mm,
 	  PDImage_ISOSpeed,
+	  kCFNull,			/* ISOSpeedRatings */
 	  PDImage_LightSource,
 	  PDImage_MaxAperture,
 	  PDImage_MeteringMode,
@@ -320,31 +340,28 @@ property_map(void)
 	  PDImage_ImageStabilization,
 	};
 
-      const void *tiff_keys[] =
+      const void *iptc_keys[] =
 	{
-	  kCGImagePropertyTIFFMake,
-	  kCGImagePropertyTIFFModel,
-	  kCGImagePropertyTIFFSoftware,
-	};
-      const void *tiff_values[] =
+	  kCGImagePropertyIPTCKeywords,
+	  kCGImagePropertyIPTCStarRating,
+ 	};
+      const void *iptc_values[] =
 	{
-	  PDImage_CameraMake,
-	  PDImage_CameraModel,
-	  PDImage_CameraSoftware,
+	  PDImage_Keywords,
+	  PDImage_Rating,
 	};
 
-      CFDictionaryRef tiff_map;
-      CFDictionaryRef exif_map;
-      CFDictionaryRef exif_aux_map;
-
-      tiff_map = CFDictionaryCreate(NULL, tiff_keys, tiff_values,
-	sizeof(tiff_keys) / sizeof(tiff_keys[0]), &kCFTypeDictionaryKeyCallBacks,
-	&kCFTypeDictionaryValueCallBacks);
-      exif_map = CFDictionaryCreate(NULL, exif_keys, exif_values,
-	sizeof(exif_keys) / sizeof(exif_keys[0]), &kCFTypeDictionaryKeyCallBacks,
-	&kCFTypeDictionaryValueCallBacks);
-      exif_aux_map = CFDictionaryCreate(NULL, exif_aux_keys, exif_aux_values,
-	sizeof(exif_aux_keys) / sizeof(exif_aux_keys[0]),
+      CFDictionaryRef tiff_map = CFDictionaryCreate(NULL, tiff_keys,
+	tiff_values, sizeof(tiff_keys) / sizeof(tiff_keys[0]),
+	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+      CFDictionaryRef exif_map = CFDictionaryCreate(NULL, exif_keys,
+	exif_values, sizeof(exif_keys) / sizeof(exif_keys[0]),
+	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+      CFDictionaryRef exif_aux_map = CFDictionaryCreate(NULL, exif_aux_keys,
+	exif_aux_values, sizeof(exif_aux_keys) / sizeof(exif_aux_keys[0]),
+	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+      CFDictionaryRef iptc_map = CFDictionaryCreate(NULL, iptc_keys,
+	iptc_values, sizeof(iptc_keys) / sizeof(iptc_keys[0]),
 	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
       const void *keys[] =
@@ -358,6 +375,8 @@ property_map(void)
 	  kCGImagePropertyTIFFDictionary,
 	  kCGImagePropertyExifDictionary,
 	  kCGImagePropertyExifAuxDictionary,
+	  kCGImagePropertyIPTCDictionary,
+	  kCGImagePropertyGPSDictionary,
 	};
       const void *values[] =
 	{
@@ -370,6 +389,8 @@ property_map(void)
 	  tiff_map,
 	  exif_map,
 	  exif_aux_map,
+	  iptc_map,
+	  kCFNull,
 	};
       
       map = CFDictionaryCreate(NULL, keys, values, sizeof(keys) / sizeof(keys[0]),
@@ -378,6 +399,7 @@ property_map(void)
       CFRelease(tiff_map);
       CFRelease(exif_map);
       CFRelease(exif_aux_map);
+      CFRelease(iptc_map);
     }
 
   return map;
@@ -390,29 +412,82 @@ struct map_closure
 };
 
 static void
+process_gps_dictionary(CFDictionaryRef gps_dict, NSMutableDictionary *dict)
+{
+  double value;
+  CFTypeRef ptr;
+  CFTypeID number_type = CFNumberGetTypeID();
+
+  ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSLatitude);
+  if (ptr != NULL && CFGetTypeID(ptr) == number_type)
+    {
+      CFNumberGetValue(ptr, kCFNumberDoubleType, &value);
+      ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSLatitudeRef);
+      if (ptr != NULL && CFEqual(ptr, CFSTR("S")))
+	value = -value;
+      id obj = [NSNumber numberWithDouble:value];
+      [dict setObject:obj forKey:PDImage_Latitude];
+    }
+      
+  ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSLongitude);
+  if (ptr != NULL && CFGetTypeID(ptr) == number_type)
+    {
+      CFNumberGetValue(ptr, kCFNumberDoubleType, &value);
+      ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSLongitudeRef);
+      if (ptr != NULL && CFEqual(ptr, CFSTR("W")))
+	value = -value;
+      id obj = [NSNumber numberWithDouble:value];
+      [dict setObject:obj forKey:PDImage_Longitude];
+    }
+
+  ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSAltitude);
+  if (ptr != NULL && CFGetTypeID(ptr) == number_type)
+    {
+      CFNumberGetValue(ptr, kCFNumberDoubleType, &value);
+      ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSAltitudeRef);
+      if (ptr != NULL && CFGetTypeID(ptr) == number_type)
+	{
+	  int x;
+	  CFNumberGetValue(ptr, kCFNumberIntType, &x);
+	  if (x == 1)
+	    value = -value;
+	}
+      id obj = [NSNumber numberWithDouble:value];
+      [dict setObject:obj forKey:PDImage_Altitude];
+    }
+
+  ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSImgDirection);
+  if (ptr != NULL && CFGetTypeID(ptr) == number_type)
+    {
+      [dict setObject:(id)ptr forKey:PDImage_Direction];
+
+      ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSImgDirectionRef);
+      if (ptr != NULL)
+	[dict setObject:(id)ptr forKey:PDImage_DirectionRef];
+    }
+}
+
+static void
 map_property(const void *key, const void *value, void *ctx)
 {
   struct map_closure *c = ctx;
 
   const void *mapped_key = CFDictionaryGetValue(c->map, key);
 
-  if (mapped_key != NULL)
+  if (mapped_key == NULL)
+    return;
+
+  if (CFGetTypeID(mapped_key) == CFDictionaryGetTypeID()
+      && CFGetTypeID(value) == CFDictionaryGetTypeID())
     {
-      if (CFGetTypeID(mapped_key) == CFDictionaryGetTypeID())
-	{
-	  struct map_closure cc;
+      struct map_closure cc;
 
-	  cc.map = mapped_key;
-	  cc.dict = c->dict;
+      cc.map = mapped_key;
+      cc.dict = c->dict;
 
-	  CFDictionaryApplyFunction((CFDictionaryRef)value, map_property, &cc);
-	}
-      else
-	{
-	  [c->dict setObject:(id)value forKey:(id)mapped_key];
-	}
+      CFDictionaryApplyFunction((CFDictionaryRef)value, map_property, &cc);
     }
-  else
+  else if (mapped_key == kCFNull)
     {
       /* Manual fix-ups. */
 
@@ -424,6 +499,17 @@ map_property(const void *key, const void *value, void *ctx)
 	  [c->dict setObject:CFArrayGetValueAtIndex(value, 0)
 	   forKey:PDImage_ISOSpeed];
 	}
+      else if (CFEqual(key, kCGImagePropertyGPSDictionary)
+	       && CFGetTypeID(value) == CFDictionaryGetTypeID())
+	{
+	  process_gps_dictionary((CFDictionaryRef)value, c->dict);
+	}
+      else
+	abort();
+    }
+  else
+    {
+      [c->dict setObject:(id)value forKey:(id)mapped_key];
     }
 }
 

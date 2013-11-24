@@ -100,14 +100,17 @@ extern NSString * const PDImage_Title;		// NSString
 extern NSString * const PDImage_Caption;	// NSString
 extern NSString * const PDImage_Keywords;	// NSArray
 extern NSString * const PDImage_Copyright;	// NSString
-extern NSString * const PDImage_Rating;		// NSNumber 1..5
+extern NSString * const PDImage_Rating;		// NSNumber -1..5
 
+extern NSString * const PDImage_Altitude;	// NSNumber (metres)
 extern NSString * const PDImage_Aperture;	// NSNumber
 extern NSString * const PDImage_CameraMake;	// NSString
 extern NSString * const PDImage_CameraModel;	// NSString
 extern NSString * const PDImage_CameraSoftware;	// NSString
 extern NSString * const PDImage_Contrast;	// NSNumber
 extern NSString * const PDImage_DigitizedDate;	// NSNumber
+extern NSString * const PDImage_Direction;	// NSNumber (degrees)
+extern NSString * const PDImage_DirectionRef;	// NSString: "M", "T" (Magnetic, True north)
 extern NSString * const PDImage_ExposureBias;	// NSNumber
 extern NSString * const PDImage_ExposureLength;	// NSNumber
 extern NSString * const PDImage_ExposureMode;	// NSNumber
@@ -119,7 +122,9 @@ extern NSString * const PDImage_FocalLength;	// NSNumber
 extern NSString * const PDImage_FocalLength35mm; // NSNumber
 extern NSString * const PDImage_ISOSpeed;	// NSNumber
 extern NSString * const PDImage_ImageStabilization; // NSNumber
+extern NSString * const PDImage_Latitude;	// NSNumber (degrees)
 extern NSString * const PDImage_LightSource;	// NSNumber
+extern NSString * const PDImage_Longitude;	// NSNumber (degrees)
 extern NSString * const PDImage_MaxAperture;	// NSNumber
 extern NSString * const PDImage_MeteringMode;	// NSNumber
 extern NSString * const PDImage_OriginalDate;	// NSNumber
