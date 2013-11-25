@@ -337,6 +337,75 @@
                         </items>
                     </menu>
                 </menuItem>
+                <menuItem title="Photos" id="kOv-22-Pu3">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Photos" id="Kzg-7o-s7I">
+                        <items>
+                            <menuItem title="Rating" id="tiX-jH-hth">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Rating" id="7Sh-xj-1Ww">
+                                    <items>
+                                        <menuItem title="★★★★★" tag="5" keyEquivalent="5" id="eWn-I2-wok">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="setImageRatingAction:" target="-1" id="9Ud-h3-qLZ"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="★★★★" tag="4" keyEquivalent="4" id="A7S-c6-BkO">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="setImageRatingAction:" target="-1" id="gqr-9I-RbL"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="★★★" tag="3" keyEquivalent="3" id="xki-gS-5Cf">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="setImageRatingAction:" target="-1" id="LWm-Ym-mtJ"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="★★" tag="2" keyEquivalent="2" id="c32-rE-EO7">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="setImageRatingAction:" target="-1" id="tZf-se-M20"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="★" tag="1" keyEquivalent="1" id="53h-D4-Kpj">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="setImageRatingAction:" target="-1" id="ATN-3P-V9m"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Unrated" keyEquivalent="0" id="h1s-T1-JNh">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="setImageRatingAction:" target="-1" id="88d-Kn-K8K"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Rejected" tag="-1" keyEquivalent="9" id="lwl-it-ohN">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="setImageRatingAction:" target="-1" id="eet-t3-qoC"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="yZ7-lw-4ey"/>
+                                        <menuItem title="Increase Rating" tag="1" keyEquivalent="=" id="nhP-qr-Sr3">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="addImageRatingAction:" target="-1" id="bMp-Ra-vND"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Decrease Rating" tag="-1" keyEquivalent="-" id="ikN-1t-NNB">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="addImageRatingAction:" target="-1" id="MQZ-Fp-CwX"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
                 <menuItem title="View" id="295">
                     <menu key="submenu" title="View" id="296">
                         <items>
@@ -358,6 +427,12 @@
                                     <action selector="cycleContentModeAction:" target="-1" id="HdI-Yp-7u8"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Show Metadata" keyEquivalent="u" id="Tca-cT-Ls7">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleListMetadata:" target="-1" id="1ZJ-dC-fRV"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="Mxw-Ys-7Qy"/>
                             <menuItem title="Library" tag="1" keyEquivalent="p" id="vlD-5w-38e">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES"/>
@@ -365,13 +440,13 @@
                                     <action selector="setSidebarModeAction:" target="-1" id="ZEY-iX-6ZG"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Image Info" tag="2" keyEquivalent="d" id="Xbh-O2-0bN">
+                            <menuItem title="Properties" tag="2" keyEquivalent="d" id="Xbh-O2-0bN">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES"/>
                                 <connections>
                                     <action selector="setSidebarModeAction:" target="-1" id="zH3-4e-eiY"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Inspector" tag="3" keyEquivalent="a" id="e1K-ph-JSl">
+                            <menuItem title="Adjustments" tag="3" keyEquivalent="a" id="e1K-ph-JSl">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES"/>
                                 <connections>
                                     <action selector="setSidebarModeAction:" target="-1" id="g5U-0J-J99"/>
@@ -381,6 +456,12 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="cycleSidebarModeAction:" target="-1" id="wkG-7T-z4o"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Show Metadata" keyEquivalent="y" id="1T7-Om-LdI">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleImageMetadata:" target="-1" id="7ts-wT-u1f"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="qQS-hS-yJa"/>

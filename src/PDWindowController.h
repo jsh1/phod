@@ -87,10 +87,23 @@ enum PDContentMode
 - (void)saveWindowState;
 - (void)applySavedWindowState;
 
+- (IBAction)setImageRatingAction:(id)sender;
+- (IBAction)addImageRatingAction:(id)sender;
+
 - (IBAction)setSidebarModeAction:(id)sender;
 - (IBAction)cycleSidebarModeAction:(id)sender;
 
 - (IBAction)setContentModeAction:(id)sender;
 - (IBAction)cycleContentModeAction:(id)sender;
+
+- (IBAction)toggleListMetadata:(id)sender;
+- (IBAction)toggleImageMetadata:(id)sender;
+
+- (BOOL)displaysListMetadata;
+- (BOOL)displaysImageMetadata;
+
+- (IBAction)zoomIn:(id)sender;
+- (IBAction)zoomOut:(id)sender;
+- (IBAction)zoomActualSize:(id)sender;
 
 @end

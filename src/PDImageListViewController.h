@@ -34,6 +34,10 @@
   IBOutlet NSSlider *_scaleSlider;
 }
 
+@property(nonatomic) BOOL displaysMetadata;
+
+- (IBAction)toggleMetadata:(id)sender;
+
 - (IBAction)controlAction:(id)sender;
 
 @end

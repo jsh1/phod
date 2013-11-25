@@ -31,10 +31,9 @@
   IBOutlet PDImageViewController *_controller;
 
   PDImage *_image;
-
   CGFloat _imageScale;
-
   CGPoint _imageOrigin;
+  BOOL _displaysMetadata;
 
   CALayer *_clipLayer;
   PDImageLayer *_imageLayer;
@@ -43,6 +42,7 @@
 @property(nonatomic, retain) PDImage *image;
 @property(nonatomic) CGFloat imageScale;
 @property(nonatomic) CGPoint imageOrigin;
+@property(nonatomic) BOOL displaysMetadata;
 
 - (CGFloat)scaleToFitScale;
 

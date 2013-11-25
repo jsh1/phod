@@ -32,10 +32,14 @@
   IBOutlet PDImageView *_imageView;
 }
   
-- (IBAction)controlAction:(id)sender;
+@property(nonatomic) BOOL displaysMetadata;
+
+- (IBAction)toggleMetadata:(id)sender;
 
 - (IBAction)zoomIn:(id)sender;
 - (IBAction)zoomOut:(id)sender;
 - (IBAction)zoomActualSize:(id)sender;
+
+- (IBAction)controlAction:(id)sender;
 
 @end

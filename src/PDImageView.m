@@ -53,6 +53,7 @@
     return nil;
 
   _imageScale = 1;
+  _displaysMetadata = YES;
 
   return self;
 }
@@ -148,6 +149,21 @@
   [self setImageScale:scale];
 
   _imageOrigin = CGPointMake(x, y);
+}
+
+- (BOOL)displaysMetadata
+{
+  return _displaysMetadata;
+}
+
+- (void)setDisplaysMetadata:(BOOL)flag
+{
+  if (_displaysMetadata != flag)
+    {
+      _displaysMetadata = flag;
+
+      [self setNeedsDisplay:YES];
+    }
 }
 
 - (BOOL)wantsUpdateLayer

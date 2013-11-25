@@ -123,6 +123,10 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 	    [item setState:sidebarMode == [item tag]];
 	  else if (sel == @selector(setContentModeAction:))
 	    [item setState:contentMode == [item tag]];
+	  else if (sel == @selector(toggleListMetadata:))
+	    [item setState:[_windowController displaysListMetadata]];
+	  else if (sel == @selector(toggleImageMetadata:))
+	    [item setState:[_windowController displaysImageMetadata]];
 	}
     }
 }

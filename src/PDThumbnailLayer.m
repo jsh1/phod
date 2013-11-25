@@ -31,6 +31,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 #define TITLE_SPACING 4
+#define MIN_RATING_HEIGHT 14
 #define SELECTION_INSET -3
 #define SELECTION_WIDTH 1
 #define SELECTION_RADIUS 3
@@ -39,19 +40,21 @@
 #define PRIMARY_SELECTION_RADIUS 4
 
 CA_HIDDEN
-@interface PDThumbnailTitleLayer : CATextLayer
+@interface PDThumbnailTextLayer : CATextLayer
 @end
 
 CA_HIDDEN
-@interface PDThumbnailSelectionLayer : CATextLayer
+@interface PDThumbnailTitleLayer : PDThumbnailTextLayer
 @end
 
-enum
-{
-  IMAGE_SUBLAYER,
-  TITLE_SUBLAYER,
-  SELECTION_SUBLAYER,			/* optional */
-};
+CA_HIDDEN
+@interface PDThumbnailRatingLayer : PDThumbnailTextLayer
+@property(nonatomic) int rating;
+@end
+
+CA_HIDDEN
+@interface PDThumbnailSelectionLayer : CALayer
+@end
 
 @implementation PDThumbnailLayer
 
@@ -69,6 +72,17 @@ enum
     return [super defaultValueForKey:key];
 }
 
+- (id)init
+{
+  self = [super init];
+  if (self == nil)
+    return nil;
+
+  _displaysMetadata = YES;
+
+  return self;
+}
+
 - (id)initWithLayer:(PDThumbnailLayer *)src
 {
   self = [super initWithLayer:src];
@@ -76,6 +90,9 @@ enum
     return nil;
 
   _image = [src->_image retain];
+  _selected = src->_selected;
+  _primary = src->_primary;
+  _displaysMetadata = src->_displaysMetadata;
 
   return self;
 }
@@ -108,9 +125,27 @@ enum
   return _primary;
 }
 
+- (void)setDisplaysMetadata:(BOOL)flag
+{
+  if (_displaysMetadata != flag)
+    {
+      _displaysMetadata = flag;
+      [self setNeedsLayout];
+    }
+}
+
+- (BOOL)displaysMetadata
+{
+  return _displaysMetadata;
+}
+
 - (void)invalidate
 {
-  [[[self sublayers] objectAtIndex:IMAGE_SUBLAYER] invalidate];
+  for (CALayer *sublayer in [self sublayers])
+    {
+      if ([sublayer isKindOfClass:[PDImageLayer class]])
+	[(PDImageLayer *)sublayer invalidate];
+    }
 }
 
 - (void)dealloc
@@ -143,37 +178,80 @@ enum
   if (_image == nil)
     return;
 
-  if ([[self sublayers] count] == 0)
+  PDImageLayer *image_layer = nil;
+  PDThumbnailTitleLayer *title_layer = nil;
+  PDThumbnailRatingLayer *rating_layer = nil;
+  PDThumbnailSelectionLayer *selection_layer = nil;
+
+  for (CALayer *sublayer in [self sublayers])
     {
-      PDImageLayer *image_layer = [PDImageLayer layer];
+      if ([sublayer isKindOfClass:[PDImageLayer class]])
+	image_layer = (PDImageLayer *)sublayer;
+      else if ([sublayer isKindOfClass:[PDThumbnailTitleLayer class]])
+	title_layer = (PDThumbnailTitleLayer *)sublayer;
+      else if ([sublayer isKindOfClass:[PDThumbnailRatingLayer class]])
+	rating_layer = (PDThumbnailRatingLayer *)sublayer;
+      else if ([sublayer isKindOfClass:[PDThumbnailSelectionLayer class]])
+	selection_layer = (PDThumbnailSelectionLayer *)sublayer;
+    }
+
+  if (image_layer == nil)
+    {
+      image_layer = [PDImageLayer layer];
       [image_layer setThumbnail:YES];
       [image_layer setDelegate:[self delegate]];
       [self addSublayer:image_layer];
-
-      CALayer *title_layer = [PDThumbnailTitleLayer layer];
-      [title_layer setDelegate:[self delegate]];
-      [self addSublayer:title_layer];
     }
-
-  NSArray *sublayers = [self sublayers];
-  PDImageLayer *image_layer = (id)[sublayers objectAtIndex:IMAGE_SUBLAYER];
-  CATextLayer *title_layer = [sublayers objectAtIndex:TITLE_SUBLAYER];
-  CALayer *selection_layer = nil;
-  if (SELECTION_SUBLAYER < [sublayers count])
-    selection_layer = [sublayers objectAtIndex:SELECTION_SUBLAYER];
 
   CGRect bounds = [self bounds];
 
   [image_layer setImage:_image];
   [image_layer setFrame:bounds];
 
-  [title_layer setString:[_image title]];
-  [title_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
+  if (_displaysMetadata)
+    {
+      if (title_layer == nil)
+	{
+	  title_layer = [PDThumbnailTitleLayer layer];
+	  [title_layer setDelegate:[self delegate]];
+	  [self addSublayer:title_layer];
+	}
+
+      [title_layer setString:[_image title]];
+      [title_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
 				       + bounds.size.height + TITLE_SPACING)];
 
-  CGSize text_size = [title_layer preferredFrameSize];
-  text_size.width = MIN(text_size.width, bounds.size.width);
-  [title_layer setBounds:CGRectMake(0, 0, text_size.width, text_size.height)];
+      CGSize title_size = [title_layer preferredFrameSize];
+      title_size.width = MIN(title_size.width, bounds.size.width);
+      [title_layer setBounds:
+       CGRectMake(0, 0, title_size.width, title_size.height)];
+
+      int rating = [[_image imagePropertyForKey:PDImage_Rating] intValue];
+
+      if (rating != 0 && rating_layer == nil)
+	{
+	  rating_layer = [PDThumbnailRatingLayer layer];
+	  [rating_layer setDelegate:[self delegate]];
+	  [self addSublayer:rating_layer];
+	}
+
+      [rating_layer setRating:rating];
+      [rating_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
+					    + bounds.size.height)];
+      CGSize rating_size = [rating_layer preferredFrameSize];
+      rating_size.width = MIN(rating_size.width, bounds.size.width * .5);
+      rating_size.height = MAX(rating_size.height, MIN_RATING_HEIGHT);
+      [rating_layer setBounds:
+       CGRectMake(0, 0, rating_size.width, rating_size.height)];
+    }
+  else
+    {
+      [title_layer removeFromSuperlayer];
+      title_layer = nil;
+
+      [rating_layer removeFromSuperlayer];
+      rating_layer = nil;
+    }
 
   if (_selected)
     {
@@ -181,7 +259,9 @@ enum
       CGFloat radius = _primary ? PRIMARY_SELECTION_RADIUS : SELECTION_RADIUS;
       CGFloat width = _primary ? PRIMARY_SELECTION_WIDTH : SELECTION_WIDTH;
 
-      CGRect selR = CGRectUnion([image_layer frame], [title_layer frame]);
+      CGRect selR = [image_layer frame];
+      if (title_layer != nil)
+	selR = CGRectUnion(selR, [title_layer frame]);
 
       if (selection_layer == nil)
 	{
@@ -201,7 +281,7 @@ enum
 
 @end
 
-@implementation PDThumbnailTitleLayer
+@implementation PDThumbnailTextLayer
 
 + (id)defaultValueForKey:(NSString *)key
 {
@@ -211,10 +291,68 @@ enum
     return [NSNumber numberWithDouble:[NSFont smallSystemFontSize]];
   else if ([key isEqualToString:@"truncationMode"])
     return @"start";
-  else if ([key isEqualToString:@"anchorPoint"])
+  else
+    return [super defaultValueForKey:key];
+}
+
+@end
+
+@implementation PDThumbnailTitleLayer
+
++ (id)defaultValueForKey:(NSString *)key
+{
+  if ([key isEqualToString:@"anchorPoint"])
     return [NSValue valueWithPoint:NSZeroPoint];
   else
     return [super defaultValueForKey:key];
+}
+
+@end
+
+@implementation PDThumbnailRatingLayer
+
+@dynamic rating;
+
++ (id)defaultValueForKey:(NSString *)key
+{
+  if ([key isEqualToString:@"anchorPoint"])
+    return [NSValue valueWithPoint:NSMakePoint(0, 1)];
+  else if ([key isEqualToString:@"backgroundColor"])
+    return (id)[[NSColor colorWithDeviceWhite:0 alpha:.3] CGColor];
+  else
+    return [super defaultValueForKey:key];
+}
+
+- (void)didChangeValueForKey:(NSString *)key
+{
+  [super didChangeValueForKey:key];
+
+  if ([key isEqualToString:@"rating"])
+    [self setNeedsLayout];
+}
+
+- (void)layoutSublayers
+{
+  int rating = [self rating];
+
+  if (rating > 0)
+    {
+      rating = rating <= 5 ? rating : 5;
+
+      unichar buf[5];
+      int i;
+      for (i = 0; i < rating; i++)
+	buf[i] = 0x2605;		/* BLACK STAR */
+
+      [self setString:[NSString stringWithCharacters:buf length:rating]];
+    }
+  else if (rating < 0)
+    {
+      unichar c = 0x2716;		/* HEAVY MULTIPLICATION X */
+      [self setString:[NSString stringWithCharacters:&c length:1]];
+    }
+  else
+    [self setString:nil];
 }
 
 @end

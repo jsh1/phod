@@ -25,6 +25,7 @@
 #import "PDImageListViewController.h"
 
 #import "PDColor.h"
+#import "PDImage.h"
 #import "PDImageGridView.h"
 #import "PDWindowController.h"
 
@@ -47,6 +48,9 @@
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(selectionDidChange:)
    name:PDSelectionDidChange object:_controller];
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(imagePropertyDidChange:)
+   name:PDImagePropertyDidChange object:nil];
 
   return self;
 }
@@ -145,6 +149,43 @@
 - (void)gridViewBoundsDidChange:(NSNotification *)note
 {
   [_gridView setNeedsDisplay:YES];
+}
+
+- (void)imagePropertyDidChange:(NSNotification *)note
+{
+  PDImage *image = [note object];
+  if (![_gridView imageMayBeVisible:image])
+    return;
+
+  NSString *key = [[note userInfo] objectForKey:@"key"];
+  if (![key isEqualToString:PDImage_Title]
+      && ![key isEqualToString:PDImage_Name]
+      && ![key isEqualToString:PDImage_Rating]
+      && ![key isEqualToString:PDImage_Flagged])
+    return;
+
+  /* FIXME: only update the layer of the image that has changed? */
+
+  [_gridView setNeedsDisplay:YES];
+}
+
+- (BOOL)displaysMetadata
+{
+  return [_gridView displaysMetadata];
+}
+
+- (void)setDisplaysMetadata:(BOOL)x
+{
+  if (_gridView == nil)
+    [self loadView];
+
+  [_gridView setDisplaysMetadata:x];
+}
+
+- (IBAction)toggleMetadata:(id)sender
+{
+  [self setDisplaysMetadata:![self displaysMetadata]];
+  [_gridView scrollToPrimaryAnimated:NO];
 }
 
 - (IBAction)controlAction:(id)sender

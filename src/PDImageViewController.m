@@ -143,8 +143,22 @@
   [_imageView setNeedsDisplay:YES];
 }
 
-- (IBAction)controlAction:(id)sender
+- (BOOL)displaysMetadata
 {
+  return [_imageView displaysMetadata];
+}
+
+- (void)setDisplaysMetadata:(BOOL)x
+{
+  if (_imageView == nil)
+    [self loadView];
+
+  [_imageView setDisplaysMetadata:x];
+}
+
+- (IBAction)toggleMetadata:(id)sender
+{
+  [self setDisplaysMetadata:![self displaysMetadata]];
 }
 
 - (IBAction)zoomIn:(id)sender
@@ -199,6 +213,10 @@
   scale = fabs(scale - fitScale) > .001 ? fitScale : 1;
 
   [_imageView setImageScale:scale preserveOrigin:YES];
+}
+
+- (IBAction)controlAction:(id)sender
+{
 }
 
 // CALayerDelegate methods

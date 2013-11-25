@@ -52,6 +52,8 @@ enum
   PDImage_MediumSize = 1024,
 };
 
+NSString *const PDImagePropertyDidChange = @"PDImagePropertyDidChange";
+
 NSString * const PDImage_Name = @"Name";
 NSString * const PDImage_Path = @"Path";
 
@@ -67,6 +69,7 @@ NSString * const PDImage_Caption = @"Caption";
 NSString * const PDImage_Keywords = @"Keywords";
 NSString * const PDImage_Copyright = @"Copyright";
 NSString * const PDImage_Rating = @"Rating";
+NSString * const PDImage_Flagged = @"Flagged";
 
 NSString * const PDImage_Altitude = @"Altitude";
 NSString * const PDImage_Aperture = @"Aperture";
@@ -642,7 +645,7 @@ static NSOperationQueue *_narrowQueue;
 - (void)dealloc
 {
   [_path release];
-  [_hash release];
+  [_imageHash release];
 
   [_explicitProperties release];
   [_implicitProperties release];
@@ -656,12 +659,12 @@ static NSOperationQueue *_narrowQueue;
   [super dealloc];
 }
 
-- (PDImageHash *)hash
+- (PDImageHash *)imageHash
 {
-  if (_hash == nil)
-    _hash = [[PDImageHash fileHash:_path] retain];
+  if (_imageHash == nil)
+    _imageHash = [[PDImageHash fileHash:_path] retain];
 
-  return _hash;
+  return _imageHash;
 }
 
 - (NSString *)title
@@ -671,6 +674,15 @@ static NSOperationQueue *_narrowQueue;
 
 - (id)imagePropertyForKey:(NSString *)key
 {
+#if 0
+  if ([key isEqualToString:PDImage_Rating])
+    {
+      int rating = ([[self imageHash] hash] & 7) - 1;
+      if (rating > 5) rating = 5;
+      return [NSNumber numberWithInt:rating];
+    }
+#endif
+
   if (_implicitProperties == nil)
     {
       CGImageSourceRef src = create_image_source_from_path(_path);
@@ -687,17 +699,32 @@ static NSOperationQueue *_narrowQueue;
   if (value == nil)
     value = [_implicitProperties objectForKey:key];
 
+  if ([value isKindOfClass:[NSNull class]])
+    value = nil;
+
   return value;
 }
 
 - (void)setImageProperty:(id)obj forKey:(NSString *)key
 {
+  if (obj == nil)
+    obj = [NSNull null];
+
   if (_explicitProperties == nil)
     _explicitProperties = [[NSMutableDictionary alloc] init];
 
-  /* FIXME: persist this? */
+  id oldValue = [_explicitProperties objectForKey:key];
 
-  [_explicitProperties setObject:obj forKey:key];
+  if (![oldValue isEqual:obj])
+    {
+      /* FIXME: persist this somewhere */
+
+      [_explicitProperties setObject:obj forKey:key];
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImagePropertyDidChange object:self
+       userInfo:[NSDictionary dictionaryWithObject:key forKey:@"key"]];
+    }
 }
 
 - (CGSize)pixelSize
@@ -730,7 +757,7 @@ static NSOperationQueue *_narrowQueue;
     {
       /* Prevent the block retaining self. */
 
-      PDImageHash *hash = [self hash];
+      PDImageHash *hash = [self imageHash];
       NSString *path = [self path];
 
       NSString *tiny_path = cache_path_for_type(hash, PDImage_Tiny);
@@ -831,7 +858,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 {
   assert([_imageHosts objectForKey:obj] == nil);
 
-  PDImageHash *hash = [self hash];
+  PDImageHash *hash = [self imageHash];
   NSString *path = [self path];
 
   NSSize imageSize = [self pixelSize];

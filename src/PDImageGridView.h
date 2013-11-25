@@ -34,6 +34,7 @@
   NSInteger _primarySelection;
   NSIndexSet *_selection;
   CGFloat _scale;
+  BOOL _displaysMetadata;
 
   CGFloat _size;
   NSInteger _columns;
@@ -44,11 +45,14 @@
 @property(nonatomic) NSInteger primarySelection;
 @property(nonatomic, copy) NSIndexSet *selection;
 @property(nonatomic) CGFloat scale;
+@property(nonatomic) BOOL displaysMetadata;
 
 - (NSRect)boundingRectOfItemAtIndex:(NSInteger)idx;
 
 - (void)scrollToPrimaryAnimated:(BOOL)flag;
 
 - (PDImage *)imageAtSuperviewPoint:(NSPoint)p;
+
+- (BOOL)imageMayBeVisible:(PDImage *)image;
 
 @end

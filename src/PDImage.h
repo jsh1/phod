@@ -24,13 +24,15 @@
 
 #import <Foundation/Foundation.h>
 
+extern NSString *const PDImagePropertyDidChange;
+
 @protocol PDImageHost;
 @class PDImageHash;
 
 @interface PDImage : NSObject
 {
   NSString *_path;
-  PDImageHash *_hash;
+  PDImageHash *_imageHash;
 
   NSMutableDictionary *_explicitProperties;
   NSDictionary *_implicitProperties;
@@ -45,7 +47,7 @@
 
 @property(nonatomic, readonly) NSString *path;
 
-@property(nonatomic, readonly) PDImageHash *hash;
+@property(nonatomic, readonly) PDImageHash *imageHash;
 
 @property(nonatomic, readonly) NSString *title;
 
@@ -102,6 +104,7 @@ extern NSString * const PDImage_Caption;	// NSString
 extern NSString * const PDImage_Keywords;	// NSArray
 extern NSString * const PDImage_Copyright;	// NSString
 extern NSString * const PDImage_Rating;		// NSNumber -1..5
+extern NSString * const PDImage_Flagged;	// NSNumber<bool>
 
 extern NSString * const PDImage_Altitude;	// NSNumber (metres)
 extern NSString * const PDImage_Aperture;	// NSNumber

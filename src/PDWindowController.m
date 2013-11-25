@@ -560,6 +560,42 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   [self setSelectedImageIndexes:sel primary:idx];
 }
 
+- (IBAction)setImageRatingAction:(id)sender
+{
+  if ([_selectedImageIndexes count] == 0)
+    return;
+
+  NSNumber *rating = [NSNumber numberWithInt:[sender tag]];
+
+  NSInteger idx;
+  for (idx = [_selectedImageIndexes firstIndex]; idx != NSNotFound;
+       idx = [_selectedImageIndexes indexGreaterThanIndex:idx])
+    {
+      PDImage *image = [_imageList objectAtIndex:idx];
+      [image setImageProperty:rating forKey:PDImage_Rating];
+    }
+}
+
+- (IBAction)addImageRatingAction:(id)sender
+{
+  if ([_selectedImageIndexes count] == 0)
+    return;
+
+  int delta = [sender tag];
+
+  NSInteger idx;
+  for (idx = [_selectedImageIndexes firstIndex]; idx != NSNotFound;
+       idx = [_selectedImageIndexes indexGreaterThanIndex:idx])
+    {
+      PDImage *image = [_imageList objectAtIndex:idx];
+      int rating = [[image imagePropertyForKey:PDImage_Rating]
+		    intValue] + delta;
+      rating = MIN(rating, 5); rating = MAX(rating, -1);
+      [image setImageProperty:[NSNumber numberWithInt:rating]
+       forKey:PDImage_Rating];
+    }
+}
+
 - (IBAction)setSidebarModeAction:(id)sender
 {
   if (sender == _sidebarControl)
@@ -590,6 +626,30 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   if (idx > PDContentMode_Image)
     idx = PDContentMode_List;
   [self setContentMode:idx];
+}
+
+- (IBAction)toggleListMetadata:(id)sender
+{
+  [(PDImageListViewController *)[self viewControllerWithClass:
+    [PDImageListViewController class]] toggleMetadata:sender];
+}
+
+- (IBAction)toggleImageMetadata:(id)sender
+{
+  [(PDImageViewController *)[self viewControllerWithClass:
+    [PDImageViewController class]] toggleMetadata:sender];
+}
+
+- (BOOL)displaysListMetadata
+{
+  return [(PDImageListViewController *)[self viewControllerWithClass:
+    [PDImageListViewController class]] displaysMetadata];
+}
+
+- (BOOL)displaysImageMetadata
+{
+  return [(PDImageViewController *)[self viewControllerWithClass:
+    [PDImageViewController class]] displaysMetadata];
 }
 
 - (IBAction)zoomIn:(id)sender

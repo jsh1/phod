@@ -31,12 +31,15 @@
   PDImage *_image;
   BOOL _selected;
   BOOL _primary;
+  BOOL _displaysMetadata;
 }
 
 @property(nonatomic, retain) PDImage *image;
 
 @property(nonatomic, getter=isSelected) BOOL selected;
 @property(nonatomic, getter=isPrimary) BOOL primary;
+
+@property(nonatomic) BOOL displaysMetadata;
 
 - (void)invalidate;
 
