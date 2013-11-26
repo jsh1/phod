@@ -13,6 +13,7 @@
 		5717B44E18424A6000149627 /* PDMetadataView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5717B44C18424A6000149627 /* PDMetadataView.m */; };
 		5718E86B183A661B00D73448 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 5718E869183A661B00D73448 /* md5.c */; };
 		5718E86F183A6CC700D73448 /* PDImageHash.m in Sources */ = {isa = PBXBuildFile; fileRef = 5718E86E183A6CC700D73448 /* PDImageHash.m */; };
+		5760022B1844FB7000B398D1 /* image-properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = 576002291844FB7000B398D1 /* image-properties.strings */; };
 		577BDBF3182D792800116AF2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 577BDBF1182D792800116AF2 /* InfoPlist.strings */; };
 		577BDBF5182D792800116AF2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 577BDBF4182D792800116AF2 /* main.m */; };
 		577BDBFC182D792800116AF2 /* PDAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 577BDBFB182D792800116AF2 /* PDAppDelegate.m */; };
@@ -64,6 +65,7 @@
 		5718E86C183A669100D73448 /* getput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = getput.h; sourceTree = "<group>"; };
 		5718E86D183A6CC700D73448 /* PDImageHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageHash.h; sourceTree = "<group>"; };
 		5718E86E183A6CC700D73448 /* PDImageHash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageHash.m; sourceTree = "<group>"; };
+		5760022A1844FB7000B398D1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = "en.lproj/image-properties.strings"; sourceTree = "<group>"; };
 		577BDBE5182D792800116AF2 /* Phod.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Phod.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		577BDBEB182D792800116AF2 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		577BDBED182D792800116AF2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -289,6 +291,7 @@
 		57CE6A13182D7D08000BF04E /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				576002291844FB7000B398D1 /* image-properties.strings */,
 				570701D718400506008D39D4 /* app-icon.icns */,
 				57CC5330183D1395009D6E19 /* defaults.plist */,
 				577BDBF0182D792800116AF2 /* Phod-Info.plist */,
@@ -361,6 +364,7 @@
 				578F0FD0182D91FD001A5152 /* MainMenu.xib in Resources */,
 				578F0FD1182D91FD001A5152 /* PDAdjustmentsView.xib in Resources */,
 				578F0FD2182D91FD001A5152 /* PDImageListView.xib in Resources */,
+				5760022B1844FB7000B398D1 /* image-properties.strings in Resources */,
 				578F0FD5182D91FD001A5152 /* PDLibraryView.xib in Resources */,
 				578F0FD4182D91FD001A5152 /* PDInfoView.xib in Resources */,
 			);
@@ -403,6 +407,14 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
+		576002291844FB7000B398D1 /* image-properties.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				5760022A1844FB7000B398D1 /* en */,
+			);
+			name = "image-properties.strings";
+			sourceTree = "<group>";
+		};
 		577BDBF1182D792800116AF2 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (

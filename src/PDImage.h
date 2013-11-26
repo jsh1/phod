@@ -76,8 +76,12 @@ extern NSString *const PDImagePropertyDidChange;
 @property(nonatomic, readonly) PDImageHash *imageHash;
 
 - (id)imagePropertyForKey:(NSString *)key;
-
 - (void)setImageProperty:(id)obj forKey:(NSString *)key;
+
+/* Converting image properties to displayable forms. */
+
++ (NSString *)localizedNameOfImageProperty:(NSString *)key;
+- (NSString *)localizedImagePropertyForKey:(NSString *)key;
 
 /* Convenience accessors for misc image properties. */
 
@@ -86,6 +90,12 @@ extern NSString *const PDImagePropertyDidChange;
 @property(nonatomic, readonly) CGSize pixelSize;
 @property(nonatomic, readonly) unsigned int orientation;
 @property(nonatomic, readonly) CGSize orientedPixelSize;
+
+/* Start loading image properties asynchronously. */
+
+- (void)prefetchMetadata;
+
+/* Fill proxy caches asynchronously. */
 
 - (void)startPrefetching;
 - (void)stopPrefetching;
@@ -135,7 +145,6 @@ extern NSString * const PDImage_Rating;		// NSNumber -1..5
 extern NSString * const PDImage_Flagged;	// NSNumber<bool>
 
 extern NSString * const PDImage_Altitude;	// NSNumber (metres)
-extern NSString * const PDImage_Aperture;	// NSNumber
 extern NSString * const PDImage_CameraMake;	// NSString
 extern NSString * const PDImage_CameraModel;	// NSString
 extern NSString * const PDImage_CameraSoftware;	// NSString

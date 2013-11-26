@@ -38,7 +38,7 @@
 - (CGFloat)heightForWidth:(CGFloat)width;
 - (void)layoutSubviews;
 
-- (NSString *)formattedImagePropertyForKey:(NSString *)key;
+- (NSString *)localizedImagePropertyForKey:(NSString *)key;
 
 - (IBAction)controlAction:(id)sender;
 

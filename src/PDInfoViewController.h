@@ -39,7 +39,7 @@
 
 @property(nonatomic, copy) NSString *activeGroup;
 
-- (NSString *)formattedImagePropertyForKey:(NSString *)key;
+- (NSString *)localizedImagePropertyForKey:(NSString *)key;
 
 - (IBAction)controlAction:(id)sender;
 

@@ -112,19 +112,13 @@
     [self setActiveGroup:value];
 }
 
-- (NSString *)formattedImagePropertyForKey:(NSString *)key
+- (NSString *)localizedImagePropertyForKey:(NSString *)key
 {
   PDImage *image = [[self controller] primaryImage];
   if (image == nil)
       return nil;
 
-  id value = [image imagePropertyForKey:key];
-  if (value == nil)
-    return nil;
-
-  // FIXME: implement this
-
-  return [NSString stringWithFormat:@"%@", value];
+  return [image localizedImagePropertyForKey:key];
 }
 
 - (IBAction)controlAction:(id)sender

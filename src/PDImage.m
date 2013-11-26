@@ -31,6 +31,8 @@
 
 #import <sys/stat.h>
 
+#define N_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
+
 #define METADATA_EXTENSION "phod"
 
 #define CACHE_DIR "proxy-cache-v1"
@@ -288,7 +290,6 @@ property_map(void)
 
       const void *exif_keys[] =
 	{
-	  kCGImagePropertyExifApertureValue,
 	  kCGImagePropertyExifContrast,
 	  kCGImagePropertyExifDateTimeDigitized,
 	  kCGImagePropertyExifExposureBiasValue,
@@ -313,7 +314,6 @@ property_map(void)
  	};
       const void *exif_values[] =
 	{
-	  PDImage_Aperture,
 	  PDImage_Contrast,
 	  PDImage_DigitizedDate,
 	  PDImage_ExposureBias,
@@ -590,17 +590,26 @@ type_identifier_for_extension(NSString *ext)
     {
       NSMutableDictionary *tem = [[NSMutableDictionary alloc] init];
 
-      for (NSString *type in (id)CGImageSourceCopyTypeIdentifiers())
+      CFArrayRef types = CGImageSourceCopyTypeIdentifiers();
+
+      for (NSString *type in (id)types)
 	{
 	  /* FIXME: remove this private API usage. Static table? */
 
-	  extern NSArray *CGImageSourceCopyTypeExtensions(NSString *);
+	  extern CFArrayRef CGImageSourceCopyTypeExtensions(CFStringRef);
 
-	  for (NSString *ext in CGImageSourceCopyTypeExtensions(type))
+	  CFArrayRef exts = CGImageSourceCopyTypeExtensions((CFStringRef)type);
+
+	  if (exts != NULL)
 	    {
-	      [tem setObject:type forKey:ext];
+	      for (NSString *ext in (id)exts)
+		[tem setObject:type forKey:ext];
+
+	      CFRelease(exts);
 	    }
 	}
+
+      CFRelease(types);
 
       dict = [tem copy];
       [tem release];
@@ -886,6 +895,44 @@ static NSOperationQueue *_narrowQueue;
     }
 }
 
+- (void)prefetchJSONFile
+{
+  if (_pendingJSONRead)
+    {
+      assert (_JSONPath != nil);
+
+      NSBlockOperation *op = [NSBlockOperation blockOperationWithBlock:^{
+	if (_pendingJSONRead)
+	  {
+	    NSLog(@"prefetching JSON %@", _JSONPath);
+	    NSData *data = [[NSData alloc] initWithContentsOfFile:_JSONPath];
+	    if (data != nil)
+	      {
+		NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:
+				      data options:0 error:nil];
+		if (dict != nil)
+		  {
+		    dispatch_async(dispatch_get_main_queue(), ^{
+		      if (_pendingJSONRead)
+			{
+			  NSDictionary *props
+			    = [dict objectForKey:@"Properties"];
+			  if (props != nil)
+			    [_properties addEntriesFromDictionary:props];
+			  _pendingJSONRead = NO;
+			}
+		    });
+		  }
+		[data release];
+	      }
+	  }
+      }];
+
+      [op setQueuePriority:NSOperationQueuePriorityLow];
+      [[PDImage wideQueue] addOperation:op];
+    }
+}
+
 - (void)writeJSONFile
 {
   if (!_pendingJSONWrite)
@@ -991,6 +1038,44 @@ static NSOperationQueue *_narrowQueue;
   return value;
 }
 
+- (void)prefetchImageProperties
+{
+  if (_implicitProperties == nil)
+    {
+      NSString *path = [self imagePath];
+
+      NSBlockOperation *op = [NSBlockOperation blockOperationWithBlock:^{
+	if (_implicitProperties == nil)
+	  {
+	    NSLog(@"prefetching image properties %@", path);
+	    CGImageSourceRef src = create_image_source_from_path(path);
+	    if (src != NULL)
+	      {
+		NSDictionary *dict = copy_image_properties(src);
+		if (dict != nil)
+		  {
+		    dispatch_async(dispatch_get_main_queue(), ^{
+		      if (_implicitProperties == nil)
+			_implicitProperties = [dict retain];
+		    });
+		    [dict release];
+		  }
+		CFRelease(src);
+	      }
+	  }
+      }];
+
+      [op setQueuePriority:NSOperationQueuePriorityLow];
+      [[PDImage wideQueue] addOperation:op];
+    }
+}
+
+- (void)prefetchMetadata
+{
+  [self prefetchJSONFile];
+  [self prefetchImageProperties];
+}
+
 - (void)setImageProperty:(id)obj forKey:(NSString *)key
 {
   if (obj == nil)
@@ -1011,6 +1096,296 @@ static NSOperationQueue *_narrowQueue;
        postNotificationName:PDImagePropertyDidChange object:self
        userInfo:[NSDictionary dictionaryWithObject:key forKey:@"key"]];
     }
+}
+
++ (NSString *)localizedNameOfImageProperty:(NSString *)key
+{
+  return [[NSBundle mainBundle] localizedStringForKey:key
+	  value:key table:@"image-properties"];
+}
+
+typedef enum
+{
+  type_unknown,
+  type_bool,
+  type_bytes,
+  type_contrast,
+  type_date,
+  type_direction,
+  type_duration,
+  type_exposure_bias,
+  type_exposure_mode,
+  type_exposure_program,
+  type_focus_mode,
+  type_flash_compensation,
+  type_flash_mode,
+  type_fstop,
+  type_image_stabilization_mode,
+  type_iso_speed,
+  type_latitude,
+  type_light_source,
+  type_longitude,
+  type_metering_mode,
+  type_metres,
+  type_millimetres,
+  type_orientation,
+  type_pixels,
+  type_rating,
+  type_saturation,
+  type_scene_capture_type,
+  type_scene_type,
+  type_sharpness,
+  type_string,
+  type_string_array,
+  type_white_balance,
+} property_type;
+
+typedef struct {
+  const char *name;
+  property_type type;
+} type_pair;
+
+static const type_pair type_map[] =
+{
+  {"ActiveType", type_string},
+  {"Altitude", type_metres},
+  {"CameraMake", type_string},
+  {"CameraModel", type_string},
+  {"CameraSoftware", type_string},
+  {"Caption", type_string},
+  {"ColorModel", type_string},
+  {"Contrast", type_contrast},
+  {"Copyright", type_string},
+  {"DigitizedDate", type_date},
+  {"Direction", type_direction},
+  {"DirectionRef", type_string},
+  {"ExposureBias", type_exposure_bias},
+  {"ExposureLength", type_duration},
+  {"ExposureMode", type_exposure_mode},
+  {"ExposureProgram", type_exposure_program},
+  {"FNumber", type_fstop},
+  {"FileSize", type_bytes},
+  {"FileTypes", type_string_array},
+  {"Flagged", type_bool},
+  {"Flash", type_flash_mode},
+  {"FlashCompensation", type_flash_compensation},
+  {"FocalLength", type_millimetres},
+  {"FocalLength35mm", type_millimetres},
+  {"FocusMode", type_focus_mode},
+  {"ISOSpeed", type_iso_speed},
+  {"ImageStabilization", type_image_stabilization_mode},
+  {"Keywords", type_string_array},
+  {"Latitude", type_latitude},
+  {"LightSource", type_light_source},
+  {"Longitude", type_longitude},
+  {"MaxAperture", type_fstop},		/* fixme: "APEX" aperture? */
+  {"MeteringMode", type_metering_mode},
+  {"Name", type_string},
+  {"Orientation", type_orientation},
+  {"OriginalDate", type_date},
+  {"PixelHeight", type_pixels},
+  {"PixelWidth", type_pixels},
+  {"ProfileName", type_string},
+  {"Rating", type_rating},
+  {"Saturation", type_saturation},
+  {"SceneCaptureType", type_scene_capture_type},
+  {"SceneType", type_scene_type},
+  {"Sharpness", type_sharpness},
+  {"Title", type_string},
+  {"WhiteBalance", type_white_balance},
+};
+
+static inline property_type
+lookup_property_type(const char *name)
+{
+  const type_pair *ptr
+    = bsearch_b(name, type_map, N_ELEMENTS(type_map), sizeof(type_map[0]),
+		^(const void *a, const void *b) {
+		  return strcmp(a, *(const char **)b);
+		});
+
+  return ptr != NULL ? ptr->type : type_unknown;
+}
+
+static inline NSString *
+array_lookup(id value, NSString **array, size_t nelts)
+{
+  size_t i = [value unsignedIntValue];
+  return i < nelts ? array[i] : @"Unknown";
+}
+
+static NSString *
+degrees_string(void)
+{
+  static NSString *deg;
+
+  if (deg == nil)
+    {
+      unichar c = 0x00b0;		/* DEGREE SIGN */
+      deg = [[NSString alloc] initWithCharacters:&c length:1];
+    }
+
+  return deg;
+}
+
+static NSString *
+exif_flash_mode(unsigned int x)
+{
+  switch (x)
+    {
+    case 0x00:
+      return @"Flash did not fire";
+    case 0x01:
+      return @"Flash fired";
+    case 0x05:
+      return @"Strobe return light not detected";
+    case 0x07:
+      return @"Strobe return light detected";
+    case 0x09:
+      return @"Flash fired, compulsory flash mode";
+    case 0x0d:
+      return @"Flash fired, compulsory flash mode, return light not detected";
+    case 0x0f:
+      return @"Flash fired, compulsory flash mode, return light detected";
+    case 0x10:
+      return @"Flash did not fire, compulsory flash mode";
+    case 0x18:
+      return @"Flash did not fire, auto mode";
+    case 0x19:
+      return @"Flash fired, auto mode";
+    case 0x1d:
+      return @"Flash fired, auto mode, return light not detected";
+    case 0x1f:
+      return @"Flash fired, auto mode, return light detected";
+    case 0x20:
+      return @"No flash function";
+    case 0x41:
+      return @"Flash fired, red-eye reduction mode";
+    case 0x45:
+      return @"Flash fired, red-eye reduction mode, return light not detected";
+    case 0x47:
+      return @"Flash fired, red-eye reduction mode, return light detected";
+    case 0x49:
+      return @"Flash fired, compulsory flash mode, red-eye reduction mode";
+    case 0x4d:
+      return @"Flash fired, compulsory flash mode, red-eye reduction mode, return light not detected";
+    case 0x4f:
+      return @"Flash fired, compulsory flash mode, red-eye reduction mode, return light detected";
+    case 0x59:
+      return @"Flash fired, auto mode, red-eye reduction mode";
+    case 0x5d:
+      return @"Flash fired, auto mode, return light not detected, red-eye reduction mode";
+    case 0x5f:
+      return @"Flash fired, auto mode, return light detected, red-eye reduction mode}";
+    default:
+      return @"Unknown flash mode.";
+    }
+}
+
+- (NSString *)localizedImagePropertyForKey:(NSString *)key
+{
+  static const NSString *contrast[] = {@"Normal", @"Low", @"High"};
+  static const NSString *exposure_mode[] = {@"Auto Exposure",
+    @"Manual Exposure", @"Auto Exposure Bracket"};
+  static const NSString *white_balance[] = {@"Auto White Balance",
+    @"Manual White Balance"};
+  static const NSString *exposure_prog[] = {@"Unknown Program", @"Manual",
+    @"Normal Program", @"Aperture Priority", @"Shutter Priority",
+    @"Creative Program", @"Action Program", @"Portrait Mode",
+    @"Landscape Mode", @"Bulb Mode"};
+  static const NSString *metering_mode[] = {@"Unknown", @"Average",
+    @"Center-Weighted Average", @"Spot", @"Multi-Spot", @"Pattern",
+    @"Partial"};
+
+  id value = [self imagePropertyForKey:key];
+  if (value == nil)
+    return nil;
+
+  switch (lookup_property_type([key UTF8String]))
+    {
+      double x;
+      const char *str;
+
+    case type_bool:
+      return [value boolValue] ? @"True" : @"False";
+
+    case type_contrast:
+      return array_lookup(value, contrast, N_ELEMENTS(contrast));
+	
+    case type_direction:
+      str = ![[self imagePropertyForKey:PDImage_DirectionRef]
+	      isEqual:@"T"] ? "Magnetic North" : "True North";
+      return [NSString stringWithFormat:@"%g%@ %s",
+	      [value doubleValue], degrees_string(), str];
+
+    case type_exposure_bias:
+      return [NSString stringWithFormat:@"%.2g ev", [value doubleValue]];
+
+    case type_fstop:
+      return [NSString stringWithFormat:@"f/%g", [value doubleValue]];
+
+    case type_duration:
+      if ([value doubleValue] < 1)
+	return [NSString stringWithFormat:@"1/%g", 1/[value doubleValue]];
+      else
+	return [NSString stringWithFormat:@"%g", [value doubleValue]];
+
+    case type_exposure_mode:
+      return array_lookup(value, exposure_mode, N_ELEMENTS(exposure_mode));
+
+    case type_exposure_program:
+      return array_lookup(value, exposure_prog, N_ELEMENTS(exposure_prog));
+
+    case type_flash_mode:
+      return exif_flash_mode([value unsignedIntValue]);
+
+    case type_iso_speed:
+      return [NSString stringWithFormat:@"ISO %g", [value doubleValue]];
+
+    case type_latitude:
+      x = [value doubleValue];
+      return [NSString stringWithFormat:@"%g%@ %s",
+	      fabs(x), degrees_string(), x >= 0 ? "South" : "North"];
+
+    case type_longitude:
+      x = [value doubleValue];
+      return [NSString stringWithFormat:@"%g%@ %s",
+	      fabs(x), degrees_string(), x >= 0 ? "West" : "East"];
+
+    case type_metering_mode:
+      return array_lookup(value, metering_mode, N_ELEMENTS(metering_mode));
+
+    case type_metres:
+      return [NSString stringWithFormat:@"%gm", [value doubleValue]];
+
+    case type_millimetres:
+      return [NSString stringWithFormat:@"%gmm", [value doubleValue]];
+
+    case type_white_balance:
+      return array_lookup(value, white_balance, N_ELEMENTS(white_balance));
+
+    case type_bytes:
+    case type_date:
+    case type_flash_compensation:
+    case type_focus_mode:
+    case type_image_stabilization_mode:
+    case type_light_source:
+    case type_orientation:
+    case type_pixels:
+    case type_rating:
+    case type_saturation:
+    case type_scene_capture_type:
+    case type_scene_type:
+    case type_sharpness:
+    case type_string:
+    case type_string_array:
+      break;
+
+    case type_unknown:
+      break;
+    }
+
+  return [NSString stringWithFormat:@"%@", value];
 }
 
 - (NSString *)name

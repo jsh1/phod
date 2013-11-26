@@ -25,6 +25,7 @@
 #import "PDMetadataItemView.h"
 
 #import "PDColor.h"
+#import "PDImage.h"
 #import "PDMetadataView.h"
 
 #define LABEL_WIDTH 120
@@ -94,7 +95,8 @@
 
 - (void)_updateImageProperty
 {
-  [_labelField setStringValue:_imageProperty];
+  [_labelField setStringValue:
+   [PDImage localizedNameOfImageProperty:_imageProperty]];
   [[_labelField cell] setTruncatesLastVisibleLine:YES];
 
   [[_valueField cell] setTextColor:[PDColor controlTextColor]];
@@ -114,7 +116,16 @@
 
 - (NSString *)fieldString
 {
-  return [_metadataView formattedImagePropertyForKey:_imageProperty];
+  if ([_imageProperty isEqualToString:@"PixelSize"])
+    {
+      double w = [[_metadataView localizedImagePropertyForKey:PDImage_PixelWidth] doubleValue];
+      double h = [[_metadataView localizedImagePropertyForKey:PDImage_PixelHeight] doubleValue];
+      double mp = w * h * 1e-6;
+
+      return [NSString stringWithFormat:@"%g x %g (%.1f MP)", w, h, mp];
+    }
+
+  return [_metadataView localizedImagePropertyForKey:_imageProperty];
 }
 
 - (void)update

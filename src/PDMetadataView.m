@@ -158,9 +158,9 @@
     }
 }
 
-- (NSString *)formattedImagePropertyForKey:(NSString *)key
+- (NSString *)localizedImagePropertyForKey:(NSString *)key
 {
-  return [_controller formattedImagePropertyForKey:key];
+  return [_controller localizedImagePropertyForKey:key];
 }
 
 - (IBAction)controlAction:(id)sender
