@@ -55,6 +55,7 @@
   [_labelField setDrawsBackground:NO];
   [_labelField setEditable:NO];
   [_labelField setAlignment:NSRightTextAlignment];
+  [_labelField setAutoresizingMask:NSViewMaxXMargin];
   [[_labelField cell] setBordered:NO];
   [[_labelField cell] setFont:font];
   [[_labelField cell] setTextColor:[PDColor controlTextColor]];
@@ -69,6 +70,7 @@
   [_valueField setDelegate:self];
   [_valueField setDrawsBackground:NO];
   [_valueField setEditable:NO];
+  [_valueField setAutoresizingMask:NSViewWidthSizable];
   [[_valueField cell] setBordered:NO];
   [[_valueField cell] setFont:font1];
   [[_valueField cell] setTextColor:[PDColor controlTextColor]];

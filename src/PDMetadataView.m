@@ -100,6 +100,7 @@
 			  initWithFrame:NSZeroRect] autorelease];
 	  [new_subview setMetadataView:self];
 	  [new_subview setImageProperty:key];
+	  [new_subview setAutoresizingMask:NSViewWidthSizable];
 	}
 
       [new_subviews addObject:new_subview];
