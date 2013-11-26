@@ -31,6 +31,7 @@ extern NSString *const PDBackgroundActivityDidChange;
 @interface PDAppDelegate : NSObject <NSApplicationDelegate>
 {
   IBOutlet PDWindowController *_windowController;
+  IBOutlet NSMenu *_photosMenu;
   IBOutlet NSMenu *_viewMenu;
 
   NSMutableSet *_backgroundActivity;

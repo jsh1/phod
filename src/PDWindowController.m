@@ -567,40 +567,62 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   [self setSelectedImageIndexes:sel primary:idx];
 }
 
-- (IBAction)setImageRatingAction:(id)sender
+- (void)foreachSelectedImage:(void (^)(PDImage *))block
 {
   if ([_selectedImageIndexes count] == 0)
     return;
-
-  NSNumber *rating = [NSNumber numberWithInt:[sender tag]];
 
   NSInteger idx;
   for (idx = [_selectedImageIndexes firstIndex]; idx != NSNotFound;
        idx = [_selectedImageIndexes indexGreaterThanIndex:idx])
     {
-      PDImage *image = [_imageList objectAtIndex:idx];
-      [image setImageProperty:rating forKey:PDImage_Rating];
+      block([_imageList objectAtIndex:idx]);
     }
+}
+
+- (IBAction)setImageRatingAction:(id)sender
+{
+  NSNumber *rating = [NSNumber numberWithInt:[sender tag]];
+
+  [self foreachSelectedImage:^(PDImage *image) {
+    [image setImageProperty:rating forKey:PDImage_Rating];
+  }];
 }
 
 - (IBAction)addImageRatingAction:(id)sender
 {
-  if ([_selectedImageIndexes count] == 0)
-    return;
-
   int delta = [sender tag];
 
-  NSInteger idx;
-  for (idx = [_selectedImageIndexes firstIndex]; idx != NSNotFound;
-       idx = [_selectedImageIndexes indexGreaterThanIndex:idx])
-    {
-      PDImage *image = [_imageList objectAtIndex:idx];
-      int rating = [[image imagePropertyForKey:PDImage_Rating]
-		    intValue] + delta;
-      rating = MIN(rating, 5); rating = MAX(rating, -1);
-      [image setImageProperty:[NSNumber numberWithInt:rating]
-       forKey:PDImage_Rating];
-    }
+  [self foreachSelectedImage:^(PDImage *image) {
+    int rating = [[image imagePropertyForKey:PDImage_Rating] intValue] + delta;
+    rating = MIN(rating, 5); rating = MAX(rating, -1);
+    [image setImageProperty:
+     [NSNumber numberWithInt:rating] forKey:PDImage_Rating];
+  }];
+}
+
+- (IBAction)toggleFlaggedAction:(id)sender
+{
+  [self foreachSelectedImage:^(PDImage *image) {
+    BOOL flagged = [[image imagePropertyForKey:PDImage_Flagged] boolValue];
+    [image setImageProperty:[NSNumber numberWithBool:!flagged]
+     forKey:PDImage_Flagged];
+  }];
+}
+
+- (NSInteger)flaggedState
+{
+  __block BOOL all_set = YES, all_clear = YES;
+
+  [self foreachSelectedImage:^(PDImage *image) {
+    BOOL flagged = [[image imagePropertyForKey:PDImage_Flagged] boolValue];
+    if (flagged)
+      all_clear = NO;
+    else
+      all_set = NO;
+  }];
+
+  return all_set ? NSOnState : all_clear ? NSOffState : NSMixedState;
 }
 
 - (IBAction)setSidebarModeAction:(id)sender

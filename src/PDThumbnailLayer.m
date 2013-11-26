@@ -31,7 +31,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 #define TITLE_SPACING 4
-#define MIN_RATING_HEIGHT 14
+#define MIN_RATING_HEIGHT 17
 #define SELECTION_INSET -3
 #define SELECTION_WIDTH 1
 #define SELECTION_RADIUS 3
@@ -50,6 +50,7 @@ CA_HIDDEN
 CA_HIDDEN
 @interface PDThumbnailRatingLayer : PDThumbnailTextLayer
 @property(nonatomic) int rating;
+@property(nonatomic, getter=isFlagged) BOOL flagged;
 @end
 
 CA_HIDDEN
@@ -227,8 +228,9 @@ CA_HIDDEN
        CGRectMake(0, 0, title_size.width, title_size.height)];
 
       int rating = [[_image imagePropertyForKey:PDImage_Rating] intValue];
+      BOOL flagged = [[_image imagePropertyForKey:PDImage_Flagged] boolValue];
 
-      if (rating != 0 && rating_layer == nil)
+      if ((rating != 0 || flagged) && rating_layer == nil)
 	{
 	  rating_layer = [PDThumbnailRatingLayer layer];
 	  [rating_layer setDelegate:[self delegate]];
@@ -236,10 +238,12 @@ CA_HIDDEN
 	}
 
       [rating_layer setRating:rating];
+      [rating_layer setFlagged:flagged];
+
       [rating_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
 					    + bounds.size.height)];
       CGSize rating_size = [rating_layer preferredFrameSize];
-      rating_size.width = MIN(rating_size.width, bounds.size.width * .5);
+      rating_size.width = MIN(rating_size.width, bounds.size.width);
       rating_size.height = MAX(rating_size.height, MIN_RATING_HEIGHT);
       [rating_layer setBounds:
        CGRectMake(0, 0, rating_size.width, rating_size.height)];
@@ -311,12 +315,14 @@ CA_HIDDEN
 
 @implementation PDThumbnailRatingLayer
 
-@dynamic rating;
+@dynamic rating, flagged;
 
 + (id)defaultValueForKey:(NSString *)key
 {
   if ([key isEqualToString:@"anchorPoint"])
     return [NSValue valueWithPoint:NSMakePoint(0, 1)];
+  else if ([key isEqualToString:@"fontSize"])
+    return [NSNumber numberWithDouble:[NSFont systemFontSize]];
   else if ([key isEqualToString:@"backgroundColor"])
     return (id)[[NSColor colorWithDeviceWhite:0 alpha:.3] CGColor];
   else
@@ -327,30 +333,40 @@ CA_HIDDEN
 {
   [super didChangeValueForKey:key];
 
-  if ([key isEqualToString:@"rating"])
+  if ([key isEqualToString:@"rating"] || [key isEqualToString:@"flagged"])
     [self setNeedsLayout];
 }
 
 - (void)layoutSublayers
 {
   int rating = [self rating];
+  BOOL flagged = [self isFlagged];
+
+  unichar buf[8];
+  size_t len = 0;
 
   if (rating > 0)
     {
       rating = rating <= 5 ? rating : 5;
 
-      unichar buf[5];
       int i;
       for (i = 0; i < rating; i++)
-	buf[i] = 0x2605;		/* BLACK STAR */
-
-      [self setString:[NSString stringWithCharacters:buf length:rating]];
+	buf[len++] = 0x2605;		/* BLACK STAR */
     }
   else if (rating < 0)
     {
-      unichar c = 0x2716;		/* HEAVY MULTIPLICATION X */
-      [self setString:[NSString stringWithCharacters:&c length:1]];
+      buf[len++] = 0x2716;		/* HEAVY MULTIPLICATION X */
     }
+
+  if (flagged)
+    {
+      if (len != 0)
+	buf[len++] = ' ';
+      buf[len++] = 0x2691;		/* BLACK FLAG */
+    }
+
+  if (len != 0)
+    [self setString:[NSString stringWithCharacters:buf length:len]];
   else
     [self setString:nil];
 }

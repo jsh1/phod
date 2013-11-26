@@ -111,7 +111,16 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 
 - (void)menuNeedsUpdate:(NSMenu *)menu
 {
-  if (menu == _viewMenu)
+  if (menu == _photosMenu)
+    {
+      for (NSMenuItem *item in [menu itemArray])
+	{
+	  SEL sel = [item action];
+	  if (sel == @selector(toggleFlaggedAction:))
+	    [item setState:[_windowController flaggedState]];
+	}
+    }
+  else if (menu == _viewMenu)
     {
       NSInteger sidebarMode = [_windowController sidebarMode];
       NSInteger contentMode = [_windowController contentMode];

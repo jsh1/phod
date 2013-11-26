@@ -403,7 +403,16 @@
                                     </items>
                                 </menu>
                             </menuItem>
+                            <menuItem title="Flagged" keyEquivalent="/" id="lYc-lk-6YL">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleFlaggedAction:" target="-1" id="Fje-y2-DsF"/>
+                                </connections>
+                            </menuItem>
                         </items>
+                        <connections>
+                            <outlet property="delegate" destination="494" id="NLj-Yw-cPS"/>
+                        </connections>
                     </menu>
                 </menuItem>
                 <menuItem title="View" id="295">
@@ -539,6 +548,7 @@
         </menu>
         <customObject id="494" customClass="PDAppDelegate">
             <connections>
+                <outlet property="_photosMenu" destination="Kzg-7o-s7I" id="pjT-Q7-snq"/>
                 <outlet property="_viewMenu" destination="296" id="X41-F2-AIt"/>
                 <outlet property="_windowController" destination="yai-mr-HWc" id="r0t-6v-zS7"/>
             </connections>

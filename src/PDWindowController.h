@@ -82,6 +82,8 @@ enum PDContentMode
 - (void)movePrimarySelectionDown:(NSInteger)delta rows:(NSInteger)rows
     columns:(NSInteger)cols byExtendingSelection:(BOOL)extend;
 
+- (void)foreachSelectedImage:(void (^)(PDImage *))block;
+
 - (PDViewController *)viewControllerWithClass:(Class)cls;
 
 - (void)saveWindowState;
@@ -89,6 +91,9 @@ enum PDContentMode
 
 - (IBAction)setImageRatingAction:(id)sender;
 - (IBAction)addImageRatingAction:(id)sender;
+
+- (IBAction)toggleFlaggedAction:(id)sender;
+- (NSInteger)flaggedState;
 
 - (IBAction)setSidebarModeAction:(id)sender;
 - (IBAction)cycleSidebarModeAction:(id)sender;
