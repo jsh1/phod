@@ -253,6 +253,7 @@
        CGPointMake(-_imageOrigin.x + scaledSize.width * (CGFloat).5,
 		   -_imageOrigin.y + scaledSize.height * (CGFloat).5)];
       [_imageLayer setColorSpace:[[[self window] colorSpace] CGColorSpace]];
+      [_imageLayer setContentsScale:[[self window] backingScaleFactor]];
 
       [_imageLayer setImage:_image];
       [_clipLayer setHidden:NO];
@@ -298,20 +299,6 @@
 	  [[_controller controller] movePrimarySelectionRight:1
 	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
 	  return;
-
-#if 0
-	case NSUpArrowFunctionKey:
-	  [[_controller controller] movePrimarySelectionDown:-1
-	   rows:_rows columns:_columns
-	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
-	  return;
-
-	case NSDownArrowFunctionKey:
-	  [[_controller controller] movePrimarySelectionDown:1
-	   rows:_rows columns:_columns
-	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
-	  return;
-#endif
 	}
     }
 

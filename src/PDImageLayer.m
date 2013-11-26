@@ -210,6 +210,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
   [image_layer setAffineTransform:m];
   [image_layer setFrame:bounds];
+  [image_layer setContentsScale:scale];
 }
 
 - (NSDictionary *)imageHostOptions

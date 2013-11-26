@@ -208,6 +208,7 @@ CA_HIDDEN
 
   [image_layer setImage:_image];
   [image_layer setFrame:bounds];
+  [image_layer setContentsScale:[self contentsScale]];
 
   if (_displaysMetadata)
     {
@@ -221,6 +222,7 @@ CA_HIDDEN
       [title_layer setString:[_image title]];
       [title_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
 				       + bounds.size.height + TITLE_SPACING)];
+      [title_layer setContentsScale:[self contentsScale]];
 
       CGSize title_size = [title_layer preferredFrameSize];
       title_size.width = MIN(title_size.width, bounds.size.width);
@@ -239,6 +241,7 @@ CA_HIDDEN
 
       [rating_layer setRating:rating];
       [rating_layer setFlagged:flagged];
+      [rating_layer setContentsScale:[self contentsScale]];
 
       [rating_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
 					    + bounds.size.height)];

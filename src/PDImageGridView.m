@@ -171,6 +171,8 @@
   if (y0 < 0) y0 = 0;
   if (y1 < 0) y1 = 0;
 
+  CGFloat backing_scale = [[self window] backingScaleFactor];
+
   NSInteger count = [_images count];
 
   CALayer *layer = [self layer];
@@ -236,6 +238,7 @@
 			     + (_size - th) * (CGFloat).5);
 
 	  [sublayer setFrame:CGRectMake(px, py, tw, th)];
+	  [sublayer setContentsScale:backing_scale];
 
 	  [sublayer setPrimary:_primarySelection == idx];
 	  [sublayer setSelected:[_selection containsIndex:idx]];

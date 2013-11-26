@@ -80,7 +80,7 @@
                 </scrollView>
                 <searchField toolTip="Search library." verticalHuggingPriority="750" id="wy1-9V-NIi">
                     <rect key="frame" x="0.0" y="652" width="246" height="19"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search Library" usesSingleLineMode="YES" bezelStyle="round" recentsAutosaveName="PDLibraryViewController.searches" id="cs9-Rs-aYE">
                         <font key="font" metaFont="smallSystem"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
