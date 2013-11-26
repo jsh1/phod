@@ -298,7 +298,14 @@ wasFirstResponder(NSView *view)
   if (_imageList != array)
     {
       [_imageList release];
-      _imageList = [array copy];
+
+      /* FIXME: allow configurable sort keys (and update the indexed
+	 selection.. or replace indices by image references?) */
+
+      _imageList = [[array sortedArrayUsingComparator:
+		     ^NSComparisonResult (id obj1, id obj2) {
+		       return [[obj1 name] compare:[obj2 name]];
+		     }] retain];
 
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDImageListDidChange object:self];

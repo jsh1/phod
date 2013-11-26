@@ -120,7 +120,7 @@
       NSMutableSet *paths = [NSMutableSet set];
 
       for (PDImage *image in images)
-	[paths addObject:[[image path] stringByDeletingLastPathComponent]];
+	[paths addObject:[image lastLibraryPathComponent]];
 
       NSMutableString *str = [NSMutableString string];
 

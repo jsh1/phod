@@ -29,31 +29,18 @@
 
 @implementation PDLibraryDirectory
 
-@synthesize path = _path;
+@synthesize libraryPath = _libraryPath;
+@synthesize libraryDirectory = _libraryDirectory;
 @synthesize titleImageName = _titleImageName;
 
-+ (NSSet *)imagePathExtensions
-{
-  static NSSet *set;
-
-  // FIXME: handle RAW files later
-
-  if (set == nil)
-    {
-      set = [[NSSet alloc] initWithObjects:@"jpg", @"JPG", @"jpeg",
-	     @"JPEG", nil];
-    }
-
-  return set;
-}
-
-- (id)initWithPath:(NSString *)path
+- (id)initWithLibraryPath:(NSString *)path directory:(NSString *)dir;
 {
   self = [super init];
   if (self == nil)
     return nil;
 
-  _path = [path copy];
+  _libraryPath = [path copy];
+  _libraryDirectory = [dir copy];
   _titleImageName = PDImage_GenericFolder;
 
   return self;
@@ -61,11 +48,17 @@
 
 - (void)dealloc
 {
-  [_path release];
+  [_libraryPath release];
+  [_libraryDirectory release];
   [_subitems release];
   [_images release];
   [_subimages release];
   [super dealloc];
+}
+
+- (NSString *)path
+{
+  return [_libraryPath stringByAppendingPathComponent:_libraryDirectory];
 }
 
 - (NSArray *)subitems
@@ -81,19 +74,25 @@
       fm = [NSFileManager defaultManager];
       array = [[NSMutableArray alloc] init];
 
-      for (NSString *file in [fm contentsOfDirectoryAtPath:_path error:nil])
+      NSString *dir_path = [self path];
+
+      for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
 	{
 	  if ([file characterAtIndex:0] == '.')
 	    continue;
 
-	  path = [_path stringByAppendingPathComponent:file];
+	  path = [dir_path stringByAppendingPathComponent:file];
 	  dir = NO;
 	  if (![fm fileExistsAtPath:path isDirectory:&dir])
 	    continue;
 
 	  if (dir)
 	    {
-	      subitem = [[PDLibraryDirectory alloc] initWithPath:path];
+	      NSString *subdir = [_libraryDirectory
+				  stringByAppendingPathComponent:file];
+
+	      subitem = [[PDLibraryDirectory alloc]
+			 initWithLibraryPath:_libraryPath directory:subdir];
 
 	      if (subitem != nil)
 		{
@@ -114,37 +113,8 @@
 {
   if (_subimages == nil)
     {
-      NSFileManager *fm = [NSFileManager defaultManager];
-      NSMutableArray *array = [[NSMutableArray alloc] init];
-
-      for (NSString *file in [fm contentsOfDirectoryAtPath:_path error:nil])
-	{
-	  if ([file characterAtIndex:0] == '.')
-	    continue;
-
-	  NSString *path = [_path stringByAppendingPathComponent:file];
-	  BOOL dir = NO;
-	  if (![fm fileExistsAtPath:path isDirectory:&dir])
-	    continue;
-
-	  if (![[[self class] imagePathExtensions]
-		containsObject:[file pathExtension]])
-	    continue;
-
-	  if (!dir)
-	    {
-	      PDImage *image = [[PDImage alloc] initWithPath:path];
-
-	      if (image != nil)
-		{
-		  [array addObject:image];
-		  [image release];
-		}
-	    }
-	}
-
-      _subimages = [array copy];
-      [array release];
+      _subimages = [[PDImage imagesInLibrary:_libraryPath
+		     directory:_libraryDirectory filter:nil] copy];
     }
 
   NSMutableArray *images = [NSMutableArray array];
@@ -167,8 +137,10 @@
 
 - (NSString *)titleString
 {
-  return [[_path lastPathComponent]
-	  stringByReplacingOccurrencesOfString:@":" withString:@"/"];
+  NSString *title = [_libraryDirectory lastPathComponent];
+  if ([title length] == 0)
+    title = [_libraryPath lastPathComponent];
+  return [title stringByReplacingOccurrencesOfString:@":" withString:@"/"];
 }
 
 - (BOOL)isExpandable

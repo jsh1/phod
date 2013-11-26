@@ -87,8 +87,7 @@
 	  em_dash = [[NSString alloc] initWithCharacters:&c length:1];
 	}
 
-      NSString *dir = [[[[image path] stringByDeletingLastPathComponent]
-			lastPathComponent]
+      NSString *dir = [[image lastLibraryPathComponent]
 		       stringByReplacingOccurrencesOfString:@":"
 		       withString:@"/"];
       NSString *title = [image title];

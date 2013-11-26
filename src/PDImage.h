@@ -31,11 +31,22 @@ extern NSString *const PDImagePropertyDidChange;
 
 @interface PDImage : NSObject
 {
-  NSString *_path;
-  PDImageHash *_imageHash;
+  NSString *_libraryPath;		/* absolute */
+  NSString *_libraryDirectory;		/* relative to _libraryRoot */
 
-  NSMutableDictionary *_explicitProperties;
-  NSDictionary *_implicitProperties;
+  NSString *_JSONPath;			/* absolute */
+
+  BOOL _pendingJSONRead;
+  BOOL _pendingJSONWrite;
+
+  NSString *_JPEGPath;			/* nil or absolute */
+  PDImageHash *_JPEGHash;
+
+  NSString *_RAWPath;			/* nil or absolute */
+  PDImageHash *_RAWHash;
+
+  NSMutableDictionary *_properties;
+  NSDictionary *_implicitProperties;	/* from the image file(s) */
 
   NSMapTable *_imageHosts;
 
@@ -43,20 +54,35 @@ extern NSString *const PDImagePropertyDidChange;
   NSOperation *_prefetchOp;
 }
 
-- (id)initWithPath:(NSString *)path;
++ (NSArray *)imagesInLibrary:(NSString *)libraryPath
+    directory:(NSString *)dir filter:(BOOL (^)(NSString *name))block;
 
-@property(nonatomic, readonly) NSString *path;
+@property(nonatomic, readonly) NSString *JSONPath;
 
+@property(nonatomic, readonly) NSString *libraryPath;
+@property(nonatomic, readonly) NSString *libraryDirectory;
+
+/* Convenience for titles. */
+
+@property(nonatomic, readonly) NSString *lastLibraryPathComponent;
+
+/* Convience for ActiveType and FileTypes properties. */
+
+@property(nonatomic, readonly) BOOL usesRAW;
+
+/* These automatically switch between JPEG and RAW files. */
+
+@property(nonatomic, readonly) NSString *imagePath;
 @property(nonatomic, readonly) PDImageHash *imageHash;
-
-@property(nonatomic, readonly) NSString *title;
 
 - (id)imagePropertyForKey:(NSString *)key;
 
 - (void)setImageProperty:(id)obj forKey:(NSString *)key;
 
-/* Convenience accessors image properties. */
+/* Convenience accessors for misc image properties. */
 
+@property(nonatomic, readonly) NSString *name;
+@property(nonatomic, readonly) NSString *title;
 @property(nonatomic, readonly) CGSize pixelSize;
 @property(nonatomic, readonly) unsigned int orientation;
 @property(nonatomic, readonly) CGSize orientedPixelSize;
@@ -92,6 +118,8 @@ extern NSString *const PDImagePropertyDidChange;
 /* Image properties. */
 
 extern NSString * const PDImage_Name;		// NSString
+extern NSString * const PDImage_ActiveType;	// NSString
+extern NSString * const PDImage_FileTypes;	// NSArray<NSString>
 extern NSString * const PDImage_FileSize;	// NSNumber
 extern NSString * const PDImage_PixelWidth;	// NSNumber
 extern NSString * const PDImage_PixelHeight;	// NSNumber
@@ -139,7 +167,7 @@ extern NSString * const PDImage_SceneType;	// NSNumber
 extern NSString * const PDImage_Sharpness;	// NSNumber
 extern NSString * const PDImage_WhiteBalance;	// NSNumber
 
-/* Hosted image options */
+/* Hosted image options. */
 
 extern NSString * const PDImageHost_Size;	// NSValue<Size>
 extern NSString * const PDImageHost_Thumbnail;	// NSNumber<bool>

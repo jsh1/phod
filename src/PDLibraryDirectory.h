@@ -26,7 +26,8 @@
 
 @interface PDLibraryDirectory : PDLibraryItem
 {
-  NSString *_path;
+  NSString *_libraryPath;
+  NSString *_libraryDirectory;
   NSArray *_subitems;
   NSArray *_images;
   NSInteger _imageCount;
@@ -35,8 +36,12 @@
   NSInteger _titleImageName;
 }
 
-- (id)initWithPath:(NSString *)path;
+- (id)initWithLibraryPath:(NSString *)path directory:(NSString *)dir;
 
+@property(nonatomic, readonly) NSString *libraryPath;
+@property(nonatomic, readonly) NSString *libraryDirectory;
+
+/* convenience that appends libraryDirectory onto libraryPath. */
 @property(nonatomic, readonly) NSString *path;
 
 @property(nonatomic) NSInteger titleImageName;

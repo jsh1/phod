@@ -31,6 +31,8 @@
 
 #import <sys/stat.h>
 
+#define METADATA_EXTENSION "phod"
+
 #define CACHE_DIR "proxy-cache-v1"
 
 /* JPEG compression quality of 50% seems to be the lowest setting that
@@ -55,8 +57,8 @@ enum
 NSString *const PDImagePropertyDidChange = @"PDImagePropertyDidChange";
 
 NSString * const PDImage_Name = @"Name";
-NSString * const PDImage_Path = @"Path";
-
+NSString * const PDImage_ActiveType = @"ActiveType";
+NSString * const PDImage_FileTypes = @"FileTypes";
 NSString * const PDImage_FileSize = @"FileSize";
 NSString * const PDImage_PixelWidth = @"PixelWidth";
 NSString * const PDImage_PixelHeight = @"PixelHeight";
@@ -579,38 +581,130 @@ valid_cache_image(NSString *filePath, PDImageHash *hash, NSInteger type)
   return file_newer_than(cache_path_for_type(hash, type), filePath);
 }
 
+static NSString *
+type_identifier_for_extension(NSString *ext)
+{
+  static NSDictionary *dict;
+
+  if (dict == nil)
+    {
+      NSMutableDictionary *tem = [[NSMutableDictionary alloc] init];
+
+      for (NSString *type in (id)CGImageSourceCopyTypeIdentifiers())
+	{
+	  /* FIXME: remove this private API usage. Static table? */
+
+	  extern NSArray *CGImageSourceCopyTypeExtensions(NSString *);
+
+	  for (NSString *ext in CGImageSourceCopyTypeExtensions(type))
+	    {
+	      [tem setObject:type forKey:ext];
+	    }
+	}
+
+      dict = [tem copy];
+      [tem release];
+    }
+
+  return [dict objectForKey:[ext lowercaseString]];
+}
+
+static NSSet *
+raw_extensions(void)
+{
+  static NSSet *set;
+
+  if (set == nil)
+    {
+      set = [[NSSet alloc] initWithObjects:
+	     @"arw", @"cr2", @"crw", @"dng", @"fff", @"3fr", @"tif",
+	     @"tiff", @"raw", @"nef", @"nrw", @"sr2", @"srf", @"srw",
+	     @"erf", @"mrw", @"rw2", @"rwz", @"orf", nil];
+    }
+
+  return set;
+}
+
+/* 'ext' must be lowercase. */
+
+static NSString *
+filename_with_extension(NSString *path, NSSet *filenames,
+			NSString *stem, NSString *ext)
+{
+  NSString *lower = [stem stringByAppendingPathExtension:ext];
+  if ([filenames containsObject:lower])
+    return [path stringByAppendingPathComponent:lower];
+
+  NSString *upper = [stem stringByAppendingPathExtension:
+		     [ext uppercaseString]];
+  if ([filenames containsObject:upper])
+    return [path stringByAppendingPathComponent:upper];
+
+  return nil;
+}
+
+static NSString *
+filename_with_extension_in_set(NSString *path, NSSet *filenames,
+			       NSString *stem, NSSet *exts)
+{
+  for (NSString *ext in exts)
+    {
+      NSString *ret = filename_with_extension(path, filenames, stem, ext);
+      if (ret != nil)
+	return ret;
+    }
+
+  return nil;
+}
+
 @implementation PDImage
 
-@synthesize path = _path;
+@synthesize libraryPath = _libraryPath;
+@synthesize libraryDirectory = _libraryDirectory;
+@synthesize JSONPath = _JSONPath;
 
 static NSOperationQueue *_wideQueue;
 static NSOperationQueue *_narrowQueue;
 
-- (NSOperationQueue *)wideQueue
++ (NSOperationQueue *)wideQueue
 {
   if (_wideQueue == nil)
     {
       _wideQueue = [[NSOperationQueue alloc] init];
       [_wideQueue setName:@"PDImage.wideQueue"];
-      [_wideQueue addObserver:(id)[self class]
+      [_wideQueue addObserver:(id)self
        forKeyPath:@"operationCount" options:0 context:NULL];
     }
 
   return _wideQueue;
 }
 
-- (NSOperationQueue *)narrowQueue
++ (NSOperationQueue *)narrowQueue
 {
   if (_narrowQueue == nil)
     {
       _narrowQueue = [[NSOperationQueue alloc] init];
       [_narrowQueue setName:@"PDImage.narrowQueue"];
       [_narrowQueue setMaxConcurrentOperationCount:1];
-      [_narrowQueue addObserver:(id)[self class]
+      [_narrowQueue addObserver:(id)self
        forKeyPath:@"operationCount" options:0 context:NULL];
     }
 
   return _narrowQueue;
+}
+
++ (NSOperationQueue *)writeQueue
+{
+  static NSOperationQueue *_writeQueue;
+
+  if (_writeQueue == nil)
+    {
+      _writeQueue = [[NSOperationQueue alloc] init];
+      [_writeQueue setName:@"PDImage.writeQueue"];
+      [_writeQueue setMaxConcurrentOperationCount:1];
+    }
+
+  return _writeQueue;
 }
 
 + (void)observeValueForKeyPath:(NSString *)path ofObject:(id)obj
@@ -630,24 +724,132 @@ static NSOperationQueue *_narrowQueue;
     }
 }
 
-- (id)initWithPath:(NSString *)path
+- (id)initWithLibrary:(NSString *)libraryPath directory:(NSString *)dir
+    name:(NSString *)name JSONPath:(NSString *)json_path
+    JPEGPath:(NSString *)jpeg_path RAWPath:(NSString *)raw_path
 {
   self = [super init];
   if (self == nil)
     return nil;
 
-  _path = [path copy];
+  _properties = [[NSMutableDictionary alloc] init];
+
+  _libraryPath = [libraryPath copy];
+  _libraryDirectory = [dir copy];
+
+  _JSONPath = [json_path copy];
+  _JPEGPath = [jpeg_path copy];
+  _RAWPath = [raw_path copy];
+
+  _pendingJSONRead = _JSONPath != nil;
+
+  [_properties setObject:name forKey:PDImage_Name];
+
+  /* This needs to be set even when NO, to prevent trying to
+     load the implicit properties to find the ActiveType key. */
+
+  NSString *jpeg_type = _JPEGPath != nil ? @"public.jpeg" : nil;
+  NSString *raw_type = _RAWPath != nil
+	? type_identifier_for_extension([_RAWPath pathExtension]) : nil;
+
+  [_properties setObject:jpeg_type ? jpeg_type : raw_type
+   forKey:PDImage_ActiveType];
+
+  [_properties setObject:
+   [NSArray arrayWithObjects:jpeg_type != nil ? jpeg_type : raw_type,
+    raw_type != nil ? raw_type : jpeg_type, nil] forKey:PDImage_FileTypes];
+
   _imageHosts = [[NSMapTable strongToStrongObjectsMapTable] retain];
 
   return self;
 }
 
++ (NSArray *)imagesInLibrary:(NSString *)libraryPath
+    directory:(NSString *)dir filter:(BOOL (^)(NSString *name))block
+{
+  NSMutableArray *array = [[NSMutableArray alloc] init];
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  NSString *dir_path = [libraryPath stringByAppendingPathComponent:dir];
+
+  NSSet *filenames = [[NSSet alloc] initWithArray:
+		      [fm contentsOfDirectoryAtPath:dir_path error:nil]];
+
+  NSMutableSet *stems = [[NSMutableSet alloc] init];
+
+  for (NSString *file in filenames)
+    {
+      if ([file characterAtIndex:0] == '.')
+	continue;
+
+      NSString *path = [dir_path stringByAppendingPathComponent:file];
+      BOOL is_dir = NO;
+      if (![fm fileExistsAtPath:path isDirectory:&is_dir] || is_dir)
+	continue;
+
+      NSString *ext = [[file pathExtension] lowercaseString];
+
+      if (![ext isEqualToString:@METADATA_EXTENSION]
+	  && ![ext isEqualToString:@"jpg"]
+	  && ![ext isEqualToString:@"jpeg"]
+	  && ![raw_extensions() containsObject:ext])
+	{
+	  continue;
+	}
+
+      NSString *stem = [file stringByDeletingPathExtension];
+      if ([stems containsObject:stem])
+	continue;
+
+      [stems addObject:stem];
+
+      if (block != nil && !block(stem))
+	continue;
+
+      NSString *json_path
+	= filename_with_extension(dir_path, filenames,
+				  stem, @METADATA_EXTENSION);
+      NSString *jpeg_path
+	= filename_with_extension(dir_path, filenames, stem, @"jpg");
+      if (jpeg_path == nil)
+	{
+	  jpeg_path = filename_with_extension(dir_path, filenames,
+					      stem, @"jpeg");
+	}
+      NSString *raw_path
+	= filename_with_extension_in_set(dir_path, filenames,
+					 stem, raw_extensions());
+
+      PDImage *image = [[self alloc] initWithLibrary:libraryPath
+			directory:dir name:stem JSONPath:json_path
+			JPEGPath:jpeg_path RAWPath:raw_path];
+      if (image != nil)
+	{
+	  [array addObject:image];
+	  [image release];
+	}
+    }
+
+  NSArray *result = [NSArray arrayWithArray:array];
+
+  [stems release];
+  [filenames release];
+  [array release];
+
+  return result;
+}
+
 - (void)dealloc
 {
-  [_path release];
-  [_imageHash release];
+  [_libraryPath release];
+  [_libraryDirectory release];
+  [_JSONPath release];
+  [_JPEGPath release];
+  [_JPEGHash release];
+  [_RAWPath release];
+  [_RAWHash release];
 
-  [_explicitProperties release];
+  [_properties release];
   [_implicitProperties release];
 
   assert([_imageHosts count] == 0);
@@ -659,45 +861,129 @@ static NSOperationQueue *_narrowQueue;
   [super dealloc];
 }
 
-- (PDImageHash *)imageHash
+- (void)readJSONFile
 {
-  if (_imageHash == nil)
-    _imageHash = [[PDImageHash fileHash:_path] retain];
+  if (_pendingJSONRead)
+    {
+      assert (_JSONPath != nil);
 
-  return _imageHash;
+      NSData *data = [[NSData alloc] initWithContentsOfFile:_JSONPath];
+
+      if (data != nil)
+	{
+	  NSDictionary *dict = [NSJSONSerialization
+				JSONObjectWithData:data options:0 error:nil];
+	  if (dict != nil)
+	    {
+	      NSDictionary *props = [dict objectForKey:@"Properties"];
+	      if (props != nil)
+		[_properties addEntriesFromDictionary:props];
+	    }
+	  [data release];
+	}
+
+      _pendingJSONRead = NO;
+    }
 }
 
-- (NSString *)title
+- (void)writeJSONFile
 {
-  return [[_path lastPathComponent] stringByDeletingPathExtension];
+  if (!_pendingJSONWrite)
+    {
+      [self readJSONFile];
+
+      if (_JSONPath == nil)
+	{
+	  _JSONPath = [[[_libraryPath stringByAppendingPathComponent:
+			 _libraryDirectory] stringByAppendingPathComponent:
+			[[self name] stringByAppendingPathExtension:
+			 @METADATA_EXTENSION]] copy];
+	}
+
+      dispatch_time_t then
+        = dispatch_time(DISPATCH_TIME_NOW, 2LL * NSEC_PER_SEC);
+
+      dispatch_after(then, dispatch_get_main_queue(), ^{
+
+	/* Copying data out of self, as operation runs asynchronously.
+
+	   FIXME: what else should be added to this dictionary? */
+
+	NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
+			      [_properties copy], @"Properties",
+			      nil];
+	NSString *path = [_JSONPath copy];
+
+	NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
+	  NSData *data = [NSJSONSerialization dataWithJSONObject:dict
+			  options:NSJSONWritingPrettyPrinted error:nil];
+	  [data writeToFile:path atomically:YES];
+	}];
+
+	[path release];
+
+	[[PDImage writeQueue] addOperation:op];
+	_pendingJSONWrite = NO;
+      });
+
+      _pendingJSONWrite = YES;
+    }
+}
+
+- (NSString *)lastLibraryPathComponent
+{
+  NSString *str = [_libraryDirectory lastPathComponent];
+  if ([str length] == 0)
+    str = [_libraryPath lastPathComponent];
+  return str;
+}
+
+- (NSString *)imagePath
+{
+  return [self usesRAW] ? _RAWPath : _JPEGPath;
+}
+
+- (PDImageHash *)imageHash
+{
+  BOOL uses_raw = [self usesRAW];
+
+  PDImageHash **hash_ptr = uses_raw ? &_RAWHash : &_JPEGHash;
+
+  if (*hash_ptr == nil)
+    {
+      *hash_ptr = [[PDImageHash fileHash:
+		    uses_raw ? _RAWPath : _JPEGPath] retain];
+    }
+
+  return *hash_ptr;
 }
 
 - (id)imagePropertyForKey:(NSString *)key
 {
-#if 0
-  if ([key isEqualToString:PDImage_Rating])
-    {
-      int rating = ([[self imageHash] hash] & 7) - 1;
-      if (rating > 5) rating = 5;
-      return [NSNumber numberWithInt:rating];
-    }
-#endif
+  if (_pendingJSONRead)
+    [self readJSONFile];
 
-  if (_implicitProperties == nil)
-    {
-      CGImageSourceRef src = create_image_source_from_path(_path);
-
-      if (src != NULL)
-	{
-	  _implicitProperties = copy_image_properties(src);
-	  CFRelease(src);
-	}
-    }
-
-  id value = [_explicitProperties objectForKey:key];
+  id value = [_properties objectForKey:key];
 
   if (value == nil)
-    value = [_implicitProperties objectForKey:key];
+    {
+      if (_implicitProperties == nil)
+	{
+	  /* FIXME: if we switch from JPEG to RAW or vice versa, should
+	     we invalidate and reload these properties? */
+
+	  CGImageSourceRef src
+	    = create_image_source_from_path([self imagePath]);
+
+	  if (src != NULL)
+	    {
+	      _implicitProperties = copy_image_properties(src);
+	      CFRelease(src);
+	    }
+	}
+
+      value = [_implicitProperties objectForKey:key];
+    }
 
   if ([value isKindOfClass:[NSNull class]])
     value = nil;
@@ -710,21 +996,43 @@ static NSOperationQueue *_narrowQueue;
   if (obj == nil)
     obj = [NSNull null];
 
-  if (_explicitProperties == nil)
-    _explicitProperties = [[NSMutableDictionary alloc] init];
+  if (_pendingJSONRead)
+    [self readJSONFile];
 
-  id oldValue = [_explicitProperties objectForKey:key];
+  id oldValue = [_properties objectForKey:key];
 
   if (![oldValue isEqual:obj])
     {
-      /* FIXME: persist this somewhere */
+      [_properties setObject:obj forKey:key];
 
-      [_explicitProperties setObject:obj forKey:key];
+      [self writeJSONFile];
 
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDImagePropertyDidChange object:self
        userInfo:[NSDictionary dictionaryWithObject:key forKey:@"key"]];
     }
+}
+
+- (NSString *)name
+{
+  return [self imagePropertyForKey:PDImage_Name];
+}
+
+- (NSString *)title
+{
+  NSString *str = [self imagePropertyForKey:PDImage_Title];
+  if (str == nil)
+    str = [self imagePropertyForKey:PDImage_Name];
+  return str;
+}
+
+- (BOOL)usesRAW
+{
+  NSString *str = [self imagePropertyForKey:PDImage_ActiveType];
+  if (str == nil || _RAWPath == nil)
+    return NO;
+  else
+    return ![str isEqualToString:@"public.jpeg"];
 }
 
 - (CGSize)pixelSize
@@ -758,7 +1066,7 @@ static NSOperationQueue *_narrowQueue;
       /* Prevent the block retaining self. */
 
       PDImageHash *hash = [self imageHash];
-      NSString *path = [self path];
+      NSString *path = [self imagePath];
 
       NSString *tiny_path = cache_path_for_type(hash, PDImage_Tiny);
 
@@ -813,7 +1121,7 @@ static NSOperationQueue *_narrowQueue;
       }];
 
       [_prefetchOp setQueuePriority:NSOperationQueuePriorityLow];
-      [[self narrowQueue] addOperation:_prefetchOp];
+      [[PDImage narrowQueue] addOperation:_prefetchOp];
       [_prefetchOp retain];
     }
 }
@@ -859,7 +1167,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
   assert([_imageHosts objectForKey:obj] == nil);
 
   PDImageHash *hash = [self imageHash];
-  NSString *path = [self path];
+  NSString *path = [self imagePath];
 
   NSSize imageSize = [self pixelSize];
   if (imageSize.width == 0 || imageSize.height == 0)
@@ -1003,8 +1311,8 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
      narrow queue to prevent them blocking other higher-priority ops
      (once they start running, they can't be preempted). */
 
-  NSOperationQueue *q1 = [self wideQueue];
-  NSOperationQueue *q2 = [self narrowQueue];
+  NSOperationQueue *q1 = [PDImage wideQueue];
+  NSOperationQueue *q2 = [PDImage narrowQueue];
   NSOperation *pred = nil;
 
   for (NSOperation *op in ops)

@@ -39,8 +39,9 @@
 
 - (void)addDirectoryItem:(NSString *)dir
 {
-  PDLibraryDirectory *item = [[PDLibraryDirectory alloc] initWithPath:
-			      [dir stringByExpandingTildeInPath]];
+  PDLibraryDirectory *item
+    = [[PDLibraryDirectory alloc] initWithLibraryPath:
+       [dir stringByExpandingTildeInPath] directory:@""];
 
   [item setTitleImageName:PDImage_GenericHardDisk];
   [_items addObject:item];
