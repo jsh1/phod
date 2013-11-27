@@ -186,6 +186,141 @@
 {
 }
 
+static void
+add_expanded_items(PDLibraryViewController *self,
+		   NSMutableDictionary *expanded, NSArray *items)
+{
+  for (PDLibraryItem *item in items)
+    {
+      if ([self->_outlineView isItemExpanded:item])
+	{
+	  NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+	  add_expanded_items(self, dict, [item subitems]);
+	  [expanded setObject:dict forKey:[item identifier]];
+	}
+    }
+}
+
+static void
+expand_expanded_items(PDLibraryViewController *self,
+		      NSDictionary *expanded, NSArray *items)
+{
+  for (PDLibraryItem *item in items)
+    {
+      NSString *ident = [item identifier];
+
+      if ([ident length] != 0)
+	{
+	  NSDictionary *dict = [expanded objectForKey:ident];
+
+	  if (dict != nil)
+	    {
+	      [self->_outlineView expandItem:item];
+	      expand_expanded_items(self, dict, [item subitems]);
+	    }
+	}
+    }
+}
+
+static BOOL
+add_selection_path(PDLibraryViewController *self,
+		   NSMutableArray *path, PDLibraryItem *item)
+{
+  NSString *ident = [item identifier];
+  if ([ident length] == 0)
+    return NO;
+
+  PDLibraryItem *parent = [self->_outlineView parentForItem:item];
+
+  if (parent != nil)
+    {
+      if (!add_selection_path(self, path, parent))
+	return NO;
+    }
+
+  [path addObject:ident];
+  return YES;
+}
+
+static PDLibraryItem *
+item_for_selection_path(PDLibraryViewController *self,
+			NSArray *path, NSInteger idx, NSArray *items)
+{
+  NSInteger count = [path count];
+  if (idx >= count)
+    return nil;
+
+  NSString *ident = [path objectAtIndex:idx];
+
+  for (PDLibraryItem *item in items)
+    {
+      if (![[item identifier] isEqualToString:ident])
+	continue;
+
+      if (idx + 1 < count)
+	return item_for_selection_path(self, path, idx + 1, [item subitems]);
+      else
+	return item;
+    }
+
+  return nil;
+}
+
+- (NSDictionary *)savedViewState
+{
+  NSMutableDictionary *expanded = [NSMutableDictionary dictionary];
+
+  add_expanded_items(self, expanded, _items);
+
+  NSMutableArray *selected = [NSMutableArray array];
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+  NSInteger idx;
+
+  for (idx = [sel firstIndex]; idx != NSNotFound;
+       idx = [sel indexGreaterThanIndex:idx])
+    {
+      PDLibraryItem *item = [_outlineView itemAtRow:idx];
+      NSMutableArray *path = [NSMutableArray array];
+      if (add_selection_path(self, path, item))
+	[selected addObject:path];
+    }
+
+  return [NSDictionary dictionaryWithObjectsAndKeys:
+	  expanded, @"expandedItems",
+	  selected, @"selectedItems",
+	  nil];
+}
+
+- (void)applySavedViewState:(NSDictionary *)state
+{
+  NSDictionary *expanded = [state objectForKey:@"expandedItems"];
+
+  if (expanded != nil)
+    expand_expanded_items(self, expanded, _items);
+
+  NSArray *selected = [state objectForKey:@"selectedItems"];
+  NSMutableIndexSet *sel = [NSMutableIndexSet indexSet];
+
+  for (NSArray *path in selected)
+    {
+      PDLibraryItem *item = item_for_selection_path(self, path, 0, _items);
+      if (item != nil)
+	{
+	  NSInteger row = [_outlineView rowForItem:item];
+	  if (row != NSNotFound)
+	    [sel addIndex:row];
+	}
+    }
+
+  if ([sel count] != 0)
+    {
+      [_outlineView selectRowIndexes:sel byExtendingSelection:NO];
+      [_outlineView scrollRowToVisible:[sel firstIndex]];
+    }
+
+  [self outlineViewSelectionDidChange:nil];
+}
+
 // NSOutlineViewDataSource methods
 
 - (NSInteger)outlineView:(NSOutlineView *)ov numberOfChildrenOfItem:(id)item

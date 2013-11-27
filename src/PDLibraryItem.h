@@ -57,6 +57,10 @@
 - (BOOL)hasBadge;
 - (NSInteger)badgeValue;
 
+/* For saving view state. */
+
+- (NSString *)identifier;
+
 /* Should [recursively] check if anything has changed, return YES if
    something has. */
 

@@ -107,6 +107,11 @@
   return 0;
 }
 
+- (NSString *)identifier
+{
+  return [self titleString];
+}
+
 - (BOOL)needsUpdate
 {
   return NO;

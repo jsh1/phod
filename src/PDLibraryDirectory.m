@@ -158,6 +158,13 @@
   return [self numberOfSubimages];
 }
 
+- (NSString *)identifier
+{
+  return ([_libraryDirectory length] == 0
+	  ? [_libraryPath stringByAbbreviatingWithTildeInPath]
+	  : [_libraryDirectory lastPathComponent]);
+}
+
 - (BOOL)needsUpdate
 {
   // FIXME: do this correctly.
