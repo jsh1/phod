@@ -114,7 +114,7 @@
 
 - (NSString *)localizedImagePropertyForKey:(NSString *)key
 {
-  PDImage *image = [[self controller] primaryImage];
+  PDImage *image = [[self controller] primarySelectedImage];
   if (image == nil)
       return nil;
 

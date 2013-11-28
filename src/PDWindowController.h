@@ -58,21 +58,25 @@ enum PDContentMode
   NSInteger _contentMode;
 
   NSArray *_imageList;
-  NSInteger _primarySelectionIndex;
+
   NSIndexSet *_selectedImageIndexes;
+  NSInteger _primarySelectionIndex;
 }
 
 @property(nonatomic) NSInteger sidebarMode;
 @property(nonatomic) NSInteger contentMode;
 
 @property(nonatomic, copy) NSArray *imageList;
-@property NSInteger primarySelectionIndex;
+
 @property(nonatomic, copy) NSIndexSet *selectedImageIndexes;
-
-@property(nonatomic, readonly) PDImage *primaryImage;
-@property(nonatomic, readonly) NSArray *selectedImages;
-
+@property NSInteger primarySelectionIndex;
 - (void)setSelectedImageIndexes:(NSIndexSet *)set primary:(NSInteger)idx;
+
+/* Convenience wrappers for the index-based selection accessors. */
+
+@property(nonatomic, copy) NSArray *selectedImages;
+@property(nonatomic, retain) PDImage *primarySelectedImage;
+- (void)setSelectedImages:(NSArray *)array primary:(PDImage *)im;
 
 - (void)clearSelection;
 - (void)selectImage:(PDImage *)image withEvent:(NSEvent *)e;

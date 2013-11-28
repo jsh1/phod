@@ -360,17 +360,6 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
     }
 }
 
-- (PDImage *)primaryImage
-{
-  if (_primarySelectionIndex >= 0
-      && _primarySelectionIndex < [_imageList count])
-    {
-      return [_imageList objectAtIndex:_primarySelectionIndex];
-    }
-  else
-    return nil;
-}
-
 - (NSIndexSet *)selectedImageIndexes
 {
   return _selectedImageIndexes;
@@ -391,25 +380,6 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
     }
 }
 
-- (NSArray *)selectedImages
-{
-  if ([_selectedImageIndexes count] == 0)
-    return [NSArray array];
-
-  NSMutableArray *array = [NSMutableArray array];
-  NSInteger count = [_imageList count];
-
-  NSInteger idx;
-  for (idx = [_selectedImageIndexes firstIndex]; idx != NSNotFound;
-       idx = [_selectedImageIndexes indexGreaterThanIndex:idx])
-    {
-      if (idx >= 0 && idx < count)
-	[array addObject:[_imageList objectAtIndex:idx]];
-    }
-
-  return array;
-}
-
 - (void)setSelectedImageIndexes:(NSIndexSet *)set primary:(NSInteger)idx
 {
   idx = closestIndexInSetToIndex(set, idx);
@@ -424,6 +394,84 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDSelectionDidChange object:self];
     }
+}
+
+static PDImage *
+convert_index_to_image(NSInteger idx, NSArray *image_list)
+{
+  if (idx >= 0 && idx < [image_list count])
+    return [image_list objectAtIndex:idx];
+  else
+    return nil;
+}
+
+static NSInteger
+convert_image_to_index(PDImage *im, NSArray *image_list)
+{
+  return [image_list indexOfObjectIdenticalTo:im];
+}
+
+static NSArray *
+convert_index_set_to_array(NSIndexSet *set, NSArray *image_list)
+{
+  NSMutableArray *array = [NSMutableArray array];
+  NSInteger count = [image_list count];
+
+  NSInteger idx;
+  for (idx = [set firstIndex]; idx != NSNotFound;
+       idx = [set indexGreaterThanIndex:idx])
+    {
+      if (idx >= 0 && idx < count)
+	[array addObject:[image_list objectAtIndex:idx]];
+    }
+
+  return array;
+}
+
+static NSIndexSet *
+convert_array_to_index_set(NSArray *array, NSArray *image_list)
+{
+  if ([array count] == 0)
+    return [NSIndexSet indexSet];
+  else
+    {
+      NSMutableIndexSet *set = [NSMutableIndexSet indexSet];
+
+      for (PDImage *im in array)
+	{
+	  NSInteger idx = [image_list indexOfObjectIdenticalTo:im];
+	  if (idx != NSNotFound)
+	    [set addIndex:idx];
+	}
+
+      return set;
+    }
+}
+
+- (NSArray *)selectedImages
+{
+  return convert_index_set_to_array(_selectedImageIndexes, _imageList);
+}
+
+- (void)setSelectedImages:(NSArray *)array
+{
+  [self setSelectedImageIndexes:convert_array_to_index_set(array, _imageList)];
+}
+
+- (PDImage *)primarySelectedImage
+{
+  return convert_index_to_image(_primarySelectionIndex, _imageList);
+}
+
+- (void)setPrimarySelectedImage:(PDImage *)im
+{
+  [self setPrimarySelectionIndex:convert_image_to_index(im, _imageList)];
+}
+
+- (void)setSelectedImages:(NSArray *)array primary:(PDImage *)im
+{
+  [self setSelectedImageIndexes:convert_array_to_index_set(array, _imageList)
+   primary:convert_image_to_index(im, _imageList)];
 }
 
 - (void)clearSelection
