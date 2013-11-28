@@ -768,6 +768,13 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 	      && _primarySelectionIndex >= 0);
     }
 
+  if (sel == @selector(setImageRatingAction:)
+      || sel == @selector(addImageRatingAction:)
+      || sel == @selector(toggleFlaggedAction:))
+    {
+      return [_selectedImageIndexes count] != 0;
+    }
+
   return YES;
 }
 
