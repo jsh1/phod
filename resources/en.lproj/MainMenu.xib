@@ -341,6 +341,19 @@
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Photos" id="Kzg-7o-s7I">
                         <items>
+                            <menuItem title="Rotate Left" keyEquivalent="[" id="P5x-Ee-pjm">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="rotateLeft:" target="-1" id="xRc-WY-06b"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Rotate Right" keyEquivalent="]" id="cLu-Ko-AkO">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="rotateRight:" target="-1" id="gd0-FK-rUB"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="tfO-Lq-ZtM"/>
                             <menuItem title="Rating" id="tiX-jH-hth">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Rating" id="7Sh-xj-1Ww">

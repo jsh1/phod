@@ -144,6 +144,10 @@
 {
   [_gridView setPrimarySelection:[_controller primarySelectionIndex]];
   [_gridView setSelection:[_controller selectedImageIndexes]];
+
+  BOOL enabled = [[_controller selectedImageIndexes] count] != 0;
+  [_rotateLeftButton setEnabled:enabled];
+  [_rotateRightButton setEnabled:enabled];
 }
 
 - (void)gridViewBoundsDidChange:(NSNotification *)note
@@ -161,7 +165,8 @@
   if (![key isEqualToString:PDImage_Title]
       && ![key isEqualToString:PDImage_Name]
       && ![key isEqualToString:PDImage_Rating]
-      && ![key isEqualToString:PDImage_Flagged])
+      && ![key isEqualToString:PDImage_Flagged]
+      && ![key isEqualToString:PDImage_Orientation])
     return;
 
   /* FIXME: only update the layer of the image that has changed? */

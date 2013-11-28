@@ -756,6 +756,34 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
     }
 }
 
+- (void)rotateUsingMap:(const int *)map
+{
+  [self foreachSelectedImage:^(PDImage *image) {
+    int orientation = [[image imagePropertyForKey:
+			PDImage_Orientation] intValue];
+    if (orientation >= 1 && orientation <= 8)
+      {
+	orientation = map[orientation-1];
+	[image setImageProperty:
+	 [NSNumber numberWithInt:orientation] forKey:PDImage_Orientation];
+      }
+  }];
+}
+
+- (IBAction)rotateLeft:(id)sender
+{
+  static const int rotate_left_map[8] = {6, 5, 8, 7, 4, 3, 2, 1};
+
+  [self rotateUsingMap:rotate_left_map];
+}
+
+- (IBAction)rotateRight:(id)sender
+{
+  static const int rotate_right_map[8] = {8, 7, 6, 5, 2, 1, 4, 3};
+
+  [self rotateUsingMap:rotate_right_map];
+}
+
 - (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem
 {
   SEL sel = [anItem action];
@@ -770,7 +798,9 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
   if (sel == @selector(setImageRatingAction:)
       || sel == @selector(addImageRatingAction:)
-      || sel == @selector(toggleFlaggedAction:))
+      || sel == @selector(toggleFlaggedAction:)
+      || sel == @selector(rotateLeft:)
+      || sel == @selector(rotateRight:))
     {
       return [_selectedImageIndexes count] != 0;
     }

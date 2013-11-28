@@ -48,6 +48,9 @@
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(selectionDidChange:)
    name:PDSelectionDidChange object:_controller];
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(imagePropertyDidChange:)
+   name:PDImagePropertyDidChange object:nil];
 
   return self;
 }
@@ -100,6 +103,10 @@
       [_imageView setImage:nil];
       [_titleLabel setStringValue:@""];
     }
+
+  BOOL enabled = [[_controller selectedImageIndexes] count] != 0;
+  [_rotateLeftButton setEnabled:enabled];
+  [_rotateRightButton setEnabled:enabled];
 }
 
 - (void)viewDidLoad
@@ -139,6 +146,23 @@
 
 - (void)imageViewBoundsDidChange:(NSNotification *)note
 {
+  [_imageView setNeedsDisplay:YES];
+}
+
+- (void)imagePropertyDidChange:(NSNotification *)note
+{
+  PDImage *image = [note object];
+  if ([_imageView image] != image)
+    return;
+
+  NSString *key = [[note userInfo] objectForKey:@"key"];
+  if (![key isEqualToString:PDImage_Title]
+      && ![key isEqualToString:PDImage_Name]
+      && ![key isEqualToString:PDImage_Rating]
+      && ![key isEqualToString:PDImage_Flagged]
+      && ![key isEqualToString:PDImage_Orientation])
+    return;
+
   [_imageView setNeedsDisplay:YES];
 }
 

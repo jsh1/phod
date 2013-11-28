@@ -31,6 +31,8 @@
   IBOutlet NSScrollView *_scrollView;
   IBOutlet PDImageGridView *_gridView;
   IBOutlet NSTextField *_titleLabel;
+  IBOutlet NSButton *_rotateLeftButton;
+  IBOutlet NSButton *_rotateRightButton;
   IBOutlet NSSlider *_scaleSlider;
 }
 

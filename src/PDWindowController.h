@@ -115,4 +115,7 @@ enum PDContentMode
 - (IBAction)zoomOut:(id)sender;
 - (IBAction)zoomActualSize:(id)sender;
 
+- (IBAction)rotateLeft:(id)sender;
+- (IBAction)rotateRight:(id)sender;
+
 @end

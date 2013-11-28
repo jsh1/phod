@@ -30,6 +30,8 @@
 {
   IBOutlet NSTextField *_titleLabel;
   IBOutlet PDImageView *_imageView;
+  IBOutlet NSButton *_rotateLeftButton;
+  IBOutlet NSButton *_rotateRightButton;
 }
   
 @property(nonatomic) BOOL displaysMetadata;
