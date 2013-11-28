@@ -1,0 +1,83 @@
+-*- indented-text -*-
+
+Issues
+======
+
+1. Sort by X
+
+  - In library items: sort subitems by name, date, etc.
+
+  - In image list view: sort images by name, date, etc. [done]
+
+  Both kinds of sorting should persist across restarts.
+
+2. Dragging library items
+
+  - Dragging a top-level item should move it in the view.
+
+  - Dragging a subfolder should move it in the file system.
+
+3. Rename folders in library view by editing their name.
+
+4. Allow image metadata to be edited
+
+  - Title, caption, copyright, keywords etc.
+
+  - Allow image names to be changed?
+
+  - Dedicated tagging/keywording UI? (Panel showing tag list, with
+  those that are applied sorted forwards and highlighted?)
+
+  - Edit orientation state for simple rotation support. [done]
+
+5. Overlay metadata badges in image view
+
+  - Ratings etc..
+
+6. Command to select RAW vs JPEG source file
+
+7. Custom image list filters
+
+  - Normal "build a query" style UI
+
+8. Save filters/queries as smart folders in source list
+
+9. "Preview" mode where the fullsize image isn't loaded?
+
+10. Viewer should be able to display multiple images?
+
+  As an option? Useful for comparing similar images.. or does it just
+  make the images too small to be useful? Perhaps a way of quickly
+  flipping through the selection like a stack of cards? (With a
+  view-all mode for selecting?)
+
+10. Image groups (aka stacks)
+
+  - Allow multiple images to be grouped
+
+  - The stack can be reordered, the first is used by default
+
+  - Stacks can be expanded to show all images, or collapsed
+
+  - Command to create stacks based on time brackets?
+
+11. Duplicate an image
+
+  - i.e. create a new meta file referencing the same master image(s)
+
+  - not too useful yet, but will be later, e.g. multiple crops of the
+  same image
+
+12. Archive volumes
+
+  Mark a directory as the "archive" of a library root. Then:
+
+    - command to move unused files (RAW vs JPEG etc) to the archive,
+    - may also copy used files into the archive, for completeness.
+
+  After moving the assets around need to create valid metadata in the
+  archive location, and update the metadata in the master to add a
+  reference to the "missing" file, probably its name and hash, so that
+  it can be found when needed. (The metadata already lists the kinds
+  of files that are available, but it may not be saved.)
+
