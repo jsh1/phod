@@ -548,12 +548,12 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
     case type_latitude:
       x = [value doubleValue];
       return [NSString stringWithFormat:@"%g%@ %s",
-	      fabs(x), degrees_string(), x >= 0 ? "South" : "North"];
+	      fabs(x), degrees_string(), x >= 0 ? "North" : "South"];
 
     case type_longitude:
       x = [value doubleValue];
       return [NSString stringWithFormat:@"%g%@ %s",
-	      fabs(x), degrees_string(), x >= 0 ? "West" : "East"];
+	      fabs(x), degrees_string(), x >= 0 ? "East" : "West"];
 
     case type_metering_mode:
       return array_lookup(value, metering_mode, N_ELEMENTS(metering_mode));
