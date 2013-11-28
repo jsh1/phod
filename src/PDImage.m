@@ -540,20 +540,6 @@ copy_image_properties(CGImageSourceRef src)
   return c.dict;
 }
 
-static NSString *cache_path;
-static dispatch_once_t cache_path_once;
-
-static void
-cache_path_init(void *unused_arg)
-{
-  NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
-						       NSUserDomainMask, YES);
-  cache_path = [[[[paths lastObject] stringByAppendingPathComponent:
-		  [[NSBundle mainBundle] bundleIdentifier]]
-		 stringByAppendingPathComponent:@CACHE_DIR]
-		copy];
-}
-
 static NSString *
 cache_path_for_type(PDImageHash *hash, NSInteger type)
 {
@@ -570,7 +556,17 @@ cache_path_for_type(PDImageHash *hash, NSInteger type)
   else /* if (type == PDImage_Medium) */
     path = [path stringByAppendingString:@"_medium.jpg"];
 
-  dispatch_once_f(&cache_path_once, NULL, cache_path_init);
+  static NSString *cache_path;
+  static dispatch_once_t once;
+
+  dispatch_once(&once, ^{
+    NSArray *paths = (NSSearchPathForDirectoriesInDomains
+		      (NSCachesDirectory, NSUserDomainMask, YES));
+    cache_path = [[[[paths lastObject] stringByAppendingPathComponent:
+		    [[NSBundle mainBundle] bundleIdentifier]]
+		   stringByAppendingPathComponent:@CACHE_DIR]
+		  copy];
+  });
 
   return [cache_path stringByAppendingPathComponent:path];
 }
@@ -585,35 +581,34 @@ static NSString *
 type_identifier_for_extension(NSString *ext)
 {
   static NSDictionary *dict;
+  static dispatch_once_t once;
 
-  if (dict == nil)
-    {
-      NSMutableDictionary *tem = [[NSMutableDictionary alloc] init];
+  dispatch_once(&once, ^{
+    NSMutableDictionary *tem = [[NSMutableDictionary alloc] init];
+    CFArrayRef types = CGImageSourceCopyTypeIdentifiers();
 
-      CFArrayRef types = CGImageSourceCopyTypeIdentifiers();
+    for (NSString *type in (id)types)
+      {
+	/* FIXME: remove this private API usage. Static table? */
 
-      for (NSString *type in (id)types)
-	{
-	  /* FIXME: remove this private API usage. Static table? */
+	extern CFArrayRef CGImageSourceCopyTypeExtensions(CFStringRef);
 
-	  extern CFArrayRef CGImageSourceCopyTypeExtensions(CFStringRef);
+	CFArrayRef exts = CGImageSourceCopyTypeExtensions((CFStringRef)type);
 
-	  CFArrayRef exts = CGImageSourceCopyTypeExtensions((CFStringRef)type);
+	if (exts != NULL)
+	  {
+	    for (NSString *ext in (id)exts)
+	      [tem setObject:type forKey:ext];
 
-	  if (exts != NULL)
-	    {
-	      for (NSString *ext in (id)exts)
-		[tem setObject:type forKey:ext];
+	    CFRelease(exts);
+	  }
+      }
 
-	      CFRelease(exts);
-	    }
-	}
+    CFRelease(types);
 
-      CFRelease(types);
-
-      dict = [tem copy];
-      [tem release];
-    }
+    dict = [tem copy];
+    [tem release];
+  });
 
   return [dict objectForKey:[ext lowercaseString]];
 }
@@ -622,14 +617,14 @@ static NSSet *
 raw_extensions(void)
 {
   static NSSet *set;
+  static dispatch_once_t once;
 
-  if (set == nil)
-    {
-      set = [[NSSet alloc] initWithObjects:
-	     @"arw", @"cr2", @"crw", @"dng", @"fff", @"3fr", @"tif",
-	     @"tiff", @"raw", @"nef", @"nrw", @"sr2", @"srf", @"srw",
-	     @"erf", @"mrw", @"rw2", @"rwz", @"orf", nil];
-    }
+  dispatch_once(&once, ^{
+    set = [[NSSet alloc] initWithObjects:
+	   @"arw", @"cr2", @"crw", @"dng", @"fff", @"3fr", @"tif",
+	   @"tiff", @"raw", @"nef", @"nrw", @"sr2", @"srf", @"srw",
+	   @"erf", @"mrw", @"rw2", @"rwz", @"orf", nil];
+  });
 
   return set;
 }
