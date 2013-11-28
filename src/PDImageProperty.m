@@ -24,6 +24,8 @@
 
 #import "PDImageProperty.h"
 
+#import <time.h>
+
 #define N_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
 
 /* Converting ImageIO properties dictionary to our format. */
@@ -589,6 +591,34 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
     }
 
   return [NSString stringWithFormat:@"%@", value];
+}
+
+
+/* EXIF date parsing. */
+
+NSDate *
+PDImageParseEXIFDateString(NSString *str)
+{
+  /* Format is "YYYY:MM:DD HH:MM:SS". */
+
+  int year, month, day;
+  int hours, minutes, seconds;
+
+  if (sscanf([str UTF8String], "%d:%d:%d %d:%d:%d",
+	     &year, &month, &day, &hours, &minutes, &seconds) == 6)
+    {
+      struct tm tm = {0};
+      tm.tm_year = year - 1900;
+      tm.tm_mon = month - 1;
+      tm.tm_mday = day;
+      tm.tm_hour = hours;
+      tm.tm_min = minutes;
+      tm.tm_sec = seconds;
+
+      return [NSDate dateWithTimeIntervalSince1970:mktime(&tm)];
+    }
+  else
+    return nil;
 }
 
 

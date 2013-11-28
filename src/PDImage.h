@@ -29,6 +29,27 @@ extern NSString *const PDImagePropertyDidChange;
 @protocol PDImageHost;
 @class PDImageHash;
 
+enum PDImageCompareKey
+{
+  PDImageCompare_FileName,
+  PDImageCompare_FileDate,
+  PDImageCompare_FileSize,
+  PDImageCompare_Name,
+  PDImageCompare_OriginalDate,
+  PDImageCompare_Keywords,
+  PDImageCompare_Caption,
+  PDImageCompare_Rating,
+  PDImageCompare_Flagged,
+  PDImageCompare_Orientation,
+  PDImageCompare_PixelSize,
+  PDImageCompare_Altitude,
+  PDImageCompare_ExposureLength,
+  PDImageCompare_FNumber,
+  PDImageCompare_ISOSpeed,
+};
+
+typedef int PDImageCompareKey;
+
 @interface PDImage : NSObject
 {
   NSString *_libraryPath;		/* absolute */
@@ -52,10 +73,15 @@ extern NSString *const PDImagePropertyDidChange;
 
   BOOL _donePrefetch;
   NSOperation *_prefetchOp;
+
+  NSDate *_originalDate;		/* cached lazily */
 }
 
 + (NSArray *)imagesInLibrary:(NSString *)libraryPath
     directory:(NSString *)dir filter:(BOOL (^)(NSString *name))block;
+
++ (void)callWithImageComparator:(PDImageCompareKey)key
+    reversed:(BOOL)flag block:(void (^)(NSComparator))block;
 
 @property(nonatomic, readonly) NSString *JSONPath;
 
@@ -86,6 +112,7 @@ extern NSString *const PDImagePropertyDidChange;
 /* Convenience accessors for misc image properties. */
 
 @property(nonatomic, readonly) NSString *name;
+@property(nonatomic, readonly) NSDate *originalDate;
 @property(nonatomic, readonly) NSString *title;
 @property(nonatomic, readonly) CGSize pixelSize;
 @property(nonatomic, readonly) unsigned int orientation;

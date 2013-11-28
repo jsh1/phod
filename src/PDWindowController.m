@@ -39,6 +39,9 @@ NSString *const PDSelectionDidChange = @"PDSelectionDidChange";
 
 @implementation PDWindowController
 
+@synthesize imageSortKey = _imageSortKey;
+@synthesize imageSortReversed = _imageSortReversed;
+
 - (NSString *)windowNibName
 {
   return @"PDWindow";
@@ -70,7 +73,11 @@ NSString *const PDSelectionDidChange = @"PDSelectionDidChange";
   _sidebarMode = PDSidebarMode_Nil;
   _contentMode = PDContentMode_Nil;
 
+  _imageSortKey = PDImageCompare_Name;
+  _imageSortReversed = YES;
+
   _imageList = [[NSArray alloc] init];
+
   _primarySelectionIndex = -1;
   _selectedImageIndexes = [[NSIndexSet alloc] init];
 
@@ -288,30 +295,71 @@ wasFirstResponder(NSView *view)
     }
 }
 
+- (NSArray *)sortedImageList:(NSArray *)array
+{
+  __block NSArray *ret = nil;
+
+  [PDImage callWithImageComparator:_imageSortKey reversed:_imageSortReversed
+   block:^(NSComparator cmp) {
+     ret = [array sortedArrayUsingComparator:
+	    ^NSComparisonResult (id obj1, id obj2) {
+
+	      NSComparisonResult ret = cmp(obj1, obj2);
+
+	      /* We don't want sorting by key1 then key2 to give
+		 different results to sorting by key3 then key2. */
+
+	      if (ret == NSOrderedSame)
+		{
+		  ret = (obj1 < obj2 ? NSOrderedAscending
+			 : obj1 > obj2 ? NSOrderedDescending
+			 : NSOrderedSame);
+		}
+
+	      return ret;
+	    }];
+   }];
+
+  return ret;
+}
+
 - (NSArray *)imageList
 {
   return _imageList;
+}
+
+- (void)_setImageList:(NSArray *)array
+{
+  NSArray *selected_images = [[self selectedImages] copy];
+  PDImage *primary_image = [[self primarySelectedImage] retain];
+
+  [_imageList release];
+  _imageList = [array copy];
+
+  [[NSNotificationCenter defaultCenter]
+   postNotificationName:PDImageListDidChange object:self];
+
+  [self setSelectedImages:selected_images primary:primary_image];
+
+  [selected_images release];
+  [primary_image release];
 }
 
 - (void)setImageList:(NSArray *)array
 {
   if (_imageList != array)
     {
-      [_imageList release];
+      [self _setImageList:[self sortedImageList:array]];
+    }
+}
 
-      /* FIXME: allow configurable sort keys (and update the indexed
-	 selection.. or replace indices by image references?) */
+- (void)resortImageList
+{
+  NSArray *array = [self sortedImageList:_imageList];
 
-      _imageList = [[array sortedArrayUsingComparator:
-		     ^NSComparisonResult (id obj1, id obj2) {
-		       return [[obj1 name] compare:[obj2 name]];
-		     }] retain];
-
-      [[NSNotificationCenter defaultCenter]
-       postNotificationName:PDImageListDidChange object:self];
-
-      if ([_selectedImageIndexes count] != 0)
-	[self setSelectedImageIndexes:nil];
+  if (![array isEqual:_imageList])
+    {
+      [self _setImageList:array];
     }
 }
 

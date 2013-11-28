@@ -407,7 +407,7 @@ item_for_selection_path(PDLibraryViewController *self,
 
       [_controller setImageList:array];
 
-      if ([array count] > 0)
+      if ([array count] > 0 && [[_controller selectedImageIndexes] count] == 0)
 	[_controller setSelectedImageIndexes:[NSIndexSet indexSetWithIndex:0]];
     }
 }

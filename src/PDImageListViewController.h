@@ -30,6 +30,8 @@
 {
   IBOutlet NSScrollView *_scrollView;
   IBOutlet PDImageGridView *_gridView;
+  IBOutlet NSPopUpButton *_sortButton;
+  IBOutlet NSMenu *_sortMenu;
   IBOutlet NSTextField *_titleLabel;
   IBOutlet NSButton *_rotateLeftButton;
   IBOutlet NSButton *_rotateRightButton;
@@ -39,6 +41,9 @@
 @property(nonatomic) BOOL displaysMetadata;
 
 - (IBAction)toggleMetadata:(id)sender;
+
+- (IBAction)sortKeyAction:(id)sender;
+- (IBAction)sortOrderAction:(id)sender;
 
 - (IBAction)controlAction:(id)sender;
 

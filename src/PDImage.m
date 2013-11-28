@@ -72,6 +72,17 @@ file_mtime(NSString *path)
     return 0;
 }
 
+static size_t
+file_size(NSString *path)
+{
+  struct stat st;
+
+  if (stat([path fileSystemRepresentation], &st) == 0)
+    return st.st_size;
+  else
+    return 0;
+}
+
 static BOOL
 file_newer_than(NSString *path1, NSString *path2)
 {
@@ -539,6 +550,8 @@ static NSOperationQueue *_narrowQueue;
   [_prefetchOp cancel];
   [_prefetchOp release];
 
+  [_originalDate release];
+
   [super dealloc];
 }
 
@@ -764,6 +777,9 @@ static NSOperationQueue *_narrowQueue;
 
       [self writeJSONFile];
 
+      if (_originalDate != nil && [key isEqualToString:PDImage_OriginalDate])
+	[_originalDate release], _originalDate = nil;
+
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDImagePropertyDidChange object:self
        userInfo:[NSDictionary dictionaryWithObject:key forKey:@"key"]];
@@ -782,6 +798,131 @@ static NSOperationQueue *_narrowQueue;
     return nil;
 
   return PDImageLocalizedPropertyValue(key, value, self);
+}
+
++ (void)callWithImageComparator:(PDImageCompareKey)key
+    reversed:(BOOL)flag block:(void (^)(NSComparator))block
+{
+  block (^(id obj1, id obj2)
+    {
+      NSComparisonResult ret;
+      if (obj1 == obj2)
+	ret = NSOrderedSame;
+      else if (obj1 == nil)
+	ret = NSOrderedAscending;
+      else if (obj2 == nil)
+	ret = NSOrderedDescending;
+      else
+	{
+	  switch ((enum PDImageCompareKey)key)
+	    {
+	      NSString *key;
+
+	    case PDImageCompare_FileName: {
+	      NSString *s1 = [[obj1 imagePath] lastPathComponent];
+	      NSString *s2 = [[obj2 imagePath] lastPathComponent];
+	      ret = [s1 compare:s2];
+	      goto got_ret; }
+
+	    case PDImageCompare_FileDate: {
+	      time_t t1 = file_mtime([obj1 imagePath]);
+	      time_t t2 = file_mtime([obj2 imagePath]);
+	      ret = (t1 < t2 ? NSOrderedAscending
+		     : t1 > t2 ? NSOrderedDescending : NSOrderedSame);
+	      goto got_ret; }
+
+	    case PDImageCompare_FileSize: {
+	      size_t s1 = file_size([obj1 imagePath]);
+	      size_t s2 = file_size([obj2 imagePath]);
+	      ret = (s1 < s2 ? NSOrderedAscending
+		     : s1 > s2 ? NSOrderedDescending : NSOrderedSame);
+	      goto got_ret; }
+
+	    case PDImageCompare_OriginalDate:
+	      obj1 = [obj1 originalDate];
+	      obj2 = [obj2 originalDate];
+	      break;
+
+	    case PDImageCompare_PixelSize: {
+	      CGSize size1 = [obj1 pixelSize];
+	      CGSize size2 = [obj2 pixelSize];
+	      obj1 = obj2 = nil;
+	      if (size1.width != 0 && size1.height != 0)
+		obj1 = [NSNumber numberWithDouble:size1.width * size1.height];
+	      if (size2.width != 0 && size2.height != 0)
+		obj2 = [NSNumber numberWithDouble:size2.width * size2.height];
+	      break; }
+
+	    case PDImageCompare_Name:
+	      key = PDImage_Name;
+	      goto do_key;
+	    case PDImageCompare_Keywords:
+	      key = PDImage_Keywords;
+	      goto do_key;
+	    case PDImageCompare_Caption:
+	      key = PDImage_Caption;
+	      goto do_key;
+	    case PDImageCompare_Rating:
+	      key = PDImage_Rating;
+	      goto do_key;
+	    case PDImageCompare_Flagged:
+	      key = PDImage_Flagged;
+	      goto do_key;
+	    case PDImageCompare_Orientation:
+	      key = PDImage_Orientation;
+	      goto do_key;
+	    case PDImageCompare_Altitude:
+	      key = PDImage_Altitude;
+	      goto do_key;
+	    case PDImageCompare_ExposureLength:
+	      key = PDImage_ExposureLength;
+	      goto do_key;
+	    case PDImageCompare_FNumber:
+	      key = PDImage_FNumber;
+	      goto do_key;
+	    case PDImageCompare_ISOSpeed:
+	      key = PDImage_ISOSpeed;
+	      /* fall through */
+	    do_key:
+	      obj1 = [obj1 imagePropertyForKey:key];
+	      obj2 = [obj2 imagePropertyForKey:key];
+	      break;
+	    }
+
+	  if (obj1 == obj2)
+	    ret = NSOrderedSame;
+	  else if (obj1 == nil)
+	    ret = NSOrderedAscending;
+	  else if (obj2 == nil)
+	    ret = NSOrderedDescending;
+	  else if ([obj1 respondsToSelector:@selector(compare:)])
+	    ret = [obj1 compare:obj2];
+	  else
+	    ret = NSOrderedSame;
+	}
+
+    got_ret:
+      return flag ? ret : -ret;
+    });
+}
+
+- (NSDate *)originalDate
+{
+  if (_originalDate == nil)
+    {
+      id date = nil;
+      NSString *str = [self imagePropertyForKey:PDImage_OriginalDate];
+      if (str != nil)
+	date = PDImageParseEXIFDateString(str);
+      if (date == nil)
+	date = [NSNull null];
+      _originalDate = [date retain];
+    }
+
+  if (![_originalDate isKindOfClass:[NSNull class]])
+    return _originalDate;
+  else
+    return nil;
 }
 
 - (NSString *)name

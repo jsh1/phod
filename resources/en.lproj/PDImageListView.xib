@@ -12,6 +12,8 @@
                 <outlet property="_rotateRightButton" destination="6zM-wb-XqZ" id="WEr-DQ-Kqm"/>
                 <outlet property="_scaleSlider" destination="7R0-fJ-wJc" id="Waq-Lq-gAf"/>
                 <outlet property="_scrollView" destination="MZC-31-5x1" id="uQE-mo-cAo"/>
+                <outlet property="_sortButton" destination="LR9-hI-PsU" id="hDm-hk-1lZ"/>
+                <outlet property="_sortMenu" destination="MZd-AP-pGT" id="uDY-Pf-gFo"/>
                 <outlet property="_titleLabel" destination="SYa-hn-mNZ" id="t2Z-wB-d1b"/>
                 <outlet property="view" destination="pcu-MU-YW6" id="q5T-1j-msf"/>
             </connections>
@@ -60,7 +62,7 @@
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                 </progressIndicator>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="SYa-hn-mNZ">
-                    <rect key="frame" x="108" y="444" width="300" height="14"/>
+                    <rect key="frame" x="121" y="444" width="287" height="14"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="center" title="Title" id="eGl-Ha-i1Z">
                         <font key="font" metaFont="smallSystemBold"/>
@@ -71,7 +73,7 @@
                 <button toolTip="Rotate image left — [" verticalHuggingPriority="750" id="WJS-W7-4un">
                     <rect key="frame" x="5" y="4" width="22" height="22"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" title="↺" bezelStyle="smallSquare" image="B9CB5A50-D105-4FF2-9078-928D151814F1" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="HKJ-fl-E0p">
+                    <buttonCell key="cell" type="smallSquare" title="↺" bezelStyle="smallSquare" image="902F347A-86D5-46FD-A235-C055EB52EF23" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="HKJ-fl-E0p">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" size="24" name="AppleSymbols"/>
                     </buttonCell>
@@ -82,7 +84,7 @@
                 <button toolTip="Rotate image right — ]" verticalHuggingPriority="750" id="6zM-wb-XqZ">
                     <rect key="frame" x="29" y="4" width="22" height="22"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" title="↻" bezelStyle="smallSquare" image="B9CB5A50-D105-4FF2-9078-928D151814F1" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Orf-oe-jjT">
+                    <buttonCell key="cell" type="smallSquare" title="↻" bezelStyle="smallSquare" image="902F347A-86D5-46FD-A235-C055EB52EF23" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Orf-oe-jjT">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" size="24" name="AppleSymbols"/>
                     </buttonCell>
@@ -90,11 +92,112 @@
                         <action selector="rotateRight:" target="-1" id="51A-IK-GsH"/>
                     </connections>
                 </button>
+                <popUpButton toolTip="Sorting order." verticalHuggingPriority="750" id="LR9-hI-PsU">
+                    <rect key="frame" x="5" y="439" width="110" height="23"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <popUpButtonCell key="cell" type="smallSquare" title="Orientation" bezelStyle="smallSquare" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="border" tag="9" imageScaling="proportionallyDown" inset="2" selectedItem="spr-fU-mLp" id="Vwx-xl-AU3">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="smallSystem"/>
+                        <menu key="menu" title="OtherViews" id="MZd-AP-pGT">
+                            <items>
+                                <menuItem title="Name" tag="3" id="hGe-CR-TES">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="Gr3-bo-Xnt"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Date" tag="4" id="hhQ-hG-cxy">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="1Cx-m1-xmo"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Rating" tag="7" id="gfR-jT-hi6">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="TDh-Y8-sq2"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Flagged" tag="8" id="6HJ-V5-dm4">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="cWH-hG-H1U"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Keywords" tag="5" id="NeJ-l8-VcJ">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="Nh0-N3-Db4"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Caption" tag="6" id="wYd-sa-2e7">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="m8B-I8-hYj"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Orientation" state="on" tag="9" id="spr-fU-mLp">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="Eu5-AK-vCv"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Pixel Size" tag="10" id="6UY-ZR-Y0f">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="Env-wu-8fg"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="File Name" id="WrC-1E-8uJ">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="af1-CG-gcC"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="File Date" state="on" tag="1" id="s5w-T3-Oh6">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="p0L-IZ-Zjj"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="File Size" tag="2" id="fYG-tt-E6I">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="A5W-Xa-2Te"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Altitude" tag="11" id="hCn-CU-7Oj">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="GOP-i1-ywo"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Shutter Speed" tag="12" id="LMX-wU-uOw">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="RLz-le-PLn"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Aperture" tag="13" id="alb-79-yX3">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="rru-ue-VVI"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="ISO Rating" tag="14" id="9xU-vm-sCR">
+                                    <connections>
+                                        <action selector="sortKeyAction:" target="-2" id="KjY-jk-lqU"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem isSeparatorItem="YES" id="Ujm-4M-U5m"/>
+                                <menuItem title="Ascending" tag="1" id="SY2-oL-7Nw">
+                                    <connections>
+                                        <action selector="sortOrderAction:" target="-2" id="dhD-uU-yK8"/>
+                                    </connections>
+                                </menuItem>
+                                <menuItem title="Descending" id="FGh-YS-eD7">
+                                    <connections>
+                                        <action selector="sortOrderAction:" target="-2" id="Lea-cT-8Gr"/>
+                                    </connections>
+                                </menuItem>
+                            </items>
+                            <connections>
+                                <outlet property="delegate" destination="-2" id="RjB-3B-VO7"/>
+                            </connections>
+                        </menu>
+                    </popUpButtonCell>
+                </popUpButton>
             </subviews>
         </customView>
     </objects>
     <resources>
-        <image name="B9CB5A50-D105-4FF2-9078-928D151814F1" width="1" height="1">
+        <image name="902F347A-86D5-46FD-A235-C055EB52EF23" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw

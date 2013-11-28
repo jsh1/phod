@@ -74,6 +74,8 @@
    addObserver:self selector:@selector(gridViewBoundsDidChange:)
    name:NSViewFrameDidChangeNotification object:_gridView];
 
+  [_sortButton selectItemWithTag:[_controller imageSortKey]];
+
   [_titleLabel setTextColor:[PDColor controlTextColor]];
   [_titleLabel setStringValue:@""];
 
@@ -148,6 +150,8 @@
   BOOL enabled = [[_controller selectedImageIndexes] count] != 0;
   [_rotateLeftButton setEnabled:enabled];
   [_rotateRightButton setEnabled:enabled];
+
+  [_sortButton selectItemWithTag:[_controller imageSortKey]];
 }
 
 - (void)gridViewBoundsDidChange:(NSNotification *)note
@@ -193,11 +197,55 @@
   [_gridView scrollToPrimaryAnimated:NO];
 }
 
+- (IBAction)sortKeyAction:(id)sender
+{
+  int key = [sender tag];
+
+  if ([_controller imageSortKey] != key)
+    {
+      [_controller setImageSortKey:key];
+      [_controller resortImageList];
+      [_sortButton selectItemWithTag:key];
+    }
+}
+
+- (IBAction)sortOrderAction:(id)sender
+{
+  BOOL reversed = [sender tag] != 0;
+
+  if ([_controller isImageSortReversed] != reversed)
+    {
+      [_controller setImageSortReversed:reversed];
+      [_controller resortImageList];
+      [_sortButton selectItemWithTag:[_controller imageSortKey]];
+    }
+}
+
 - (IBAction)controlAction:(id)sender
 {
   if (sender == _scaleSlider)
     {
       [_gridView setScale:[sender doubleValue]];
+    }
+}
+
+// NSMenuDelegate methods
+
+- (void)menuNeedsUpdate:(NSMenu *)menu
+{
+  if (menu == _sortMenu)
+    {
+      int key = [_controller imageSortKey];
+      BOOL reversed = [_controller isImageSortReversed];
+
+      for (NSMenuItem *item in [menu itemArray])
+	{
+	  SEL sel = [item action];
+	  if (sel == @selector(sortKeyAction:))
+	    [item setState:[item tag] == key];
+	  else if (sel == @selector(sortOrderAction:))
+	    [item setState:[item tag] == reversed];
+	}
     }
 }
 

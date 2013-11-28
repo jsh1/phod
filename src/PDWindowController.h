@@ -57,6 +57,9 @@ enum PDContentMode
   NSInteger _sidebarMode;
   NSInteger _contentMode;
 
+  int _imageSortKey;
+  BOOL _imageSortReversed;
+
   NSArray *_imageList;
 
   NSIndexSet *_selectedImageIndexes;
@@ -67,6 +70,14 @@ enum PDContentMode
 @property(nonatomic) NSInteger contentMode;
 
 @property(nonatomic, copy) NSArray *imageList;
+
+@property(nonatomic) int imageSortKey;
+@property(nonatomic, getter=isImageSortReversed) BOOL imageSortReversed;
+
+/* Setting the sort key does not change imageList, this method must be
+   called explicitly. (But setting imageList does sort the new array.) */
+
+- (void)resortImageList;
 
 @property(nonatomic, copy) NSIndexSet *selectedImageIndexes;
 @property NSInteger primarySelectionIndex;

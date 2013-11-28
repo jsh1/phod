@@ -24,6 +24,7 @@
 		<key>Photo</key>
 		<array>
 			<string>Name</string>
+			<string>OriginalDate</string>
 			<string>DigitizedDate</string>
 			<string>CameraMake</string>
 			<string>CameraModel</string>
