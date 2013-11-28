@@ -200,8 +200,10 @@
 
 - (CGFloat)minimumSizeOfSubview:(NSView *)subview
 {
-  if ([subview respondsToSelector:@selector(minSize)])
-    return [subview minSize];
+  id delegate = [self delegate];
+
+  if ([delegate respondsToSelector:@selector(splitView:minimumSizeOfSubview:)])
+    return [delegate splitView:self minimumSizeOfSubview:subview];
   else
     return 100;
 }

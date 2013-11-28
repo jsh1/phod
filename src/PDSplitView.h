@@ -44,8 +44,10 @@
 
 @end
 
-@interface NSView (PDSplitView)
+@protocol PDSplitViewDelegate <NSSplitViewDelegate>
+@optional
 
-- (CGFloat)minSize;
+- (CGFloat)splitView:(PDSplitView *)splitView
+    minimumSizeOfSubview:(NSView *)subview;
 
 @end
