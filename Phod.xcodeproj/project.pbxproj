@@ -47,6 +47,7 @@
 		57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A1F182D863E000BF04E /* PDSplitView.m */; };
 		57CE6A2A182D863E000BF04E /* PDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A21182D863E000BF04E /* PDViewController.m */; };
 		57CE6A2B182D863E000BF04E /* PDWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57CE6A23182D863E000BF04E /* PDWindowController.m */; };
+		57D096141846C646005B2AD4 /* PDImageProperty.m in Sources */ = {isa = PBXBuildFile; fileRef = 57D096131846C646005B2AD4 /* PDImageProperty.m */; };
 		57DADC0B1831865C006D0BC1 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 57DADC0A1831865C006D0BC1 /* libsqlite3.dylib */; };
 		57DADC0E1833C40F006D0BC1 /* PDImageGridView.m in Sources */ = {isa = PBXBuildFile; fileRef = 57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */; };
 		57E053B71830576A00123059 /* PDThumbnailLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 57E053B61830576A00123059 /* PDThumbnailLayer.m */; };
@@ -118,6 +119,8 @@
 		57CE6A21182D863E000BF04E /* PDViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDViewController.m; sourceTree = "<group>"; };
 		57CE6A22182D863E000BF04E /* PDWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDWindowController.h; sourceTree = "<group>"; };
 		57CE6A23182D863E000BF04E /* PDWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDWindowController.m; sourceTree = "<group>"; };
+		57D096121846C646005B2AD4 /* PDImageProperty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageProperty.h; sourceTree = "<group>"; };
+		57D096131846C646005B2AD4 /* PDImageProperty.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageProperty.m; sourceTree = "<group>"; };
 		57DADC0A1831865C006D0BC1 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		57DADC0C1833C40F006D0BC1 /* PDImageGridView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageGridView.h; sourceTree = "<group>"; };
 		57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageGridView.m; sourceTree = "<group>"; };
@@ -150,6 +153,8 @@
 				57C18105182F0ED3002B8DB2 /* PDImage.m */,
 				5718E86D183A6CC700D73448 /* PDImageHash.h */,
 				5718E86E183A6CC700D73448 /* PDImageHash.m */,
+				57D096121846C646005B2AD4 /* PDImageProperty.h */,
+				57D096131846C646005B2AD4 /* PDImageProperty.m */,
 			);
 			name = Imaging;
 			sourceTree = "<group>";
@@ -394,6 +399,7 @@
 				57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */,
 				5718E86F183A6CC700D73448 /* PDImageHash.m in Sources */,
 				57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */,
+				57D096141846C646005B2AD4 /* PDImageProperty.m in Sources */,
 				57CE6A2A182D863E000BF04E /* PDViewController.m in Sources */,
 				57CE6A28182D863E000BF04E /* PDLibraryViewController.m in Sources */,
 				57C1810D182FD616002B8DB2 /* PDLibraryDirectory.m in Sources */,

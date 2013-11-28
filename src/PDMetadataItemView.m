@@ -120,10 +120,15 @@
 {
   if ([_imageProperty isEqualToString:@"PixelSize"])
     {
-      double w = [[_metadataView localizedImagePropertyForKey:PDImage_PixelWidth] doubleValue];
-      double h = [[_metadataView localizedImagePropertyForKey:PDImage_PixelHeight] doubleValue];
-      double mp = w * h * 1e-6;
+      double w = [[_metadataView localizedImagePropertyForKey:
+		   PDImage_PixelWidth] doubleValue];
+      double h = [[_metadataView localizedImagePropertyForKey:
+		   PDImage_PixelHeight] doubleValue];
 
+      if (w == 0 || h == 0)
+	return nil;
+
+      double mp = w * h * 1e-6;
       return [NSString stringWithFormat:@"%g x %g (%.1f MP)", w, h, mp];
     }
 
