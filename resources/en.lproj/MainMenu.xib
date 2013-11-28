@@ -449,12 +449,6 @@
                                     <action selector="cycleContentModeAction:" target="-1" id="HdI-Yp-7u8"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Metadata" keyEquivalent="u" id="Tca-cT-Ls7">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="toggleListMetadata:" target="-1" id="1ZJ-dC-fRV"/>
-                                </connections>
-                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="Mxw-Ys-7Qy"/>
                             <menuItem title="Library" tag="1" keyEquivalent="p" id="vlD-5w-38e">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES"/>
@@ -474,13 +468,20 @@
                                     <action selector="setSidebarModeAction:" target="-1" id="g5U-0J-J99"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Cycle Sidebar Mode" keyEquivalent="w" id="W85-Cj-Cyk">
+                            <menuItem title="Cycle Inspector Mode" keyEquivalent="w" id="W85-Cj-Cyk">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="cycleSidebarModeAction:" target="-1" id="wkG-7T-z4o"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Metadata" keyEquivalent="y" id="1T7-Om-LdI">
+                            <menuItem isSeparatorItem="YES" id="Y9S-6s-Me3"/>
+                            <menuItem title="Show Browser Metadata" keyEquivalent="u" id="Tca-cT-Ls7">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleListMetadata:" target="-1" id="1ZJ-dC-fRV"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Show Viewer Metadata" keyEquivalent="y" id="1T7-Om-LdI">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleImageMetadata:" target="-1" id="7ts-wT-u1f"/>
@@ -534,7 +535,28 @@
                                     <action selector="performZoom:" target="-1" id="240"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Fullscreen" keyEquivalent="f" id="8rz-1s-ht3">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleFullScreen:" target="-1" id="0RG-1m-JSr"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="92">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Show Inspector" keyEquivalent="i" id="iwt-9e-y62">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleSidebarAction:" target="-1" id="cay-2H-cSu"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Hide Inspector" tag="1" keyEquivalent="i" id="W7v-1W-lH8">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleSidebarAction:" target="-1" id="D7q-mX-bgV"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="7Fe-zS-hmv">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
                             <menuItem title="Bring All to Front" id="5">
@@ -543,6 +565,9 @@
                                 </connections>
                             </menuItem>
                         </items>
+                        <connections>
+                            <outlet property="delegate" destination="494" id="nwS-WY-EjM"/>
+                        </connections>
                     </menu>
                 </menuItem>
                 <menuItem title="Help" id="490">
@@ -564,6 +589,7 @@
                 <outlet property="_photosMenu" destination="Kzg-7o-s7I" id="pjT-Q7-snq"/>
                 <outlet property="_viewMenu" destination="296" id="X41-F2-AIt"/>
                 <outlet property="_windowController" destination="yai-mr-HWc" id="r0t-6v-zS7"/>
+                <outlet property="_windowMenu" destination="24" id="z9S-Xf-RwJ"/>
             </connections>
         </customObject>
         <customObject id="420" customClass="NSFontManager"/>

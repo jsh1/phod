@@ -24,6 +24,7 @@
 
 #import "PDImageGridView.h"
 
+#import "PDAppDelegate.h"
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
 #import "PDImageListViewController.h"
@@ -141,7 +142,7 @@
   CGFloat width = frame.size.width - GRID_MARGIN*2;
   CGFloat ideal = IMAGE_MIN_SIZE + _scale * (IMAGE_MAX_SIZE - IMAGE_MIN_SIZE);
 
-  _columns = floor(width / ideal);
+  _columns = fmax(1, floor(width / ideal));
   _rows = ([_images count] + (_columns - 1)) / _columns;
   _size = floor((width - GRID_SPACING * (_columns - 1)) / _columns);
 
@@ -350,6 +351,13 @@
 	[[_controller controller] clearSelection];
 
       [self scrollToPrimaryAnimated:YES];
+
+      if ([e type] == NSRightMouseDown
+	  || ([e modifierFlags] & NSControlKeyMask))
+	{
+	  [(PDAppDelegate *)[NSApp delegate]
+	   popUpImageContextMenuWithEvent:e forView:self];
+	}
       break;
 
     case 2:
@@ -357,6 +365,11 @@
 	[[_controller controller] setContentMode:PDContentMode_Image];
       break;
     }
+}
+
+- (void)rightMouseDown:(NSEvent *)e
+{
+  [self mouseDown:e];
 }
 
 - (BOOL)acceptsFirstResponder

@@ -36,6 +36,7 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 {
   [_windowController release];
   [_backgroundActivity release];
+  [_imageContextMenu release];
 
   [super dealloc];
 }
@@ -107,11 +108,23 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
     }
 }
 
+- (void)popUpImageContextMenuWithEvent:(NSEvent *)e forView:(NSView *)view
+{
+  if (_imageContextMenu == nil)
+    {
+      _imageContextMenu = [_photosMenu copy];
+      [_imageContextMenu setDelegate:self];
+    }
+
+  [NSMenu popUpContextMenu:_imageContextMenu withEvent:e forView:view
+   withFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
+}
+
 // NSMenuDelegate methods
 
 - (void)menuNeedsUpdate:(NSMenu *)menu
 {
-  if (menu == _photosMenu)
+  if (menu == _photosMenu || menu == _imageContextMenu)
     {
       for (NSMenuItem *item in [menu itemArray])
 	{
@@ -136,6 +149,17 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 	    [item setState:[_windowController displaysListMetadata]];
 	  else if (sel == @selector(toggleImageMetadata:))
 	    [item setState:[_windowController displaysImageMetadata]];
+	}
+    }
+  else if (menu == _windowMenu)
+    {
+      BOOL sidebarVisible = [_windowController isSidebarVisible];
+
+      for (NSMenuItem *item in [menu itemArray])
+	{
+	  SEL sel = [item action];
+	  if (sel == @selector(toggleSidebarAction:))
+	    [item setHidden:[item tag] != sidebarVisible];
 	}
     }
 }

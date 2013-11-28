@@ -28,11 +28,13 @@ extern NSString *const PDBackgroundActivityDidChange;
 
 @class PDWindowController;
 
-@interface PDAppDelegate : NSObject <NSApplicationDelegate>
+@interface PDAppDelegate : NSObject <NSApplicationDelegate, NSMenuDelegate>
 {
   IBOutlet PDWindowController *_windowController;
   IBOutlet NSMenu *_photosMenu;
+  IBOutlet NSMenu *_imageContextMenu;
   IBOutlet NSMenu *_viewMenu;
+  IBOutlet NSMenu *_windowMenu;
 
   NSMutableSet *_backgroundActivity;
 }
@@ -45,5 +47,7 @@ extern NSString *const PDBackgroundActivityDidChange;
 
 - (void)addBackgroundActivity:(NSString *)name;
 - (void)removeBackgroundActivity:(NSString *)name;
+
+- (void)popUpImageContextMenuWithEvent:(NSEvent *)e forView:(NSView *)view;
 
 @end

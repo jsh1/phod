@@ -676,6 +676,82 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
     }
 }
 
+- (IBAction)toggleSidebarAction:(id)sender
+{
+  NSView *view = [_sidebarView superview];
+
+  [_splitView setSubview:view collapsed:![view isHidden]];
+}
+
+- (BOOL)isSidebarVisible
+{
+  NSView *view = [_sidebarView superview];
+
+  return ![view isHidden];
+}
+
+- (IBAction)setSidebarModeAction:(id)sender
+{
+  if (![self isSidebarVisible])
+    [self toggleSidebarAction:sender];
+
+  if (sender == _sidebarControl)
+    {
+      [self setSidebarMode:[[_sidebarControl cell] tagForSegment:
+			    [_sidebarControl selectedSegment]]];
+    }
+  else
+    [self setSidebarMode:[sender tag]];
+}
+
+- (IBAction)cycleSidebarModeAction:(id)sender
+{
+  if (![self isSidebarVisible])
+    [self toggleSidebarAction:sender];
+
+  NSInteger idx = _sidebarMode + 1;
+  if (idx > PDSidebarMode_Adjustments)
+    idx = PDSidebarMode_Library;
+  [self setSidebarMode:idx];
+}
+
+- (IBAction)setContentModeAction:(id)sender
+{
+  [self setContentMode:[sender tag]];
+}
+
+- (IBAction)cycleContentModeAction:(id)sender
+{
+  NSInteger idx = _contentMode + 1;
+  if (idx > PDContentMode_Image)
+    idx = PDContentMode_List;
+  [self setContentMode:idx];
+}
+
+- (IBAction)toggleListMetadata:(id)sender
+{
+  [(PDImageListViewController *)[self viewControllerWithClass:
+    [PDImageListViewController class]] toggleMetadata:sender];
+}
+
+- (IBAction)toggleImageMetadata:(id)sender
+{
+  [(PDImageViewController *)[self viewControllerWithClass:
+    [PDImageViewController class]] toggleMetadata:sender];
+}
+
+- (BOOL)displaysListMetadata
+{
+  return [(PDImageListViewController *)[self viewControllerWithClass:
+    [PDImageListViewController class]] displaysMetadata];
+}
+
+- (BOOL)displaysImageMetadata
+{
+  return [(PDImageViewController *)[self viewControllerWithClass:
+    [PDImageViewController class]] displaysMetadata];
+}
+
 - (IBAction)setImageRatingAction:(id)sender
 {
   NSNumber *rating = [NSNumber numberWithInt:[sender tag]];
@@ -721,62 +797,6 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   return all_set ? NSOnState : all_clear ? NSOffState : NSMixedState;
 }
 
-- (IBAction)setSidebarModeAction:(id)sender
-{
-  if (sender == _sidebarControl)
-    {
-      [self setSidebarMode:[[_sidebarControl cell] tagForSegment:
-			    [_sidebarControl selectedSegment]]];
-    }
-  else
-    [self setSidebarMode:[sender tag]];
-}
-
-- (IBAction)cycleSidebarModeAction:(id)sender
-{
-  NSInteger idx = _sidebarMode + 1;
-  if (idx > PDSidebarMode_Adjustments)
-    idx = PDSidebarMode_Library;
-  [self setSidebarMode:idx];
-}
-
-- (IBAction)setContentModeAction:(id)sender
-{
-  [self setContentMode:[sender tag]];
-}
-
-- (IBAction)cycleContentModeAction:(id)sender
-{
-  NSInteger idx = _contentMode + 1;
-  if (idx > PDContentMode_Image)
-    idx = PDContentMode_List;
-  [self setContentMode:idx];
-}
-
-- (IBAction)toggleListMetadata:(id)sender
-{
-  [(PDImageListViewController *)[self viewControllerWithClass:
-    [PDImageListViewController class]] toggleMetadata:sender];
-}
-
-- (IBAction)toggleImageMetadata:(id)sender
-{
-  [(PDImageViewController *)[self viewControllerWithClass:
-    [PDImageViewController class]] toggleMetadata:sender];
-}
-
-- (BOOL)displaysListMetadata
-{
-  return [(PDImageListViewController *)[self viewControllerWithClass:
-    [PDImageListViewController class]] displaysMetadata];
-}
-
-- (BOOL)displaysImageMetadata
-{
-  return [(PDImageViewController *)[self viewControllerWithClass:
-    [PDImageViewController class]] displaysMetadata];
-}
-
 - (IBAction)zoomIn:(id)sender
 {
   if (_contentMode == PDContentMode_Image)
@@ -818,17 +838,19 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   }];
 }
 
+/* FIXME: these two tables haven't been verified for the flipped
+   orientations, only for the plain 90 degree rotations. */
+
+static const int rotate_left_map[8] = {8, 5, 6, 7, 2, 1, 4, 3};
+static const int rotate_right_map[8] = {6, 7, 8, 5, 4, 3, 2, 1};
+
 - (IBAction)rotateLeft:(id)sender
 {
-  static const int rotate_left_map[8] = {6, 5, 8, 7, 4, 3, 2, 1};
-
   [self rotateUsingMap:rotate_left_map];
 }
 
 - (IBAction)rotateRight:(id)sender
 {
-  static const int rotate_right_map[8] = {8, 7, 6, 5, 2, 1, 4, 3};
-
   [self rotateUsingMap:rotate_right_map];
 }
 
@@ -858,15 +880,23 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
 // NSSplitViewDelegate methods
 
+- (CGFloat)splitView:(PDSplitView *)view minimumSizeOfSubview:(NSView *)subview
+{
+  if (subview == [_sidebarView superview])
+    return 250;
+  else
+    return 500;
+}
+
 - (BOOL)splitView:(NSSplitView *)view canCollapseSubview:(NSView *)subview
 {
-  return NO;
+  return YES;
 }
 
 - (BOOL)splitView:(NSSplitView *)view shouldCollapseSubview:(NSView *)subview
     forDoubleClickOnDividerAtIndex:(NSInteger)idx
 {
-  return NO;
+  return YES;
 }
 
 - (CGFloat)splitView:(NSSplitView *)view constrainMinCoordinate:(CGFloat)p
@@ -881,7 +911,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (CGFloat)splitView:(NSSplitView *)view constrainMaxCoordinate:(CGFloat)p
     ofSubviewAt:(NSInteger)idx
 {
-  NSView *subview = [[view subviews] objectAtIndex:idx];
+  NSView *subview = [[view subviews] objectAtIndex:idx+1];
   CGFloat min_size = [(PDSplitView *)view minimumSizeOfSubview:subview];
 
   return p - min_size;

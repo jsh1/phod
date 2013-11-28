@@ -46,7 +46,6 @@ enum PDContentMode
 
 @interface PDWindowController : NSWindowController <NSSplitViewDelegate>
 {
-  IBOutlet NSToolbar *_toolbar;
   IBOutlet PDSplitView *_splitView;
   IBOutlet NSSegmentedControl *_sidebarControl;
   IBOutlet NSView *_sidebarView;
@@ -104,11 +103,8 @@ enum PDContentMode
 - (void)saveWindowState;
 - (void)applySavedWindowState;
 
-- (IBAction)setImageRatingAction:(id)sender;
-- (IBAction)addImageRatingAction:(id)sender;
-
-- (IBAction)toggleFlaggedAction:(id)sender;
-- (NSInteger)flaggedState;
+- (IBAction)toggleSidebarAction:(id)sender;
+- (BOOL)isSidebarVisible;
 
 - (IBAction)setSidebarModeAction:(id)sender;
 - (IBAction)cycleSidebarModeAction:(id)sender;
@@ -121,6 +117,12 @@ enum PDContentMode
 
 - (BOOL)displaysListMetadata;
 - (BOOL)displaysImageMetadata;
+
+- (IBAction)setImageRatingAction:(id)sender;
+- (IBAction)addImageRatingAction:(id)sender;
+
+- (IBAction)toggleFlaggedAction:(id)sender;
+- (NSInteger)flaggedState;
 
 - (IBAction)zoomIn:(id)sender;
 - (IBAction)zoomOut:(id)sender;

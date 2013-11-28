@@ -42,6 +42,7 @@
 			<string>FocusMode</string>
 			<string>ProfileName</string>
 			<string>PixelSize</string>
+			<string>Orientation</string>
 		</array>
 		<key>GPS</key>
 		<array>
