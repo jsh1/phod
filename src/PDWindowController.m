@@ -307,6 +307,9 @@ wasFirstResponder(NSView *view)
     {
       _predicatePanelController = [[PDPredicatePanelController alloc] init];
 
+      if (_imagePredicate != nil)
+	[_predicatePanelController setPredicate:_imagePredicate];
+
       [[NSNotificationCenter defaultCenter] addObserver:self
        selector:@selector(predicateDidChange:)
        name:PDPredicateDidChange object:_predicatePanelController];
@@ -397,6 +400,8 @@ wasFirstResponder(NSView *view)
     {
       [_imagePredicate release];
       _imagePredicate = [pred copy];
+
+      [_predicatePanelController setPredicate:_imagePredicate];
 
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDImagePredicateDidChange object:self];

@@ -730,6 +730,17 @@ static NSOperationQueue *_narrowQueue;
 	  value = [NSNumber numberWithUnsignedLong:
 		   file_mtime([self imagePath])];
 	}
+      else if ([key isEqualToString:PDImage_FileSize])
+	{
+	  value = [NSNumber numberWithUnsignedLong:
+		   file_size([self imagePath])];
+	}
+      else if ([key isEqualToString:PDImage_Rejected])
+	{
+	  value = [self imagePropertyForKey:PDImage_Rating];
+	  if (value != nil)
+	    value = [NSNumber numberWithBool:[value intValue] < 0];
+	}
     }
 
   if ([value isKindOfClass:[NSNull class]])

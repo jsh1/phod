@@ -37,7 +37,15 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
 - (id)init
 {
-  return [super initWithWindow:nil];
+  self = [super initWithWindow:nil];
+  if (self == nil)
+    return nil;
+
+  _predicate = [[NSCompoundPredicate andPredicateWithSubpredicates:
+		@[[NSPredicate predicateWithFormat:@"%K >= %@",
+		   PDImage_Rating, @0]]] retain];
+
+  return self;
 }
 
 - (void)dealloc
@@ -79,8 +87,7 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 			  @(NSContainsPredicateOperatorType)];
 
   NSPredicateEditorRowTemplate *string_template
-    = [[NSPredicateEditorRowTemplate alloc]
-       initWithLeftExpressions:string_keys
+    = [[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:string_keys
        rightExpressionAttributeType:NSStringAttributeType
        modifier:NSDirectPredicateModifier operators:string_ops
        options:(NSCaseInsensitivePredicateOption
@@ -89,7 +96,7 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
   NSMutableArray *numeric_keys = [NSMutableArray array];
   for (NSString *key in @[PDImage_FileSize, PDImage_PixelWidth,
 			  PDImage_PixelHeight, PDImage_Rating,
-			  PDImage_Flagged, PDImage_Altitude,
+			  PDImage_Altitude,
 			  PDImage_Contrast, PDImage_Direction,
 			  PDImage_ExposureBias, PDImage_ExposureLength,
 			  PDImage_FNumber, PDImage_FocalLength,
@@ -109,10 +116,28 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 			   @(NSGreaterThanOrEqualToPredicateOperatorType)];
 
   NSPredicateEditorRowTemplate *numeric_template
-    = [[NSPredicateEditorRowTemplate alloc]
-       initWithLeftExpressions:numeric_keys
-       rightExpressionAttributeType:NSDoubleAttributeType
+    = [[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:
+       numeric_keys rightExpressionAttributeType:NSDoubleAttributeType
        modifier:NSDirectPredicateModifier operators:numeric_ops options:0];
+
+  NSMutableArray *bool_keys = [NSMutableArray array];
+  for (NSString *key in @[PDImage_Flagged, PDImage_Rejected])
+    {
+      [bool_keys addObject:[NSExpression expressionForKeyPath:key]];
+    }
+
+  NSArray *bool_values = @[[NSExpression expressionForConstantValue:
+			    [NSNumber numberWithBool:NO]],
+			   [NSExpression expressionForConstantValue:
+			    [NSNumber numberWithBool:YES]]];
+
+  NSArray *bool_ops = @[@(NSEqualToPredicateOperatorType),
+			   @(NSNotEqualToPredicateOperatorType)];
+
+  NSPredicateEditorRowTemplate *bool_template
+    = [[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:bool_keys
+       rightExpressions:bool_values modifier:NSDirectPredicateModifier
+       operators:bool_ops options:0];
 
   NSMutableArray *date_keys = [NSMutableArray array];
   for (NSString *key in @[PDImage_FileDate, PDImage_OriginalDate,
@@ -124,22 +149,20 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
   NSArray *date_ops = numeric_ops;
 
   NSPredicateEditorRowTemplate *date_template
-    = [[NSPredicateEditorRowTemplate alloc]
-       initWithLeftExpressions:date_keys
+    = [[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:date_keys
        rightExpressionAttributeType:NSDateAttributeType
        modifier:NSDirectPredicateModifier operators:date_ops options:0];
 
   [_predicateEditor setRowTemplates:
-   @[compound_template, string_template, numeric_template, date_template]];
+   @[compound_template, string_template, numeric_template, bool_template,
+     date_template]];
 
   [compound_template release];
   [string_template release];
   [numeric_template release];
   [date_template release];
 
-  [_predicateEditor setObjectValue:
-   [NSCompoundPredicate orPredicateWithSubpredicates:
-    @[[NSPredicate predicateWithFormat:@"%K > %@", @"Rating", @1]]]];
+  [_predicateEditor setObjectValue:_predicate];
 }
 
 - (NSPredicate *)predicate
@@ -149,6 +172,11 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
 - (void)setPredicate:(NSPredicate *)obj
 {
+  /* Make sure it's always compound, else it can't be aggreated. */
+
+  if (obj != nil && ![obj isKindOfClass:[NSCompoundPredicate class]])
+    obj = [NSCompoundPredicate andPredicateWithSubpredicates:@[obj]];
+
   if (_predicate != obj)
     {
       [_predicate release];

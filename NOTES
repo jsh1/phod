@@ -45,6 +45,17 @@ Issues
 
 8. Save filters/queries as smart folders in source list
 
+  The position of the filter item in the library hierarchy controls
+  what it filters. E.g. top-level == filter everything, subitem of a
+  directory == only filter that directory.
+
+  Once created, selecting the smart folder item activates the
+  associated image list and predicate. Opening the predicate editor
+  shows the current filter, but editing the predicate doesn't
+  immediately commit the changes back to the smart folder. Only once
+  the OK button has been clicked will the smart folder's permanent
+  state be updated, cancelling returns it to the original state.
+
 9. "Preview" mode where the fullsize image isn't loaded?
 
 10. Viewer should be able to display multiple images?

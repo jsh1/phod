@@ -162,9 +162,6 @@ typedef int PDImageCompareKey;
 extern NSString * const PDImage_Name;		// NSString
 extern NSString * const PDImage_ActiveType;	// NSString
 extern NSString * const PDImage_FileTypes;	// NSArray<NSString>
-extern NSString * const PDImage_FileName;	// NSString
-extern NSString * const PDImage_FileSize;	// NSNumber
-extern NSString * const PDImage_FileDate;	// NSNumber
 extern NSString * const PDImage_PixelWidth;	// NSNumber
 extern NSString * const PDImage_PixelHeight;	// NSNumber
 extern NSString * const PDImage_Orientation;	// NSNumber
@@ -209,6 +206,13 @@ extern NSString * const PDImage_SceneCaptureType; // NSNumber
 extern NSString * const PDImage_SceneType;	// NSNumber
 extern NSString * const PDImage_Sharpness;	// NSNumber
 extern NSString * const PDImage_WhiteBalance;	// NSNumber
+
+/* Read-only meta-properties for filtering. */
+
+extern NSString * const PDImage_FileName;	// NSString
+extern NSString * const PDImage_FileDate;	// NSNumber
+extern NSString * const PDImage_FileSize;	// NSNumber
+extern NSString * const PDImage_Rejected;	// NSNumber<bool>
 
 /* Hosted image options. */
 

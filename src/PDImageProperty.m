@@ -355,53 +355,54 @@ typedef struct {
 
 static const type_pair type_map[] =
 {
-  {"ActiveType", type_string},
-  {"Altitude", type_metres},
-  {"CameraMake", type_string},
-  {"CameraModel", type_string},
-  {"CameraSoftware", type_string},
-  {"Caption", type_string},
-  {"ColorModel", type_string},
-  {"Contrast", type_contrast},
-  {"Copyright", type_string},
-  {"DigitizedDate", type_date},
-  {"Direction", type_direction},
-  {"DirectionRef", type_string},
-  {"ExposureBias", type_exposure_bias},
-  {"ExposureLength", type_duration},
-  {"ExposureMode", type_exposure_mode},
-  {"ExposureProgram", type_exposure_program},
-  {"FNumber", type_fstop},
-  {"FileDate", type_date},
-  {"FileSize", type_bytes},
-  {"FileTypes", type_string_array},
-  {"Flagged", type_bool},
-  {"Flash", type_flash_mode},
-  {"FlashCompensation", type_flash_compensation},
-  {"FocalLength", type_millimetres},
-  {"FocalLength35mm", type_millimetres},
-  {"FocusMode", type_focus_mode},
-  {"ISOSpeed", type_iso_speed},
-  {"ImageStabilization", type_image_stabilization_mode},
-  {"Keywords", type_string_array},
-  {"Latitude", type_latitude},
-  {"LightSource", type_light_source},
-  {"Longitude", type_longitude},
-  {"MaxAperture", type_fstop},		/* fixme: "APEX" aperture? */
-  {"MeteringMode", type_metering_mode},
-  {"Name", type_string},
-  {"Orientation", type_orientation},
-  {"OriginalDate", type_date},
-  {"PixelHeight", type_pixels},
-  {"PixelWidth", type_pixels},
-  {"ProfileName", type_string},
-  {"Rating", type_rating},
-  {"Saturation", type_saturation},
-  {"SceneCaptureType", type_scene_capture_type},
-  {"SceneType", type_scene_type},
-  {"Sharpness", type_sharpness},
-  {"Title", type_string},
-  {"WhiteBalance", type_white_balance},
+  {"active_type", type_string},
+  {"altitude", type_metres},
+  {"camera_make", type_string},
+  {"camera_model", type_string},
+  {"camera_software", type_string},
+  {"caption", type_string},
+  {"color_model", type_string},
+  {"contrast", type_contrast},
+  {"copyright", type_string},
+  {"digitized_date", type_date},
+  {"direction", type_direction},
+  {"direction_ref", type_string},
+  {"exposure_bias", type_exposure_bias},
+  {"exposure_length", type_duration},
+  {"exposure_mode", type_exposure_mode},
+  {"exposure_program", type_exposure_program},
+  {"f_number", type_fstop},
+  {"file_date", type_date},
+  {"file_size", type_bytes},
+  {"file_types", type_string_array},
+  {"flagged", type_bool},
+  {"flash", type_flash_mode},
+  {"flash_compensation", type_flash_compensation},
+  {"focal_length", type_millimetres},
+  {"focal_length_35mm", type_millimetres},
+  {"focus_mode", type_focus_mode},
+  {"iso_speed", type_iso_speed},
+  {"image_stabilization", type_image_stabilization_mode},
+  {"keywords", type_string_array},
+  {"latitude", type_latitude},
+  {"light_source", type_light_source},
+  {"longitude", type_longitude},
+  {"max_aperture", type_fstop},		/* fixme: "APEX" aperture? */
+  {"metering_mode", type_metering_mode},
+  {"name", type_string},
+  {"orientation", type_orientation},
+  {"original_date", type_date},
+  {"pixel_height", type_pixels},
+  {"pixel_width", type_pixels},
+  {"profile_name", type_string},
+  {"rating", type_rating},
+  {"rejected", type_bool},
+  {"saturation", type_saturation},
+  {"scene_capture_type", type_scene_capture_type},
+  {"scene_type", type_scene_type},
+  {"sharpness", type_sharpness},
+  {"title", type_string},
+  {"white_balance", type_white_balance},
 };
 
 static inline property_type
@@ -520,7 +521,7 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
       const char *str;
 
     case type_bool:
-      return [value boolValue] ? @"True" : @"False";
+      return [value intValue] != 0 ? @"True" : @"False";
 
     case type_contrast:
       return array_lookup(value, contrast, N_ELEMENTS(contrast));
@@ -615,20 +616,18 @@ PDImageExpressionValues(PDImage *im)
 - (id)valueForKey:(id)key
 {
   id value = [_image imagePropertyForKey:key];
-  if (value == nil)
-    return nil;
 
   switch (lookup_property_type([key UTF8String]))
     {
     case type_bool:
-      return [NSNumber numberWithInt:[value boolValue] ? 1 : 0];
+      return [NSNumber numberWithBool:[value intValue] != 0];
 
     case type_date:
       return PDImageParseEXIFDateString(value);
       break;
 
     case type_string:
-      return value;
+      return value != nil ? value : @"";
 
     case type_string_array:
       return [(NSArray *)value componentsJoinedByString:@" "];
@@ -673,8 +672,8 @@ PDImageExpressionValues(PDImage *im)
     case type_rating:
     case type_saturation:
     case type_sharpness:
-      /* Numeric values remain numeric. */
-      return value;
+      /* Numeric values remain numeric, nil = zero. */
+      return value != nil ? value : [NSNumber numberWithInt:0];
 
     case type_unknown:
       break;
@@ -716,54 +715,56 @@ PDImageParseEXIFDateString(NSString *str)
 
 /* Property string definitions. */
 
-NSString * const PDImage_Name = @"Name";
-NSString * const PDImage_ActiveType = @"ActiveType";
-NSString * const PDImage_FileTypes = @"FileTypes";
-NSString * const PDImage_FileName = @"FileName";
-NSString * const PDImage_FileSize = @"FileSize";
-NSString * const PDImage_FileDate = @"FileDate";
-NSString * const PDImage_PixelWidth = @"PixelWidth";
-NSString * const PDImage_PixelHeight = @"PixelHeight";
-NSString * const PDImage_Orientation = @"Orientation";
-NSString * const PDImage_ColorModel = @"ColorModel";
-NSString * const PDImage_ProfileName = @"ProfileName";
+NSString * const PDImage_Name = @"name";
+NSString * const PDImage_ActiveType = @"active_type";
+NSString * const PDImage_FileTypes = @"file_types";
+NSString * const PDImage_PixelWidth = @"pixel_width";
+NSString * const PDImage_PixelHeight = @"pixel_height";
+NSString * const PDImage_Orientation = @"orientation";
+NSString * const PDImage_ColorModel = @"color_model";
+NSString * const PDImage_ProfileName = @"profile_name";
 
-NSString * const PDImage_Title = @"Title";
-NSString * const PDImage_Caption = @"Caption";
-NSString * const PDImage_Keywords = @"Keywords";
-NSString * const PDImage_Copyright = @"Copyright";
-NSString * const PDImage_Rating = @"Rating";
-NSString * const PDImage_Flagged = @"Flagged";
+NSString * const PDImage_Title = @"title";
+NSString * const PDImage_Caption = @"caption";
+NSString * const PDImage_Keywords = @"keywords";
+NSString * const PDImage_Copyright = @"copyright";
+NSString * const PDImage_Rating = @"rating";
+NSString * const PDImage_Flagged = @"flagged";
 
-NSString * const PDImage_Altitude = @"Altitude";
-NSString * const PDImage_Aperture = @"Aperture";
-NSString * const PDImage_CameraMake = @"CameraMake";
-NSString * const PDImage_CameraModel = @"CameraModel";
-NSString * const PDImage_CameraSoftware = @"CameraSoftware";
-NSString * const PDImage_Contrast = @"Contrast";
-NSString * const PDImage_DigitizedDate = @"DigitizedDate";
-NSString * const PDImage_Direction = @"Direction";
-NSString * const PDImage_DirectionRef = @"DirectionRef";
-NSString * const PDImage_ExposureBias = @"ExposureBias";
-NSString * const PDImage_ExposureLength = @"ExposureLength";
-NSString * const PDImage_ExposureMode = @"ExposureMode";
-NSString * const PDImage_ExposureProgram = @"ExposureProgram";
-NSString * const PDImage_Flash = @"Flash";
-NSString * const PDImage_FlashCompensation = @"FlashCompensation";
-NSString * const PDImage_FNumber = @"FNumber";
-NSString * const PDImage_FocalLength = @"FocalLength";
-NSString * const PDImage_FocalLength35mm = @"FocalLength35mm";
-NSString * const PDImage_FocusMode = @"FocusMode";
-NSString * const PDImage_ISOSpeed = @"ISOSpeed";
-NSString * const PDImage_ImageStabilization = @"ImageStabilization";
-NSString * const PDImage_Latitude = @"Latitude";
-NSString * const PDImage_LightSource = @"LightSource";
-NSString * const PDImage_Longitude = @"Longitude";
-NSString * const PDImage_MaxAperture = @"MaxAperture";
-NSString * const PDImage_MeteringMode = @"MeteringMode";
-NSString * const PDImage_OriginalDate = @"OriginalDate";
-NSString * const PDImage_Saturation = @"Saturation";
-NSString * const PDImage_SceneCaptureType = @"SceneCaptureType";
-NSString * const PDImage_SceneType = @"SceneType";
-NSString * const PDImage_Sharpness = @"Sharpness";
-NSString * const PDImage_WhiteBalance = @"WhiteBalance";
+NSString * const PDImage_Altitude = @"altitude";
+NSString * const PDImage_Aperture = @"aperture";
+NSString * const PDImage_CameraMake = @"camera_make";
+NSString * const PDImage_CameraModel = @"camera_model";
+NSString * const PDImage_CameraSoftware = @"camera_software";
+NSString * const PDImage_Contrast = @"contrast";
+NSString * const PDImage_DigitizedDate = @"digitized_date";
+NSString * const PDImage_Direction = @"direction";
+NSString * const PDImage_DirectionRef = @"direction_ref";
+NSString * const PDImage_ExposureBias = @"exposure_bias";
+NSString * const PDImage_ExposureLength = @"exposure_length";
+NSString * const PDImage_ExposureMode = @"exposure_mode";
+NSString * const PDImage_ExposureProgram = @"exposure_program";
+NSString * const PDImage_Flash = @"flash";
+NSString * const PDImage_FlashCompensation = @"flash_compensation";
+NSString * const PDImage_FNumber = @"f_number";
+NSString * const PDImage_FocalLength = @"focal_length";
+NSString * const PDImage_FocalLength35mm = @"focal_length_35mm";
+NSString * const PDImage_FocusMode = @"focus_mode";
+NSString * const PDImage_ISOSpeed = @"iso_speed";
+NSString * const PDImage_ImageStabilization = @"image_stabilization";
+NSString * const PDImage_Latitude = @"latitude";
+NSString * const PDImage_LightSource = @"light_source";
+NSString * const PDImage_Longitude = @"longitude";
+NSString * const PDImage_MaxAperture = @"max_aperture";
+NSString * const PDImage_MeteringMode = @"metering_mode";
+NSString * const PDImage_OriginalDate = @"original_date";
+NSString * const PDImage_Saturation = @"saturation";
+NSString * const PDImage_SceneCaptureType = @"scene_capture_type";
+NSString * const PDImage_SceneType = @"scene_type";
+NSString * const PDImage_Sharpness = @"sharpness";
+NSString * const PDImage_WhiteBalance = @"white_balance";
+
+NSString * const PDImage_FileName = @"file_name";
+NSString * const PDImage_FileDate = @"file_date";
+NSString * const PDImage_FileSize = @"file_size";
+NSString * const PDImage_Rejected = @"rejected";

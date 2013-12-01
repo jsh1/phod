@@ -118,7 +118,7 @@
 
 - (NSString *)fieldString
 {
-  if ([_imageProperty isEqualToString:@"PixelSize"])
+  if ([_imageProperty isEqualToString:@"pixel_size"])
     {
       double w = [[_metadataView localizedImagePropertyForKey:
 		   PDImage_PixelWidth] doubleValue];

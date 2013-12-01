@@ -10,46 +10,46 @@
 	<dict>
 		<key>General</key>
 		<array>
-			<string>Name</string>
-			<string>Rating</string>
-			<string>Title</string>
-			<string>Caption</string>
-			<string>Keywords</string>
-			<string>Copyright</string>
-			<string>DigitizedDate</string>
-			<string>PixelSize</string>
-			<string>FileSize</string>
-			<string>Path</string>
+			<string>name</string>
+			<string>rating</string>
+			<string>title</string>
+			<string>caption</string>
+			<string>keywords</string>
+			<string>copyright</string>
+			<string>digitized_date</string>
+			<string>pixel_size</string>
+			<string>file_size</string>
+			<string>file_path</string>
 		</array>
 		<key>Photo</key>
 		<array>
-			<string>Name</string>
-			<string>OriginalDate</string>
-			<string>DigitizedDate</string>
-			<string>CameraMake</string>
-			<string>CameraModel</string>
-			<string>ISOSpeed</string>
-			<string>FocalLength</string>
-			<string>FocalLength35mm</string>
-			<string>ExposureBias</string>
-			<string>FNumber</string>
-			<string>ExposureLength</string>
-			<string>Flash</string>
-			<string>WhiteBalance</string>
-			<string>ExposureProgram</string>
-			<string>MeteringMode</string>
-			<string>ExposureMode</string>
-			<string>FocusMode</string>
-			<string>ProfileName</string>
-			<string>PixelSize</string>
-			<string>Orientation</string>
+			<string>name</string>
+			<string>original_date</string>
+			<string>digitized_date</string>
+			<string>camera_make</string>
+			<string>camera_model</string>
+			<string>iso_speed</string>
+			<string>Focal_Length</string>
+			<string>focal_length_35mm</string>
+			<string>exposure_bias</string>
+			<string>f_number</string>
+			<string>exposure_length</string>
+			<string>flash</string>
+			<string>white_balance</string>
+			<string>exposure_program</string>
+			<string>metering_mode</string>
+			<string>exposure_mode</string>
+			<string>focus_mode</string>
+			<string>profile_name</string>
+			<string>pixel_size</string>
+			<string>orientation</string>
 		</array>
 		<key>GPS</key>
 		<array>
-			<string>Latitude</string>
-			<string>Longitude</string>
-			<string>Altitude</string>
-			<string>Direction</string>
+			<string>latitude</string>
+			<string>longitude</string>
+			<string>altitude</string>
+			<string>direction</string>
 		</array>
 	</dict>
 	<key>PDMetadataGroupOrder</key>
