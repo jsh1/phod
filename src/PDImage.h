@@ -109,6 +109,11 @@ typedef int PDImageCompareKey;
 + (NSString *)localizedNameOfImageProperty:(NSString *)key;
 - (NSString *)localizedImagePropertyForKey:(NSString *)key;
 
+/* For use with NSExpression/NSPredicate -- a KVC'able object whose
+   keys look up the formatted image properties. */
+
+- (id)expressionValues;
+
 /* Convenience accessors for misc image properties. */
 
 @property(nonatomic, readonly) NSString *name;
@@ -157,7 +162,9 @@ typedef int PDImageCompareKey;
 extern NSString * const PDImage_Name;		// NSString
 extern NSString * const PDImage_ActiveType;	// NSString
 extern NSString * const PDImage_FileTypes;	// NSArray<NSString>
+extern NSString * const PDImage_FileName;	// NSString
 extern NSString * const PDImage_FileSize;	// NSNumber
+extern NSString * const PDImage_FileDate;	// NSNumber
 extern NSString * const PDImage_PixelWidth;	// NSNumber
 extern NSString * const PDImage_PixelHeight;	// NSNumber
 extern NSString * const PDImage_Orientation;	// NSNumber

@@ -33,9 +33,11 @@
 #import "PDInfoViewController.h"
 #import "PDSplitView.h"
 #import "PDLibraryViewController.h"
+#import "PDPredicatePanelController.h"
 
 NSString *const PDImageListDidChange = @"PDImageListDidChange";
 NSString *const PDSelectionDidChange = @"PDSelectionDidChange";
+NSString *const PDImagePredicateDidChange = @"PDImagePredicateDidChange";
 
 @implementation PDWindowController
 
@@ -77,6 +79,7 @@ NSString *const PDSelectionDidChange = @"PDSelectionDidChange";
   _imageSortReversed = YES;
 
   _imageList = [[NSArray alloc] init];
+  _filteredImageList = [_imageList retain];
 
   _primarySelectionIndex = -1;
   _selectedImageIndexes = [[NSIndexSet alloc] init];
@@ -89,8 +92,11 @@ NSString *const PDSelectionDidChange = @"PDSelectionDidChange";
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [NSRunLoop cancelPreviousPerformRequestsWithTarget:self];
 
+  [_predicatePanelController release];
   [_viewControllers release];
   [_imageList release];
+  [_imagePredicate release];
+  [_filteredImageList release];
   [_selectedImageIndexes release];
 
   [super dealloc];
@@ -295,6 +301,42 @@ wasFirstResponder(NSView *view)
     }
 }
 
+- (PDPredicatePanelController *)predicatePanelController
+{
+  if (_predicatePanelController == nil)
+    {
+      _predicatePanelController = [[PDPredicatePanelController alloc] init];
+
+      [[NSNotificationCenter defaultCenter] addObserver:self
+       selector:@selector(predicateDidChange:)
+       name:PDPredicateDidChange object:_predicatePanelController];
+    }
+
+  return _predicatePanelController;
+}
+
+- (void)predicateDidChange:(NSNotification *)note
+{
+  [self setImagePredicate:[_predicatePanelController predicate]];
+  [self rebuildImageList];
+}
+
+- (NSArray *)filteredImageList:(NSArray *)array
+{
+  if (_imagePredicate == nil)
+    return array;
+
+  NSMutableArray *ret = [NSMutableArray array];
+
+  for (PDImage *im in array)
+    {
+      if ([_imagePredicate evaluateWithObject:[im expressionValues]])
+	[ret addObject:im];
+    }
+
+  return ret;
+}
+
 - (NSArray *)sortedImageList:(NSArray *)array
 {
   __block NSArray *ret = nil;
@@ -328,38 +370,63 @@ wasFirstResponder(NSView *view)
   return _imageList;
 }
 
-- (void)_setImageList:(NSArray *)array
-{
-  NSArray *selected_images = [[self selectedImages] copy];
-  PDImage *primary_image = [[self primarySelectedImage] retain];
-
-  [_imageList release];
-  _imageList = [array copy];
-
-  [[NSNotificationCenter defaultCenter]
-   postNotificationName:PDImageListDidChange object:self];
-
-  [self setSelectedImages:selected_images primary:primary_image];
-
-  [selected_images release];
-  [primary_image release];
-}
-
 - (void)setImageList:(NSArray *)array
 {
-  if (_imageList != array)
+  if (![_imageList isEqual:array])
     {
-      [self _setImageList:[self sortedImageList:array]];
+      [_imageList release];
+      _imageList = [array copy];
+
+      [self rebuildImageList];
     }
 }
 
-- (void)resortImageList
+- (NSPredicate *)imagePredicateWithFormat:(NSString *)str
 {
-  NSArray *array = [self sortedImageList:_imageList];
+  return [[self predicatePanelController] predicateWithFormat:str];
+}
 
-  if (![array isEqual:_imageList])
+- (NSPredicate *)imagePredicate
+{
+  return _imagePredicate;
+}
+
+- (void)setImagePredicate:(NSPredicate *)pred
+{
+  if (_imagePredicate != pred)
     {
-      [self _setImageList:array];
+      [_imagePredicate release];
+      _imagePredicate = [pred copy];
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImagePredicateDidChange object:self];
+    }
+}
+
+- (NSArray *)filteredImageList
+{
+  return _filteredImageList;
+}
+
+- (void)rebuildImageList
+{
+  NSArray *array = [self sortedImageList:[self filteredImageList:_imageList]];
+
+  if (![array isEqual:_filteredImageList])
+    {
+      NSArray *selected_images = [[self selectedImages] copy];
+      PDImage *primary_image = [[self primarySelectedImage] retain];
+
+      [_filteredImageList release];
+      _filteredImageList = [array copy];
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImageListDidChange object:self];
+
+      [self setSelectedImages:selected_images primary:primary_image];
+
+      [selected_images release];
+      [primary_image release];
     }
 }
 
@@ -498,28 +565,31 @@ convert_array_to_index_set(NSArray *array, NSArray *image_list)
 
 - (NSArray *)selectedImages
 {
-  return convert_index_set_to_array(_selectedImageIndexes, _imageList);
+  return convert_index_set_to_array(_selectedImageIndexes, _filteredImageList);
 }
 
 - (void)setSelectedImages:(NSArray *)array
 {
-  [self setSelectedImageIndexes:convert_array_to_index_set(array, _imageList)];
+  [self setSelectedImageIndexes:
+   convert_array_to_index_set(array, _filteredImageList)];
 }
 
 - (PDImage *)primarySelectedImage
 {
-  return convert_index_to_image(_primarySelectionIndex, _imageList);
+  return convert_index_to_image(_primarySelectionIndex, _filteredImageList);
 }
 
 - (void)setPrimarySelectedImage:(PDImage *)im
 {
-  [self setPrimarySelectionIndex:convert_image_to_index(im, _imageList)];
+  [self setPrimarySelectionIndex:
+   convert_image_to_index(im, _filteredImageList)];
 }
 
 - (void)setSelectedImages:(NSArray *)array primary:(PDImage *)im
 {
-  [self setSelectedImageIndexes:convert_array_to_index_set(array, _imageList)
-   primary:convert_image_to_index(im, _imageList)];
+  [self setSelectedImageIndexes:
+   convert_array_to_index_set(array, _filteredImageList)
+   primary:convert_image_to_index(im, _filteredImageList)];
 }
 
 - (void)clearSelection
@@ -529,7 +599,7 @@ convert_array_to_index_set(NSArray *array, NSArray *image_list)
 
 - (void)selectImage:(PDImage *)image withEvent:(NSEvent *)e;
 {
-  NSInteger idx = [_imageList indexOfObjectIdenticalTo:image];
+  NSInteger idx = [_filteredImageList indexOfObjectIdenticalTo:image];
 
   if (idx != NSNotFound)
     {
@@ -606,7 +676,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (void)movePrimarySelectionRight:(NSInteger)delta
     byExtendingSelection:(BOOL)extend
 {
-  NSInteger count = [_imageList count];
+  NSInteger count = [_filteredImageList count];
   if (count == 0)
     return;
 
@@ -632,7 +702,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (void)movePrimarySelectionDown:(NSInteger)delta rows:(NSInteger)rows
     columns:(NSInteger)cols byExtendingSelection:(BOOL)extend
 {
-  NSInteger count = [_imageList count];
+  NSInteger count = [_filteredImageList count];
   if (count == 0)
     return;
 
@@ -672,7 +742,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   for (idx = [_selectedImageIndexes firstIndex]; idx != NSNotFound;
        idx = [_selectedImageIndexes indexGreaterThanIndex:idx])
     {
-      block([_imageList objectAtIndex:idx]);
+      block([_filteredImageList objectAtIndex:idx]);
     }
 }
 
@@ -750,6 +820,16 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 {
   return [(PDImageViewController *)[self viewControllerWithClass:
     [PDImageViewController class]] displaysMetadata];
+}
+
+- (IBAction)showPredicatePanel:(id)sender
+{
+  [[self predicatePanelController] showWindow:self];
+}
+
+- (IBAction)performFindPanelAction:(id)sender
+{
+  [self showPredicatePanel:sender];
 }
 
 - (IBAction)setImageRatingAction:(id)sender

@@ -58,7 +58,7 @@
 - (void)updateImage
 {
   NSInteger idx = [_controller primarySelectionIndex];
-  NSArray *images = [_controller imageList];
+  NSArray *images = [_controller filteredImageList];
   NSInteger count = [images count];
 
   if (idx >= 0 && idx < count)

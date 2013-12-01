@@ -33,6 +33,8 @@
   IBOutlet NSPopUpButton *_sortButton;
   IBOutlet NSMenu *_sortMenu;
   IBOutlet NSTextField *_titleLabel;
+  IBOutlet NSSearchField *_searchField;
+  IBOutlet NSButton *_predicateButton;
   IBOutlet NSButton *_rotateLeftButton;
   IBOutlet NSButton *_rotateRightButton;
   IBOutlet NSSlider *_scaleSlider;

@@ -2,7 +2,9 @@
 "Name" = "Name";
 "ActiveType" = "Active Type";
 "FileTypes" = "File Types";
+"FileName" = "File Name";
 "FileSize" = "File Size";
+"FileDate" = "File Date";
 "PixelWidth" = "Pixel Width";
 "PixelHeight" = "Pixel Height";
 "PixelSize" = "Pixel Size";

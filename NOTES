@@ -38,7 +38,10 @@ Issues
 
 7. Custom image list filters
 
-  - Normal "build a query" style UI
+  Normal "build a query" style UI (use NSPredicate and its editor).
+
+  RESOLVED: implemented. But may create a better editing UI later,
+  NSPredicateEditor is somewhat clunky.
 
 8. Save filters/queries as smart folders in source list
 

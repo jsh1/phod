@@ -28,6 +28,13 @@
 
 #define N_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
 
+CA_HIDDEN @interface PDImageExpressionObject : NSObject
+{
+@public
+  PDImage *_image;
+}
+@end
+
 /* Converting ImageIO properties dictionary to our format. */
 
 static CFDictionaryRef
@@ -365,6 +372,7 @@ static const type_pair type_map[] =
   {"ExposureMode", type_exposure_mode},
   {"ExposureProgram", type_exposure_program},
   {"FNumber", type_fstop},
+  {"FileDate", type_date},
   {"FileSize", type_bytes},
   {"FileTypes", type_string_array},
   {"Flagged", type_bool},
@@ -593,6 +601,90 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
   return [NSString stringWithFormat:@"%@", value];
 }
 
+NSDictionary *
+PDImageExpressionValues(PDImage *im)
+{
+  PDImageExpressionObject *obj
+    = [[PDImageExpressionObject alloc] init];
+  obj->_image = [im retain];
+  return [obj autorelease];
+}
+
+@implementation PDImageExpressionObject
+
+- (id)valueForKey:(id)key
+{
+  id value = [_image imagePropertyForKey:key];
+  if (value == nil)
+    return nil;
+
+  switch (lookup_property_type([key UTF8String]))
+    {
+    case type_bool:
+      return [NSNumber numberWithInt:[value boolValue] ? 1 : 0];
+
+    case type_date:
+      return PDImageParseEXIFDateString(value);
+      break;
+
+    case type_string:
+      return value;
+
+    case type_string_array:
+      return [(NSArray *)value componentsJoinedByString:@" "];
+
+    case type_exposure_mode:
+      return array_lookup(value, exposure_mode, N_ELEMENTS(exposure_mode));
+
+    case type_exposure_program:
+      return array_lookup(value, exposure_prog, N_ELEMENTS(exposure_prog));
+
+    case type_flash_mode:
+      return exif_flash_mode([value unsignedIntValue]);
+
+    case type_metering_mode:
+      return array_lookup(value, metering_mode, N_ELEMENTS(metering_mode));
+
+    case type_white_balance:
+      return array_lookup(value, white_balance, N_ELEMENTS(white_balance));
+
+    case type_image_stabilization_mode:
+    case type_scene_capture_type:
+    case type_scene_type:
+      /* FIXME format these types. */
+      break;
+
+    case type_contrast:
+    case type_direction:
+    case type_exposure_bias:
+    case type_fstop:
+    case type_duration:
+    case type_iso_speed:
+    case type_latitude:
+    case type_longitude:
+    case type_metres:
+    case type_millimetres:
+    case type_bytes:
+    case type_flash_compensation:
+    case type_focus_mode:
+    case type_light_source:
+    case type_orientation:
+    case type_pixels:
+    case type_rating:
+    case type_saturation:
+    case type_sharpness:
+      /* Numeric values remain numeric. */
+      return value;
+
+    case type_unknown:
+      break;
+    }
+
+  return nil;
+}
+
+@end
+
 
 /* EXIF date parsing. */
 
@@ -627,7 +719,9 @@ PDImageParseEXIFDateString(NSString *str)
 NSString * const PDImage_Name = @"Name";
 NSString * const PDImage_ActiveType = @"ActiveType";
 NSString * const PDImage_FileTypes = @"FileTypes";
+NSString * const PDImage_FileName = @"FileName";
 NSString * const PDImage_FileSize = @"FileSize";
+NSString * const PDImage_FileDate = @"FileDate";
 NSString * const PDImage_PixelWidth = @"PixelWidth";
 NSString * const PDImage_PixelHeight = @"PixelHeight";
 NSString * const PDImage_Orientation = @"Orientation";

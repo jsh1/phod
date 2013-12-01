@@ -13,6 +13,8 @@
 		5717B44E18424A6000149627 /* PDMetadataView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5717B44C18424A6000149627 /* PDMetadataView.m */; };
 		5718E86B183A661B00D73448 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 5718E869183A661B00D73448 /* md5.c */; };
 		5718E86F183A6CC700D73448 /* PDImageHash.m in Sources */ = {isa = PBXBuildFile; fileRef = 5718E86E183A6CC700D73448 /* PDImageHash.m */; };
+		5727CDA3184A3EB3007BF7E8 /* PDPredicatePanelController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5727CDA2184A3EB3007BF7E8 /* PDPredicatePanelController.m */; };
+		5727CDA6184A3EC7007BF7E8 /* PDPredicatePanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5727CDA4184A3EC7007BF7E8 /* PDPredicatePanel.xib */; };
 		5760022B1844FB7000B398D1 /* image-properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = 576002291844FB7000B398D1 /* image-properties.strings */; };
 		577BDBF3182D792800116AF2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 577BDBF1182D792800116AF2 /* InfoPlist.strings */; };
 		577BDBF5182D792800116AF2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 577BDBF4182D792800116AF2 /* main.m */; };
@@ -66,6 +68,9 @@
 		5718E86C183A669100D73448 /* getput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = getput.h; sourceTree = "<group>"; };
 		5718E86D183A6CC700D73448 /* PDImageHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageHash.h; sourceTree = "<group>"; };
 		5718E86E183A6CC700D73448 /* PDImageHash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageHash.m; sourceTree = "<group>"; };
+		5727CDA1184A3EB3007BF7E8 /* PDPredicatePanelController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDPredicatePanelController.h; sourceTree = "<group>"; };
+		5727CDA2184A3EB3007BF7E8 /* PDPredicatePanelController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDPredicatePanelController.m; sourceTree = "<group>"; };
+		5727CDA5184A3EC7007BF7E8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDPredicatePanel.xib; sourceTree = "<group>"; };
 		5760022A1844FB7000B398D1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = "en.lproj/image-properties.strings"; sourceTree = "<group>"; };
 		577BDBE5182D792800116AF2 /* Phod.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Phod.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		577BDBEB182D792800116AF2 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -214,6 +219,7 @@
 				578F0FC8182D91FD001A5152 /* PDImageView.xib */,
 				578F0FCA182D91FD001A5152 /* PDInfoView.xib */,
 				578F0FCC182D91FD001A5152 /* PDLibraryView.xib */,
+				5727CDA4184A3EC7007BF7E8 /* PDPredicatePanel.xib */,
 				578F0FCE182D91FD001A5152 /* PDWindow.xib */,
 			);
 			name = Nibs;
@@ -239,6 +245,8 @@
 				57CE6A1B182D863E000BF04E /* PDInfoViewController.m */,
 				57CE6A1C182D863E000BF04E /* PDLibraryViewController.h */,
 				57CE6A1D182D863E000BF04E /* PDLibraryViewController.m */,
+				5727CDA1184A3EB3007BF7E8 /* PDPredicatePanelController.h */,
+				5727CDA2184A3EB3007BF7E8 /* PDPredicatePanelController.m */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -361,6 +369,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				578F0FD6182D91FD001A5152 /* PDWindow.xib in Resources */,
+				5727CDA6184A3EC7007BF7E8 /* PDPredicatePanel.xib in Resources */,
 				577BDBF3182D792800116AF2 /* InfoPlist.strings in Resources */,
 				57CC5331183D1395009D6E19 /* defaults.plist in Resources */,
 				577BDC01182D792800116AF2 /* Images.xcassets in Resources */,
@@ -396,6 +405,7 @@
 				5717B44E18424A6000149627 /* PDMetadataView.m in Sources */,
 				57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */,
 				57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */,
+				5727CDA3184A3EB3007BF7E8 /* PDPredicatePanelController.m in Sources */,
 				57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */,
 				5718E86F183A6CC700D73448 /* PDImageHash.m in Sources */,
 				57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */,
@@ -413,6 +423,14 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
+		5727CDA4184A3EC7007BF7E8 /* PDPredicatePanel.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				5727CDA5184A3EC7007BF7E8 /* en */,
+			);
+			name = PDPredicatePanel.xib;
+			sourceTree = "<group>";
+		};
 		576002291844FB7000B398D1 /* image-properties.strings */ = {
 			isa = PBXVariantGroup;
 			children = (

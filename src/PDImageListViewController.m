@@ -49,6 +49,9 @@
    addObserver:self selector:@selector(selectionDidChange:)
    name:PDSelectionDidChange object:_controller];
   [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(imagePredicateDidChange:)
+   name:PDImagePredicateDidChange object:_controller];
+  [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(imagePropertyDidChange:)
    name:PDImagePropertyDidChange object:nil];
 
@@ -78,6 +81,8 @@
 
   [_titleLabel setTextColor:[PDColor controlTextColor]];
   [_titleLabel setStringValue:@""];
+
+  [[_searchField cell] setBackgroundColor:[NSColor grayColor]];
 
   [_scaleSlider setDoubleValue:[_gridView scale]];
 }
@@ -112,7 +117,7 @@
 
 - (void)imageListDidChange:(NSNotification *)note
 {
-  NSArray *images = [_controller imageList];
+  NSArray *images = [_controller filteredImageList];
 
   [_gridView setImages:images];
   [_gridView scrollPoint:NSZeroPoint];
@@ -152,6 +157,14 @@
   [_rotateRightButton setEnabled:enabled];
 
   [_sortButton selectItemWithTag:[_controller imageSortKey]];
+}
+
+- (void)imagePredicateDidChange:(NSNotification *)note
+{
+  NSString *str = [[_controller imagePredicate] predicateFormat];
+  if ([str length] == 0)
+    str = @"";
+  [_searchField setStringValue:str];
 }
 
 - (void)gridViewBoundsDidChange:(NSNotification *)note
@@ -204,7 +217,7 @@
   if ([_controller imageSortKey] != key)
     {
       [_controller setImageSortKey:key];
-      [_controller resortImageList];
+      [_controller rebuildImageList];
       [_sortButton selectItemWithTag:key];
     }
 }
@@ -216,7 +229,7 @@
   if ([_controller isImageSortReversed] != reversed)
     {
       [_controller setImageSortReversed:reversed];
-      [_controller resortImageList];
+      [_controller rebuildImageList];
       [_sortButton selectItemWithTag:[_controller imageSortKey]];
     }
 }
@@ -226,6 +239,13 @@
   if (sender == _scaleSlider)
     {
       [_gridView setScale:[sender doubleValue]];
+    }
+  else if (sender == _searchField)
+    {
+      NSString *str = [_searchField stringValue];
+      [_controller setImagePredicate:
+       [_controller imagePredicateWithFormat:str]];
+      [_controller rebuildImageList];
     }
 }
 

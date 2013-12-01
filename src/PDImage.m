@@ -717,6 +717,21 @@ static NSOperationQueue *_narrowQueue;
       value = [_implicitProperties objectForKey:key];
     }
 
+  if (value == nil)
+    {
+      /* A few specially coded properties. */
+
+      if ([key isEqualToString:PDImage_FileName])
+	{
+	  value = [[self imagePath] lastPathComponent];
+	}
+      else if ([key isEqualToString:PDImage_FileDate])
+	{
+	  value = [NSNumber numberWithUnsignedLong:
+		   file_mtime([self imagePath])];
+	}
+    }
+
   if ([value isKindOfClass:[NSNull class]])
     value = nil;
 
@@ -798,6 +813,11 @@ static NSOperationQueue *_narrowQueue;
     return nil;
 
   return PDImageLocalizedPropertyValue(key, value, self);
+}
+
+- (id)expressionValues
+{
+  return PDImageExpressionValues(self);
 }
 
 + (void)callWithImageComparator:(PDImageCompareKey)key

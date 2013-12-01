@@ -26,6 +26,7 @@
 
 extern NSString *const PDImageListDidChange;
 extern NSString *const PDSelectionDidChange;
+extern NSString *const PDImagePredicateDidChange;
 
 enum PDSidebarMode
 {
@@ -42,7 +43,8 @@ enum PDContentMode
   PDContentMode_Image,
 };
 
-@class PDViewController, PDSplitView, PDImage;
+@class PDViewController, PDPredicatePanelController;
+@class PDSplitView, PDImage;
 
 @interface PDWindowController : NSWindowController <NSSplitViewDelegate>
 {
@@ -50,6 +52,8 @@ enum PDContentMode
   IBOutlet NSSegmentedControl *_sidebarControl;
   IBOutlet NSView *_sidebarView;
   IBOutlet NSView *_contentView;
+
+  PDPredicatePanelController *_predicatePanelController;
 
   NSMutableArray *_viewControllers;
 
@@ -61,6 +65,9 @@ enum PDContentMode
 
   NSArray *_imageList;
 
+  NSPredicate *_imagePredicate;
+  NSArray *_filteredImageList;
+
   NSIndexSet *_selectedImageIndexes;
   NSInteger _primarySelectionIndex;
 }
@@ -70,13 +77,20 @@ enum PDContentMode
 
 @property(nonatomic, copy) NSArray *imageList;
 
+- (NSPredicate *)imagePredicateWithFormat:(NSString *)str;
+
+@property(nonatomic, copy) NSPredicate *imagePredicate;
+
 @property(nonatomic) int imageSortKey;
 @property(nonatomic, getter=isImageSortReversed) BOOL imageSortReversed;
 
-/* Setting the sort key does not change imageList, this method must be
-   called explicitly. (But setting imageList does sort the new array.) */
+@property(nonatomic, readonly) NSArray *filteredImageList;
 
-- (void)resortImageList;
+/* Setting the sort key or image predicate does not change the result
+   of filteredImageList, this method must be called explicitly. (But
+   setting imageList does filter and sort the new array.) */
+
+- (void)rebuildImageList;
 
 @property(nonatomic, copy) NSIndexSet *selectedImageIndexes;
 @property NSInteger primarySelectionIndex;
@@ -117,6 +131,8 @@ enum PDContentMode
 
 - (BOOL)displaysListMetadata;
 - (BOOL)displaysImageMetadata;
+
+- (IBAction)showPredicatePanel:(id)sender;
 
 - (IBAction)setImageRatingAction:(id)sender;
 - (IBAction)addImageRatingAction:(id)sender;

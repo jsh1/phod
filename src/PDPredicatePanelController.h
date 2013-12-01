@@ -22,15 +22,26 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDImage.h"
+#import <AppKit/AppKit.h>
 
-extern NSDictionary *PDImageSourceCopyProperties(CGImageSourceRef src);
+extern NSString * const PDPredicateDidChange;
 
-extern NSString *PDImageLocalizedNameOfProperty(NSString *key);
+@interface PDPredicatePanelController : NSWindowController
+{
+  IBOutlet NSPredicateEditor *_predicateEditor;
+  IBOutlet NSButton *_addSmartFolderButton;
+  IBOutlet NSButton *_cancelButton;
+  IBOutlet NSButton *_okButton;
 
-extern NSString *PDImageLocalizedPropertyValue(NSString *key,
-    id value, PDImage *im);
+  NSPredicate *_predicate;
+}
 
-extern NSDate *PDImageParseEXIFDateString(NSString *str);
+- (id)init;
 
-extern id PDImageExpressionValues(PDImage *im);
+@property(nonatomic, retain) NSPredicate *predicate;
+
+- (NSPredicate *)predicateWithFormat:(NSString *)str;
+
+- (IBAction)controlAction:(id)sender;
+
+@end
