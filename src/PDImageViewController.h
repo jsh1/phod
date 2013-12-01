@@ -32,6 +32,7 @@
   IBOutlet PDImageView *_imageView;
   IBOutlet NSButton *_rotateLeftButton;
   IBOutlet NSButton *_rotateRightButton;
+  IBOutlet NSSlider *_scaleSlider;
 }
   
 @property(nonatomic) BOOL displaysMetadata;

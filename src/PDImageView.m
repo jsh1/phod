@@ -206,7 +206,14 @@
 
   if (_image != nil)
     {
-      _imageScale = fmax(_imageScale, [self scaleToFitScale]);
+      CGFloat fitScale = [self scaleToFitScale];
+
+      if (_imageScale < fitScale)
+	{
+	  [self willChangeValueForKey:@"imageScale"];
+	  _imageScale = fitScale;
+	  [self didChangeValueForKey:@"imageScale"];
+	}
 
       CGSize scaledSize = [self scaledImageSize];
 

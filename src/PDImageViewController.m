@@ -118,6 +118,9 @@
    addObserver:self selector:@selector(imageViewBoundsDidChange:)
    name:NSViewFrameDidChangeNotification object:_imageView];
 
+  [_imageView addObserver:self
+   forKeyPath:@"imageScale" options:0 context:NULL];
+
   [_titleLabel setTextColor:[PDColor controlTextColor]];
   [_titleLabel setStringValue:@""];
 
@@ -240,6 +243,29 @@
 
 - (IBAction)controlAction:(id)sender
 {
+  if (sender == _scaleSlider)
+    {
+      CGFloat f = [_scaleSlider doubleValue];
+      CGFloat fitScale = [_imageView scaleToFitScale];
+      CGFloat scale = fitScale + (1 - fitScale) * f;
+      [_imageView setImageScale:scale preserveOrigin:YES];
+    }
+}
+
+- (void)observeValueForKeyPath:(NSString *)path ofObject:(id)obj
+    change:(NSDictionary *)dict context:(void *)ctx
+{
+  if (obj == _imageView && [path isEqualToString:@"imageScale"])
+    {
+      dispatch_async(dispatch_get_main_queue(), ^{
+	CGFloat scale = [_imageView imageScale];
+	CGFloat fitScale = [_imageView scaleToFitScale];
+	CGFloat f = (scale - fitScale) / (1 - fitScale);
+	[_scaleSlider setDoubleValue:f];
+	[_scaleSlider setToolTip:
+	 [NSString stringWithFormat:@"%d%%", (int) (scale*100)]];
+      });
+    }
 }
 
 // CALayerDelegate methods

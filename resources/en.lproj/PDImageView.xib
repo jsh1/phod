@@ -10,6 +10,7 @@
                 <outlet property="_progressIndicator" destination="0b1-GF-tR0" id="Zbu-KQ-BYg"/>
                 <outlet property="_rotateLeftButton" destination="OoR-lL-5Jc" id="BBg-V9-nKD"/>
                 <outlet property="_rotateRightButton" destination="heS-sk-CBW" id="PLS-Rx-EMY"/>
+                <outlet property="_scaleSlider" destination="RhE-7O-uC8" id="ipM-WT-k4Y"/>
                 <outlet property="_titleLabel" destination="skE-zB-OXB" id="IDj-OT-UrV"/>
                 <outlet property="view" destination="9tm-7j-KTe" id="FZs-Hw-2b6"/>
             </connections>
@@ -43,7 +44,7 @@
                 <button toolTip="Rotate image left — [" verticalHuggingPriority="750" id="OoR-lL-5Jc">
                     <rect key="frame" x="5" y="4" width="22" height="22"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" title="↺" bezelStyle="smallSquare" image="283D9B44-FE96-40C6-9185-30AC264F0B79" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="BFh-cd-gKh">
+                    <buttonCell key="cell" type="smallSquare" title="↺" bezelStyle="smallSquare" image="4EFC6C88-9482-4C68-9C18-0B0B689C4260" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="BFh-cd-gKh">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" size="24" name="AppleSymbols"/>
                     </buttonCell>
@@ -54,7 +55,7 @@
                 <button toolTip="Rotate image right — ]" verticalHuggingPriority="750" id="heS-sk-CBW">
                     <rect key="frame" x="29" y="4" width="22" height="22"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" title="↻" bezelStyle="smallSquare" image="283D9B44-FE96-40C6-9185-30AC264F0B79" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="YKC-3q-XLg">
+                    <buttonCell key="cell" type="smallSquare" title="↻" bezelStyle="smallSquare" image="4EFC6C88-9482-4C68-9C18-0B0B689C4260" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="YKC-3q-XLg">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" size="24" name="AppleSymbols"/>
                     </buttonCell>
@@ -62,11 +63,19 @@
                         <action selector="rotateRight:" target="-1" id="7DN-fJ-6nr"/>
                     </connections>
                 </button>
+                <slider verticalHuggingPriority="750" id="RhE-7O-uC8">
+                    <rect key="frame" x="439" y="7" width="120" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                    <sliderCell key="cell" controlSize="small" continuous="YES" state="on" alignment="left" maxValue="1" doubleValue="0.5" tickMarkPosition="above" sliderType="linear" id="re7-X3-hGr"/>
+                    <connections>
+                        <action selector="controlAction:" target="-2" id="wgP-sN-10V"/>
+                    </connections>
+                </slider>
             </subviews>
         </customView>
     </objects>
     <resources>
-        <image name="283D9B44-FE96-40C6-9185-30AC264F0B79" width="1" height="1">
+        <image name="4EFC6C88-9482-4C68-9C18-0B0B689C4260" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
