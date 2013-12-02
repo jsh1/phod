@@ -35,7 +35,7 @@ enum PDImageCompareKey
   PDImageCompare_FileDate,
   PDImageCompare_FileSize,
   PDImageCompare_Name,
-  PDImageCompare_OriginalDate,
+  PDImageCompare_Date,
   PDImageCompare_Keywords,
   PDImageCompare_Caption,
   PDImageCompare_Rating,
@@ -57,7 +57,6 @@ typedef int PDImageCompareKey;
 
   NSString *_JSONPath;			/* absolute */
 
-  BOOL _pendingJSONRead;
   BOOL _pendingJSONWrite;
 
   NSString *_JPEGPath;			/* nil or absolute */
@@ -74,11 +73,11 @@ typedef int PDImageCompareKey;
   BOOL _donePrefetch;
   NSOperation *_prefetchOp;
 
-  NSDate *_originalDate;		/* cached lazily */
+  NSDate *_date;			/* cached lazily */
 }
 
-+ (NSArray *)imagesInLibrary:(NSString *)libraryPath
-    directory:(NSString *)dir filter:(BOOL (^)(NSString *name))block;
++ (void)loadImagesInLibrary:(NSString *)libraryPath directory:(NSString *)dir
+    handler:(void (^)(PDImage *))block;
 
 + (void)callWithImageComparator:(PDImageCompareKey)key
     reversed:(BOOL)flag block:(void (^)(NSComparator))block;
@@ -117,15 +116,11 @@ typedef int PDImageCompareKey;
 /* Convenience accessors for misc image properties. */
 
 @property(nonatomic, readonly) NSString *name;
-@property(nonatomic, readonly) NSDate *originalDate;
+@property(nonatomic, readonly) NSDate *date;
 @property(nonatomic, readonly) NSString *title;
 @property(nonatomic, readonly) CGSize pixelSize;
 @property(nonatomic, readonly) unsigned int orientation;
 @property(nonatomic, readonly) CGSize orientedPixelSize;
-
-/* Start loading image properties asynchronously. */
-
-- (void)prefetchMetadata;
 
 /* Fill proxy caches asynchronously. */
 

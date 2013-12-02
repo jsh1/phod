@@ -50,10 +50,62 @@
 {
   [_libraryPath release];
   [_libraryDirectory release];
+  for (PDLibraryItem *item in _subitems)
+    [item setParent:nil];
   [_subitems release];
   [_images release];
   [_subimages release];
   [super dealloc];
+}
+
+- (void)loadSubimages
+{
+  if (_subimages == nil)
+    {
+      static dispatch_queue_t queue;
+      static dispatch_once_t once;
+
+      dispatch_once(&once, ^{
+	queue = dispatch_queue_create("PDLibraryDirectory",
+				      DISPATCH_QUEUE_SERIAL);
+      });
+
+      _subimages = [[NSMutableArray alloc] init];
+
+      dispatch_async(queue, ^{
+	NSMutableArray *array = [[NSMutableArray alloc] init];
+	__block CFTimeInterval last_t = CACurrentMediaTime();
+
+	[PDImage loadImagesInLibrary:_libraryPath
+	 directory:_libraryDirectory handler:^(PDImage *im) {
+	   [array addObject:im];
+	   CFTimeInterval t = CACurrentMediaTime();
+	   if (t - last_t > .5)
+	     {
+	       last_t = t;
+	       dispatch_async(dispatch_get_main_queue(), ^{
+		 [_subimages addObjectsFromArray:array];
+		 [array removeAllObjects];
+		 [[NSNotificationCenter defaultCenter]
+		  postNotificationName:PDLibraryItemSubimagesDidChange
+		  object:self];
+	       });
+	     }
+	   }];
+
+	if ([array count] != 0)
+	  {
+	    dispatch_async(dispatch_get_main_queue(), ^{
+	      [_subimages addObjectsFromArray:array];
+	      [[NSNotificationCenter defaultCenter]
+	       postNotificationName:PDLibraryItemSubimagesDidChange
+	       object:self];
+	    });
+	  }
+	  
+	[array release];
+      });
+    }
 }
 
 - (NSString *)path
@@ -96,6 +148,7 @@
 
 	      if (subitem != nil)
 		{
+		  [subitem setParent:self];
 		  [array addObject:subitem];
 		  [subitem release];
 		}
@@ -112,10 +165,7 @@
 - (NSArray *)subimages
 {
   if (_subimages == nil)
-    {
-      _subimages = [[PDImage imagesInLibrary:_libraryPath
-		     directory:_libraryDirectory filter:nil] copy];
-    }
+    [self loadSubimages];
 
   NSMutableArray *images = [NSMutableArray array];
 

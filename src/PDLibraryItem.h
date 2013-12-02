@@ -24,10 +24,15 @@
 
 #import <Foundation/Foundation.h>
 
+extern NSString * const PDLibraryItemSubimagesDidChange;
+
 @interface PDLibraryItem : NSObject
 {
+  PDLibraryItem *_parent;
   BOOL _hidden;
 }
+
+@property(nonatomic, assign) PDLibraryItem *parent;
 
 @property(nonatomic, getter=isHidden) BOOL hidden;
 

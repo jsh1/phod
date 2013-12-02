@@ -29,6 +29,8 @@
 #import "PDImageGridView.h"
 #import "PDWindowController.h"
 
+#define MAX_TITLE_STRINGS 6
+
 @implementation PDImageListViewController
 
 + (NSString *)viewNibName
@@ -125,9 +127,17 @@
   if ([images count] != 0)
     {
       NSMutableSet *paths = [NSMutableSet set];
+      BOOL tooMany = NO;
 
       for (PDImage *image in images)
-	[paths addObject:[image lastLibraryPathComponent]];
+	{
+	  [paths addObject:[image lastLibraryPathComponent]];
+	  if ([paths count] > MAX_TITLE_STRINGS)
+	    {
+	      tooMany = YES;
+	      break;
+	    }
+	}
 
       NSMutableString *str = [NSMutableString string];
 
@@ -139,6 +149,13 @@
 	  if ([str length] != 0)
 	    [str appendString:@" & "];
 	  [str appendString:path];
+	}
+
+      if (tooMany)
+	{
+	  [str appendString:@" & "];
+	  unichar c = 0x2026;		/* HORIZONTAL ELLIPSIS */
+	  [str appendString:[NSString stringWithCharacters:&c length:1]];
 	}
 
       [_titleLabel setStringValue:str];

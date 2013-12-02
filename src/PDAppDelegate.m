@@ -43,21 +43,18 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-  NSString *path;
-  NSData *data;
-  NSDictionary *dict;
-
-  path = [[NSBundle mainBundle] pathForResource:@"defaults" ofType:@"plist"];
-
+  NSString *path = [[NSBundle mainBundle]
+		    pathForResource:@"defaults" ofType:@"plist"];
   if (path != nil)
     {
-      data = [NSData dataWithContentsOfFile:path];
+      NSData *data = [NSData dataWithContentsOfFile:path];
 
       if (data != nil)
 	{
-	  dict = [NSPropertyListSerialization propertyListWithData:data
-		  options:NSPropertyListImmutable format:nil error:nil];
-
+	  NSDictionary *dict = [NSPropertyListSerialization
+				propertyListWithData:data options:
+				NSPropertyListImmutable format:nil
+				error:nil];
 	  if (dict != nil)
 	    [[NSUserDefaults standardUserDefaults] registerDefaults:dict];
 	}

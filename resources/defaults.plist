@@ -29,7 +29,7 @@
 			<string>camera_make</string>
 			<string>camera_model</string>
 			<string>iso_speed</string>
-			<string>Focal_Length</string>
+			<string>focal_length</string>
 			<string>focal_length_35mm</string>
 			<string>exposure_bias</string>
 			<string>f_number</string>

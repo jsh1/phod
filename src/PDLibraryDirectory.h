@@ -31,7 +31,7 @@
   NSArray *_subitems;
   NSArray *_images;
   NSInteger _imageCount;
-  NSArray *_subimages;
+  NSMutableArray *_subimages;
   BOOL _toplevel;
   NSInteger _titleImageName;
 }

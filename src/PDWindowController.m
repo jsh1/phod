@@ -75,7 +75,7 @@ NSString *const PDImagePredicateDidChange = @"PDImagePredicateDidChange";
   _sidebarMode = PDSidebarMode_Nil;
   _contentMode = PDContentMode_Nil;
 
-  _imageSortKey = PDImageCompare_Name;
+  _imageSortKey = PDImageCompare_Date;
   _imageSortReversed = YES;
 
   _imageList = [[NSArray alloc] init];
@@ -83,6 +83,20 @@ NSString *const PDImagePredicateDidChange = @"PDImagePredicateDidChange";
 
   _primarySelectionIndex = -1;
   _selectedImageIndexes = [[NSIndexSet alloc] init];
+
+  for (Class cls in @[[PDLibraryViewController class],
+		      [PDInfoViewController class],
+		      [PDAdjustmentsViewController class],
+		      [PDImageListViewController class],
+		      [PDImageViewController class]])
+    {
+      PDViewController *controller = [[cls alloc] initWithController:self];
+      if (controller != nil)
+	{
+	  [_viewControllers addObject:controller];
+	  [controller release];
+	}
+    }
 
   return self;
 }
@@ -109,20 +123,6 @@ NSString *const PDImagePredicateDidChange = @"PDImagePredicateDidChange";
   [window setBackgroundColor:[PDColor windowBackgroundColor]];
 
   [_splitView setIndexOfResizableSubview:1];
-
-  for (Class cls in @[[PDLibraryViewController class],
-		      [PDInfoViewController class],
-		      [PDAdjustmentsViewController class],
-		      [PDImageListViewController class],
-		      [PDImageViewController class]])
-    {
-      PDViewController *controller = [[cls alloc] initWithController:self];
-      if (controller != nil)
-	{
-	  [_viewControllers addObject:controller];
-	  [controller release];
-	}
-    }
 
   // make sure we're in viewer mode before trying to restore view state
 

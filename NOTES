@@ -95,3 +95,9 @@ Issues
   it can be found when needed. (The metadata already lists the kinds
   of files that are available, but it may not be saved.)
 
+13. Trashed images
+
+  Add a deleted property to the image, set it when the image is
+  "deleted". Add a "Trash" meta-folder to show all deleted images.
+  (Requires an expensive full-library scan?) Also add an "Empty Trash"
+  command.

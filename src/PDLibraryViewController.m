@@ -79,6 +79,10 @@
 {
   [super viewDidLoad];
 
+  [[NSNotificationCenter defaultCenter] addObserver:self
+   selector:@selector(libraryItemSubimagesDidChange:)
+   name:PDLibraryItemSubimagesDidChange object:nil];
+
   [[_searchField cell] setBackgroundColor:[NSColor grayColor]];
 
   for (NSTableColumn *col in [_outlineView tableColumns])
@@ -88,6 +92,27 @@
 - (NSView *)initialFirstResponder
 {
   return _outlineView;
+}
+
+- (void)libraryItemSubimagesDidChange:(NSNotification *)note
+{
+  PDLibraryItem *item = [note object];
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+  BOOL selected = NO;
+
+  while (item != nil)
+    {
+      [_outlineView reloadItem:item];
+
+      NSInteger row = [_outlineView rowForItem:item];
+      if (row != NSNotFound && [sel containsIndex:row])
+	selected = YES;
+
+      item = [item parent];
+    }
+
+  if (selected)
+    [self outlineViewSelectionDidChange:nil];
 }
 
 - (IBAction)addFolderAction:(id)sender

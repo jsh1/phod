@@ -416,6 +416,12 @@ static NSOperationQueue *_narrowQueue;
     }
 }
 
+/* Originally I did the usual thing and deferred all I/O until it's
+   actually needed to implement a method. But that tends to lead to
+   non-deterministic blocking later. It's better to do all I/O up front
+   assuming that whatever's loading the image library will do so
+   ahead-of-time / asynchronously. */
+
 - (id)initWithLibrary:(NSString *)libraryPath directory:(NSString *)dir
     name:(NSString *)name JSONPath:(NSString *)json_path
     JPEGPath:(NSString *)jpeg_path RAWPath:(NSString *)raw_path
@@ -433,7 +439,25 @@ static NSOperationQueue *_narrowQueue;
   _JPEGPath = [jpeg_path copy];
   _RAWPath = [raw_path copy];
 
-  _pendingJSONRead = _JSONPath != nil;
+  if (_JSONPath != nil)
+    {
+      NSData *data = [[NSData alloc] initWithContentsOfFile:_JSONPath];
+
+      if (data != nil)
+	{
+	  NSDictionary *dict = [NSJSONSerialization
+				JSONObjectWithData:data options:0 error:nil];
+	  if (dict != nil)
+	    {
+	      NSDictionary *props = [dict objectForKey:@"Properties"];
+
+	      if (props != nil)
+		[_properties addEntriesFromDictionary:props];
+	    }
+
+	  [data release];
+	}
+    }
 
   [_properties setObject:name forKey:PDImage_Name];
 
@@ -451,15 +475,25 @@ static NSOperationQueue *_narrowQueue;
    [NSArray arrayWithObjects:jpeg_type != nil ? jpeg_type : raw_type,
     raw_type != nil ? raw_type : jpeg_type, nil] forKey:PDImage_FileTypes];
 
+  /* FIXME: if we switch from JPEG to RAW or vice versa, should we
+     invalidate and reload these properties? */
+
+  CGImageSourceRef src = create_image_source_from_path([self imagePath]);
+
+  if (src != NULL)
+    {
+      _implicitProperties = PDImageSourceCopyProperties(src);
+      CFRelease(src);
+    }
+
   _imageHosts = [[NSMapTable strongToStrongObjectsMapTable] retain];
 
   return self;
 }
 
-+ (NSArray *)imagesInLibrary:(NSString *)libraryPath
-    directory:(NSString *)dir filter:(BOOL (^)(NSString *name))block
++ (void)loadImagesInLibrary:(NSString *)libraryPath directory:(NSString *)dir
+    handler:(void (^)(PDImage *))block;
 {
-  NSMutableArray *array = [[NSMutableArray alloc] init];
   NSFileManager *fm = [NSFileManager defaultManager];
 
   NSString *dir_path = [libraryPath stringByAppendingPathComponent:dir];
@@ -471,64 +505,59 @@ static NSOperationQueue *_narrowQueue;
 
   for (NSString *file in filenames)
     {
-      if ([file characterAtIndex:0] == '.')
-	continue;
+      @autoreleasepool
+        {
+	  if ([file characterAtIndex:0] == '.')
+	    continue;
 
-      NSString *path = [dir_path stringByAppendingPathComponent:file];
-      BOOL is_dir = NO;
-      if (![fm fileExistsAtPath:path isDirectory:&is_dir] || is_dir)
-	continue;
+	  NSString *path = [dir_path stringByAppendingPathComponent:file];
+	  BOOL is_dir = NO;
+	  if (![fm fileExistsAtPath:path isDirectory:&is_dir] || is_dir)
+	    continue;
 
-      NSString *ext = [[file pathExtension] lowercaseString];
+	  NSString *ext = [[file pathExtension] lowercaseString];
 
-      if (![ext isEqualToString:@METADATA_EXTENSION]
-	  && ![ext isEqualToString:@"jpg"]
-	  && ![ext isEqualToString:@"jpeg"]
-	  && ![raw_extensions() containsObject:ext])
-	{
-	  continue;
-	}
+	  if (![ext isEqualToString:@METADATA_EXTENSION]
+	      && ![ext isEqualToString:@"jpg"]
+	      && ![ext isEqualToString:@"jpeg"]
+	      && ![raw_extensions() containsObject:ext])
+	    {
+	      continue;
+	    }
 
-      NSString *stem = [file stringByDeletingPathExtension];
-      if ([stems containsObject:stem])
-	continue;
+	  NSString *stem = [file stringByDeletingPathExtension];
+	  if ([stems containsObject:stem])
+	    continue;
 
-      [stems addObject:stem];
+	  [stems addObject:stem];
 
-      if (block != nil && !block(stem))
-	continue;
+	  NSString *json_path
+	    = filename_with_extension(dir_path, filenames,
+				      stem, @METADATA_EXTENSION);
+	  NSString *jpeg_path
+	    = filename_with_extension(dir_path, filenames, stem, @"jpg");
+	  if (jpeg_path == nil)
+	    {
+	      jpeg_path = filename_with_extension(dir_path, filenames,
+						  stem, @"jpeg");
+	    }
+	  NSString *raw_path
+	    = filename_with_extension_in_set(dir_path, filenames,
+					     stem, raw_extensions());
 
-      NSString *json_path
-	= filename_with_extension(dir_path, filenames,
-				  stem, @METADATA_EXTENSION);
-      NSString *jpeg_path
-	= filename_with_extension(dir_path, filenames, stem, @"jpg");
-      if (jpeg_path == nil)
-	{
-	  jpeg_path = filename_with_extension(dir_path, filenames,
-					      stem, @"jpeg");
-	}
-      NSString *raw_path
-	= filename_with_extension_in_set(dir_path, filenames,
-					 stem, raw_extensions());
-
-      PDImage *image = [[self alloc] initWithLibrary:libraryPath
-			directory:dir name:stem JSONPath:json_path
-			JPEGPath:jpeg_path RAWPath:raw_path];
-      if (image != nil)
-	{
-	  [array addObject:image];
-	  [image release];
+	  PDImage *image = [[self alloc] initWithLibrary:libraryPath
+			    directory:dir name:stem JSONPath:json_path
+			    JPEGPath:jpeg_path RAWPath:raw_path];
+	  if (image != nil)
+	    {
+	      block(image);
+	      [image release];
+	    }
 	}
     }
 
-  NSArray *result = [NSArray arrayWithArray:array];
-
   [stems release];
   [filenames release];
-  [array release];
-
-  return result;
 }
 
 - (void)dealloc
@@ -550,80 +579,23 @@ static NSOperationQueue *_narrowQueue;
   [_prefetchOp cancel];
   [_prefetchOp release];
 
-  [_originalDate release];
+  [_date release];
 
   [super dealloc];
 }
 
-- (void)readJSONFile
+- (void)didLoadJSONDictionary:(NSDictionary *)dict
 {
-  if (_pendingJSONRead)
-    {
-      assert (_JSONPath != nil);
+  NSDictionary *props = [dict objectForKey:@"Properties"];
 
-      NSData *data = [[NSData alloc] initWithContentsOfFile:_JSONPath];
-
-      if (data != nil)
-	{
-	  NSDictionary *dict = [NSJSONSerialization
-				JSONObjectWithData:data options:0 error:nil];
-	  if (dict != nil)
-	    {
-	      NSDictionary *props = [dict objectForKey:@"Properties"];
-	      if (props != nil)
-		[_properties addEntriesFromDictionary:props];
-	    }
-	  [data release];
-	}
-
-      _pendingJSONRead = NO;
-    }
-}
-
-- (void)prefetchJSONFile
-{
-  if (_pendingJSONRead)
-    {
-      assert (_JSONPath != nil);
-
-      NSBlockOperation *op = [NSBlockOperation blockOperationWithBlock:^{
-	if (_pendingJSONRead)
-	  {
-	    NSLog(@"prefetching JSON %@", _JSONPath);
-	    NSData *data = [[NSData alloc] initWithContentsOfFile:_JSONPath];
-	    if (data != nil)
-	      {
-		NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:
-				      data options:0 error:nil];
-		if (dict != nil)
-		  {
-		    dispatch_async(dispatch_get_main_queue(), ^{
-		      if (_pendingJSONRead)
-			{
-			  NSDictionary *props
-			    = [dict objectForKey:@"Properties"];
-			  if (props != nil)
-			    [_properties addEntriesFromDictionary:props];
-			  _pendingJSONRead = NO;
-			}
-		    });
-		  }
-		[data release];
-	      }
-	  }
-      }];
-
-      [op setQueuePriority:NSOperationQueuePriorityLow];
-      [[PDImage wideQueue] addOperation:op];
-    }
+  if (props != nil)
+    [_properties addEntriesFromDictionary:props];
 }
 
 - (void)writeJSONFile
 {
   if (!_pendingJSONWrite)
     {
-      [self readJSONFile];
-
       if (_JSONPath == nil)
 	{
 	  _JSONPath = [[[_libraryPath stringByAppendingPathComponent:
@@ -692,30 +664,10 @@ static NSOperationQueue *_narrowQueue;
 
 - (id)imagePropertyForKey:(NSString *)key
 {
-  if (_pendingJSONRead)
-    [self readJSONFile];
-
   id value = [_properties objectForKey:key];
 
   if (value == nil)
-    {
-      if (_implicitProperties == nil)
-	{
-	  /* FIXME: if we switch from JPEG to RAW or vice versa, should
-	     we invalidate and reload these properties? */
-
-	  CGImageSourceRef src
-	    = create_image_source_from_path([self imagePath]);
-
-	  if (src != NULL)
-	    {
-	      _implicitProperties = PDImageSourceCopyProperties(src);
-	      CFRelease(src);
-	    }
-	}
-
-      value = [_implicitProperties objectForKey:key];
-    }
+    value = [_implicitProperties objectForKey:key];
 
   if (value == nil)
     {
@@ -749,51 +701,16 @@ static NSOperationQueue *_narrowQueue;
   return value;
 }
 
-- (void)prefetchImageProperties
+- (void)installImagePropertiesDictionary:(NSDictionary *)dict
 {
   if (_implicitProperties == nil)
-    {
-      NSString *path = [self imagePath];
-
-      NSBlockOperation *op = [NSBlockOperation blockOperationWithBlock:^{
-	if (_implicitProperties == nil)
-	  {
-	    NSLog(@"prefetching image properties %@", path);
-	    CGImageSourceRef src = create_image_source_from_path(path);
-	    if (src != NULL)
-	      {
-		NSDictionary *dict = PDImageSourceCopyProperties(src);
-		if (dict != nil)
-		  {
-		    dispatch_async(dispatch_get_main_queue(), ^{
-		      if (_implicitProperties == nil)
-			_implicitProperties = [dict retain];
-		    });
-		    [dict release];
-		  }
-		CFRelease(src);
-	      }
-	  }
-      }];
-
-      [op setQueuePriority:NSOperationQueuePriorityLow];
-      [[PDImage wideQueue] addOperation:op];
-    }
-}
-
-- (void)prefetchMetadata
-{
-  [self prefetchJSONFile];
-  [self prefetchImageProperties];
+    _implicitProperties = [dict copy];
 }
 
 - (void)setImageProperty:(id)obj forKey:(NSString *)key
 {
   if (obj == nil)
     obj = [NSNull null];
-
-  if (_pendingJSONRead)
-    [self readJSONFile];
 
   id oldValue = [_properties objectForKey:key];
 
@@ -803,8 +720,12 @@ static NSOperationQueue *_narrowQueue;
 
       [self writeJSONFile];
 
-      if (_originalDate != nil && [key isEqualToString:PDImage_OriginalDate])
-	[_originalDate release], _originalDate = nil;
+      if (_date != nil
+	  && ([key isEqualToString:PDImage_OriginalDate]
+	      || [key isEqualToString:PDImage_DigitizedDate]))
+	{
+	  [_date release], _date = nil;
+	}
 
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDImagePropertyDidChange object:self
@@ -869,9 +790,9 @@ static NSOperationQueue *_narrowQueue;
 		     : s1 > s2 ? NSOrderedDescending : NSOrderedSame);
 	      goto got_ret; }
 
-	    case PDImageCompare_OriginalDate:
-	      obj1 = [obj1 originalDate];
-	      obj2 = [obj2 originalDate];
+	    case PDImageCompare_Date:
+	      obj1 = [obj1 date];
+	      obj2 = [obj2 date];
 	      break;
 
 	    case PDImageCompare_PixelSize: {
@@ -937,23 +858,25 @@ static NSOperationQueue *_narrowQueue;
     });
 }
 
-- (NSDate *)originalDate
+- (NSDate *)date
 {
-  if (_originalDate == nil)
+  if (_date == nil)
     {
       id date = nil;
       NSString *str = [self imagePropertyForKey:PDImage_OriginalDate];
+      if (str == nil)
+	str = [self imagePropertyForKey:PDImage_DigitizedDate];
       if (str != nil)
 	date = PDImageParseEXIFDateString(str);
       if (date == nil)
-	date = [NSNull null];
-      _originalDate = [date retain];
+	{
+	  date = [NSDate dateWithTimeIntervalSince1970:
+		  file_mtime([self imagePath])];
+	}
+      _date = [date copy];
     }
 
-  if (![_originalDate isKindOfClass:[NSNull class]])
-    return _originalDate;
-  else
-    return nil;
+  return _date;
 }
 
 - (NSString *)name

@@ -24,8 +24,11 @@
 
 #import "PDLibraryItem.h"
 
+NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidChange";
+
 @implementation PDLibraryItem
 
+@synthesize parent = _parent;
 @synthesize hidden = _hidden;
 
 - (BOOL)applySearchString:(NSString *)str
