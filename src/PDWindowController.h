@@ -27,6 +27,7 @@
 extern NSString *const PDImageListDidChange;
 extern NSString *const PDSelectionDidChange;
 extern NSString *const PDImagePredicateDidChange;
+extern NSString *const PDImageSortOptionsDidChange;
 
 enum PDSidebarMode
 {

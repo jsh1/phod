@@ -38,11 +38,9 @@
 NSString *const PDImageListDidChange = @"PDImageListDidChange";
 NSString *const PDSelectionDidChange = @"PDSelectionDidChange";
 NSString *const PDImagePredicateDidChange = @"PDImagePredicateDidChange";
+NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
 
 @implementation PDWindowController
-
-@synthesize imageSortKey = _imageSortKey;
-@synthesize imageSortReversed = _imageSortReversed;
 
 - (NSString *)windowNibName
 {
@@ -405,6 +403,38 @@ wasFirstResponder(NSView *view)
 
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDImagePredicateDidChange object:self];
+    }
+}
+
+- (int)imageSortKey
+{
+  return _imageSortKey;
+}
+
+- (void)setImageSortKey:(int)key
+{
+  if (_imageSortKey != key)
+    {
+      _imageSortKey = key;
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImageSortOptionsDidChange object:self];
+    }
+}
+
+- (BOOL)isImageSortReversed
+{
+  return _imageSortReversed;
+}
+
+- (void)setImageSortReversed:(BOOL)flag
+{
+  if (_imageSortReversed != flag)
+    {
+      _imageSortReversed = flag;
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImageSortOptionsDidChange object:self];
     }
 }
 
