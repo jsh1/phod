@@ -70,6 +70,7 @@
   [_valueField setDelegate:self];
   [_valueField setDrawsBackground:NO];
   [_valueField setEditable:NO];
+  [_valueField setSelectable:YES];
   [_valueField setAutoresizingMask:NSViewWidthSizable];
   [[_valueField cell] setBordered:NO];
   [[_valueField cell] setFont:font1];
