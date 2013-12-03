@@ -956,8 +956,8 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 /* FIXME: these two tables haven't been verified for the flipped
    orientations, only for the plain 90 degree rotations. */
 
-static const int rotate_left_map[8] = {8, 5, 6, 7, 2, 1, 4, 3};
-static const int rotate_right_map[8] = {6, 7, 8, 5, 4, 3, 2, 1};
+static const int rotate_left_map[8] = {8, 5, 6, 7, 4, 1, 2, 3};
+static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 
 - (IBAction)rotateLeft:(id)sender
 {
