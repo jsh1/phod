@@ -25,6 +25,7 @@
 #import "PDLibraryViewController.h"
 
 #import "PDAppKitExtensions.h"
+#import "PDImage.h"
 #import "PDImageTextCell.h"
 #import "PDLibraryDirectory.h"
 #import "PDLibraryItem.h"
@@ -58,6 +59,8 @@
 	       arrayForKey:@"PDLibraryDirectories"] mutableCopy];
 
   _items = [[NSMutableArray alloc] init];
+
+  _itemViewState = [[NSMapTable strongToStrongObjectsMapTable] retain];
   
   for (NSString *dir in _folders)
     [self addDirectoryItem:dir];
@@ -82,6 +85,12 @@
   [[NSNotificationCenter defaultCenter] addObserver:self
    selector:@selector(libraryItemSubimagesDidChange:)
    name:PDLibraryItemSubimagesDidChange object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+   selector:@selector(imageViewOptionsDidChange:)
+   name:PDImagePredicateDidChange object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+   selector:@selector(imageViewOptionsDidChange:)
+   name:PDImageSortOptionsDidChange object:nil];
 
   [[_searchField cell] setBackgroundColor:[NSColor grayColor]];
 
@@ -168,7 +177,7 @@
     {
       PDLibraryItem *item = [_outlineView itemAtRow:idx];
 
-      if ([_outlineView parentForItem:item] == nil
+      if ([item parent] == nil
 	  && [item isKindOfClass:[PDLibraryDirectory class]])
 	{
 	  NSInteger idx = [_items indexOfObjectIdenticalTo:item];
@@ -211,91 +220,160 @@
 {
 }
 
-static void
-add_expanded_items(PDLibraryViewController *self,
-		   NSMutableDictionary *expanded, NSArray *items)
+- (void)imageViewOptionsDidChange:(NSNotification *)note
 {
-  for (PDLibraryItem *item in items)
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+
+  int key = [_controller imageSortKey];
+  BOOL rev = [_controller isImageSortReversed];
+  NSPredicate *pred = [_controller imagePredicate];
+
+  NSMutableDictionary *opts = [NSMutableDictionary dictionary];
+
+  if (key != PDImageCompare_Date)
+    [opts setObject:[PDImage imageCompareKeyString:key] forKey:@"imageSortKey"];
+  if (!rev)
+    [opts setObject:[NSNumber numberWithBool:rev] forKey:@"imageSortReversed"];
+  if (pred != nil != 0)
+    [opts setObject:[pred predicateFormat] forKey:@"imagePredicate"];
+
+  if ([opts count] == 0)
+    opts = nil;
+
+  NSInteger idx;
+  for (idx = [sel firstIndex]; idx != NSNotFound;
+       idx = [sel indexGreaterThanIndex:idx])
     {
-      if ([self->_outlineView isItemExpanded:item])
-	{
-	  NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-	  add_expanded_items(self, dict, [item subitems]);
-	  [expanded setObject:dict forKey:[item identifier]];
-	}
+      PDLibraryItem *item = [_outlineView itemAtRow:idx];
+      if (opts != nil)
+	[_itemViewState setObject:opts forKey:item];
+      else
+	[_itemViewState removeObjectForKey:item];
     }
 }
 
-static void
-expand_expanded_items(PDLibraryViewController *self,
-		      NSDictionary *expanded, NSArray *items)
+static NSArray *
+path_for_item(PDLibraryItem *item)
 {
-  for (PDLibraryItem *item in items)
+  struct node
+    {
+      struct node *next;
+      NSString *ident;
+    };
+
+  struct node *lst = NULL;
+
+  for (; item != nil; item = [item parent])
     {
       NSString *ident = [item identifier];
-
-      if ([ident length] != 0)
-	{
-	  NSDictionary *dict = [expanded objectForKey:ident];
-
-	  if (dict != nil)
-	    {
-	      [self->_outlineView expandItem:item];
-	      expand_expanded_items(self, dict, [item subitems]);
-	    }
-	}
-    }
-}
-
-static BOOL
-add_selection_path(PDLibraryViewController *self,
-		   NSMutableArray *path, PDLibraryItem *item)
-{
-  NSString *ident = [item identifier];
-  if ([ident length] == 0)
-    return NO;
-
-  PDLibraryItem *parent = [self->_outlineView parentForItem:item];
-
-  if (parent != nil)
-    {
-      if (!add_selection_path(self, path, parent))
-	return NO;
+      if ([ident length] == 0)
+	break;
+      struct node *node = alloca(sizeof(*node));
+      node->next = lst;
+      lst = node;
+      node->ident = ident;
     }
 
-  [path addObject:ident];
-  return YES;
+  if (item != nil)
+    return nil;
+
+  NSMutableArray *path = [NSMutableArray array];
+
+  for (; lst != NULL; lst = lst->next)
+    [path addObject:lst->ident];
+
+  return path;
 }
 
 static PDLibraryItem *
-item_for_selection_path(PDLibraryViewController *self,
-			NSArray *path, NSInteger idx, NSArray *items)
+item_for_path(NSArray *items, NSArray *path)
 {
-  NSInteger count = [path count];
-  if (idx >= count)
-    return nil;
+  PDLibraryItem *item = nil;
 
-  NSString *ident = [path objectAtIndex:idx];
-
-  for (PDLibraryItem *item in items)
+  for (NSString *ident in path)
     {
-      if (![[item identifier] isEqualToString:ident])
-	continue;
+      BOOL found = NO;
 
-      if (idx + 1 < count)
-	return item_for_selection_path(self, path, idx + 1, [item subitems]);
-      else
-	return item;
+      for (PDLibraryItem *subitem in items)
+	{
+	  NSString *ident2 = [subitem identifier];
+
+	  if ([ident isEqualToString:ident2])
+	    {
+	      found = YES;
+	      item = subitem;
+	      items = [subitem subitems];
+	      break;
+	    }
+	}
+
+      if (!found)
+	return nil;
     }
 
-  return nil;
+  return item;
+}
+
+- (void)addItem:(PDLibraryItem *)item viewState:(NSMutableDictionary *)dict
+{
+  NSString *ident = [item identifier];
+  if ([ident length] == 0)
+    return;
+
+  BOOL expanded = [_outlineView isItemExpanded:item];
+  NSDictionary *opts = [_itemViewState objectForKey:item];
+
+  NSMutableDictionary *subdict = [NSMutableDictionary dictionary];
+
+  for (PDLibraryItem *subitem in [item subitems])
+    [self addItem:subitem viewState:subdict];
+
+  if (expanded || [opts count] != 0 || [subdict count] != 0)
+    {
+      if (opts == nil)
+	opts = @{};
+
+      NSDictionary *tem = @{
+	@"expanded": @(expanded),
+	@"viewState": opts,
+	@"subitems": subdict
+      };
+
+      [dict setObject:tem forKey:ident];
+    }
+}
+
+- (void)applyItem:(PDLibraryItem *)item viewState:(NSDictionary *)dict
+{
+  NSString *ident = [item identifier];
+  if ([ident length] == 0)
+    return;
+
+  NSDictionary *state = [dict objectForKey:ident];
+  if (state == nil)
+    return;
+
+  if ([[state objectForKey:@"expanded"] boolValue])
+    [_outlineView expandItem:item];
+
+  NSDictionary *view_state = [state objectForKey:@"viewState"];
+  if ([view_state count] != 0)
+    [_itemViewState setObject:view_state forKey:item];
+
+  NSDictionary *sub_state = [state objectForKey:@"subitems"];
+  if (sub_state != nil)
+    {
+      for (PDLibraryItem *subitem in [item subitems])
+	[self applyItem:subitem viewState:sub_state];
+    }
 }
 
 - (NSDictionary *)savedViewState
 {
-  NSMutableDictionary *expanded = [NSMutableDictionary dictionary];
+  NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
-  add_expanded_items(self, expanded, _items);
+  for (PDLibraryItem *item in _items)
+    [self addItem:item viewState:dict];
 
   NSMutableArray *selected = [NSMutableArray array];
   NSIndexSet *sel = [_outlineView selectedRowIndexes];
@@ -304,31 +382,33 @@ item_for_selection_path(PDLibraryViewController *self,
   for (idx = [sel firstIndex]; idx != NSNotFound;
        idx = [sel indexGreaterThanIndex:idx])
     {
-      PDLibraryItem *item = [_outlineView itemAtRow:idx];
-      NSMutableArray *path = [NSMutableArray array];
-      if (add_selection_path(self, path, item))
+      NSArray *path = path_for_item([_outlineView itemAtRow:idx]);
+      if (path != nil)
 	[selected addObject:path];
     }
 
   return [NSDictionary dictionaryWithObjectsAndKeys:
-	  expanded, @"expandedItems",
+	  dict, @"itemState",
 	  selected, @"selectedItems",
 	  nil];
 }
 
 - (void)applySavedViewState:(NSDictionary *)state
 {
-  NSDictionary *expanded = [state objectForKey:@"expandedItems"];
+  NSDictionary *item_state = [state objectForKey:@"itemState"];
 
-  if (expanded != nil)
-    expand_expanded_items(self, expanded, _items);
+  if (item_state != nil)
+    {
+      for (PDLibraryItem *item in _items)
+	[self applyItem:item viewState:item_state];
+    }
 
   NSArray *selected = [state objectForKey:@"selectedItems"];
   NSMutableIndexSet *sel = [NSMutableIndexSet indexSet];
 
   for (NSArray *path in selected)
     {
-      PDLibraryItem *item = item_for_selection_path(self, path, 0, _items);
+      PDLibraryItem *item = item_for_path(_items, path);
       if (item != nil)
 	{
 	  NSInteger row = [_outlineView rowForItem:item];
@@ -414,21 +494,50 @@ item_for_selection_path(PDLibraryViewController *self,
 
 - (void)outlineViewSelectionDidChange:(NSNotification *)note
 {
-  NSIndexSet *sel;
-  NSMutableArray *array;
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
 
-  sel = [_outlineView selectedRowIndexes];
-  if (sel == nil)
+  if ([sel count] == 0)
     [_controller setImageList:[NSArray array]];
   else
     {
-      array = [NSMutableArray array];
+      NSMutableArray *array = [NSMutableArray array];
+      NSDictionary *viewState = nil;
 
       for (NSInteger row = [sel firstIndex];
 	   row != NSNotFound; row = [sel indexGreaterThanIndex:row])
 	{
-	  [array addObjectsFromArray:[[_outlineView itemAtRow:row] subimages]];
+	  PDLibraryItem *item = [_outlineView itemAtRow:row];
+
+	  if (viewState == nil)
+	    viewState = [_itemViewState objectForKey:item];
+
+	  [array addObjectsFromArray:[item subimages]];
 	}
+
+      int sortKey = PDImageCompare_Date;
+      BOOL sortRev = YES;
+      NSPredicate *pred = nil;
+
+      if (viewState != nil)
+	{
+	  NSString *key = [viewState objectForKey:@"imageSortKey"];
+	  NSNumber *reversed = [viewState objectForKey:@"imageSortReversed"];
+	  NSString *predicate = [viewState objectForKey:@"imagePredicate"];
+
+	  if (key != nil)
+	    sortKey = [PDImage imageCompareKeyFromString:key];
+	  if (reversed != nil)
+	    sortRev = [reversed boolValue];
+	  if (predicate != nil)
+	    pred = [_controller imagePredicateWithFormat:predicate];
+	}
+
+      /* Install sort/filter options before modifying the image list,
+	 so that they only get applied once. */
+
+      [_controller setImageSortKey:sortKey];
+      [_controller setImageSortReversed:sortRev];
+      [_controller setImagePredicate:pred];
 
       [_controller setImageList:array];
 

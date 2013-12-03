@@ -35,6 +35,8 @@
 
   NSMutableArray *_folders;
   NSMutableArray *_items;
+
+  NSMapTable *_itemViewState;		/* PDLibaryItem -> NSDictionary */
 }
 
 - (IBAction)addFolderAction:(id)sender;
