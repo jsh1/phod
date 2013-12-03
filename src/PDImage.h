@@ -82,6 +82,9 @@ typedef int PDImageCompareKey;
 + (void)callWithImageComparator:(PDImageCompareKey)key
     reversed:(BOOL)flag block:(void (^)(NSComparator))block;
 
++ (NSString *)imageCompareKeyString:(PDImageCompareKey)key;
++ (PDImageCompareKey)imageCompareKeyFromString:(NSString *)str;
+
 @property(nonatomic, readonly) NSString *JSONPath;
 
 @property(nonatomic, readonly) NSString *libraryPath;

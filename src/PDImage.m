@@ -468,12 +468,15 @@ static NSOperationQueue *_narrowQueue;
   NSString *raw_type = _RAWPath != nil
 	? type_identifier_for_extension([_RAWPath pathExtension]) : nil;
 
-  [_properties setObject:jpeg_type ? jpeg_type : raw_type
-   forKey:PDImage_ActiveType];
+  if (jpeg_type != nil || raw_type != nil)
+    {
+      [_properties setObject:jpeg_type ? jpeg_type : raw_type
+       forKey:PDImage_ActiveType];
 
-  [_properties setObject:
-   [NSArray arrayWithObjects:jpeg_type != nil ? jpeg_type : raw_type,
-    raw_type != nil ? raw_type : jpeg_type, nil] forKey:PDImage_FileTypes];
+      [_properties setObject:
+       [NSArray arrayWithObjects:jpeg_type != nil ? jpeg_type : raw_type,
+	raw_type != nil ? raw_type : jpeg_type, nil] forKey:PDImage_FileTypes];
+    }
 
   /* FIXME: if we switch from JPEG to RAW or vice versa, should we
      invalidate and reload these properties? */
@@ -614,8 +617,8 @@ static NSOperationQueue *_narrowQueue;
 	   FIXME: what else should be added to this dictionary? */
 
 	NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
-			      [_properties copy], @"Properties",
-			      nil];
+			      [NSDictionary dictionaryWithDictionary:
+			       _properties], @"Properties", nil];
 	NSString *path = [_JSONPath copy];
 
 	NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
@@ -856,6 +859,81 @@ static NSOperationQueue *_narrowQueue;
     got_ret:
       return flag ? ret : -ret;
     });
+}
+
++ (NSString *)imageCompareKeyString:(PDImageCompareKey)key
+{
+  switch (key)
+    {
+    case PDImageCompare_FileName:
+      return @"FileName";
+    case PDImageCompare_FileDate:
+      return @"FileDate";
+    case PDImageCompare_FileSize:
+      return @"FileSize";
+    case PDImageCompare_Name:
+      return @"Name";
+    case PDImageCompare_Date:
+      return @"Date";
+    case PDImageCompare_Keywords:
+      return @"Keywords";
+    case PDImageCompare_Caption:
+      return @"Caption";
+    case PDImageCompare_Rating:
+      return @"Rating";
+    case PDImageCompare_Flagged:
+      return @"Flagged";
+    case PDImageCompare_Orientation:
+      return @"Orientation";
+    case PDImageCompare_PixelSize:
+      return @"PixelSize";
+    case PDImageCompare_Altitude:
+      return @"Altitude";
+    case PDImageCompare_ExposureLength:
+      return @"ExposureLength";
+    case PDImageCompare_FNumber:
+      return @"FNumber";
+    case PDImageCompare_ISOSpeed:
+      return @"ISOSpeed";
+    }
+
+  return @"";
+}
+
++ (PDImageCompareKey)imageCompareKeyFromString:(NSString *)str
+{
+  if ([str isEqualToString:@"FileName"])
+    return PDImageCompare_FileName;
+  else if ([str isEqualToString:@"FileDate"])
+    return PDImageCompare_FileDate;
+  else if ([str isEqualToString:@"FileSize"])
+    return PDImageCompare_FileSize;
+  else if ([str isEqualToString:@"Name"])
+    return PDImageCompare_Name;
+  else if ([str isEqualToString:@"Date"])
+    return PDImageCompare_Date;
+  else if ([str isEqualToString:@"Keywords"])
+    return PDImageCompare_Keywords;
+  else if ([str isEqualToString:@"Caption"])
+    return PDImageCompare_Caption;
+  else if ([str isEqualToString:@"Rating"])
+    return PDImageCompare_Rating;
+  else if ([str isEqualToString:@"Flagged"])
+    return PDImageCompare_Flagged;
+  else if ([str isEqualToString:@"Orientation"])
+    return PDImageCompare_Orientation;
+  else if ([str isEqualToString:@"PixelSize"])
+    return PDImageCompare_PixelSize;
+  else if ([str isEqualToString:@"Altitude"])
+    return PDImageCompare_Altitude;
+  else if ([str isEqualToString:@"ExposureLength"])
+    return PDImageCompare_ExposureLength;
+  else if ([str isEqualToString:@"FNumber"])
+    return PDImageCompare_FNumber;
+  else if ([str isEqualToString:@"ISOSpeed"])
+    return PDImageCompare_ISOSpeed;
+  else
+    return PDImageCompare_Date;
 }
 
 - (NSDate *)date
