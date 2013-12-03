@@ -202,12 +202,14 @@ extern NSString * const PDImage_OriginalDate;	// NSNumber
 extern NSString * const PDImage_Saturation;	// NSNumber
 extern NSString * const PDImage_SceneCaptureType; // NSNumber
 extern NSString * const PDImage_SceneType;	// NSNumber
+extern NSString * const PDImage_SensitivityType; // NSNumber
 extern NSString * const PDImage_Sharpness;	// NSNumber
 extern NSString * const PDImage_WhiteBalance;	// NSNumber
 
 /* Read-only meta-properties for filtering. */
 
 extern NSString * const PDImage_FileName;	// NSString
+extern NSString * const PDImage_FilePath;	// NSString
 extern NSString * const PDImage_FileDate;	// NSNumber
 extern NSString * const PDImage_FileSize;	// NSNumber
 extern NSString * const PDImage_Rejected;	// NSNumber<bool>

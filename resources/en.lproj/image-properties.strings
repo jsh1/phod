@@ -46,10 +46,12 @@
 "saturation" = "Saturation";
 "scene_capture_type" = "Scene Capture Type";
 "scene_type" = "Scene Type";
+"sensitivity_type" = "Sensitivity Type";
 "sharpness" = "Sharpness";
 "white_balance" = "White Balance";
 
 "file_name" = "File Name";
 "file_size" = "File Size";
 "file_date" = "File Date";
+"file_path" = "File Path";
 "rejected" = "Rejected";

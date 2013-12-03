@@ -680,6 +680,10 @@ static NSOperationQueue *_narrowQueue;
 	{
 	  value = [[self imagePath] lastPathComponent];
 	}
+      else if ([key isEqualToString:PDImage_FilePath])
+	{
+	  value = [self imagePath];
+	}
       else if ([key isEqualToString:PDImage_FileDate])
 	{
 	  value = [NSNumber numberWithUnsignedLong:

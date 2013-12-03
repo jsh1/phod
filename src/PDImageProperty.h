@@ -34,3 +34,5 @@ extern NSString *PDImageLocalizedPropertyValue(NSString *key,
 extern NSDate *PDImageParseEXIFDateString(NSString *str);
 
 extern id PDImageExpressionValues(PDImage *im);
+
+extern NSArray *PDImagePredicateEditorRowTemplates(void);

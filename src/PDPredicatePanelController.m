@@ -25,6 +25,7 @@
 #import "PDPredicatePanelController.h"
 
 #import "PDImage.h"
+#import "PDImageProperty.h"
 
 NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
@@ -58,111 +59,7 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 {
   /* Setting up templates in IB is painful, so do it by hand. */
 
-  NSArray *compound_types = @[@(NSNotPredicateType),
-			     @(NSAndPredicateType),
-			     @(NSOrPredicateType)];
-  NSPredicateEditorRowTemplate *compound_template
-   = [[NSPredicateEditorRowTemplate alloc]
-      initWithCompoundTypes:compound_types];
-
-  NSMutableArray *string_keys = [NSMutableArray array];
-  for (NSString *key in @[PDImage_Name, PDImage_ActiveType, PDImage_FileTypes,
-			  PDImage_ColorModel, PDImage_ProfileName,
-			  PDImage_Title, PDImage_Caption, PDImage_Keywords,
-			  PDImage_Copyright, PDImage_CameraMake,
-			  PDImage_CameraModel, PDImage_CameraSoftware,
-			  PDImage_Orientation, PDImage_ExposureMode,
-			  PDImage_ExposureProgram, PDImage_Flash,
-			  PDImage_ImageStabilization, PDImage_LightSource,
-			  PDImage_MeteringMode, PDImage_SceneCaptureType,
-			  PDImage_SceneType, PDImage_WhiteBalance])
-    {
-      [string_keys addObject:[NSExpression expressionForKeyPath:key]];
-    }
-
-  NSArray *string_ops = @[@(NSEqualToPredicateOperatorType),
-			  @(NSNotEqualToPredicateOperatorType),
-			  @(NSBeginsWithPredicateOperatorType),
-			  @(NSEndsWithPredicateOperatorType),
-			  @(NSContainsPredicateOperatorType)];
-
-  NSPredicateEditorRowTemplate *string_template
-    = [[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:string_keys
-       rightExpressionAttributeType:NSStringAttributeType
-       modifier:NSDirectPredicateModifier operators:string_ops
-       options:(NSCaseInsensitivePredicateOption
-		| NSDiacriticInsensitivePredicateOption)];
-
-  NSMutableArray *numeric_keys = [NSMutableArray array];
-  for (NSString *key in @[PDImage_FileSize, PDImage_PixelWidth,
-			  PDImage_PixelHeight, PDImage_Rating,
-			  PDImage_Altitude,
-			  PDImage_Contrast, PDImage_Direction,
-			  PDImage_ExposureBias, PDImage_ExposureLength,
-			  PDImage_FNumber, PDImage_FocalLength,
-			  PDImage_FocalLength35mm, PDImage_ISOSpeed,
-			  PDImage_Latitude, PDImage_Longitude,
-			  PDImage_MaxAperture, PDImage_Saturation,
-			  PDImage_Sharpness])
-    {
-      [numeric_keys addObject:[NSExpression expressionForKeyPath:key]];
-    }
-
-  NSArray *numeric_ops = @[@(NSEqualToPredicateOperatorType),
-			   @(NSNotEqualToPredicateOperatorType),
-			   @(NSLessThanPredicateOperatorType),
-			   @(NSLessThanOrEqualToPredicateOperatorType),
-			   @(NSGreaterThanPredicateOperatorType),
-			   @(NSGreaterThanOrEqualToPredicateOperatorType)];
-
-  NSPredicateEditorRowTemplate *numeric_template
-    = [[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:
-       numeric_keys rightExpressionAttributeType:NSDoubleAttributeType
-       modifier:NSDirectPredicateModifier operators:numeric_ops options:0];
-
-  NSMutableArray *bool_keys = [NSMutableArray array];
-  for (NSString *key in @[PDImage_Flagged, PDImage_Rejected])
-    {
-      [bool_keys addObject:[NSExpression expressionForKeyPath:key]];
-    }
-
-  NSArray *bool_values = @[[NSExpression expressionForConstantValue:
-			    [NSNumber numberWithBool:NO]],
-			   [NSExpression expressionForConstantValue:
-			    [NSNumber numberWithBool:YES]]];
-
-  NSArray *bool_ops = @[@(NSEqualToPredicateOperatorType),
-			   @(NSNotEqualToPredicateOperatorType)];
-
-  NSPredicateEditorRowTemplate *bool_template
-    = [[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:bool_keys
-       rightExpressions:bool_values modifier:NSDirectPredicateModifier
-       operators:bool_ops options:0];
-
-  NSMutableArray *date_keys = [NSMutableArray array];
-  for (NSString *key in @[PDImage_FileDate, PDImage_OriginalDate,
-			  PDImage_DigitizedDate])
-    {
-      [date_keys addObject:[NSExpression expressionForKeyPath:key]];
-    }
-
-  NSArray *date_ops = numeric_ops;
-
-  NSPredicateEditorRowTemplate *date_template
-    = [[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:date_keys
-       rightExpressionAttributeType:NSDateAttributeType
-       modifier:NSDirectPredicateModifier operators:date_ops options:0];
-
-  [_predicateEditor setRowTemplates:
-   @[compound_template, string_template, numeric_template, bool_template,
-     date_template]];
-
-  [compound_template release];
-  [string_template release];
-  [numeric_template release];
-  [bool_template release];
-  [date_template release];
-
+  [_predicateEditor setRowTemplates:PDImagePredicateEditorRowTemplates()];
   [_predicateEditor setObjectValue:_predicate];
 }
 

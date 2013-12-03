@@ -43,6 +43,10 @@
 			<string>profile_name</string>
 			<string>pixel_size</string>
 			<string>orientation</string>
+			<string>light_source</string>
+			<string>sensitivity_type</string>
+			<string>scene_type</string>
+			<string>scene_capture_type</string>
 		</array>
 		<key>GPS</key>
 		<array>

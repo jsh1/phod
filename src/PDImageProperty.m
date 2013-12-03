@@ -78,6 +78,7 @@ property_map(void)
 	  kCGImagePropertyExifSaturation,
 	  kCGImagePropertyExifSceneCaptureType,
 	  kCGImagePropertyExifSceneType,
+	  kCGImagePropertyExifSensitivityType,
 	  kCGImagePropertyExifSharpness,
 	  kCGImagePropertyExifWhiteBalance,
  	};
@@ -102,6 +103,7 @@ property_map(void)
 	  PDImage_Saturation,
 	  PDImage_SceneCaptureType,
 	  PDImage_SceneType,
+	  PDImage_SensitivityType,
 	  PDImage_Sharpness,
 	  PDImage_WhiteBalance,
 	};
@@ -342,6 +344,7 @@ typedef enum
   type_saturation,
   type_scene_capture_type,
   type_scene_type,
+  type_sensitivity_type,
   type_sharpness,
   type_string,
   type_string_array,
@@ -400,6 +403,7 @@ static const type_pair type_map[] =
   {"saturation", type_saturation},
   {"scene_capture_type", type_scene_capture_type},
   {"scene_type", type_scene_type},
+  {"sensitivity_type", type_sensitivity_type},
   {"sharpness", type_sharpness},
   {"title", type_string},
   {"white_balance", type_white_balance},
@@ -417,13 +421,6 @@ lookup_property_type(const char *name)
   return ptr != NULL ? ptr->type : type_unknown;
 }
 
-static inline NSString *
-array_lookup(id value, NSString **array, size_t nelts)
-{
-  size_t i = [value unsignedIntValue];
-  return i < nelts ? array[i] : @"Unknown";
-}
-
 static NSString *
 degrees_string(void)
 {
@@ -438,72 +435,129 @@ degrees_string(void)
   return deg;
 }
 
-static NSString *
-exif_flash_mode(unsigned int x)
-{
-  switch (x)
-    {
-    case 0x00:
-      return @"Flash did not fire";
-    case 0x01:
-      return @"Flash fired";
-    case 0x05:
-      return @"Strobe return light not detected";
-    case 0x07:
-      return @"Strobe return light detected";
-    case 0x09:
-      return @"Flash fired, compulsory flash mode";
-    case 0x0d:
-      return @"Flash fired, compulsory flash mode, return light not detected";
-    case 0x0f:
-      return @"Flash fired, compulsory flash mode, return light detected";
-    case 0x10:
-      return @"Flash did not fire, compulsory flash mode";
-    case 0x18:
-      return @"Flash did not fire, auto mode";
-    case 0x19:
-      return @"Flash fired, auto mode";
-    case 0x1d:
-      return @"Flash fired, auto mode, return light not detected";
-    case 0x1f:
-      return @"Flash fired, auto mode, return light detected";
-    case 0x20:
-      return @"No flash function";
-    case 0x41:
-      return @"Flash fired, red-eye reduction mode";
-    case 0x45:
-      return @"Flash fired, red-eye reduction mode, return light not detected";
-    case 0x47:
-      return @"Flash fired, red-eye reduction mode, return light detected";
-    case 0x49:
-      return @"Flash fired, compulsory flash mode, red-eye reduction mode";
-    case 0x4d:
-      return @"Flash fired, compulsory flash mode, red-eye reduction mode, return light not detected";
-    case 0x4f:
-      return @"Flash fired, compulsory flash mode, red-eye reduction mode, return light detected";
-    case 0x59:
-      return @"Flash fired, auto mode, red-eye reduction mode";
-    case 0x5d:
-      return @"Flash fired, auto mode, return light not detected, red-eye reduction mode";
-    case 0x5f:
-      return @"Flash fired, auto mode, return light detected, red-eye reduction mode}";
-    default:
-      return @"Unknown flash mode.";
-    }
-}
+static const NSString *flash_modes[] = {
+  [0x00] = @"Flash did not fire",
+  [0x01] = @"Flash fired",
+  [0x05] = @"Strobe return light not detected",
+  [0x07] = @"Strobe return light detected",
+  [0x09] = @"Flash fired, compulsory flash mode",
+  [0x0d] = @"Flash fired, compulsory flash mode, return light not detected",
+  [0x0f] = @"Flash fired, compulsory flash mode, return light detected",
+  [0x10] = @"Flash did not fire, compulsory flash mode",
+  [0x18] = @"Flash did not fire, auto mode",
+  [0x19] = @"Flash fired, auto mode",
+  [0x1d] = @"Flash fired, auto mode, return light not detected",
+  [0x1f] = @"Flash fired, auto mode, return light detected",
+  [0x20] = @"No flash function",
+  [0x41] = @"Flash fired, red-eye reduction mode",
+  [0x45] = @"Flash fired, red-eye reduction mode, return light not detected",
+  [0x47] = @"Flash fired, red-eye reduction mode, return light detected",
+  [0x49] = @"Flash fired, compulsory flash mode, red-eye reduction mode",
+  [0x4d] = @"Flash fired, compulsory flash mode, red-eye reduction mode, return light not detected",
+  [0x4f] = @"Flash fired, compulsory flash mode, red-eye reduction mode, return light detected",
+  [0x59] = @"Flash fired, auto mode, red-eye reduction mode",
+  [0x5d] = @"Flash fired, auto mode, return light not detected, red-eye reduction mode",
+  [0x5f] = @"Flash fired, auto mode, return light detected, red-eye reduction mode",
+};
 
 static const NSString *contrast[] = {@"Normal", @"Low", @"High"};
+
 static const NSString *exposure_mode[] = {@"Auto Exposure",
   @"Manual Exposure", @"Auto Exposure Bracket"};
+
 static const NSString *white_balance[] = {@"Auto White Balance",
   @"Manual White Balance"};
+
 static const NSString *exposure_prog[] = {@"Unknown Program", @"Manual",
   @"Normal Program", @"Aperture Priority", @"Shutter Priority",
   @"Creative Program", @"Action Program", @"Portrait Mode",
   @"Landscape Mode", @"Bulb Mode"};
-static const NSString *metering_mode[] = {@"Unknown", @"Average",
+
+static const NSString *metering_mode[] = {nil, @"Average",
   @"Center-Weighted Average", @"Spot", @"Multi-Spot", @"Pattern",
   @"Partial"};
+
+static const NSString *orientation_type[] = {nil, @"Landscape",
+  @"Mirror Horizontal", @"Rotate 180", @"Mirror Vertical",
+  @"Mirror Horizontal and Rotate 270 CW",
+  @"Rotate 90 CW", @"Mirror Horizontal and Rotate 90 CW",
+  @"Rotate 270 CW"};
+
+static const NSString *light_sources[] = {nil, @"Daylight",
+  @"Fluorescent", @"Tungsten (Incandescent)", @"Flash", nil, nil, nil, nil,
+  @"Fine Weather", @"Cloudy", @"Shade", @"Daylight Fluorescent",
+  @"Day White Fluorescent", @"Cool White Fluorescent",
+  @"White Fluorescent", @"Warm White Fluorescent", @"Standard Light A",
+  @"Standard Light B", @"Standard Light C", @"D55", @"D65", @"D75",
+  @"D50", @"ISO Studio Tungsten"};
+
+static const NSString *scene_types[] = {nil, @"Directly Photographed"};
+
+static const NSString *scene_capture_types[] = {@"Standard", @"Landscape",
+  @"Portrait", @"Night"};
+
+static const NSString *sensitivity_types[] = {nil,
+  @"Standard Output Sensitivity", @"Recommended Exposure Index",
+  @"ISO Speed", @"Standard Output Sensitivity and Recommended Exposure Index",
+  @"Standard Output Sensitivity and ISO Speed",
+  @"Recommended Exposure Index and ISO Speed",
+  @"Standard Output Sensitivity, Recommended Exposure Index and ISO Speed"};
+
+static inline NSString *
+array_lookup(int idx, NSString **array, size_t nelts)
+{
+  NSString *str = idx >= 0 && idx < nelts ? array[idx] : nil;
+  return str != nil ? str : @"Unknown";
+}
+
+static NSString *
+lookup_enum_string(property_type type, int idx)
+{
+  switch (type)
+    {
+    case type_contrast:
+      return array_lookup(idx, contrast, N_ELEMENTS(contrast));
+	
+    case type_exposure_mode:
+      return array_lookup(idx, exposure_mode, N_ELEMENTS(exposure_mode));
+
+    case type_exposure_program:
+      return array_lookup(idx, exposure_prog, N_ELEMENTS(exposure_prog));
+
+    case type_flash_mode:
+      return array_lookup(idx, flash_modes, N_ELEMENTS(flash_modes));
+
+    case type_light_source:
+      return array_lookup(idx, light_sources, N_ELEMENTS(light_sources));
+      
+    case type_scene_type:
+      return array_lookup(idx, scene_types, N_ELEMENTS(scene_types));
+
+    case type_scene_capture_type:
+      return array_lookup(idx, scene_capture_types,
+			  N_ELEMENTS(scene_capture_types));
+
+    case type_sensitivity_type:
+      return array_lookup(idx, sensitivity_types,
+			  N_ELEMENTS(sensitivity_types));
+
+    case type_metering_mode:
+      return array_lookup(idx, metering_mode, N_ELEMENTS(metering_mode));
+
+    case type_orientation:
+      return array_lookup(idx, orientation_type, N_ELEMENTS(orientation_type));
+
+    case type_white_balance:
+      return array_lookup(idx, white_balance, N_ELEMENTS(white_balance));
+
+    case type_focus_mode:
+    case type_image_stabilization_mode:
+      /* FIXME: definitions? */
+
+    default:
+      return nil;
+    }
+}
 
 NSString *
 PDImageLocalizedNameOfProperty(NSString *key)
@@ -515,17 +569,53 @@ PDImageLocalizedNameOfProperty(NSString *key)
 NSString *
 PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
 {
-  switch (lookup_property_type([key UTF8String]))
+  property_type type = lookup_property_type([key UTF8String]);
+
+  switch (type)
     {
       double x;
       const char *str;
+      NSDate *date;
 
     case type_bool:
       return [value intValue] != 0 ? @"True" : @"False";
 
-    case type_contrast:
-      return array_lookup(value, contrast, N_ELEMENTS(contrast));
-	
+    case type_bytes:
+      x = [value doubleValue];
+      if (x > 1024.*1024.*1024.*1024.)
+	x = x / (1024.*1024.*1024.*1024.), str = "TB";
+      else if (x > 1024.*1024.*1024.)
+	x = x / (1024.*1024.*1024.), str = "GB";
+      else if (x > 1024*1024)
+	x = x / (1024*1024), str = "MB";
+      else if (x > 1024)
+	x = x / 1024, str = "KB";
+      else
+	str ="bytes";
+      return [NSString stringWithFormat:@"%.3g %s", x, str];
+      
+    case type_duration:
+      if ([value doubleValue] < 1)
+	return [NSString stringWithFormat:@"1/%g", 1/[value doubleValue]];
+      else
+	return [NSString stringWithFormat:@"%g", [value doubleValue]];
+
+    case type_latitude:
+      x = [value doubleValue];
+      return [NSString stringWithFormat:@"%g%@ %s",
+	      fabs(x), degrees_string(), x >= 0 ? "North" : "South"];
+
+    case type_longitude:
+      x = [value doubleValue];
+      return [NSString stringWithFormat:@"%g%@ %s",
+	      fabs(x), degrees_string(), x >= 0 ? "East" : "West"];
+
+    case type_metres:
+      return [NSString stringWithFormat:@"%gm", [value doubleValue]];
+
+    case type_millimetres:
+      return [NSString stringWithFormat:@"%gmm", [value doubleValue]];
+
     case type_direction:
       str = ![[im imagePropertyForKey:PDImage_DirectionRef]
 	      isEqual:@"T"] ? "Magnetic North" : "True North";
@@ -538,58 +628,45 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
     case type_fstop:
       return [NSString stringWithFormat:@"f/%g", [value doubleValue]];
 
-    case type_duration:
-      if ([value doubleValue] < 1)
-	return [NSString stringWithFormat:@"1/%g", 1/[value doubleValue]];
-      else
-	return [NSString stringWithFormat:@"%g", [value doubleValue]];
-
-    case type_exposure_mode:
-      return array_lookup(value, exposure_mode, N_ELEMENTS(exposure_mode));
-
-    case type_exposure_program:
-      return array_lookup(value, exposure_prog, N_ELEMENTS(exposure_prog));
-
-    case type_flash_mode:
-      return exif_flash_mode([value unsignedIntValue]);
-
     case type_iso_speed:
       return [NSString stringWithFormat:@"ISO %g", [value doubleValue]];
 
-    case type_latitude:
-      x = [value doubleValue];
-      return [NSString stringWithFormat:@"%g%@ %s",
-	      fabs(x), degrees_string(), x >= 0 ? "North" : "South"];
-
-    case type_longitude:
-      x = [value doubleValue];
-      return [NSString stringWithFormat:@"%g%@ %s",
-	      fabs(x), degrees_string(), x >= 0 ? "East" : "West"];
-
+    case type_contrast:
+    case type_exposure_mode:
+    case type_exposure_program:
+    case type_flash_mode:
     case type_metering_mode:
-      return array_lookup(value, metering_mode, N_ELEMENTS(metering_mode));
-
-    case type_metres:
-      return [NSString stringWithFormat:@"%gm", [value doubleValue]];
-
-    case type_millimetres:
-      return [NSString stringWithFormat:@"%gmm", [value doubleValue]];
-
     case type_white_balance:
-      return array_lookup(value, white_balance, N_ELEMENTS(white_balance));
-
-    case type_bytes:
-    case type_date:
-    case type_flash_compensation:
-    case type_focus_mode:
     case type_image_stabilization_mode:
+    case type_scene_type:
+    case type_scene_capture_type:
+    case type_sensitivity_type:
+    case type_focus_mode:
     case type_light_source:
     case type_orientation:
+      return lookup_enum_string(type, [value intValue]);
+
+    case type_date:
+      date = PDImageParseEXIFDateString(value);
+      if (date != nil)
+	{
+	  static NSDateFormatter *formatter;
+	  static dispatch_once_t once;
+
+	  dispatch_once(&once, ^{
+	    formatter = [[NSDateFormatter alloc] init];
+	    [formatter setDateStyle:NSDateFormatterMediumStyle];
+	    [formatter setTimeStyle:NSDateFormatterMediumStyle];
+	  });
+
+	  return [formatter stringFromDate:date];
+	}
+      break;
+
+    case type_flash_compensation:
     case type_pixels:
     case type_rating:
     case type_saturation:
-    case type_scene_capture_type:
-    case type_scene_type:
     case type_sharpness:
     case type_string:
     case type_string_array:
@@ -617,7 +694,9 @@ PDImageExpressionValues(PDImage *im)
 {
   id value = [_image imagePropertyForKey:key];
 
-  switch (lookup_property_type([key UTF8String]))
+  property_type type = lookup_property_type([key UTF8String]);
+
+  switch (type)
     {
     case type_bool:
       return [NSNumber numberWithBool:[value intValue] != 0];
@@ -632,28 +711,21 @@ PDImageExpressionValues(PDImage *im)
     case type_string_array:
       return [(NSArray *)value componentsJoinedByString:@" "];
 
-    case type_exposure_mode:
-      return array_lookup(value, exposure_mode, N_ELEMENTS(exposure_mode));
-
-    case type_exposure_program:
-      return array_lookup(value, exposure_prog, N_ELEMENTS(exposure_prog));
-
-    case type_flash_mode:
-      return exif_flash_mode([value unsignedIntValue]);
-
-    case type_metering_mode:
-      return array_lookup(value, metering_mode, N_ELEMENTS(metering_mode));
-
-    case type_white_balance:
-      return array_lookup(value, white_balance, N_ELEMENTS(white_balance));
-
-    case type_image_stabilization_mode:
-    case type_scene_capture_type:
-    case type_scene_type:
-      /* FIXME format these types. */
-      break;
-
     case type_contrast:
+    case type_exposure_mode:
+    case type_exposure_program:
+    case type_flash_mode:
+    case type_metering_mode:
+    case type_white_balance:
+    case type_scene_type:
+    case type_scene_capture_type:
+    case type_sensitivity_type:
+    case type_light_source:
+    case type_orientation:
+    case type_focus_mode:
+    case type_image_stabilization_mode:
+      return lookup_enum_string(type, [value intValue]);
+
     case type_direction:
     case type_exposure_bias:
     case type_fstop:
@@ -665,9 +737,6 @@ PDImageExpressionValues(PDImage *im)
     case type_millimetres:
     case type_bytes:
     case type_flash_compensation:
-    case type_focus_mode:
-    case type_light_source:
-    case type_orientation:
     case type_pixels:
     case type_rating:
     case type_saturation:
@@ -711,6 +780,185 @@ PDImageParseEXIFDateString(NSString *str)
   else
     return nil;
 }
+
+
+/* NSPredicateEditor templates for image properties. */
+
+static NSPredicateEditorRowTemplate *
+predicate_compound_template(void)
+{
+  NSArray *compound_types = @[@(NSNotPredicateType),
+			     @(NSAndPredicateType),
+			     @(NSOrPredicateType)];
+
+  return [[[NSPredicateEditorRowTemplate alloc]
+	   initWithCompoundTypes:compound_types]
+	  autorelease];
+}
+
+static NSPredicateEditorRowTemplate *
+predicate_string_template(void)
+{
+  NSMutableArray *string_keys = [NSMutableArray array];
+  for (NSString *key in @[PDImage_Name, PDImage_ActiveType, PDImage_FileTypes,
+			  PDImage_ColorModel, PDImage_ProfileName,
+			  PDImage_Title, PDImage_Caption, PDImage_Keywords,
+			  PDImage_Copyright, PDImage_CameraMake,
+			  PDImage_CameraModel, PDImage_CameraSoftware])
+    {
+      [string_keys addObject:[NSExpression expressionForKeyPath:key]];
+    }
+
+  NSArray *string_ops = @[@(NSEqualToPredicateOperatorType),
+			  @(NSNotEqualToPredicateOperatorType),
+			  @(NSBeginsWithPredicateOperatorType),
+			  @(NSEndsWithPredicateOperatorType),
+			  @(NSContainsPredicateOperatorType)];
+
+  return [[[NSPredicateEditorRowTemplate alloc]
+	   initWithLeftExpressions:string_keys rightExpressionAttributeType:
+	   NSStringAttributeType modifier:NSDirectPredicateModifier
+	   operators:string_ops options:NSCaseInsensitivePredicateOption
+	   | NSDiacriticInsensitivePredicateOption]
+	  autorelease];
+}
+
+static NSPredicateEditorRowTemplate *
+predicate_numeric_template(void)
+{
+  NSMutableArray *numeric_keys = [NSMutableArray array];
+  for (NSString *key in @[PDImage_FileSize, PDImage_PixelWidth,
+			  PDImage_PixelHeight, PDImage_Rating,
+			  PDImage_Altitude, PDImage_Direction,
+			  PDImage_ExposureBias, PDImage_ExposureLength,
+			  PDImage_FNumber, PDImage_FocalLength,
+			  PDImage_FocalLength35mm, PDImage_ISOSpeed,
+			  PDImage_Latitude, PDImage_Longitude,
+			  PDImage_MaxAperture, PDImage_Saturation,
+			  PDImage_Sharpness])
+    {
+      [numeric_keys addObject:[NSExpression expressionForKeyPath:key]];
+    }
+
+  NSArray *numeric_ops = @[@(NSEqualToPredicateOperatorType),
+			   @(NSNotEqualToPredicateOperatorType),
+			   @(NSLessThanPredicateOperatorType),
+			   @(NSLessThanOrEqualToPredicateOperatorType),
+			   @(NSGreaterThanPredicateOperatorType),
+			   @(NSGreaterThanOrEqualToPredicateOperatorType)];
+
+  return [[[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:
+	   numeric_keys rightExpressionAttributeType:NSDoubleAttributeType
+	   modifier:NSDirectPredicateModifier operators:numeric_ops options:0]
+	  autorelease];
+}
+
+static NSPredicateEditorRowTemplate *
+predicate_bool_template(void)
+{
+  NSMutableArray *bool_keys = [NSMutableArray array];
+  for (NSString *key in @[PDImage_Flagged, PDImage_Rejected])
+    {
+      [bool_keys addObject:[NSExpression expressionForKeyPath:key]];
+    }
+
+  NSArray *bool_values = @[[NSExpression expressionForConstantValue:
+			    [NSNumber numberWithBool:NO]],
+			   [NSExpression expressionForConstantValue:
+			    [NSNumber numberWithBool:YES]]];
+
+  NSArray *bool_ops = @[@(NSEqualToPredicateOperatorType),
+			   @(NSNotEqualToPredicateOperatorType)];
+
+  return [[[NSPredicateEditorRowTemplate alloc]
+	   initWithLeftExpressions:bool_keys rightExpressions:bool_values
+	   modifier:NSDirectPredicateModifier operators:bool_ops options:0]
+	  autorelease];
+}
+
+static NSPredicateEditorRowTemplate *
+predicate_date_template(void)
+{
+  NSMutableArray *date_keys = [NSMutableArray array];
+  for (NSString *key in @[PDImage_FileDate, PDImage_OriginalDate,
+			  PDImage_DigitizedDate])
+    {
+      [date_keys addObject:[NSExpression expressionForKeyPath:key]];
+    }
+
+  NSArray *date_ops = @[@(NSEqualToPredicateOperatorType),
+			@(NSNotEqualToPredicateOperatorType),
+			@(NSLessThanPredicateOperatorType),
+			@(NSLessThanOrEqualToPredicateOperatorType),
+			@(NSGreaterThanPredicateOperatorType),
+			@(NSGreaterThanOrEqualToPredicateOperatorType)];
+
+  return [[[NSPredicateEditorRowTemplate alloc]
+	   initWithLeftExpressions:date_keys rightExpressionAttributeType:
+	   NSDateAttributeType modifier:NSDirectPredicateModifier
+	   operators:date_ops options:0]
+	  autorelease];
+}
+
+static NSPredicateEditorRowTemplate *
+predicate_enum_template(NSString *key, NSString **array, size_t nelts)
+{
+  NSExpression *enum_key = [NSExpression expressionForKeyPath:key];
+
+  NSMutableArray *enum_values = [NSMutableArray array];
+
+  size_t i;
+  for (i = 0; i < nelts; i++)
+    {
+      if (array[i] == nil)
+	continue;
+      [enum_values addObject:
+       [NSExpression expressionForConstantValue:array[i]]];
+    }
+
+  NSArray *enum_ops = @[@(NSEqualToPredicateOperatorType),
+			@(NSNotEqualToPredicateOperatorType)];
+
+  return [[[NSPredicateEditorRowTemplate alloc]
+	   initWithLeftExpressions:@[enum_key] rightExpressions:enum_values
+	   modifier:NSDirectPredicateModifier operators:enum_ops options:0]
+	  autorelease];
+}
+
+#define ENUM(x, y) predicate_enum_template(PDImage_##x, y, N_ELEMENTS(y))
+
+NSArray *
+PDImagePredicateEditorRowTemplates(void)
+{
+  static NSArray *templates;
+  static dispatch_once_t once;
+
+  dispatch_once(&once, ^{
+    templates = @[
+      predicate_compound_template(),
+      predicate_string_template(),
+      predicate_numeric_template(),
+      predicate_bool_template(),
+      predicate_date_template(),
+      ENUM(Contrast, contrast),
+      ENUM(ExposureMode, exposure_mode),
+      ENUM(ExposureProgram, exposure_prog),
+      ENUM(Flash, flash_modes),
+      ENUM(LightSource, light_sources),
+      ENUM(SceneType, scene_types),
+      ENUM(SceneCaptureType, scene_capture_types),
+      ENUM(SensitivityType, sensitivity_types),
+      ENUM(MeteringMode, metering_mode),
+      ENUM(Orientation, orientation_type),
+      ENUM(WhiteBalance, white_balance)
+    ];
+    [templates retain];
+  });
+
+  return templates;
+}
+
+#undef ENUM
 
 
 /* Property string definitions. */
@@ -761,10 +1009,12 @@ NSString * const PDImage_OriginalDate = @"original_date";
 NSString * const PDImage_Saturation = @"saturation";
 NSString * const PDImage_SceneCaptureType = @"scene_capture_type";
 NSString * const PDImage_SceneType = @"scene_type";
+NSString * const PDImage_SensitivityType = @"sensitivity_type";
 NSString * const PDImage_Sharpness = @"sharpness";
 NSString * const PDImage_WhiteBalance = @"white_balance";
 
 NSString * const PDImage_FileName = @"file_name";
+NSString * const PDImage_FilePath = @"file_path";
 NSString * const PDImage_FileDate = @"file_date";
 NSString * const PDImage_FileSize = @"file_size";
 NSString * const PDImage_Rejected = @"rejected";
