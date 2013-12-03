@@ -160,6 +160,7 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
   [compound_template release];
   [string_template release];
   [numeric_template release];
+  [bool_template release];
   [date_template release];
 
   [_predicateEditor setObjectValue:_predicate];
@@ -188,6 +189,9 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
 - (NSPredicate *)predicateWithFormat:(NSString *)str
 {
+  if ([str length] == 0)
+    return nil;
+
   @try {
     return [NSPredicate predicateWithFormat:str];
   } @catch (id exception) {
