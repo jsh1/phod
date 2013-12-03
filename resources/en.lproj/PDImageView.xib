@@ -42,9 +42,9 @@
                     </textFieldCell>
                 </textField>
                 <button toolTip="Rotate image left — [" verticalHuggingPriority="750" id="OoR-lL-5Jc">
-                    <rect key="frame" x="5" y="4" width="22" height="22"/>
+                    <rect key="frame" x="5" y="4" width="23" height="23"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" title="↺" bezelStyle="smallSquare" image="4EFC6C88-9482-4C68-9C18-0B0B689C4260" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="BFh-cd-gKh">
+                    <buttonCell key="cell" type="smallSquare" title="↺" bezelStyle="smallSquare" image="FD8376B3-911A-42F7-8EBF-90E5AAF73A59" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="BFh-cd-gKh">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" size="24" name="AppleSymbols"/>
                     </buttonCell>
@@ -53,9 +53,9 @@
                     </connections>
                 </button>
                 <button toolTip="Rotate image right — ]" verticalHuggingPriority="750" id="heS-sk-CBW">
-                    <rect key="frame" x="29" y="4" width="22" height="22"/>
+                    <rect key="frame" x="30" y="4" width="23" height="23"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" title="↻" bezelStyle="smallSquare" image="4EFC6C88-9482-4C68-9C18-0B0B689C4260" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="YKC-3q-XLg">
+                    <buttonCell key="cell" type="smallSquare" title="↻" bezelStyle="smallSquare" image="FD8376B3-911A-42F7-8EBF-90E5AAF73A59" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="YKC-3q-XLg">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" size="24" name="AppleSymbols"/>
                     </buttonCell>
@@ -75,7 +75,7 @@
         </customView>
     </objects>
     <resources>
-        <image name="4EFC6C88-9482-4C68-9C18-0B0B689C4260" width="1" height="1">
+        <image name="FD8376B3-911A-42F7-8EBF-90E5AAF73A59" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
