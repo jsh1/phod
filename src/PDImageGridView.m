@@ -353,7 +353,7 @@
       [self scrollToPrimaryAnimated:YES];
 
       if ([e type] == NSRightMouseDown
-	  || ([e modifierFlags] & NSControlKeyMask))
+	  || ([e modifierFlags] & NSControlKeyMask) != 0)
 	{
 	  [(PDAppDelegate *)[NSApp delegate]
 	   popUpImageContextMenuWithEvent:e forView:self];

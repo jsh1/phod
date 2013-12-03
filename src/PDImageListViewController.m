@@ -27,6 +27,7 @@
 #import "PDColor.h"
 #import "PDImage.h"
 #import "PDImageGridView.h"
+#import "PDLibraryViewController.h"
 #import "PDWindowController.h"
 
 #define MAX_TITLE_STRINGS 6
@@ -53,6 +54,9 @@
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(imagePredicateDidChange:)
    name:PDImagePredicateDidChange object:_controller];
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(librarySelectionDidChange:)
+   name:PDLibrarySelectionDidChange object:_controller];
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(imagePropertyDidChange:)
    name:PDImagePropertyDidChange object:nil];
@@ -122,7 +126,6 @@
   NSArray *images = [_controller filteredImageList];
 
   [_gridView setImages:images];
-  [_gridView scrollPoint:NSZeroPoint];
 
   if ([images count] != 0)
     {
@@ -174,6 +177,11 @@
   [_rotateRightButton setEnabled:enabled];
 
   [_sortButton selectItemWithTag:[_controller imageSortKey]];
+}
+
+- (void)librarySelectionDidChange:(NSNotification *)note
+{
+  [_gridView scrollPoint:NSZeroPoint];
 }
 
 - (void)imagePredicateDidChange:(NSNotification *)note
@@ -259,10 +267,29 @@
     }
   else if (sender == _searchField)
     {
-      NSString *str = [_searchField stringValue];
-      [_controller setImagePredicate:
-       [_controller imagePredicateWithFormat:str]];
-      [_controller rebuildImageList];
+      NSString *str = [[_searchField stringValue]
+		       stringByTrimmingCharactersInSet:
+		       [NSCharacterSet whitespaceCharacterSet]];
+
+      if ([str length] != 0)
+	{
+	  NSPredicate *pred = [_controller imagePredicateWithFormat:str];
+
+	  /* If parsing a non-null string fails, we don't want to
+	     update the in-use predicate, that would probably set the
+	     string being edited to the empty string. */
+
+	  if (pred != nil)
+	    {
+	      [_controller setImagePredicate:pred];
+	      [_controller rebuildImageList];
+	    }
+	}
+      else if ([_controller imagePredicate] != nil)
+	{
+	  [_controller setImagePredicate:nil];
+	  [_controller rebuildImageList];
+	}
     }
 }
 

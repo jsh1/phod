@@ -24,6 +24,9 @@
 
 #import "PDViewController.h"
 
+/* posted to window controller. */
+extern NSString *const PDLibrarySelectionDidChange;
+
 @interface PDLibraryViewController : PDViewController
     <NSOutlineViewDataSource, NSOutlineViewDelegate>
 {

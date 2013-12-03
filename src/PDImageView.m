@@ -24,6 +24,7 @@
 
 #import "PDImageView.h"
 
+#import "PDAppDelegate.h"
 #import "PDAppKitExtensions.h"
 #import "PDColor.h"
 #import "PDImage.h"
@@ -320,6 +321,13 @@
       return;
     }
 
+  if (([e modifierFlags] & NSControlKeyMask) != 0)
+    {
+      [(PDAppDelegate *)[NSApp delegate]
+       popUpImageContextMenuWithEvent:e forView:self];
+      return;
+    }
+
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   NSPoint p0 = [self convertPoint:[e locationInWindow] fromView:nil];
@@ -347,6 +355,12 @@
     }
 
   [pool drain];
+}
+
+- (void)rightMouseDown:(NSEvent *)e
+{
+  [(PDAppDelegate *)[NSApp delegate]
+   popUpImageContextMenuWithEvent:e forView:self];
 }
 
 - (void)scrollWheel:(NSEvent *)e

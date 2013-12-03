@@ -31,6 +31,8 @@
 #import "PDLibraryItem.h"
 #import "PDWindowController.h"
 
+NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
+
 @implementation PDLibraryViewController
 
 + (NSString *)viewNibName
@@ -103,6 +105,57 @@
   return _outlineView;
 }
 
+- (void)updateImageList
+{
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+
+  if ([sel count] == 0)
+    [_controller setImageList:[NSArray array]];
+  else
+    {
+      NSMutableArray *array = [NSMutableArray array];
+      NSDictionary *viewState = nil;
+
+      for (NSInteger row = [sel firstIndex];
+	   row != NSNotFound; row = [sel indexGreaterThanIndex:row])
+	{
+	  PDLibraryItem *item = [_outlineView itemAtRow:row];
+
+	  if (viewState == nil)
+	    viewState = [_itemViewState objectForKey:item];
+
+	  [array addObjectsFromArray:[item subimages]];
+	}
+
+      int sortKey = PDImageCompare_Date;
+      BOOL sortRev = YES;
+      NSPredicate *pred = nil;
+
+      if (viewState != nil)
+	{
+	  NSString *key = [viewState objectForKey:@"imageSortKey"];
+	  NSNumber *reversed = [viewState objectForKey:@"imageSortReversed"];
+	  NSString *predicate = [viewState objectForKey:@"imagePredicate"];
+
+	  if (key != nil)
+	    sortKey = [PDImage imageCompareKeyFromString:key];
+	  if (reversed != nil)
+	    sortRev = [reversed boolValue];
+	  if (predicate != nil)
+	    pred = [_controller imagePredicateWithFormat:predicate];
+	}
+
+      /* Install sort/filter options before modifying the image list,
+	 so that they only get applied once. */
+
+      [_controller setImageSortKey:sortKey];
+      [_controller setImageSortReversed:sortRev];
+      [_controller setImagePredicate:pred];
+
+      [_controller setImageList:array];
+    }
+}
+
 - (void)libraryItemSubimagesDidChange:(NSNotification *)note
 {
   PDLibraryItem *item = [note object];
@@ -121,7 +174,7 @@
     }
 
   if (selected)
-    [self outlineViewSelectionDidChange:nil];
+    [self updateImageList];
 }
 
 - (IBAction)addFolderAction:(id)sender
@@ -198,7 +251,7 @@
       [_outlineView reloadData];
     }
 
-  [self outlineViewSelectionDidChange:nil];
+  [self updateImageList];
 }
 
 - (IBAction)searchAction:(id)sender
@@ -423,7 +476,7 @@ item_for_path(NSArray *items, NSArray *path)
       [_outlineView scrollRowToVisible:[sel firstIndex]];
     }
 
-  [self outlineViewSelectionDidChange:nil];
+  [self updateImageList];
 }
 
 // NSOutlineViewDataSource methods
@@ -494,56 +547,16 @@ item_for_path(NSArray *items, NSArray *path)
 
 - (void)outlineViewSelectionDidChange:(NSNotification *)note
 {
-  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+  [self updateImageList];
 
-  if ([sel count] == 0)
-    [_controller setImageList:[NSArray array]];
-  else
+  if ([[_controller filteredImageList] count] > 0
+      && [[_controller selectedImageIndexes] count] == 0)
     {
-      NSMutableArray *array = [NSMutableArray array];
-      NSDictionary *viewState = nil;
-
-      for (NSInteger row = [sel firstIndex];
-	   row != NSNotFound; row = [sel indexGreaterThanIndex:row])
-	{
-	  PDLibraryItem *item = [_outlineView itemAtRow:row];
-
-	  if (viewState == nil)
-	    viewState = [_itemViewState objectForKey:item];
-
-	  [array addObjectsFromArray:[item subimages]];
-	}
-
-      int sortKey = PDImageCompare_Date;
-      BOOL sortRev = YES;
-      NSPredicate *pred = nil;
-
-      if (viewState != nil)
-	{
-	  NSString *key = [viewState objectForKey:@"imageSortKey"];
-	  NSNumber *reversed = [viewState objectForKey:@"imageSortReversed"];
-	  NSString *predicate = [viewState objectForKey:@"imagePredicate"];
-
-	  if (key != nil)
-	    sortKey = [PDImage imageCompareKeyFromString:key];
-	  if (reversed != nil)
-	    sortRev = [reversed boolValue];
-	  if (predicate != nil)
-	    pred = [_controller imagePredicateWithFormat:predicate];
-	}
-
-      /* Install sort/filter options before modifying the image list,
-	 so that they only get applied once. */
-
-      [_controller setImageSortKey:sortKey];
-      [_controller setImageSortReversed:sortRev];
-      [_controller setImagePredicate:pred];
-
-      [_controller setImageList:array];
-
-      if ([array count] > 0 && [[_controller selectedImageIndexes] count] == 0)
-	[_controller setSelectedImageIndexes:[NSIndexSet indexSetWithIndex:0]];
+      [_controller setSelectedImageIndexes:[NSIndexSet indexSetWithIndex:0]];
     }
+
+  [[NSNotificationCenter defaultCenter]
+   postNotificationName:PDLibrarySelectionDidChange object:_controller];
 }
 
 - (NSString *)outlineView:(NSOutlineView *)ov toolTipForCell:(NSCell *)cell
