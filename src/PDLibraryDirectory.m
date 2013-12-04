@@ -58,6 +58,23 @@
   [super dealloc];
 }
 
+- (BOOL)applySearchString:(NSString *)str
+{
+  BOOL matches = [super applySearchString:str];
+
+  NSString *title = [self titleString];
+
+  if (title != nil)
+    {
+      if ([title rangeOfString:str options:NSCaseInsensitiveSearch].length > 0)
+	matches = YES;
+    }
+
+  [self setHidden:!matches];
+
+  return matches;
+}
+
 - (void)loadSubimages
 {
   if (_subimages == nil)

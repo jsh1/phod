@@ -41,16 +41,6 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
 	matches = YES;
     }
 
-  NSString *title = [self titleString];
-
-  if (title != nil)
-    {
-      if ([title rangeOfString:str options:NSCaseInsensitiveSearch].length > 0)
-	matches = YES;
-    }
-
-  [self setHidden:!matches];
-
   return matches;
 }
 

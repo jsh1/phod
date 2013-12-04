@@ -29,7 +29,10 @@
 #import "PDImageTextCell.h"
 #import "PDLibraryDirectory.h"
 #import "PDLibraryItem.h"
+#import "PDLibraryGroup.h"
 #import "PDWindowController.h"
+
+#import "PXSourceList.h"
 
 NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
@@ -47,7 +50,7 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
        [dir stringByExpandingTildeInPath] directory:@""];
 
   [item setTitleImageName:PDImage_GenericHardDisk];
-  [_items addObject:item];
+  [_foldersGroup addSubitem:item];
   [item release];
 }
 
@@ -61,6 +64,11 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 	       arrayForKey:@"PDLibraryDirectories"] mutableCopy];
 
   _items = [[NSMutableArray alloc] init];
+
+  _foldersGroup = [[PDLibraryGroup alloc] init];
+  [_foldersGroup setName:@"Folders"];
+  [_items addObject:_foldersGroup];
+  [_foldersGroup release];
 
   _itemViewState = [[NSMapTable strongToStrongObjectsMapTable] retain];
   
@@ -76,6 +84,7 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   [_outlineView setDelegate:nil];
 
   [_items release];
+  [_itemViewState release];
 
   [super dealloc];
 }
@@ -98,6 +107,8 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
   for (NSTableColumn *col in [_outlineView tableColumns])
     [[col dataCell] setVerticallyCentered:YES];
+
+  [_outlineView expandItem:_foldersGroup];
 }
 
 - (NSView *)initialFirstResponder
@@ -233,11 +244,12 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
       if ([item parent] == nil
 	  && [item isKindOfClass:[PDLibraryDirectory class]])
 	{
-	  NSInteger idx = [_items indexOfObjectIdenticalTo:item];
+	  NSArray *subitems = [_foldersGroup subitems];
+	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
 	  if (idx != NSNotFound)
 	    {
 	      [_folders removeObjectAtIndex:idx];
-	      [_items removeObjectAtIndex:idx];
+	      [_foldersGroup removeSubitem:[subitems objectAtIndex:idx]];
 	      changed = YES;
 	    }
 	}
@@ -479,9 +491,9 @@ item_for_path(NSArray *items, NSArray *path)
   [self updateImageList];
 }
 
-// NSOutlineViewDataSource methods
+// PXSourceListDataSource methods
 
-- (NSInteger)outlineView:(NSOutlineView *)ov numberOfChildrenOfItem:(id)item
+- (NSUInteger)sourceList:(PXSourceList *)lst numberOfChildrenOfItem:(id)item
 {
   NSArray *array = item == nil ? _items : [(PDLibraryItem *)item subitems];
   NSInteger count = 0;
@@ -489,63 +501,72 @@ item_for_path(NSArray *items, NSArray *path)
   for (PDLibraryItem *item in array)
     {
       if (![item isHidden])
-	count++;
+       count++;
     }
 
   return count;
 }
 
-- (id)outlineView:(NSOutlineView *)ov child:(NSInteger)index ofItem:(id)item
+- (id)sourceList:(PXSourceList *)lst child:(NSUInteger)idx ofItem:(id)item
 {
   NSArray *array = item == nil ? _items : [(PDLibraryItem *)item subitems];
-  NSInteger count = 0;
+  NSUInteger count = 0;
 
   for (PDLibraryItem *item in array)
     {
-      if (![item isHidden] && count++ == index)
-	return item;
+      if (![item isHidden] && count++ == idx)
+       return item;
     }
 
   return nil;
 }
 
-- (BOOL)outlineView:(NSOutlineView *)ov isItemExpandable:(id)item
+- (id)sourceList:(PXSourceList *)lst objectValueForItem:(id)item
+{
+  return [(PDLibraryItem *)item titleString];
+}
+
+- (BOOL)sourceList:(PXSourceList *)lst isItemExpandable:(id)item
 {
   return [(PDLibraryItem *)item isExpandable];
 }
 
-- (id)outlineView:(NSOutlineView *)ov
-    objectValueForTableColumn:(NSTableColumn *)col byItem:(id)item
+- (BOOL)sourceList:(PXSourceList *)lst itemHasBadge:(id)item
 {
-  NSString *ident = [col identifier];
-
-  if ([ident isEqualToString:@"name"])
-    return [item titleString];
-  else if ([ident isEqualToString:@"badge"])
-    return [item hasBadge] ? [NSString stringWithFormat:@"%d", (int)[item badgeValue]] : nil;
-
-  return nil;
+  return [(PDLibraryItem *)item hasBadge];
 }
 
-- (void)outlineView:(NSOutlineView *)ov setObjectValue:(id)object
-    forTableColumn:(NSTableColumn *)col byItem:(id)item
+- (NSInteger)sourceList:(PXSourceList *)lst badgeValueForItem:(id)item
 {
+  return [(PDLibraryItem *)item badgeValue];
 }
 
-// NSOutlineViewDelegate methods
-
-- (void)outlineView:(NSOutlineView *)ov willDisplayCell:(id)cell
-    forTableColumn:(NSTableColumn *)col item:(id)item
+- (BOOL)sourceList:(PXSourceList *)lst itemHasIcon:(id)item
 {
-  NSString *ident = [col identifier];
-
-  if ([ident isEqualToString:@"name"])
-    {
-      [(PDImageTextCell *)cell setImage:[item titleImage]];
-    }
+  return [(PDLibraryItem *)item titleImage] != nil;
 }
 
-- (void)outlineViewSelectionDidChange:(NSNotification *)note
+- (NSImage*)sourceList:(PXSourceList *)lst iconForItem:(id)item
+{
+  return [(PDLibraryItem *)item titleImage];
+}
+
+// PXSourceListDelegate methods
+
+- (CGFloat)sourceList:(PXSourceList *)lst heightOfRowByItem:(id)item
+{
+  if ([item isKindOfClass:[PDLibraryGroup class]])
+    return 24;
+  else
+    return 22;
+}
+
+- (BOOL)sourceList:(PXSourceList *)lst shouldEditItem:(id)item
+{
+  return NO;
+}
+
+- (void)sourceListSelectionDidChange:(NSNotification *)note
 {
   [self updateImageList];
 
@@ -557,20 +578,6 @@ item_for_path(NSArray *items, NSArray *path)
 
   [[NSNotificationCenter defaultCenter]
    postNotificationName:PDLibrarySelectionDidChange object:_controller];
-}
-
-- (NSString *)outlineView:(NSOutlineView *)ov toolTipForCell:(NSCell *)cell
-    rect:(NSRectPointer)rect tableColumn:(NSTableColumn *)col item:(id)item
-    mouseLocation:(NSPoint)p
-{
-  if ([[col identifier] isEqualToString:@"name"]
-      && [item isKindOfClass:[PDLibraryDirectory class]])
-    {
-      return [[(PDLibraryDirectory *)item path]
-	      stringByAbbreviatingWithTildeInPath];
-    }
-
-  return nil;
 }
 
 @end

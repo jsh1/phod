@@ -22,38 +22,72 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDViewController.h"
+#import "PDLibraryGroup.h"
 
-#import "PXSourceListDataSource.h"
-#import "PXSourceListDelegate.h"
+@implementation PDLibraryGroup
 
-/* posted to window controller. */
-extern NSString *const PDLibrarySelectionDidChange;
+@synthesize name = _name;
 
-@class PDLibraryGroup;
-
-@interface PDLibraryViewController : PDViewController
-    <PXSourceListDataSource, PXSourceListDelegate>
+- (void)dealloc
 {
-  IBOutlet PXSourceList *_outlineView;
-  IBOutlet NSSearchField *_searchField;
-  IBOutlet NSButton *_addButton;
-  IBOutlet NSButton *_removeButton;
-  IBOutlet NSButton *_actionButton;
-
-  NSMutableArray *_items;
-
-  NSMutableArray *_folders;
-  PDLibraryGroup *_foldersGroup;
-
-  NSMapTable *_itemViewState;		/* PDLibaryItem -> NSDictionary */
+  [_name release];
+  [_subitems release];
+  [super dealloc];
 }
 
-- (IBAction)addFolderAction:(id)sender;
-- (IBAction)removeFolderAction:(id)sender;
+- (NSArray *)subitems
+{
+  return _subitems != nil ? _subitems : [NSArray array];
+}
 
-- (IBAction)searchAction:(id)sender;
+- (void)setSubitems:(NSArray *)array
+{
+  if (_subitems != array)
+    {
+      for (PDLibraryItem *item in _subitems)
+	[item setParent:nil];
 
-- (IBAction)controlAction:(id)sender;
+      [_subitems release];
+      _subitems = [array mutableCopy];
+
+      for (PDLibraryItem *item in _subitems)
+	[item setParent:self];
+    }
+}
+
+- (void)addSubitem:(PDLibraryItem *)item
+{
+  if (_subitems == nil
+      || [_subitems indexOfObjectIdenticalTo:item] == NSNotFound)
+    {
+      if (_subitems == nil)
+	_subitems = [[NSMutableArray alloc] init];
+      [_subitems addObject:item];
+      [item setParent:self];
+    }
+}
+
+- (void)removeSubitem:(PDLibraryItem *)item
+{
+  if (_subitems != nil)
+    {
+      NSInteger idx = [_subitems indexOfObjectIdenticalTo:item];
+      if (idx != NSNotFound)
+	{
+	  [item setParent:nil];
+	  [_subitems removeObjectAtIndex:idx];
+	}
+    }
+}
+
+- (NSString *)titleString
+{
+  return _name;
+}
+
+- (BOOL)isExpandable
+{
+  return YES;
+}
 
 @end
