@@ -94,6 +94,8 @@
 		       stringByReplacingOccurrencesOfString:@":"
 		       withString:@"/"];
       NSString *title = [image title];
+      if (title == nil)
+	title = [image name];
 
       [_titleLabel setStringValue:
        [NSString stringWithFormat:@"%@ %@ %@", dir, em_dash, title]];
