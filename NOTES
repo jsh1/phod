@@ -56,6 +56,10 @@ Issues
   the OK button has been clicked will the smart folder's permanent
   state be updated, cancelling returns it to the original state.
 
+  PARTIALLY RESOLVED: added top-level smart folders that filter the
+  complete set of images. No way to rename them. No way to drag/create
+  them under a normal folder.
+
 9. "Preview" mode where the fullsize image isn't loaded?
 
 10. Viewer should be able to display multiple images?

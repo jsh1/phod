@@ -197,17 +197,22 @@
   return images;
 }
 
-- (NSImage *)titleImage
-{
-  return PDImageWithName(_titleImageName);
-}
-
 - (NSString *)titleString
 {
   NSString *title = [_libraryDirectory lastPathComponent];
   if ([title length] == 0)
     title = [_libraryPath lastPathComponent];
   return [title stringByReplacingOccurrencesOfString:@":" withString:@"/"];
+}
+
+- (BOOL)hasTitleImage
+{
+  return YES;
+}
+
+- (NSImage *)titleImage
+{
+  return PDImageWithName(_titleImageName);
 }
 
 - (BOOL)isExpandable

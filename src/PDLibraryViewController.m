@@ -35,6 +35,8 @@
 
 #import "PXSourceList.h"
 
+#define MAX_TITLE_STRINGS 6
+
 NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
 @implementation PDLibraryViewController
@@ -155,15 +157,25 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   return _outlineView;
 }
 
+- (NSArray *)allImages
+{
+  return [_foldersGroup subimages];
+}
+
 - (void)updateImageList
 {
   NSIndexSet *sel = [_outlineView selectedRowIndexes];
 
   if ([sel count] == 0)
-    [_controller setImageList:[NSArray array]];
+    {
+      [_controller setImageListTitle:@""];
+      [_controller setImageList:[NSArray array]];
+    }
   else
     {
       NSMutableArray *array = [NSMutableArray array];
+      NSMutableString *title = [NSMutableString string];
+      NSInteger count = 0;
       NSDictionary *viewState = nil;
 
       for (NSInteger row = [sel firstIndex];
@@ -175,6 +187,25 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 	    viewState = [_itemViewState objectForKey:item];
 
 	  [array addObjectsFromArray:[item subimages]];
+
+	  NSString *item_title = [item titleString];
+	  if ([item_title length] != 0)
+	    {
+	      if (count < MAX_TITLE_STRINGS)
+		{
+		  if ([title length] != 0)
+		    [title appendString:@" & "];
+		  [title appendString:item_title];
+		}
+	      else if (count == MAX_TITLE_STRINGS)
+		{
+		  [title appendString:@" & "];
+		  unichar c = 0x2026;		/* HORIZONTAL ELLIPSIS */
+		  [title appendString:
+		   [NSString stringWithCharacters:&c length:1]];
+		}
+	      count++;
+	    }
 	}
 
       int sortKey = PDImageCompare_Date;
@@ -202,6 +233,7 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
       [_controller setImageSortReversed:sortRev];
       [_controller setImagePredicate:pred];
 
+      [_controller setImageListTitle:title];
       [_controller setImageList:array];
     }
 }
@@ -221,6 +253,21 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 	selected = YES;
 
       item = [item parent];
+    }
+
+  if (!selected)
+    {
+      NSInteger idx;
+      for (idx = [sel firstIndex]; idx != NSNotFound;
+	   idx = [sel indexGreaterThanIndex:idx])
+	{
+	  PDLibraryItem *item = [_outlineView itemAtRow:idx];
+	  if ([item isKindOfClass:[PDLibraryQuery class]])
+	    {
+	      selected = YES;
+	      break;
+	    }
+	}
     }
 
   if (selected)
@@ -618,7 +665,7 @@ item_for_path(NSArray *items, NSArray *path)
 
 - (BOOL)sourceList:(PXSourceList *)lst itemHasIcon:(id)item
 {
-  return [(PDLibraryItem *)item titleImage] != nil;
+  return [(PDLibraryItem *)item hasTitleImage];
 }
 
 - (NSImage*)sourceList:(PXSourceList *)lst iconForItem:(id)item

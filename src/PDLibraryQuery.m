@@ -24,7 +24,10 @@
 
 #import "PDLibraryQuery.h"
 
+#import "PDAppDelegate.h"
 #import "PDAppKitExtensions.h"
+#import "PDImage.h"
+#import "PDWindowController.h"
 
 @implementation PDLibraryQuery
 
@@ -40,14 +43,21 @@
 
 - (NSArray *)subimages
 {
-  /* FIXME: need to implement this somehow. */
+  if (_predicate == nil)
+    return [NSArray array];
 
-  return [NSArray array];
-}
+  PDWindowController *controller
+    = [(PDAppDelegate *)[NSApp delegate] windowController];
 
-- (NSImage *)titleImage
-{
-  return PDImageWithName(PDImage_SmartFolder);
+  NSMutableArray *ret = [NSMutableArray array];
+
+  for (PDImage *im in [controller allImages])
+    {
+      if ([_predicate evaluateWithObject:[im expressionValues]])
+	[ret addObject:im];
+    }
+
+  return ret;
 }
 
 - (NSString *)titleString
@@ -55,14 +65,19 @@
   return _name;
 }
 
-- (BOOL)hasBadge
+- (BOOL)hasTitleImage
 {
   return YES;
 }
 
-- (NSInteger)badgeValue
+- (NSImage *)titleImage
 {
-  return [self numberOfSubimages];
+  return PDImageWithName(PDImage_SmartFolder);
+}
+
+- (BOOL)hasBadge
+{
+  return NO;
 }
 
 - (NSString *)identifier

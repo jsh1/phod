@@ -64,6 +64,8 @@ enum PDContentMode
   int _imageSortKey;
   BOOL _imageSortReversed;
 
+  NSString *_imageListTitle;
+
   NSArray *_imageList;
 
   NSPredicate *_imagePredicate;
@@ -76,7 +78,11 @@ enum PDContentMode
 @property(nonatomic) NSInteger sidebarMode;
 @property(nonatomic) NSInteger contentMode;
 
+@property(nonatomic, readonly) NSArray *allImages;
+
 @property(nonatomic, copy) NSArray *imageList;
+
+@property(nonatomic, copy) NSString *imageListTitle;
 
 - (NSPredicate *)imagePredicateWithFormat:(NSString *)str;
 

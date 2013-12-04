@@ -52,6 +52,8 @@ extern NSString *const PDLibrarySelectionDidChange;
   NSMapTable *_itemViewState;		/* PDLibraryItem -> NSDictionary */
 }
 
+@property(nonatomic, readonly) NSArray *allImages;
+
 - (void)addSmartFolder:(NSString *)name predicate:(NSPredicate *)pred;
 
 - (IBAction)addFolderAction:(id)sender;

@@ -54,8 +54,10 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 
 /* For outline view. */
 
-- (NSImage *)titleImage;
 - (NSString *)titleString;
+
+- (NSImage *)titleImage;
+- (BOOL)hasTitleImage;
 
 - (BOOL)isExpandable;
 

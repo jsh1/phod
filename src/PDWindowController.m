@@ -107,6 +107,7 @@ NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
   [_predicatePanelController release];
   [_viewControllers release];
   [_imageList release];
+  [_imageListTitle release];
   [_imagePredicate release];
   [_filteredImageList release];
   [_selectedImageIndexes release];
@@ -322,6 +323,12 @@ wasFirstResponder(NSView *view)
   [self rebuildImageList];
 }
 
+- (NSArray *)allImages
+{
+  return [(PDLibraryViewController *)[self viewControllerWithClass:
+	  [PDLibraryViewController class]] allImages];
+}
+
 - (NSArray *)filteredImageList:(NSArray *)array
 {
   if (_imagePredicate == nil)
@@ -379,6 +386,20 @@ wasFirstResponder(NSView *view)
       _imageList = [array copy];
 
       [self rebuildImageList];
+    }
+}
+
+- (NSString *)imageListTitle
+{
+  return _imageListTitle;
+}
+
+- (void)setImageListTitle:(NSString *)str
+{
+  if (_imageListTitle != str)
+    {
+      [_imageListTitle release];
+      _imageListTitle = [str copy];
     }
 }
 
