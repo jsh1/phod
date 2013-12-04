@@ -320,9 +320,9 @@ typedef enum
   type_bool,
   type_bytes,
   type_contrast,
-  type_date,
   type_direction,
   type_duration,
+  type_exif_date,
   type_exposure_bias,
   type_exposure_mode,
   type_exposure_program,
@@ -348,6 +348,7 @@ typedef enum
   type_sharpness,
   type_string,
   type_string_array,
+  type_unix_date,
   type_white_balance,
 } property_type;
 
@@ -367,7 +368,7 @@ static const type_pair type_map[] =
   {"color_model", type_string},
   {"contrast", type_contrast},
   {"copyright", type_string},
-  {"digitized_date", type_date},
+  {"digitized_date", type_exif_date},
   {"direction", type_direction},
   {"direction_ref", type_string},
   {"exposure_bias", type_exposure_bias},
@@ -375,7 +376,7 @@ static const type_pair type_map[] =
   {"exposure_mode", type_exposure_mode},
   {"exposure_program", type_exposure_program},
   {"f_number", type_fstop},
-  {"file_date", type_date},
+  {"file_date", type_unix_date},
   {"file_size", type_bytes},
   {"file_types", type_string_array},
   {"flagged", type_bool},
@@ -394,7 +395,7 @@ static const type_pair type_map[] =
   {"metering_mode", type_metering_mode},
   {"name", type_string},
   {"orientation", type_orientation},
-  {"original_date", type_date},
+  {"original_date", type_exif_date},
   {"pixel_height", type_pixels},
   {"pixel_width", type_pixels},
   {"profile_name", type_string},
@@ -646,8 +647,15 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
     case type_orientation:
       return lookup_enum_string(type, [value intValue]);
 
-    case type_date:
-      date = PDImageParseEXIFDateString(value);
+    case type_exif_date:
+    case type_unix_date:
+      if (type == type_exif_date)
+	date = PDImageParseEXIFDateString(value);
+      else /* if (type == type_unix_date) */
+	{
+	  date = [NSDate dateWithTimeIntervalSince1970:
+		  [value unsignedLongValue]];
+	}
       if (date != nil)
 	{
 	  static NSDateFormatter *formatter;
@@ -663,13 +671,17 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
 	}
       break;
 
+    case type_string:
+      return value;
+
+    case type_string_array:
+      return [(NSArray *)value componentsJoinedByString:@" "];
+
     case type_flash_compensation:
     case type_pixels:
     case type_rating:
     case type_saturation:
     case type_sharpness:
-    case type_string:
-    case type_string_array:
       break;
 
     case type_unknown:
@@ -677,6 +689,30 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
     }
 
   return [NSString stringWithFormat:@"%@", value];
+}
+
+id
+PDImageUnlocalizedPropertyValue(NSString *key, NSString *str, PDImage *im)
+{
+  property_type type = lookup_property_type([key UTF8String]);
+
+  switch (type)
+    {
+    case type_string:
+      return str;
+
+    case type_string_array:
+      return [str componentsSeparatedByCharactersInSet:
+	      [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+
+    case type_bool:
+      return [NSNumber numberWithBool:[str boolValue]];
+
+    default:
+      break;
+    }
+
+  return nil;
 }
 
 NSDictionary *
@@ -701,15 +737,18 @@ PDImageExpressionValues(PDImage *im)
     case type_bool:
       return [NSNumber numberWithBool:[value intValue] != 0];
 
-    case type_date:
+    case type_exif_date:
       return PDImageParseEXIFDateString(value);
       break;
+
+    case type_unix_date:
+      return [NSDate dateWithTimeIntervalSince1970:[value unsignedLongValue]];
 
     case type_string:
       return value != nil ? value : @"";
 
     case type_string_array:
-      return [(NSArray *)value componentsJoinedByString:@" "];
+      return value != nil ? value : [NSArray array];
 
     case type_contrast:
     case type_exposure_mode:
@@ -800,9 +839,9 @@ static NSPredicateEditorRowTemplate *
 predicate_string_template(void)
 {
   NSMutableArray *string_keys = [NSMutableArray array];
-  for (NSString *key in @[PDImage_Name, PDImage_ActiveType, PDImage_FileTypes,
+  for (NSString *key in @[PDImage_Name, PDImage_ActiveType,
 			  PDImage_ColorModel, PDImage_ProfileName,
-			  PDImage_Title, PDImage_Caption, PDImage_Keywords,
+			  PDImage_Title, PDImage_Caption,
 			  PDImage_Copyright, PDImage_CameraMake,
 			  PDImage_CameraModel, PDImage_CameraSoftware])
     {
@@ -901,6 +940,28 @@ predicate_date_template(void)
 }
 
 static NSPredicateEditorRowTemplate *
+predicate_string_array_template(void)
+{
+  NSMutableArray *array_keys = [NSMutableArray array];
+  for (NSString *key in @[PDImage_Keywords, PDImage_FileTypes])
+    {
+      [array_keys addObject:[NSExpression expressionForKeyPath:key]];
+    }
+
+  NSArray *string_ops = @[@(NSEqualToPredicateOperatorType),
+			  @(NSNotEqualToPredicateOperatorType),
+			  @(NSBeginsWithPredicateOperatorType),
+			  @(NSEndsWithPredicateOperatorType),
+			  @(NSContainsPredicateOperatorType)];
+
+  return [[[NSPredicateEditorRowTemplate alloc]
+	   initWithLeftExpressions:array_keys rightExpressionAttributeType:
+	   NSStringAttributeType modifier:NSAnyPredicateModifier
+	   operators:string_ops options:0]
+	  autorelease];
+}
+
+static NSPredicateEditorRowTemplate *
 predicate_enum_template(NSString *key, NSString **array, size_t nelts)
 {
   NSExpression *enum_key = [NSExpression expressionForKeyPath:key];
@@ -940,6 +1001,7 @@ PDImagePredicateEditorRowTemplates(void)
       predicate_numeric_template(),
       predicate_bool_template(),
       predicate_date_template(),
+      predicate_string_array_template(),
       ENUM(Contrast, contrast),
       ENUM(ExposureMode, exposure_mode),
       ENUM(ExposureProgram, exposure_prog),

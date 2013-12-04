@@ -40,6 +40,7 @@
 @property(nonatomic, copy) NSString *activeGroup;
 
 - (NSString *)localizedImagePropertyForKey:(NSString *)key;
+- (void)setLocalizedImageProperty:(NSString *)str forKey:(NSString *)key;
 
 - (IBAction)controlAction:(id)sender;
 

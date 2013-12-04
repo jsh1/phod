@@ -106,10 +106,14 @@ typedef int PDImageCompareKey;
 - (id)imagePropertyForKey:(NSString *)key;
 - (void)setImageProperty:(id)obj forKey:(NSString *)key;
 
++ (BOOL)imagePropertyIsEditableInUI:(NSString *)key;
+
 /* Converting image properties to displayable forms. */
 
 + (NSString *)localizedNameOfImageProperty:(NSString *)key;
+
 - (NSString *)localizedImagePropertyForKey:(NSString *)key;
+- (void)setLocalizedImageProperty:(id)obj forKey:(NSString *)key;
 
 /* For use with NSExpression/NSPredicate -- a KVC'able object whose
    keys look up the formatted image properties. */
@@ -206,7 +210,7 @@ extern NSString * const PDImage_SensitivityType; // NSNumber
 extern NSString * const PDImage_Sharpness;	// NSNumber
 extern NSString * const PDImage_WhiteBalance;	// NSNumber
 
-/* Read-only meta-properties for filtering. */
+/* Read-only implicit properties. */
 
 extern NSString * const PDImage_FileName;	// NSString
 extern NSString * const PDImage_FilePath;	// NSString

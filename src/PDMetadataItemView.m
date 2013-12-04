@@ -28,11 +28,12 @@
 #import "PDImage.h"
 #import "PDMetadataView.h"
 
+#define LABEL_Y_OFFSET -4
 #define LABEL_WIDTH 120
-#define LABEL_HEIGHT 14
+#define LABEL_HEIGHT 16
 #define SPACING 8
 
-#define CONTROL_HEIGHT LABEL_HEIGHT
+#define CONTROL_HEIGHT 20
 
 @implementation PDMetadataItemView
 
@@ -48,7 +49,7 @@
   NSFont *font1 = [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]];
 
   _labelField = [[NSTextField alloc] initWithFrame:
-		 NSMakeRect(0, 0, LABEL_WIDTH, LABEL_HEIGHT)];
+		 NSMakeRect(0, LABEL_Y_OFFSET, LABEL_WIDTH, LABEL_HEIGHT)];
   [_labelField setTarget:self];
   [_labelField setAction:@selector(controlAction:)];
   [_labelField setDelegate:self];
@@ -68,13 +69,16 @@
   [_valueField setTarget:self];
   [_valueField setAction:@selector(controlAction:)];
   [_valueField setDelegate:self];
-  [_valueField setDrawsBackground:NO];
   [_valueField setEditable:NO];
   [_valueField setSelectable:YES];
   [_valueField setAutoresizingMask:NSViewWidthSizable];
   [[_valueField cell] setBordered:NO];
+  [[_valueField cell] setBezeled:YES];
   [[_valueField cell] setFont:font1];
   [[_valueField cell] setTextColor:[PDColor controlTextColor]];
+  [[_valueField cell] setBackgroundColor:[PDColor controlBackgroundColor]];
+  [_valueField setAction:@selector(controlAction:)];
+  [_valueField setTarget:self];
   [self addSubview:_valueField];
   [_valueField release];
 
@@ -98,11 +102,15 @@
 
 - (void)_updateImageProperty
 {
-  [_labelField setStringValue:
-   [PDImage localizedNameOfImageProperty:_imageProperty]];
+  BOOL editable = [PDImage imagePropertyIsEditableInUI:_imageProperty];
+  NSString *label = [PDImage localizedNameOfImageProperty:_imageProperty];
+
+  [_labelField setStringValue:label];
   [[_labelField cell] setTruncatesLastVisibleLine:YES];
 
-  [[_valueField cell] setTextColor:[PDColor controlTextColor]];
+  [_valueField setEditable:editable];
+  [_valueField setDrawsBackground:editable];
+  [[_valueField cell] setBezeled:editable];
   [[_valueField cell] setTruncatesLastVisibleLine:YES];
 }
 
@@ -151,24 +159,34 @@
 
 - (CGFloat)preferredHeight
 {
-  return CONTROL_HEIGHT;
+  return [_valueField isEditable] ? CONTROL_HEIGHT : LABEL_HEIGHT;
 }
 
 - (void)layoutSubviews
 {
   NSRect bounds = [self bounds];
   NSRect frame = bounds;
+  BOOL editable = [_valueField isEditable];
 
+  if (editable)
+    frame.origin.y += LABEL_Y_OFFSET;
   frame.size.width = LABEL_WIDTH;
   [_labelField setFrame:frame];
 
   frame.origin.x += frame.size.width + SPACING;
+  frame.origin.y = bounds.origin.y;
   frame.size.width = bounds.size.width - frame.origin.x;
+  frame.size.height = editable ? CONTROL_HEIGHT : LABEL_HEIGHT;
   [_valueField setFrame:frame];
 }
 
 - (IBAction)controlAction:(id)sender
 {
+  if (sender == _valueField)
+    {
+      [_metadataView setLocalizedImageProperty:
+       [_valueField stringValue] forKey:_imageProperty];
+    }
 }
 
 @end

@@ -432,6 +432,8 @@ static NSOperationQueue *_narrowQueue;
 
   _properties = [[NSMutableDictionary alloc] init];
 
+  [_properties setObject:name forKey:PDImage_Name];
+
   _libraryPath = [libraryPath copy];
   _libraryDirectory = [dir copy];
 
@@ -459,8 +461,6 @@ static NSOperationQueue *_narrowQueue;
 	}
     }
 
-  [_properties setObject:name forKey:PDImage_Name];
-
   /* This needs to be set even when NO, to prevent trying to
      load the implicit properties to find the ActiveType key. */
 
@@ -470,12 +470,24 @@ static NSOperationQueue *_narrowQueue;
 
   if (jpeg_type != nil || raw_type != nil)
     {
-      [_properties setObject:jpeg_type ? jpeg_type : raw_type
-       forKey:PDImage_ActiveType];
+      if ([_properties objectForKey:PDImage_ActiveType] == nil)
+	{
+	  [_properties setObject:jpeg_type ? jpeg_type : raw_type
+	   forKey:PDImage_ActiveType];
+	}
 
-      [_properties setObject:
-       [NSArray arrayWithObjects:jpeg_type != nil ? jpeg_type : raw_type,
-	raw_type != nil ? raw_type : jpeg_type, nil] forKey:PDImage_FileTypes];
+      if ([_properties objectForKey:PDImage_FileTypes] == nil)
+	{
+	  id objects[2];
+	  size_t count = 0;
+	  if (jpeg_type != nil)
+	    objects[count++] = jpeg_type;
+	  if (raw_type != nil)
+	    objects[count++] = raw_type;
+
+	  [_properties setObject:[NSArray arrayWithObjects:objects count:count]
+	   forKey:PDImage_FileTypes];
+	}
     }
 
   /* FIXME: if we switch from JPEG to RAW or vice versa, should we
@@ -740,6 +752,20 @@ static NSOperationQueue *_narrowQueue;
     }
 }
 
++ (BOOL)imagePropertyIsEditableInUI:(NSString *)key
+{
+  static NSSet *editable_keys;
+  static dispatch_once_t once;
+
+  dispatch_once(&once, ^{
+    editable_keys = [[NSSet alloc] initWithObjects:PDImage_Name,
+		     PDImage_Title, PDImage_Caption, PDImage_Keywords,
+		     PDImage_Copyright, nil];
+  });
+
+  return [editable_keys containsObject:key];
+}
+
 + (NSString *)localizedNameOfImageProperty:(NSString *)key
 {
   return PDImageLocalizedNameOfProperty(key);
@@ -752,6 +778,15 @@ static NSOperationQueue *_narrowQueue;
     return nil;
 
   return PDImageLocalizedPropertyValue(key, value, self);
+}
+
+- (void)setLocalizedImageProperty:(NSString *)str forKey:(NSString *)key
+{
+  id value = PDImageUnlocalizedPropertyValue(key, str, self);
+  if (value == nil)
+    return;
+
+  [self setImageProperty:value forKey:key];
 }
 
 - (id)expressionValues
@@ -968,10 +1003,7 @@ static NSOperationQueue *_narrowQueue;
 
 - (NSString *)title
 {
-  NSString *str = [self imagePropertyForKey:PDImage_Title];
-  if (str == nil)
-    str = [self imagePropertyForKey:PDImage_Name];
-  return str;
+  return [self imagePropertyForKey:PDImage_Title];
 }
 
 - (BOOL)usesRAW

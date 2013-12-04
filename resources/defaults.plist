@@ -10,8 +10,8 @@
 	<dict>
 		<key>General</key>
 		<array>
+			<string>file_name</string>
 			<string>name</string>
-			<string>rating</string>
 			<string>title</string>
 			<string>caption</string>
 			<string>keywords</string>
@@ -19,9 +19,11 @@
 			<string>digitized_date</string>
 			<string>pixel_size</string>
 			<string>file_size</string>
-			<string>file_path</string>
+			<string>iso_speed</string>
+			<string>f_number</string>
+			<string>exposure_length</string>
 		</array>
-		<key>Photo</key>
+		<key>Photo Info</key>
 		<array>
 			<string>name</string>
 			<string>original_date</string>
@@ -48,19 +50,27 @@
 			<string>scene_type</string>
 			<string>scene_capture_type</string>
 		</array>
-		<key>GPS</key>
+		<key>GPS Info</key>
 		<array>
 			<string>latitude</string>
 			<string>longitude</string>
 			<string>altitude</string>
 			<string>direction</string>
 		</array>
+		<key>File Info</key>
+		<array>
+			<string>file_name</string>
+			<string>file_path</string>
+			<string>file_date</string>
+			<string>file_size</string>
+		</array>
 	</dict>
 	<key>PDMetadataGroupOrder</key>
 	<array>
 		<string>General</string>
-		<string>Photo</string>
-		<string>GPS</string>
+		<string>Photo Info</string>
+		<string>GPS Info</string>
+		<string>File Info</string>
 	</array>
 </dict>
 </plist>

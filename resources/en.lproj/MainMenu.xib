@@ -451,19 +451,19 @@
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="Mxw-Ys-7Qy"/>
                             <menuItem title="Library" tag="1" keyEquivalent="p" id="vlD-5w-38e">
-                                <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="setSidebarModeAction:" target="-1" id="ZEY-iX-6ZG"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Properties" tag="2" keyEquivalent="d" id="Xbh-O2-0bN">
-                                <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="setSidebarModeAction:" target="-1" id="zH3-4e-eiY"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Adjustments" tag="3" keyEquivalent="a" id="e1K-ph-JSl">
-                                <modifierMask key="keyEquivalentModifierMask" control="YES"/>
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="setSidebarModeAction:" target="-1" id="g5U-0J-J99"/>
                                 </connections>

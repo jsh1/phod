@@ -26,7 +26,7 @@
 "direction" = "Direction";
 "direction_ref" = "Direction Reference";
 "exposure_bias" = "Exposure Bias";
-"exposure_length" = "Exposure Length";
+"exposure_length" = "Shutter Speed";
 "exposure_mode" = "Exposure Mode";
 "exposure_program" = "Exposure Program";
 "flash" = "Flash";
@@ -35,7 +35,7 @@
 "focal_length" = "Focal Length";
 "focal_length_35mm" = "Focal Length (35mm equivalent)";
 "focus_mode" = "Focus Mode";
-"iso_speed" = "ISO Speed Rating";
+"iso_speed" = "ISO";
 "image_stabilization" = "Image Stabilization";
 "latitude" = "Latitude";
 "light_source" = "Light Source";

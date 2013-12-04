@@ -164,6 +164,11 @@
   return [_controller localizedImagePropertyForKey:key];
 }
 
+- (void)setLocalizedImageProperty:(NSString *)str forKey:(NSString *)key
+{
+  [_controller setLocalizedImageProperty:str forKey:key];
+}
+
 - (IBAction)controlAction:(id)sender
 {
 }

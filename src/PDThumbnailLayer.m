@@ -219,7 +219,10 @@ CA_HIDDEN
 	  [self addSublayer:title_layer];
 	}
 
-      [title_layer setString:[_image title]];
+      NSString *title = [_image title];
+      if (title == nil)
+	title = [_image name];
+      [title_layer setString:title];
       [title_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
 				       + bounds.size.height + TITLE_SPACING)];
       [title_layer setContentsScale:[self contentsScale]];

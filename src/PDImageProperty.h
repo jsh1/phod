@@ -31,6 +31,9 @@ extern NSString *PDImageLocalizedNameOfProperty(NSString *key);
 extern NSString *PDImageLocalizedPropertyValue(NSString *key,
     id value, PDImage *im);
 
+extern id PDImageUnlocalizedPropertyValue(NSString *key, NSString *str,
+    PDImage *im);
+
 extern NSDate *PDImageParseEXIFDateString(NSString *str);
 
 extern id PDImageExpressionValues(PDImage *im);
