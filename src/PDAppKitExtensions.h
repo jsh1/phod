@@ -50,6 +50,7 @@ enum
   PDImage_GenericFolder,
   PDImage_GenericHardDisk,
   PDImage_GenericRemovableDisk,
+  PDImage_SmartFolder,
   PDImageCount,
 };
 

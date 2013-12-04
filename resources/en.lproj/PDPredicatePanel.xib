@@ -32,7 +32,7 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <predicateEditor verticalHuggingPriority="750" nestingMode="compound" formattingStringsFilename="image-properties.strings" rowHeight="25" id="sZ8-bT-ltY">
-                                    <rect key="frame" x="0.0" y="0.0" width="480" height="169"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="480" height="125"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                                     <rowTemplates/>
                                     <connections>
@@ -46,7 +46,7 @@
                             <rect key="frame" x="-100" y="-100" width="360" height="15"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
-                        <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="KeA-FU-FiB">
+                        <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="KeA-FU-FiB">
                             <rect key="frame" x="464" y="0.0" width="16" height="125"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
@@ -81,14 +81,14 @@ Gw
                     <button verticalHuggingPriority="750" id="mnQ-EU-RXH">
                         <rect key="frame" x="189" y="4" width="120" height="28"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="New Smart Folder" bezelStyle="rounded" alignment="center" controlSize="small" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="o7b-6r-gUF">
+                        <buttonCell key="cell" type="push" title="New Smart Folder" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="o7b-6r-gUF">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="smallSystem"/>
                             <string key="keyEquivalent">n</string>
                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                         </buttonCell>
                         <connections>
-                            <action selector="controlAction:" target="-2" id="Khe-OT-NKL"/>
+                            <action selector="newSmartFolderAction:" target="-2" id="dl1-lJ-C2h"/>
                         </connections>
                     </button>
                 </subviews>

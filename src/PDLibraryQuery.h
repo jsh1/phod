@@ -22,43 +22,15 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDViewController.h"
+#import "PDLibraryItem.h"
 
-#import "PXSourceListDataSource.h"
-#import "PXSourceListDelegate.h"
-
-/* posted to window controller. */
-extern NSString *const PDLibrarySelectionDidChange;
-
-@class PDLibraryGroup;
-
-@interface PDLibraryViewController : PDViewController
-    <PXSourceListDataSource, PXSourceListDelegate>
+@interface PDLibraryQuery : PDLibraryItem
 {
-  IBOutlet PXSourceList *_outlineView;
-  IBOutlet NSSearchField *_searchField;
-  IBOutlet NSButton *_addButton;
-  IBOutlet NSButton *_removeButton;
-  IBOutlet NSButton *_actionButton;
-
-  NSMutableArray *_items;
-
-  NSMutableArray *_folders;
-  PDLibraryGroup *_foldersGroup;
-                                     
-  NSMutableArray *_smartFolders;
-  PDLibraryGroup *_smartFoldersGroup;
-
-  NSMapTable *_itemViewState;		/* PDLibraryItem -> NSDictionary */
+  NSString *_name;
+  NSPredicate *_predicate;
 }
 
-- (void)addSmartFolder:(NSString *)name predicate:(NSPredicate *)pred;
-
-- (IBAction)addFolderAction:(id)sender;
-- (IBAction)removeFolderAction:(id)sender;
-
-- (IBAction)searchAction:(id)sender;
-
-- (IBAction)controlAction:(id)sender;
+@property(nonatomic, copy) NSString *name;
+@property(nonatomic, copy) NSPredicate *predicate;
 
 @end

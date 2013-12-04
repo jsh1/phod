@@ -6,6 +6,9 @@
 	<array>
 		<string>~/Pictures/Photos</string>
 	</array>
+	<key>PDLibraryQueries</key>
+	<array>
+	</array>
 	<key>PDMetadataGroups</key>
 	<dict>
 		<key>General</key>

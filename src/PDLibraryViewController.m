@@ -30,6 +30,7 @@
 #import "PDLibraryDirectory.h"
 #import "PDLibraryItem.h"
 #import "PDLibraryGroup.h"
+#import "PDLibraryQuery.h"
 #import "PDWindowController.h"
 
 #import "PXSourceList.h"
@@ -50,7 +51,26 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
        [dir stringByExpandingTildeInPath] directory:@""];
 
   [item setTitleImageName:PDImage_GenericHardDisk];
+
   [_foldersGroup addSubitem:item];
+
+  [item release];
+}
+
+- (void)addQueryItem:(NSDictionary *)dict
+{
+  NSString *name = [dict objectForKey:@"name"];
+  NSString *format = [dict objectForKey:@"predicate"];
+  NSPredicate *pred = format != nil ? [_controller imagePredicateWithFormat:
+				       format] : nil;
+
+  PDLibraryQuery *item = [[PDLibraryQuery alloc] init];
+
+  [item setName:name];
+  [item setPredicate:pred];
+
+  [_smartFoldersGroup addSubitem:item];
+
   [item release];
 }
 
@@ -60,20 +80,35 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   if (self == nil)
     return nil;
 
+  _items = [[NSMutableArray alloc] init];
+
   _folders = [[[NSUserDefaults standardUserDefaults]
 	       arrayForKey:@"PDLibraryDirectories"] mutableCopy];
-
-  _items = [[NSMutableArray alloc] init];
+  if (_folders == nil)
+    _folders = [[NSMutableArray alloc] init];
 
   _foldersGroup = [[PDLibraryGroup alloc] init];
   [_foldersGroup setName:@"Folders"];
   [_items addObject:_foldersGroup];
   [_foldersGroup release];
 
+  _smartFolders = [[[NSUserDefaults standardUserDefaults]
+		    arrayForKey:@"PDLibraryQueries"] mutableCopy];
+  if (_smartFolders == nil)
+    _smartFolders = [[NSMutableArray alloc] init];
+
+  _smartFoldersGroup = [[PDLibraryGroup alloc] init];
+  [_smartFoldersGroup setName:@"Smart Folders"];
+  [_items addObject:_smartFoldersGroup];
+  [_smartFoldersGroup release];
+
   _itemViewState = [[NSMapTable strongToStrongObjectsMapTable] retain];
   
   for (NSString *dir in _folders)
     [self addDirectoryItem:dir];
+
+  for (NSDictionary *dict in _smartFolders)
+    [self addQueryItem:dict];
 
   return self;
 }
@@ -85,6 +120,9 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
   [_items release];
   [_itemViewState release];
+
+  [_folders release];
+  [_smartFolders release];
 
   [super dealloc];
 }
@@ -109,6 +147,7 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
     [[col dataCell] setVerticallyCentered:YES];
 
   [_outlineView expandItem:_foldersGroup];
+  [_outlineView expandItem:_smartFoldersGroup];
 }
 
 - (NSView *)initialFirstResponder
@@ -230,6 +269,27 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
    }];
 }
 
+- (void)addSmartFolder:(NSString *)name predicate:(NSPredicate *)pred
+{
+  NSString *query = [pred predicateFormat];
+  if (query == nil)
+    query = @"";
+
+  NSDictionary *dict = @{
+    @"name": name,
+    @"predicate": query
+  };
+
+  [_smartFolders addObject:dict];
+
+  [self addQueryItem:dict];
+
+  [[NSUserDefaults standardUserDefaults] setObject:_smartFolders
+   forKey:@"PDLibraryQueries"];
+
+  [_outlineView reloadItem:_smartFoldersGroup reloadChildren:YES];
+}
+
 - (IBAction)removeFolderAction:(id)sender
 {
   BOOL changed = NO;
@@ -241,8 +301,10 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
     {
       PDLibraryItem *item = [_outlineView itemAtRow:idx];
 
-      if ([item parent] == nil
-	  && [item isKindOfClass:[PDLibraryDirectory class]])
+      if ([item parent] != nil)
+	continue;
+
+      if ([item isKindOfClass:[PDLibraryDirectory class]])
 	{
 	  NSArray *subitems = [_foldersGroup subitems];
 	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
@@ -253,12 +315,25 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 	      changed = YES;
 	    }
 	}
+      else if ([item isKindOfClass:[PDLibraryQuery class]])
+	{
+	  NSArray *subitems = [_smartFoldersGroup subitems];
+	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
+	  if (idx != NSNotFound)
+	    {
+	      [_smartFolders removeObjectAtIndex:idx];
+	      [_smartFoldersGroup removeSubitem:[subitems objectAtIndex:idx]];
+	      changed = YES;
+	    }
+	}
     }
 
   if (changed)
     {
       [[NSUserDefaults standardUserDefaults] setObject:_folders
        forKey:@"PDLibraryDirectories"];
+      [[NSUserDefaults standardUserDefaults] setObject:_smartFolders
+       forKey:@"PDLibraryQueries"];
 
       [_outlineView reloadData];
     }

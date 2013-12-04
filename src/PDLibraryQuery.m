@@ -22,43 +22,52 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDViewController.h"
+#import "PDLibraryQuery.h"
 
-#import "PXSourceListDataSource.h"
-#import "PXSourceListDelegate.h"
+#import "PDAppKitExtensions.h"
 
-/* posted to window controller. */
-extern NSString *const PDLibrarySelectionDidChange;
+@implementation PDLibraryQuery
 
-@class PDLibraryGroup;
+@synthesize name = _name;
+@synthesize predicate = _predicate;
 
-@interface PDLibraryViewController : PDViewController
-    <PXSourceListDataSource, PXSourceListDelegate>
+- (void)dealloc
 {
-  IBOutlet PXSourceList *_outlineView;
-  IBOutlet NSSearchField *_searchField;
-  IBOutlet NSButton *_addButton;
-  IBOutlet NSButton *_removeButton;
-  IBOutlet NSButton *_actionButton;
-
-  NSMutableArray *_items;
-
-  NSMutableArray *_folders;
-  PDLibraryGroup *_foldersGroup;
-                                     
-  NSMutableArray *_smartFolders;
-  PDLibraryGroup *_smartFoldersGroup;
-
-  NSMapTable *_itemViewState;		/* PDLibraryItem -> NSDictionary */
+  [_name release];
+  [_predicate release];
+  [super dealloc];
 }
 
-- (void)addSmartFolder:(NSString *)name predicate:(NSPredicate *)pred;
+- (NSArray *)subimages
+{
+  /* FIXME: need to implement this somehow. */
 
-- (IBAction)addFolderAction:(id)sender;
-- (IBAction)removeFolderAction:(id)sender;
+  return [NSArray array];
+}
 
-- (IBAction)searchAction:(id)sender;
+- (NSImage *)titleImage
+{
+  return PDImageWithName(PDImage_SmartFolder);
+}
 
-- (IBAction)controlAction:(id)sender;
+- (NSString *)titleString
+{
+  return _name;
+}
+
+- (BOOL)hasBadge
+{
+  return YES;
+}
+
+- (NSInteger)badgeValue
+{
+  return [self numberOfSubimages];
+}
+
+- (NSString *)identifier
+{
+  return _name;
+}
 
 @end

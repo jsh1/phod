@@ -148,4 +148,6 @@ enum PDContentMode
 - (IBAction)rotateLeft:(id)sender;
 - (IBAction)rotateRight:(id)sender;
 
+- (IBAction)newSmartFolderAction:(id)sender;
+
 @end

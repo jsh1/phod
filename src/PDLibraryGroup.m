@@ -31,6 +31,8 @@
 - (void)dealloc
 {
   [_name release];
+  for (PDLibraryItem *item in _subitems)
+    [item setParent:nil];
   [_subitems release];
   [super dealloc];
 }

@@ -44,4 +44,6 @@ extern NSString * const PDPredicateDidChange;
 
 - (IBAction)controlAction:(id)sender;
 
+- (IBAction)newSmartFolderAction:(id)sender;
+
 @end

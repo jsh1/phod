@@ -115,6 +115,10 @@ PDImageWithName(NSInteger name)
 	    case PDImage_GenericRemovableDisk:
 	      typeCode = kGenericRemovableMediaIcon;
 	      break;
+
+	    case PDImage_SmartFolder:
+	      imageName = NSImageNameFolderSmart;
+	      break;
 	    }
 
 	  if (imageName != nil)

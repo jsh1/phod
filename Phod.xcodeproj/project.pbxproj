@@ -29,6 +29,7 @@
 		578F0FD6182D91FD001A5152 /* PDWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCE182D91FD001A5152 /* PDWindow.xib */; };
 		57B1FAF9184FCBDB00FEF7DB /* PXSourceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAF6184FCBDB00FEF7DB /* PXSourceList.m */; };
 		57B1FAFC184FCCFB00FEF7DB /* PDLibraryGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAFB184FCCFB00FEF7DB /* PDLibraryGroup.m */; };
+		57B1FAFF184FDA4900FEF7DB /* PDLibraryQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAFE184FDA4900FEF7DB /* PDLibraryQuery.m */; };
 		57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */; };
 		57C18109182F0ED3002B8DB2 /* PDImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18105182F0ED3002B8DB2 /* PDImage.m */; };
 		57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18107182F0ED3002B8DB2 /* PDLibraryItem.m */; };
@@ -97,6 +98,8 @@
 		57B1FAF8184FCBDB00FEF7DB /* PXSourceListDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PXSourceListDelegate.h; sourceTree = "<group>"; };
 		57B1FAFA184FCCFB00FEF7DB /* PDLibraryGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryGroup.h; sourceTree = "<group>"; };
 		57B1FAFB184FCCFB00FEF7DB /* PDLibraryGroup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryGroup.m; sourceTree = "<group>"; };
+		57B1FAFD184FDA4900FEF7DB /* PDLibraryQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryQuery.h; sourceTree = "<group>"; };
+		57B1FAFE184FDA4900FEF7DB /* PDLibraryQuery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryQuery.m; sourceTree = "<group>"; };
 		57C180FF182E9644002B8DB2 /* PDAppKitExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDAppKitExtensions.h; sourceTree = "<group>"; };
 		57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDAppKitExtensions.m; sourceTree = "<group>"; };
 		57C18104182F0ED3002B8DB2 /* PDImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImage.h; sourceTree = "<group>"; };
@@ -280,6 +283,8 @@
 				57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */,
 				57B1FAFA184FCCFB00FEF7DB /* PDLibraryGroup.h */,
 				57B1FAFB184FCCFB00FEF7DB /* PDLibraryGroup.m */,
+				57B1FAFD184FDA4900FEF7DB /* PDLibraryQuery.h */,
+				57B1FAFE184FDA4900FEF7DB /* PDLibraryQuery.m */,
 			);
 			name = Library;
 			sourceTree = "<group>";
@@ -438,6 +443,7 @@
 				57CE6A28182D863E000BF04E /* PDLibraryViewController.m in Sources */,
 				57C1810D182FD616002B8DB2 /* PDLibraryDirectory.m in Sources */,
 				57CE6A24182D863E000BF04E /* PDAdjustmentsViewController.m in Sources */,
+				57B1FAFF184FDA4900FEF7DB /* PDLibraryQuery.m in Sources */,
 				577BDBFC182D792800116AF2 /* PDAppDelegate.m in Sources */,
 				577BDBF5182D792800116AF2 /* main.m in Sources */,
 				57CE6A2B182D863E000BF04E /* PDWindowController.m in Sources */,

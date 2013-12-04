@@ -969,6 +969,18 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
   [self rotateUsingMap:rotate_right_map];
 }
 
+- (IBAction)newSmartFolderAction:(id)sender
+{
+  NSPredicate *pred = [[self predicatePanelController] predicate];
+  if (pred == nil)
+    return;
+
+  NSString *format = [pred predicateFormat];
+
+  [(PDLibraryViewController *)[self viewControllerWithClass:
+   [PDLibraryViewController class]] addSmartFolder:format predicate:pred];
+}
+
 - (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem
 {
   SEL sel = [anItem action];

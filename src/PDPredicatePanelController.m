@@ -24,6 +24,7 @@
 
 #import "PDPredicatePanelController.h"
 
+#import "PDAppDelegate.h"
 #import "PDImage.h"
 #import "PDImageProperty.h"
 
@@ -125,6 +126,12 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
       NSBeep();
     }
+}
+
+- (IBAction)newSmartFolderAction:(id)sender
+{
+  [[(PDAppDelegate *)[NSApp delegate] windowController]
+   newSmartFolderAction:sender];
 }
 
 @end
