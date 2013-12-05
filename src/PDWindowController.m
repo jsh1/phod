@@ -37,6 +37,7 @@
 
 NSString *const PDImageListDidChange = @"PDImageListDidChange";
 NSString *const PDSelectionDidChange = @"PDSelectionDidChange";
+NSString *const PDShowsHiddenImagesDidChange = @"PDShowsHiddenImagesDidChange";
 NSString *const PDImagePredicateDidChange = @"PDImagePredicateDidChange";
 NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
 
@@ -74,7 +75,7 @@ NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
   _contentMode = PDContentMode_Nil;
 
   _imageSortKey = PDImageCompare_Date;
-  _imageSortReversed = YES;
+  _imageSortReversed = NO;
 
   _imageList = [[NSArray alloc] init];
   _filteredImageList = [_imageList retain];
@@ -169,8 +170,9 @@ NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
 			[_splitView savedViewState], @"PDSplitViewState",
 			nil];
 
-  [[NSUserDefaults standardUserDefaults]
-   setObject:dict forKey:@"PDSavedWindowState"];
+  NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+
+  [defaults setObject:dict forKey:@"PDSavedWindowState"];
 }
 
 - (void)applySavedWindowState
@@ -327,6 +329,22 @@ wasFirstResponder(NSView *view)
 {
   return [(PDLibraryViewController *)[self viewControllerWithClass:
 	  [PDLibraryViewController class]] allImages];
+}
+
+- (BOOL)showsHiddenImages
+{
+  return _showsHiddenImages;
+}
+
+- (void)setShowsHiddenImages:(BOOL)flag
+{
+  if (_showsHiddenImages != flag)
+    {
+      _showsHiddenImages = flag;
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDShowsHiddenImagesDidChange object:self];
+    }
 }
 
 - (NSArray *)filteredImageList:(NSArray *)array
@@ -878,6 +896,11 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
     [PDImageViewController class]] displaysMetadata];
 }
 
+- (IBAction)toggleShowsHiddenImages:(id)sender
+{
+  [self setShowsHiddenImages:![self showsHiddenImages]];
+}
+
 - (IBAction)showPredicatePanel:(id)sender
 {
   [[self predicatePanelController] showWindow:self];
@@ -925,6 +948,30 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   [self foreachSelectedImage:^(PDImage *image) {
     BOOL flagged = [[image imagePropertyForKey:PDImage_Flagged] boolValue];
     if (flagged)
+      all_clear = NO;
+    else
+      all_set = NO;
+  }];
+
+  return all_set ? NSOnState : all_clear ? NSOffState : NSMixedState;
+}
+
+- (IBAction)toggleHiddenAction:(id)sender
+{
+  [self foreachSelectedImage:^(PDImage *image) {
+    BOOL hidden = [image isHidden];
+    [image setImageProperty:[NSNumber numberWithBool:!hidden]
+     forKey:PDImage_Hidden];
+  }];
+}
+
+- (NSInteger)hiddenState
+{
+  __block BOOL all_set = YES, all_clear = YES;
+
+  [self foreachSelectedImage:^(PDImage *image) {
+    BOOL hidden = [image isHidden];
+    if (hidden)
       all_clear = NO;
     else
       all_set = NO;
@@ -1017,6 +1064,7 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
   if (sel == @selector(setImageRatingAction:)
       || sel == @selector(addImageRatingAction:)
       || sel == @selector(toggleFlaggedAction:)
+      || sel == @selector(toggleHiddenAction:)
       || sel == @selector(rotateLeft:)
       || sel == @selector(rotateRight:))
     {

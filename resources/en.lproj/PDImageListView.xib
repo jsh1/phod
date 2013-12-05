@@ -75,7 +75,7 @@
                 <button toolTip="Rotate image left — [" verticalHuggingPriority="750" id="WJS-W7-4un">
                     <rect key="frame" x="5" y="4" width="23" height="23"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" title="↺" bezelStyle="smallSquare" image="A920A922-50A5-4368-BA2F-FB19E4B36152" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="HKJ-fl-E0p">
+                    <buttonCell key="cell" type="smallSquare" title="↺" bezelStyle="smallSquare" image="49C2AFA2-A39B-4DF7-990A-57FF26991145" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="HKJ-fl-E0p">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" size="24" name="AppleSymbols"/>
                     </buttonCell>
@@ -86,7 +86,7 @@
                 <button toolTip="Rotate image right — ]" verticalHuggingPriority="750" id="6zM-wb-XqZ">
                     <rect key="frame" x="30" y="4" width="23" height="23"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" title="↻" bezelStyle="smallSquare" image="A920A922-50A5-4368-BA2F-FB19E4B36152" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Orf-oe-jjT">
+                    <buttonCell key="cell" type="smallSquare" title="↻" bezelStyle="smallSquare" image="49C2AFA2-A39B-4DF7-990A-57FF26991145" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Orf-oe-jjT">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" size="24" name="AppleSymbols"/>
                     </buttonCell>
@@ -97,7 +97,7 @@
                 <popUpButton toolTip="Sorting order." verticalHuggingPriority="750" id="LR9-hI-PsU">
                     <rect key="frame" x="5" y="439" width="110" height="23"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <popUpButtonCell key="cell" type="smallSquare" title="Orientation" bezelStyle="smallSquare" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="border" tag="9" imageScaling="proportionallyDown" inset="2" selectedItem="spr-fU-mLp" id="Vwx-xl-AU3">
+                    <popUpButtonCell key="cell" type="smallSquare" title="Descending" bezelStyle="smallSquare" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="border" tag="1" imageScaling="proportionallyDown" inset="2" selectedItem="FGh-YS-eD7" id="Vwx-xl-AU3">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="smallSystem"/>
                         <menu key="menu" title="OtherViews" id="MZd-AP-pGT">
@@ -132,7 +132,7 @@
                                         <action selector="sortKeyAction:" target="-2" id="m8B-I8-hYj"/>
                                     </connections>
                                 </menuItem>
-                                <menuItem title="Orientation" state="on" tag="9" id="spr-fU-mLp">
+                                <menuItem title="Orientation" tag="9" id="spr-fU-mLp">
                                     <connections>
                                         <action selector="sortKeyAction:" target="-2" id="Eu5-AK-vCv"/>
                                     </connections>
@@ -178,12 +178,12 @@
                                     </connections>
                                 </menuItem>
                                 <menuItem isSeparatorItem="YES" id="Ujm-4M-U5m"/>
-                                <menuItem title="Ascending" tag="1" id="SY2-oL-7Nw">
+                                <menuItem title="Ascending" id="SY2-oL-7Nw">
                                     <connections>
                                         <action selector="sortOrderAction:" target="-2" id="dhD-uU-yK8"/>
                                     </connections>
                                 </menuItem>
-                                <menuItem title="Descending" id="FGh-YS-eD7">
+                                <menuItem title="Descending" state="on" tag="1" id="FGh-YS-eD7">
                                     <connections>
                                         <action selector="sortOrderAction:" target="-2" id="Lea-cT-8Gr"/>
                                     </connections>
@@ -241,7 +241,7 @@
         </menu>
     </objects>
     <resources>
-        <image name="A920A922-50A5-4368-BA2F-FB19E4B36152" width="1" height="1">
+        <image name="49C2AFA2-A39B-4DF7-990A-57FF26991145" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw

@@ -64,6 +64,8 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 - (BOOL)hasBadge;
 - (NSInteger)badgeValue;
 
+- (BOOL)badgeValueIsNumberOfSubimages;
+
 /* For saving view state. */
 
 - (NSString *)identifier;

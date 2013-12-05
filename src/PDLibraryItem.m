@@ -112,6 +112,11 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
   return 0;
 }
 
+- (BOOL)badgeValueIsNumberOfSubimages
+{
+  return NO;
+}
+
 - (NSString *)identifier
 {
   return [self titleString];

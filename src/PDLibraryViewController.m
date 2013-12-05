@@ -138,10 +138,13 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
    name:PDLibraryItemSubimagesDidChange object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self
    selector:@selector(imageViewOptionsDidChange:)
-   name:PDImagePredicateDidChange object:nil];
+   name:PDImagePredicateDidChange object:_controller];
   [[NSNotificationCenter defaultCenter] addObserver:self
    selector:@selector(imageViewOptionsDidChange:)
-   name:PDImageSortOptionsDidChange object:nil];
+   name:PDImageSortOptionsDidChange object:_controller];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+   selector:@selector(showsHiddenImagesDidChange:)
+   name:PDShowsHiddenImagesDidChange object:_controller];
 
   [[_searchField cell] setBackgroundColor:[NSColor grayColor]];
 
@@ -175,6 +178,7 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
     {
       NSMutableArray *array = [NSMutableArray array];
       NSMutableString *title = [NSMutableString string];
+      BOOL showsHidden = [_controller showsHiddenImages];
       NSInteger count = 0;
       NSDictionary *viewState = nil;
 
@@ -186,42 +190,64 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 	  if (viewState == nil)
 	    viewState = [_itemViewState objectForKey:item];
 
-	  [array addObjectsFromArray:[item subimages]];
+	  NSArray *subimages = [item subimages];
+	  if ([subimages count] == 0)
+	    continue;
 
-	  NSString *item_title = [item titleString];
-	  if ([item_title length] != 0)
+	  BOOL none = NO;
+
+	  if (showsHidden)
 	    {
-	      if (count < MAX_TITLE_STRINGS)
+	      [array addObjectsFromArray:subimages];
+	    }
+	  else
+	    {
+	      none = YES;
+	      for (PDImage *im in subimages)
 		{
-		  if ([title length] != 0)
-		    [title appendString:@" & "];
-		  [title appendString:item_title];
+		  if ([im isHidden])
+		    continue;
+		  [array addObject:im];
+		  none = NO;
 		}
-	      else if (count == MAX_TITLE_STRINGS)
+	    }
+
+	  if (!none)
+	    {
+	      NSString *item_title = [item titleString];
+	      if ([item_title length] != 0)
 		{
-		  [title appendString:@" & "];
-		  unichar c = 0x2026;		/* HORIZONTAL ELLIPSIS */
-		  [title appendString:
-		   [NSString stringWithCharacters:&c length:1]];
+		  if (count < MAX_TITLE_STRINGS)
+		    {
+		      if ([title length] != 0)
+			[title appendString:@" & "];
+		      [title appendString:item_title];
+		    }
+		  else if (count == MAX_TITLE_STRINGS)
+		    {
+		      [title appendString:@" & "];
+		      unichar c = 0x2026;	/* HORIZONTAL ELLIPSIS */
+		      [title appendString:
+		       [NSString stringWithCharacters:&c length:1]];
+		    }
+		  count++;
 		}
-	      count++;
 	    }
 	}
 
       int sortKey = PDImageCompare_Date;
-      BOOL sortRev = YES;
+      BOOL sortRev = NO;
       NSPredicate *pred = nil;
 
       if (viewState != nil)
 	{
 	  NSString *key = [viewState objectForKey:@"imageSortKey"];
-	  NSNumber *reversed = [viewState objectForKey:@"imageSortReversed"];
-	  NSString *predicate = [viewState objectForKey:@"imagePredicate"];
-
 	  if (key != nil)
 	    sortKey = [PDImage imageCompareKeyFromString:key];
-	  if (reversed != nil)
-	    sortRev = [reversed boolValue];
+
+	  sortRev = [[viewState objectForKey:@"imageSortReversed"] boolValue];
+
+	  NSString *predicate = [viewState objectForKey:@"imagePredicate"];
 	  if (predicate != nil)
 	    pred = [_controller imagePredicateWithFormat:predicate];
 	}
@@ -236,6 +262,28 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
       [_controller setImageListTitle:title];
       [_controller setImageList:array];
     }
+}
+
+- (NSInteger)imageListSizeFromItem:(PDLibraryItem *)item
+{
+  NSArray *subimages = [item subimages];
+  if ([subimages count] == 0)
+    return 0;
+
+  BOOL showsHidden = [_controller showsHiddenImages];
+  if (showsHidden)
+    return [subimages count];
+
+  NSInteger count = 0;
+
+  for (PDImage *im in subimages)
+    {
+      if ([im isHidden])
+	continue;
+      count++;
+    }
+
+  return count;
 }
 
 - (void)libraryItemSubimagesDidChange:(NSNotification *)note
@@ -272,6 +320,13 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
   if (selected)
     [self updateImageList];
+}
+
+- (void)showsHiddenImagesDidChange:(NSNotification *)note
+{
+  [self updateImageList];
+
+  [_outlineView reloadData];
 }
 
 - (IBAction)addFolderAction:(id)sender
@@ -419,9 +474,9 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
   if (key != PDImageCompare_Date)
     [opts setObject:[PDImage imageCompareKeyString:key] forKey:@"imageSortKey"];
-  if (!rev)
+  if (rev)
     [opts setObject:[NSNumber numberWithBool:rev] forKey:@"imageSortReversed"];
-  if (pred != nil != 0)
+  if (pred != nil)
     [opts setObject:[pred predicateFormat] forKey:@"imagePredicate"];
 
   if ([opts count] == 0)
@@ -501,7 +556,7 @@ item_for_path(NSArray *items, NSArray *path)
   return item;
 }
 
-- (void)addItem:(PDLibraryItem *)item viewState:(NSMutableDictionary *)dict
+- (void)addItem:(PDLibraryItem *)item viewState:(NSMutableDictionary *)state
 {
   NSString *ident = [item identifier];
   if ([ident length] == 0)
@@ -510,24 +565,26 @@ item_for_path(NSArray *items, NSArray *path)
   BOOL expanded = [_outlineView isItemExpanded:item];
   NSDictionary *opts = [_itemViewState objectForKey:item];
 
-  NSMutableDictionary *subdict = [NSMutableDictionary dictionary];
+  NSMutableDictionary *subdict = [[NSMutableDictionary alloc] init];
 
   for (PDLibraryItem *subitem in [item subitems])
     [self addItem:subitem viewState:subdict];
 
-  if (expanded || [opts count] != 0 || [subdict count] != 0)
-    {
-      if (opts == nil)
-	opts = @{};
+  NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
 
-      NSDictionary *tem = @{
-	@"expanded": @(expanded),
-	@"viewState": opts,
-	@"subitems": subdict
-      };
+  if (expanded)
+    [dict setObject:[NSNumber numberWithBool:YES] forKey:@"expanded"];
+  if ([opts count] != 0)
+    [dict setObject:opts forKey:@"viewState"];
+  if ([subdict count] != 0)
+    [dict setObject:subdict forKey:@"subitems"];
 
-      [dict setObject:tem forKey:ident];
-    }
+  [subdict release];
+
+  if ([dict count] != 0)
+    [state setObject:dict forKey:ident];
+
+  [dict release];
 }
 
 - (void)applyItem:(PDLibraryItem *)item viewState:(NSDictionary *)dict
@@ -660,7 +717,10 @@ item_for_path(NSArray *items, NSArray *path)
 
 - (NSInteger)sourceList:(PXSourceList *)lst badgeValueForItem:(id)item
 {
-  return [(PDLibraryItem *)item badgeValue];
+  if ([(PDLibraryItem *)item badgeValueIsNumberOfSubimages])
+    return [self imageListSizeFromItem:item];
+  else
+    return [(PDLibraryItem *)item badgeValue];
 }
 
 - (BOOL)sourceList:(PXSourceList *)lst itemHasIcon:(id)item

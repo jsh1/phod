@@ -128,6 +128,8 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 	  SEL sel = [item action];
 	  if (sel == @selector(toggleFlaggedAction:))
 	    [item setState:[_windowController flaggedState]];
+	  else if (sel == @selector(toggleHiddenAction:))
+	    [item setState:[_windowController hiddenState]];
 	}
     }
   else if (menu == _viewMenu)
@@ -146,6 +148,8 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 	    [item setState:[_windowController displaysListMetadata]];
 	  else if (sel == @selector(toggleImageMetadata:))
 	    [item setState:[_windowController displaysImageMetadata]];
+	  else if (sel == @selector(toggleShowsHiddenImages:))
+	    [item setState:[_windowController showsHiddenImages]];
 	}
     }
   else if (menu == _windowMenu)

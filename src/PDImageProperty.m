@@ -385,6 +385,7 @@ static const type_pair type_map[] =
   {"focal_length", type_millimetres},
   {"focal_length_35mm", type_millimetres},
   {"focus_mode", type_focus_mode},
+  {"hidden", type_bool},
   {"iso_speed", type_iso_speed},
   {"image_stabilization", type_image_stabilization_mode},
   {"keywords", type_string_array},
@@ -896,7 +897,7 @@ static NSPredicateEditorRowTemplate *
 predicate_bool_template(void)
 {
   NSMutableArray *bool_keys = [NSMutableArray array];
-  for (NSString *key in @[PDImage_Flagged, PDImage_Rejected])
+  for (NSString *key in @[PDImage_Flagged, PDImage_Hidden, PDImage_Rejected])
     {
       [bool_keys addObject:[NSExpression expressionForKeyPath:key]];
     }
@@ -1040,6 +1041,7 @@ NSString * const PDImage_Keywords = @"keywords";
 NSString * const PDImage_Copyright = @"copyright";
 NSString * const PDImage_Rating = @"rating";
 NSString * const PDImage_Flagged = @"flagged";
+NSString * const PDImage_Hidden = @"hidden";
 
 NSString * const PDImage_Altitude = @"altitude";
 NSString * const PDImage_Aperture = @"aperture";

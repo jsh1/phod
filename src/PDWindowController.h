@@ -26,6 +26,7 @@
 
 extern NSString *const PDImageListDidChange;
 extern NSString *const PDSelectionDidChange;
+extern NSString *const PDShowsHiddenImagesDidChange;
 extern NSString *const PDImagePredicateDidChange;
 extern NSString *const PDImageSortOptionsDidChange;
 
@@ -61,6 +62,8 @@ enum PDContentMode
   NSInteger _sidebarMode;
   NSInteger _contentMode;
 
+  BOOL _showsHiddenImages;
+
   int _imageSortKey;
   BOOL _imageSortReversed;
 
@@ -77,6 +80,8 @@ enum PDContentMode
 
 @property(nonatomic) NSInteger sidebarMode;
 @property(nonatomic) NSInteger contentMode;
+
+@property(nonatomic) BOOL showsHiddenImages;
 
 @property(nonatomic, readonly) NSArray *allImages;
 
@@ -139,6 +144,8 @@ enum PDContentMode
 - (BOOL)displaysListMetadata;
 - (BOOL)displaysImageMetadata;
 
+- (IBAction)toggleShowsHiddenImages:(id)sender;
+
 - (IBAction)showPredicatePanel:(id)sender;
 
 - (IBAction)setImageRatingAction:(id)sender;
@@ -146,6 +153,9 @@ enum PDContentMode
 
 - (IBAction)toggleFlaggedAction:(id)sender;
 - (NSInteger)flaggedState;
+
+- (IBAction)toggleHiddenAction:(id)sender;
+- (NSInteger)hiddenState;
 
 - (IBAction)zoomIn:(id)sender;
 - (IBAction)zoomOut:(id)sender;

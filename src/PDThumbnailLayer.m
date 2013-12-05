@@ -51,6 +51,7 @@ CA_HIDDEN
 @interface PDThumbnailRatingLayer : PDThumbnailTextLayer
 @property(nonatomic) int rating;
 @property(nonatomic, getter=isFlagged) BOOL flagged;
+@property(nonatomic, getter=hiddenState) BOOL hiddenState;
 @end
 
 CA_HIDDEN
@@ -234,8 +235,9 @@ CA_HIDDEN
 
       int rating = [[_image imagePropertyForKey:PDImage_Rating] intValue];
       BOOL flagged = [[_image imagePropertyForKey:PDImage_Flagged] boolValue];
+      BOOL hidden = [[_image imagePropertyForKey:PDImage_Hidden] boolValue];
 
-      if ((rating != 0 || flagged) && rating_layer == nil)
+      if ((rating != 0 || flagged || hidden) && rating_layer == nil)
 	{
 	  rating_layer = [PDThumbnailRatingLayer layer];
 	  [rating_layer setDelegate:[self delegate]];
@@ -244,6 +246,7 @@ CA_HIDDEN
 
       [rating_layer setRating:rating];
       [rating_layer setFlagged:flagged];
+      [rating_layer setHiddenState:hidden];
       [rating_layer setContentsScale:[self contentsScale]];
 
       [rating_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
@@ -321,7 +324,7 @@ CA_HIDDEN
 
 @implementation PDThumbnailRatingLayer
 
-@dynamic rating, flagged;
+@dynamic rating, flagged, hiddenState;
 
 + (id)defaultValueForKey:(NSString *)key
 {
@@ -339,14 +342,19 @@ CA_HIDDEN
 {
   [super didChangeValueForKey:key];
 
-  if ([key isEqualToString:@"rating"] || [key isEqualToString:@"flagged"])
-    [self setNeedsLayout];
+  if ([key isEqualToString:@"rating"]
+      || [key isEqualToString:@"flagged"]
+      || [key isEqualToString:@"hiddenState"])
+    {
+      [self setNeedsLayout];
+    }
 }
 
 - (void)layoutSublayers
 {
   int rating = [self rating];
   BOOL flagged = [self isFlagged];
+  BOOL hiddenState = [self hiddenState];
 
   unichar buf[8];
   size_t len = 0;
@@ -369,6 +377,13 @@ CA_HIDDEN
       if (len != 0)
 	buf[len++] = ' ';
       buf[len++] = 0x2691;		/* BLACK FLAG */
+    }
+
+  if (hiddenState)
+    {
+      if (len != 0)
+	buf[len++] = ' ';
+      buf[len++] = 0x272a;		/* CIRCLED WHITE STAR */
     }
 
   if (len != 0)

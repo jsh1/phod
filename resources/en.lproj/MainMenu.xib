@@ -422,6 +422,12 @@
                                     <action selector="toggleFlaggedAction:" target="-1" id="Fje-y2-DsF"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Hidden" keyEquivalent="." id="qiw-r1-dGb">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleHiddenAction:" target="-1" id="vRq-AF-Pns"/>
+                                </connections>
+                            </menuItem>
                         </items>
                         <connections>
                             <outlet property="delegate" destination="494" id="NLj-Yw-cPS"/>
@@ -475,19 +481,24 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="Y9S-6s-Me3"/>
-                            <menuItem title="Show Browser Metadata" keyEquivalent="u" id="Tca-cT-Ls7">
+                            <menuItem title="Hidden Photos" keyEquivalent="H" id="hPA-e6-Dg9">
+                                <connections>
+                                    <action selector="toggleShowsHiddenImages:" target="-1" id="GmZ-6N-qog"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Browser Metadata" keyEquivalent="u" id="Tca-cT-Ls7">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleListMetadata:" target="-1" id="1ZJ-dC-fRV"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Viewer Metadata" keyEquivalent="y" id="1T7-Om-LdI">
+                            <menuItem title="Viewer Metadata" keyEquivalent="y" id="1T7-Om-LdI">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleImageMetadata:" target="-1" id="7ts-wT-u1f"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="qQS-hS-yJa"/>
+                            <menuItem isSeparatorItem="YES" id="ShJ-rJ-P9X"/>
                             <menuItem title="Zoom To Actual Size" keyEquivalent="z" id="a6P-sh-4Ch">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>

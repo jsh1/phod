@@ -225,9 +225,9 @@
   return YES;
 }
 
-- (NSInteger)badgeValue
+- (BOOL)badgeValueIsNumberOfSubimages
 {
-  return [self numberOfSubimages];
+  return YES;
 }
 
 - (NSString *)identifier

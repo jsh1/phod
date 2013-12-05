@@ -896,7 +896,7 @@ static NSOperationQueue *_narrowQueue;
 	}
 
     got_ret:
-      return flag ? ret : -ret;
+      return flag ? -ret : ret;
     });
 }
 
@@ -1004,6 +1004,11 @@ static NSOperationQueue *_narrowQueue;
 - (NSString *)title
 {
   return [self imagePropertyForKey:PDImage_Title];
+}
+
+- (BOOL)isHidden
+{
+  return [[self imagePropertyForKey:PDImage_Hidden] boolValue];
 }
 
 - (BOOL)usesRAW

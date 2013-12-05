@@ -169,6 +169,7 @@
       && ![key isEqualToString:PDImage_Name]
       && ![key isEqualToString:PDImage_Rating]
       && ![key isEqualToString:PDImage_Flagged]
+      && ![key isEqualToString:PDImage_Hidden]
       && ![key isEqualToString:PDImage_Orientation])
     return;
 
