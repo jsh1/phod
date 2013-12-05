@@ -39,6 +39,10 @@
 
 NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
+@interface PDLibraryViewController ()
+- (void)updateControls;
+@end
+
 @implementation PDLibraryViewController
 
 + (NSString *)viewNibName
@@ -153,11 +157,32 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
   [_outlineView expandItem:_foldersGroup];
   [_outlineView expandItem:_smartFoldersGroup];
+
+  [self updateControls];
 }
 
 - (NSView *)initialFirstResponder
 {
   return _outlineView;
+}
+
+- (void)updateControls
+{
+  BOOL can_delete = NO;
+
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+  NSInteger idx;
+  for (idx = [sel firstIndex]; idx != NSNotFound;
+       idx = [sel indexGreaterThanIndex:idx])
+    {
+      PDLibraryItem *item = [_outlineView itemAtRow:idx];
+
+      if ([[item parent] isKindOfClass:[PDLibraryGroup class]])
+	can_delete = YES;
+    }
+
+  [_removeButton setEnabled:can_delete];
+  [_actionButton setEnabled:NO];
 }
 
 - (NSArray *)allImages
@@ -403,7 +428,7 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
     {
       PDLibraryItem *item = [_outlineView itemAtRow:idx];
 
-      if ([item parent] != nil)
+      if (![[item parent] isKindOfClass:[PDLibraryGroup class]])
 	continue;
 
       if ([item isKindOfClass:[PDLibraryDirectory class]])
@@ -751,6 +776,7 @@ item_for_path(NSArray *items, NSArray *path)
 - (void)sourceListSelectionDidChange:(NSNotification *)note
 {
   [self updateImageList];
+  [self updateControls];
 
   if ([[_controller filteredImageList] count] > 0
       && [[_controller selectedImageIndexes] count] == 0)
