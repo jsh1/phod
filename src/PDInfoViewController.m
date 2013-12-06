@@ -102,7 +102,10 @@
 
 - (NSDictionary *)savedViewState
 {
-  return @{@"ActiveGroup": _activeGroup};
+  if (_activeGroup != nil)
+    return @{@"ActiveGroup": _activeGroup};
+  else
+    return nil;
 }
 
 - (void)applySavedViewState:(NSDictionary *)dict

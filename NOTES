@@ -105,3 +105,45 @@ Issues
   "deleted". Add a "Trash" meta-folder to show all deleted images.
   (Requires an expensive full-library scan?) Also add an "Empty Trash"
   command.
+
+14. Libraries and caching
+
+  Even though startup asynchronously loads images, it takes long enough
+  to be annoying. The bulk of the time is sucking the metadata out of
+  each image, ImageIO parsing it and then us converting it to our own
+  format.
+
+  Adding a basic cache of parsed properties helps this, but to make the
+  cache fast enough it can only index on base-name, size and mtime of
+  each file, which is fragile. And it's going to be hard to GC items
+  out of the cache when images are deleted.
+
+  So we need something less ad hoc. It's perhaps time to formalize the
+  "image library" concept, along the lines of:
+
+  - each library has a host-unique id (32-bit token), and a persistent
+  catalog associated with it
+
+  - the catalog maps relative-path -> file-id
+
+  - file-id is a 32-bit token of some kind, unique to the library
+
+  - arrange proxy and property caches relative to library root, both
+  stored in file system. File names are made from library and image ids
+
+  - can't store library or file ids in the .phod file -- rsyncing the
+  file to another host or library would leave it in an invalid state.
+
+  - deleting a library purges its cached state. (If we format the
+  library's cache as its own subdirectory, we can delete it wholesale.)
+
+  - after startup is complete, GC files from each mounted library that
+  no longer exist (and aren't marked archived)
+
+  - no more use of broken hashes to cache files. If files move, we
+  always regenerate the hash. If an old file is replaced by a new file,
+  its mtime had better get updated!
+
+  - NSURL has -bookmarkDataWithContentsOfURL:error: to get an NSData
+  blob somehow referencing the file without using its path. But I'd
+  prefer not to rely on this kind of OS-specific magic.

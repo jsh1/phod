@@ -26,7 +26,7 @@
 
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
-#import "PDImageTextCell.h"
+#import "PDImageLibrary.h"
 #import "PDLibraryDirectory.h"
 #import "PDLibraryItem.h"
 #import "PDLibraryGroup.h"
@@ -50,34 +50,43 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   return @"PDLibraryView";
 }
 
-- (void)addDirectoryItem:(NSString *)dir
+- (void)addImageLibraryItem:(PDImageLibrary *)lib
 {
   PDLibraryDirectory *item
-    = [[PDLibraryDirectory alloc] initWithLibraryPath:
-       [dir stringByExpandingTildeInPath] directory:@""];
+    = [[PDLibraryDirectory alloc] initWithLibrary:lib directory:@""];
 
   [item setTitleImageName:PDImage_GenericHardDisk];
 
-  [_foldersGroup addSubitem:item];
+  [_libraryGroup addSubitem:item];
 
   [item release];
 }
 
-- (void)addQueryItem:(NSDictionary *)dict
+- (void)addAlbumItem:(NSDictionary *)dict
 {
   NSString *name = [dict objectForKey:@"name"];
-  NSString *format = [dict objectForKey:@"predicate"];
-  NSPredicate *pred = format != nil ? [_controller imagePredicateWithFormat:
-				       format] : nil;
+  NSString *pred_str = [dict objectForKey:@"predicate"];
 
-  PDLibraryQuery *item = [[PDLibraryQuery alloc] init];
+  PDLibraryItem *item = nil;
 
-  [item setName:name];
-  [item setPredicate:pred];
+  if (pred_str != nil)
+    {
+      NSPredicate *pred = [_controller imagePredicateWithFormat:pred_str];
 
-  [_smartFoldersGroup addSubitem:item];
+      if (pred != nil)
+	{
+	  PDLibraryQuery *tem = [[PDLibraryQuery alloc] init];
+	  [tem setName:name];
+	  [tem setPredicate:pred];
+	  item = tem;
+	}
+    }
 
-  [item release];
+  if (item != nil)
+    {
+      [_albumsGroup addSubitem:item];
+      [item release];
+    }
 }
 
 - (id)initWithController:(PDWindowController *)controller
@@ -88,33 +97,17 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
   _items = [[NSMutableArray alloc] init];
 
-  _folders = [[[NSUserDefaults standardUserDefaults]
-	       arrayForKey:@"PDLibraryDirectories"] mutableCopy];
-  if (_folders == nil)
-    _folders = [[NSMutableArray alloc] init];
+  _libraryGroup = [[PDLibraryGroup alloc] init];
+  [_libraryGroup setName:@"LIBRARIES"];
+  [_items addObject:_libraryGroup];
+  [_libraryGroup release];
 
-  _foldersGroup = [[PDLibraryGroup alloc] init];
-  [_foldersGroup setName:@"Folders"];
-  [_items addObject:_foldersGroup];
-  [_foldersGroup release];
-
-  _smartFolders = [[[NSUserDefaults standardUserDefaults]
-		    arrayForKey:@"PDLibraryQueries"] mutableCopy];
-  if (_smartFolders == nil)
-    _smartFolders = [[NSMutableArray alloc] init];
-
-  _smartFoldersGroup = [[PDLibraryGroup alloc] init];
-  [_smartFoldersGroup setName:@"Smart Folders"];
-  [_items addObject:_smartFoldersGroup];
-  [_smartFoldersGroup release];
+  _albumsGroup = [[PDLibraryGroup alloc] init];
+  [_albumsGroup setName:@"ALBUMS"];
+  [_items addObject:_albumsGroup];
+  [_albumsGroup release];
 
   _itemViewState = [[NSMapTable strongToStrongObjectsMapTable] retain];
-  
-  for (NSString *dir in _folders)
-    [self addDirectoryItem:dir];
-
-  for (NSDictionary *dict in _smartFolders)
-    [self addQueryItem:dict];
 
   return self;
 }
@@ -124,11 +117,10 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   [_outlineView setDataSource:nil];
   [_outlineView setDelegate:nil];
 
+  [_albums release];
+
   [_items release];
   [_itemViewState release];
-
-  [_folders release];
-  [_smartFolders release];
 
   [super dealloc];
 }
@@ -136,6 +128,25 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 - (void)viewDidLoad
 {
   [super viewDidLoad];
+
+  for (id obj in [[NSUserDefaults standardUserDefaults]
+		  arrayForKey:@"PDImageLibraries"])
+    {
+      PDImageLibrary *lib = [[PDImageLibrary alloc] initWithPropertyList:obj];
+      if (lib != nil)
+	{
+	  [self addImageLibraryItem:lib];
+	  [lib release];
+	}
+    }
+
+  _albums = [[[NSUserDefaults standardUserDefaults]
+	      arrayForKey:@"PDLibraryAlbums"] mutableCopy];
+  if (_albums == nil)
+    _albums = [[NSMutableArray alloc] init];
+
+  for (NSDictionary *dict in _albums)
+    [self addAlbumItem:dict];
 
   [[NSNotificationCenter defaultCenter] addObserver:self
    selector:@selector(libraryItemSubimagesDidChange:)
@@ -155,8 +166,8 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   for (NSTableColumn *col in [_outlineView tableColumns])
     [[col dataCell] setVerticallyCentered:YES];
 
-  [_outlineView expandItem:_foldersGroup];
-  [_outlineView expandItem:_smartFoldersGroup];
+  [_outlineView expandItem:_libraryGroup];
+  [_outlineView expandItem:_albumsGroup];
 
   [self updateControls];
 }
@@ -187,7 +198,7 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
 - (NSArray *)allImages
 {
-  return [_foldersGroup subimages];
+  return [_libraryGroup subimages];
 }
 
 - (void)updateImageList
@@ -354,7 +365,22 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   [_outlineView reloadData];
 }
 
-- (IBAction)addFolderAction:(id)sender
+- (void)updateImageLibraries
+{
+  NSMutableArray *array = [NSMutableArray array];
+
+  for (PDImageLibrary *lib in [PDImageLibrary allLibraries])
+    {
+      id obj = [lib propertyList];
+      if (obj != nil)
+	[array addObject:obj];
+    }
+
+  [[NSUserDefaults standardUserDefaults]
+   setObject:array forKey:@"PDImageLibraries"];
+}
+
+- (IBAction)addLibraryAction:(id)sender
 {
   NSOpenPanel *panel = [NSOpenPanel openPanel];
 
@@ -376,20 +402,23 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 	     if (![url isFileURL])
 	       continue;
 
-	     NSString *dir = [[url path] stringByAbbreviatingWithTildeInPath];
-	     if ([_folders containsObject:dir])
+	     NSString *path = [url path];
+
+	     if ([PDImageLibrary libraryWithPath:path] != nil)
 	       continue;
 
-	     [_folders addObject:dir];
-	     [self addDirectoryItem:dir];
+	     PDImageLibrary *lib = [[PDImageLibrary alloc] initWithPath:path];
+	     if (lib == nil)
+	       continue;
+
+	     [self addImageLibraryItem:lib];
+	     [lib release];
 	     changed = YES;
 	   }
 
 	 if (changed)
 	   {
-	     [[NSUserDefaults standardUserDefaults] setObject:_folders
-	      forKey:@"PDLibraryDirectories"];
-
+	     [self updateImageLibraries];
 	     [_outlineView reloadData];
 	   }
        }
@@ -407,17 +436,17 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
     @"predicate": query
   };
 
-  [_smartFolders addObject:dict];
+  [_albums addObject:dict];
 
-  [self addQueryItem:dict];
+  [self addAlbumItem:dict];
 
-  [[NSUserDefaults standardUserDefaults] setObject:_smartFolders
-   forKey:@"PDLibraryQueries"];
+  [[NSUserDefaults standardUserDefaults] setObject:_albums
+   forKey:@"PDLibraryAlbums"];
 
-  [_outlineView reloadItem:_smartFoldersGroup reloadChildren:YES];
+  [_outlineView reloadItem:_albumsGroup reloadChildren:YES];
 }
 
-- (IBAction)removeFolderAction:(id)sender
+- (IBAction)removeAction:(id)sender
 {
   BOOL changed = NO;
   NSIndexSet *sel = [_outlineView selectedRowIndexes];
@@ -433,23 +462,24 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
       if ([item isKindOfClass:[PDLibraryDirectory class]])
 	{
-	  NSArray *subitems = [_foldersGroup subitems];
+	  NSArray *subitems = [_libraryGroup subitems];
 	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
 	  if (idx != NSNotFound)
 	    {
-	      [_folders removeObjectAtIndex:idx];
-	      [_foldersGroup removeSubitem:[subitems objectAtIndex:idx]];
+	      PDImageLibrary *lib = [(PDLibraryDirectory *)item library];
+	      [lib remove];
+	      [_libraryGroup removeSubitem:[subitems objectAtIndex:idx]];
 	      changed = YES;
 	    }
 	}
       else if ([item isKindOfClass:[PDLibraryQuery class]])
 	{
-	  NSArray *subitems = [_smartFoldersGroup subitems];
+	  NSArray *subitems = [_albumsGroup subitems];
 	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
 	  if (idx != NSNotFound)
 	    {
-	      [_smartFolders removeObjectAtIndex:idx];
-	      [_smartFoldersGroup removeSubitem:[subitems objectAtIndex:idx]];
+	      [_albums removeObjectAtIndex:idx];
+	      [_albumsGroup removeSubitem:[subitems objectAtIndex:idx]];
 	      changed = YES;
 	    }
 	}
@@ -457,10 +487,10 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
   if (changed)
     {
-      [[NSUserDefaults standardUserDefaults] setObject:_folders
-       forKey:@"PDLibraryDirectories"];
-      [[NSUserDefaults standardUserDefaults] setObject:_smartFolders
-       forKey:@"PDLibraryQueries"];
+      [self updateImageLibraries];
+
+      [[NSUserDefaults standardUserDefaults] setObject:_albums
+       forKey:@"PDLibraryAlbums"];
 
       [_outlineView reloadData];
     }
@@ -635,6 +665,14 @@ item_for_path(NSArray *items, NSArray *path)
       for (PDLibraryItem *subitem in [item subitems])
 	[self applyItem:subitem viewState:sub_state];
     }
+}
+
+- (void)synchronize
+{
+  [self updateImageLibraries];
+
+  for (PDImageLibrary *lib in [PDImageLibrary allLibraries])
+    [lib synchronize];
 }
 
 - (NSDictionary *)savedViewState

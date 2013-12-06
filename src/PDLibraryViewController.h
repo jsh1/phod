@@ -41,13 +41,11 @@ extern NSString *const PDLibrarySelectionDidChange;
   IBOutlet NSButton *_removeButton;
   IBOutlet NSButton *_actionButton;
 
-  NSMutableArray *_items;
+  NSMutableArray *_albums;
 
-  NSMutableArray *_folders;
-  PDLibraryGroup *_foldersGroup;
-                                     
-  NSMutableArray *_smartFolders;
-  PDLibraryGroup *_smartFoldersGroup;
+  NSMutableArray *_items;
+  PDLibraryGroup *_libraryGroup;
+  PDLibraryGroup *_albumsGroup;
 
   NSMapTable *_itemViewState;		/* PDLibraryItem -> NSDictionary */
 }
@@ -56,8 +54,9 @@ extern NSString *const PDLibrarySelectionDidChange;
 
 - (void)addSmartFolder:(NSString *)name predicate:(NSPredicate *)pred;
 
-- (IBAction)addFolderAction:(id)sender;
-- (IBAction)removeFolderAction:(id)sender;
+- (IBAction)addLibraryAction:(id)sender;
+
+- (IBAction)removeAction:(id)sender;
 
 - (IBAction)searchAction:(id)sender;
 

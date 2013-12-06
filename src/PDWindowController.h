@@ -126,6 +126,8 @@ enum PDContentMode
 
 - (PDViewController *)viewControllerWithClass:(Class)cls;
 
+- (void)synchronize;
+
 - (void)saveWindowState;
 - (void)applySavedWindowState;
 

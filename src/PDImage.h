@@ -27,7 +27,7 @@
 extern NSString *const PDImagePropertyDidChange;
 
 @protocol PDImageHost;
-@class PDImageHash;
+@class PDImageLibrary;
 
 enum PDImageCompareKey
 {
@@ -52,18 +52,18 @@ typedef int PDImageCompareKey;
 
 @interface PDImage : NSObject
 {
-  NSString *_libraryPath;		/* absolute */
+  PDImageLibrary *_library;
   NSString *_libraryDirectory;		/* relative to _libraryRoot */
 
-  NSString *_JSONPath;			/* absolute */
+  NSString *_jsonPath;			/* absolute */
 
   BOOL _pendingJSONWrite;
 
-  NSString *_JPEGPath;			/* nil or absolute */
-  PDImageHash *_JPEGHash;
+  NSString *_jpegPath;			/* nil or absolute */
+  uint32_t _jpegId;
 
-  NSString *_RAWPath;			/* nil or absolute */
-  PDImageHash *_RAWHash;
+  NSString *_rawPath;			/* nil or absolute */
+  uint32_t _rawId;
 
   NSMutableDictionary *_properties;
   NSDictionary *_implicitProperties;	/* from the image file(s) */
@@ -76,18 +76,20 @@ typedef int PDImageCompareKey;
   NSDate *_date;			/* cached lazily */
 }
 
-+ (void)loadImagesInLibrary:(NSString *)libraryPath directory:(NSString *)dir
-    handler:(void (^)(PDImage *))block;
-
 + (void)callWithImageComparator:(PDImageCompareKey)key
     reversed:(BOOL)flag block:(void (^)(NSComparator))block;
 
 + (NSString *)imageCompareKeyString:(PDImageCompareKey)key;
 + (PDImageCompareKey)imageCompareKeyFromString:(NSString *)str;
 
+- (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
+    name:(NSString *)name JSONPath:(NSString *)json_path
+    JPEGPath:(NSString *)jpeg_path RAWPath:(NSString *)raw_path;
+
+@property(nonatomic, readonly) PDImageLibrary *library;
+
 @property(nonatomic, readonly) NSString *JSONPath;
 
-@property(nonatomic, readonly) NSString *libraryPath;
 @property(nonatomic, readonly) NSString *libraryDirectory;
 
 /* Convenience for titles. */
@@ -101,7 +103,7 @@ typedef int PDImageCompareKey;
 /* These automatically switch between JPEG and RAW files. */
 
 @property(nonatomic, readonly) NSString *imagePath;
-@property(nonatomic, readonly) PDImageHash *imageHash;
+@property(nonatomic, readonly) uint32_t imageId;
 
 - (id)imagePropertyForKey:(NSString *)key;
 - (void)setImageProperty:(id)obj forKey:(NSString *)key;

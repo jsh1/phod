@@ -147,6 +147,12 @@
 {
 }
 
+- (void)synchronize
+{
+  for (PDViewController *controller in _subviewControllers)
+    [controller synchronize];
+}
+
 - (NSDictionary *)savedViewState
 {
   if ([_subviewControllers count] == 0)

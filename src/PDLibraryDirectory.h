@@ -24,9 +24,11 @@
 
 #import "PDLibraryItem.h"
 
+@class PDImageLibrary;
+
 @interface PDLibraryDirectory : PDLibraryItem
 {
-  NSString *_libraryPath;
+  PDImageLibrary *_library;
   NSString *_libraryDirectory;
   NSArray *_subitems;
   NSArray *_images;
@@ -35,12 +37,12 @@
   NSInteger _titleImageName;
 }
 
-- (id)initWithLibraryPath:(NSString *)path directory:(NSString *)dir;
+- (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 
-@property(nonatomic, readonly) NSString *libraryPath;
+@property(nonatomic, readonly) PDImageLibrary *library;
 @property(nonatomic, readonly) NSString *libraryDirectory;
 
-/* convenience that appends libraryDirectory onto libraryPath. */
+/* convenience that appends libraryDirectory onto [library path]. */
 @property(nonatomic, readonly) NSString *path;
 
 @property(nonatomic) NSInteger titleImageName;

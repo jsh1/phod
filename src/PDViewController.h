@@ -62,6 +62,8 @@
 
 @property(nonatomic, readonly) NSView *initialFirstResponder;
 
+- (void)synchronize;
+
 - (NSDictionary *)savedViewState;
 - (void)applySavedViewState:(NSDictionary *)dict;
 

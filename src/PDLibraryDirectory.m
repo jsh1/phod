@@ -26,20 +26,21 @@
 
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
+#import "PDImageLibrary.h"
 
 @implementation PDLibraryDirectory
 
-@synthesize libraryPath = _libraryPath;
+@synthesize library = _library;
 @synthesize libraryDirectory = _libraryDirectory;
 @synthesize titleImageName = _titleImageName;
 
-- (id)initWithLibraryPath:(NSString *)path directory:(NSString *)dir;
+- (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 {
   self = [super init];
   if (self == nil)
     return nil;
 
-  _libraryPath = [path copy];
+  _library = [lib retain];
   _libraryDirectory = [dir copy];
   _titleImageName = PDImage_GenericFolder;
 
@@ -48,7 +49,7 @@
 
 - (void)dealloc
 {
-  [_libraryPath release];
+  [_library release];
   [_libraryDirectory release];
   for (PDLibraryItem *item in _subitems)
     [item setParent:nil];
@@ -93,9 +94,10 @@
 	NSMutableArray *array = [[NSMutableArray alloc] init];
 	__block CFTimeInterval last_t = CACurrentMediaTime();
 
-	[PDImage loadImagesInLibrary:_libraryPath
-	 directory:_libraryDirectory handler:^(PDImage *im) {
+	[_library loadImagesInSubdirectory:_libraryDirectory
+         handler:^(PDImage *im) {
 	   [array addObject:im];
+
 	   CFTimeInterval t = CACurrentMediaTime();
 	   if (t - last_t > .5)
 	     {
@@ -108,7 +110,7 @@
 		  object:self];
 	       });
 	     }
-	   }];
+	 }];
 
 	if ([array count] != 0)
 	  {
@@ -127,7 +129,7 @@
 
 - (NSString *)path
 {
-  return [_libraryPath stringByAppendingPathComponent:_libraryDirectory];
+  return [[_library path] stringByAppendingPathComponent:_libraryDirectory];
 }
 
 - (NSArray *)subitems
@@ -161,7 +163,7 @@
 				  stringByAppendingPathComponent:file];
 
 	      subitem = [[PDLibraryDirectory alloc]
-			 initWithLibraryPath:_libraryPath directory:subdir];
+			 initWithLibrary:_library directory:subdir];
 
 	      if (subitem != nil)
 		{
@@ -200,9 +202,11 @@
 - (NSString *)titleString
 {
   NSString *title = [_libraryDirectory lastPathComponent];
-  if ([title length] == 0)
-    title = [_libraryPath lastPathComponent];
-  return [title stringByReplacingOccurrencesOfString:@":" withString:@"/"];
+  if ([title length] != 0)
+    title = [title stringByReplacingOccurrencesOfString:@":" withString:@"/"];
+  else
+    title = [_library name];
+  return title;
 }
 
 - (BOOL)hasTitleImage
@@ -233,7 +237,7 @@
 - (NSString *)identifier
 {
   return ([_libraryDirectory length] == 0
-	  ? [_libraryPath stringByAbbreviatingWithTildeInPath]
+	  ? [[_library path] stringByAbbreviatingWithTildeInPath]
 	  : [_libraryDirectory lastPathComponent]);
 }
 

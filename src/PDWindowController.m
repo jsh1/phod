@@ -28,6 +28,7 @@
 #import "PDAppDelegate.h"
 #import "PDColor.h"
 #import "PDImage.h"
+#import "PDImageLibrary.h"
 #import "PDImageViewController.h"
 #import "PDImageListViewController.h"
 #import "PDInfoViewController.h"
@@ -146,9 +147,17 @@ NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
+  [self synchronize];
+
   [self saveWindowState];
 
   [NSApp terminate:self];
+}
+
+- (void)synchronize
+{
+  for (PDViewController *controller in _viewControllers)
+    [controller synchronize];
 }
 
 - (void)saveWindowState

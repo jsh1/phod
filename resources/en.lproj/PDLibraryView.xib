@@ -97,7 +97,7 @@
                         <font key="font" metaFont="smallSystem"/>
                     </buttonCell>
                     <connections>
-                        <action selector="removeFolderAction:" target="-2" id="riQ-II-9Uv"/>
+                        <action selector="removeAction:" target="-2" id="XVH-jW-klK"/>
                     </connections>
                 </button>
                 <button toolTip="Add image folder." verticalHuggingPriority="750" id="bv5-Rg-fp3">
@@ -108,7 +108,7 @@
                         <font key="font" metaFont="smallSystem"/>
                     </buttonCell>
                     <connections>
-                        <action selector="addFolderAction:" target="-2" id="UGT-Ul-t3p"/>
+                        <action selector="addLibraryAction:" target="-2" id="dfj-tP-Ism"/>
                     </connections>
                 </button>
             </subviews>

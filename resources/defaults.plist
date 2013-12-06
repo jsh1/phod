@@ -2,11 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>PDLibraryDirectories</key>
+	<key>PDImageLibraries</key>
 	<array>
-		<string>~/Pictures/Photos</string>
+		<dict>
+			<key>path</key>
+			<string>~/Pictures/Photos</string>
+			<key>name</key>
+			<string>Photos</string>
+		</dict>
 	</array>
-	<key>PDLibraryQueries</key>
+	<key>PDLibraryAlbums</key>
 	<array>
 	</array>
 	<key>PDMetadataGroups</key>
