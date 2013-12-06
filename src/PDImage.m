@@ -720,12 +720,6 @@ static NSOperationQueue *_narrowQueue;
   return value;
 }
 
-- (void)installImagePropertiesDictionary:(NSDictionary *)dict
-{
-  if (_implicitProperties == nil)
-    _implicitProperties = [dict copy];
-}
-
 - (void)setImageProperty:(id)obj forKey:(NSString *)key
 {
   if (obj == nil)
