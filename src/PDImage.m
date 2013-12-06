@@ -828,18 +828,13 @@ static NSOperationQueue *_narrowQueue;
 {
   if (_date == nil)
     {
-      id date = nil;
-      NSString *str = [self imagePropertyForKey:PDImage_OriginalDate];
-      if (str == nil)
-	str = [self imagePropertyForKey:PDImage_DigitizedDate];
-      if (str != nil)
-	date = PDImageParseEXIFDateString(str);
-      if (date == nil)
-	{
-	  date = [NSDate dateWithTimeIntervalSince1970:
-		  file_mtime([self imagePath])];
-	}
-      _date = [date copy];
+      id value = [self imagePropertyForKey:PDImage_OriginalDate];
+      if (value == nil)
+	value = [self imagePropertyForKey:PDImage_DigitizedDate];
+      time_t t = (value != nil
+		  ? [value unsignedLongValue]
+		  : file_mtime([self imagePath]));
+      _date = [[NSDate alloc] initWithTimeIntervalSince1970:t];
     }
 
   return _date;

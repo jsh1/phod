@@ -35,6 +35,8 @@ CA_HIDDEN @interface PDImageExpressionObject : NSObject
 }
 @end
 
+static time_t PDImageParseEXIFDateString_(NSString *str);
+
 /* Converting ImageIO properties dictionary to our format. */
 
 static CFDictionaryRef
@@ -85,7 +87,7 @@ property_map(void)
       const void *exif_values[] =
 	{
 	  PDImage_Contrast,
-	  PDImage_DigitizedDate,
+	  kCFNull,			/* DigitizedDate */
 	  PDImage_ExposureBias,
 	  PDImage_ExposureLength,
 	  PDImage_ExposureMode,
@@ -99,7 +101,7 @@ property_map(void)
 	  PDImage_LightSource,
 	  PDImage_MaxAperture,
 	  PDImage_MeteringMode,
-	  PDImage_OriginalDate,
+	  kCFNull,			/* OriginalDate */
 	  PDImage_Saturation,
 	  PDImage_SceneCaptureType,
 	  PDImage_SceneType,
@@ -278,6 +280,19 @@ map_property(const void *key, const void *value, void *ctx)
 	  [c->dict setObject:CFArrayGetValueAtIndex(value, 0)
 	   forKey:PDImage_ISOSpeed];
 	}
+      else if ((CFEqual(key, kCGImagePropertyExifDateTimeDigitized)
+		|| CFEqual(key, kCGImagePropertyExifDateTimeOriginal))
+	       && CFGetTypeID(value) == CFStringGetTypeID())
+	{
+	  time_t date = PDImageParseEXIFDateString_((NSString *)value);
+	  if (date != 0)
+	    {
+	      NSString *k = CFEqual(key, kCGImagePropertyExifDateTimeDigitized)
+			    ? PDImage_DigitizedDate : PDImage_OriginalDate;
+	      [c->dict setObject:
+	       [NSNumber numberWithUnsignedLong:date] forKey:k];
+	    }
+	}
       else if (CFEqual(key, kCGImagePropertyGPSDictionary)
 	       && CFGetTypeID(value) == CFDictionaryGetTypeID())
 	{
@@ -322,7 +337,6 @@ typedef enum
   type_contrast,
   type_direction,
   type_duration,
-  type_exif_date,
   type_exposure_bias,
   type_exposure_mode,
   type_exposure_program,
@@ -368,7 +382,7 @@ static const type_pair type_map[] =
   {"color_model", type_string},
   {"contrast", type_contrast},
   {"copyright", type_string},
-  {"digitized_date", type_exif_date},
+  {"digitized_date", type_unix_date},
   {"direction", type_direction},
   {"direction_ref", type_string},
   {"exposure_bias", type_exposure_bias},
@@ -396,7 +410,7 @@ static const type_pair type_map[] =
   {"metering_mode", type_metering_mode},
   {"name", type_string},
   {"orientation", type_orientation},
-  {"original_date", type_exif_date},
+  {"original_date", type_unix_date},
   {"pixel_height", type_pixels},
   {"pixel_width", type_pixels},
   {"profile_name", type_string},
@@ -648,15 +662,9 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
     case type_orientation:
       return lookup_enum_string(type, [value intValue]);
 
-    case type_exif_date:
     case type_unix_date:
-      if (type == type_exif_date)
-	date = PDImageParseEXIFDateString(value);
-      else /* if (type == type_unix_date) */
-	{
-	  date = [NSDate dateWithTimeIntervalSince1970:
-		  [value unsignedLongValue]];
-	}
+      date = [NSDate dateWithTimeIntervalSince1970:
+	      [value unsignedLongValue]];
       if (date != nil)
 	{
 	  static NSDateFormatter *formatter;
@@ -738,10 +746,6 @@ PDImageExpressionValues(PDImage *im)
     case type_bool:
       return [NSNumber numberWithBool:[value intValue] != 0];
 
-    case type_exif_date:
-      return PDImageParseEXIFDateString(value);
-      break;
-
     case type_unix_date:
       return [NSDate dateWithTimeIntervalSince1970:[value unsignedLongValue]];
 
@@ -796,8 +800,8 @@ PDImageExpressionValues(PDImage *im)
 
 /* EXIF date parsing. */
 
-NSDate *
-PDImageParseEXIFDateString(NSString *str)
+static time_t
+PDImageParseEXIFDateString_(NSString *str)
 {
   /* Format is "YYYY:MM:DD HH:MM:SS". */
 
@@ -815,8 +819,18 @@ PDImageParseEXIFDateString(NSString *str)
       tm.tm_min = minutes;
       tm.tm_sec = seconds;
 
-      return [NSDate dateWithTimeIntervalSince1970:mktime(&tm)];
+      return mktime(&tm);
     }
+  else
+    return 0;
+}
+
+NSDate *
+PDImageParseEXIFDateString(NSString *str)
+{
+  time_t date = PDImageParseEXIFDateString_(str);
+  if (date != 0)
+    return [NSDate dateWithTimeIntervalSince1970:date];
   else
     return nil;
 }
