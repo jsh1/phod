@@ -428,6 +428,15 @@ static NSOperationQueue *_narrowQueue;
 	}
     }
 
+  /* Pull both file ids from the library catalog to tell the library
+     they're still valid. But don't generate new ids until we actually
+     access the caches. */
+
+  if (_jpegPath != nil)
+    _jpegId = [_library fileIdOfPath:_jpegPath onlyIfExists:YES];
+  if (_rawPath != nil)
+    _rawId = [_library fileIdOfPath:_rawPath onlyIfExists:YES];
+
   [self loadImageProperties];
 
   _imageHosts = [[NSMapTable strongToStrongObjectsMapTable] retain];

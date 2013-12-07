@@ -33,7 +33,9 @@
   NSString *_cachePath;
   uint32_t _libraryId;
   uint32_t _lastFileId;
-  NSMutableDictionary *_catalog;
+  NSMutableDictionary *_catalog0;
+  NSMutableDictionary *_catalog1;
+  uint32_t _catalogDirty;
 }
 
 + (NSArray *)allLibraries;
@@ -46,24 +48,20 @@
 - (id)initWithPropertyList:(id)obj;
 - (id)propertyList;
 
-- (void)synchronize;
-
-- (void)remove;
-
-- (void)validateCaches;
-- (void)emptyCaches;
-
 @property(nonatomic, copy) NSString *name;
-
+@property(nonatomic, readonly) uint32_t libraryId;
 @property(nonatomic, readonly) NSString *path;
-
 @property(nonatomic, readonly) NSString *cachePath;
+
+- (uint32_t)fileIdOfPath:(NSString *)path;
+- (uint32_t)fileIdOfPath:(NSString *)path onlyIfExists:(BOOL)flag;
 
 - (NSString *)cachePathForFileId:(uint32_t)file_id base:(NSString *)str;
 
-@property(nonatomic, readonly) uint32_t libraryId;
-
-- (uint32_t)fileIdOfPath:(NSString *)path;
+- (void)synchronize;
+- (void)validateCaches;
+- (void)emptyCaches;
+- (void)remove;
 
 - (void)loadImagesInSubdirectory:(NSString *)path
     handler:(void (^)(PDImage *))block;

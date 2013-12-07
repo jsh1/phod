@@ -29,6 +29,7 @@
 #import <stdlib.h>
 
 #define CATALOG_FILE "catalog.json"
+#define CATALOG_VER_KEY "///version"
 #define METADATA_EXTENSION "phod"
 #define CACHE_BITS 6
 #define CACHE_SEP '$'
@@ -96,7 +97,8 @@ add_library(PDImageLibrary *lib)
   [_name release];
   [_path release];
   [_cachePath release];
-  [_catalog release];
+  [_catalog0 release];
+  [_catalog1 release];
   [super dealloc];
 }
 
@@ -117,7 +119,8 @@ again:
 	goto again;
     }
 
-  _catalog = [[NSMutableDictionary alloc] init];
+  _catalog1 = [[NSMutableDictionary alloc] init];
+  _catalogDirty = YES;
 
   add_library(self);
 
@@ -165,26 +168,23 @@ again:
 	}
     }
 
-  if (_catalog == nil)
+  NSString *catalog_path
+    = [[self cachePath] stringByAppendingPathComponent:@CATALOG_FILE];
+
+  NSData *data = [[NSData alloc] initWithContentsOfFile:catalog_path];
+  if (data != nil)
     {
-      NSString *catalog_path
-        = [[self cachePath] stringByAppendingPathComponent:@CATALOG_FILE];
+      id obj = [NSJSONSerialization
+		JSONObjectWithData:data options:0 error:nil];
 
-      NSData *data = [[NSData alloc] initWithContentsOfFile:catalog_path];
-      if (data != nil)
-	{
-	  id obj = [NSJSONSerialization
-		    JSONObjectWithData:data options:0 error:nil];
+      if ([obj isKindOfClass:[NSDictionary class]])
+	_catalog0 = [obj mutableCopy];
 
-	  if ([obj isKindOfClass:[NSDictionary class]])
-	    _catalog = [obj mutableCopy];
-
-	  [data release];
-	}
+      [data release];
     }
 
-  if (_catalog == nil)
-    _catalog = [[NSMutableDictionary alloc] init];
+  _catalog1 = [[NSMutableDictionary alloc] init];
+  _catalogDirty = YES;
 
   [self validateCaches];
 
@@ -205,16 +205,18 @@ again:
 
 - (void)synchronize
 {
-  NSString *path = [[self cachePath]
-		    stringByAppendingPathComponent:@CATALOG_FILE];
+  if (_catalogDirty)
+    {
+      NSString *path = [[self cachePath]
+			stringByAppendingPathComponent:@CATALOG_FILE];
 
-  NSData *data = [NSJSONSerialization
-		  dataWithJSONObject:_catalog options:0 error:nil];
+      NSData *data = [NSJSONSerialization
+		      dataWithJSONObject:_catalog1 options:0 error:nil];
 
-  if (data == nil
-      || ![data writeToFile:path atomically:YES])
-    {    
-      [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
+      if ([data writeToFile:path atomically:YES])
+	_catalogDirty = NO;
+      else
+	[[NSFileManager defaultManager] removeItemAtPath:path error:nil];
     }
 }
 
@@ -251,10 +253,14 @@ convert_hexdigit(int c)
      the updated catalog and library state. In this case we'll reuse
      image ids and musn't find data for those ids already in the cache.
 
-     Note that this doesn't handle removing items from the cache that
-     exist in the catalog but not in the library itself. That will be a
-     separate scanning pass done once the app is up and running (not
-     crucial, only to reclaim cache space). */
+     Note that this doesn't immediately remove items from the cache
+     that exist in the catalog but not in the library itself. Due to
+     how we double-buffer catalog dictionaries to remove unused file
+     ids, any missing files will be removed when -validateCaches is
+     called the next time the app is launched.
+
+     (Or we could choose a point after all libraries have been scanned
+     to release _catalog0 then call -validateCaches.) */
 
   @autoreleasepool
     {
@@ -263,8 +269,10 @@ convert_hexdigit(int c)
 
       NSMutableIndexSet *catalog = [NSMutableIndexSet indexSet];
 
-      for (NSString *key in _catalog)
-	[catalog addIndex:[[_catalog objectForKey:key] unsignedIntValue]];
+      for (NSString *key in _catalog0)
+	[catalog addIndex:[[_catalog0 objectForKey:key] unsignedIntValue]];
+      for (NSString *key in _catalog1)
+	[catalog addIndex:[[_catalog1 objectForKey:key] unsignedIntValue]];
 
       unsigned int i;
       for (i = 0; i < (1U << CACHE_BITS); i++)
@@ -350,7 +358,7 @@ convert_hexdigit(int c)
   return [[self cachePath] stringByAppendingPathComponent:base];
 }
 
-- (uint32_t)fileIdOfPath:(NSString *)path
+- (uint32_t)fileIdOfPath:(NSString *)path onlyIfExists:(BOOL)flag
 {
   if (![path hasPrefix:_path])
     return 0;
@@ -361,16 +369,44 @@ convert_hexdigit(int c)
 
   NSString *rel_path = [path substringFromIndex:len];
 
-  NSNumber *obj = [_catalog objectForKey:rel_path];
+  NSNumber *obj = [_catalog1 objectForKey:rel_path];
+
+  if (obj == nil)
+    {
+      obj = [_catalog0 objectForKey:rel_path];
+
+      /* We place the deserialized dictionary in _catalog0, and the
+	 current dictionary in _catalog1. We know that all extant files
+	 will have their ids queried at least once when the library is
+	 scanned on startup, so by moving entries from the old to new
+	 dictionaries we effectively remove stale entries from the
+	 current version. */
+
+      if (obj != nil)
+	{
+	  [_catalog1 setObject:obj forKey:rel_path];
+	  [_catalog0 removeObjectForKey:rel_path];
+	  _catalogDirty = YES;
+	}
+    }
 
   if (obj != nil)
     return [obj unsignedIntValue];
 
+  if (flag)
+    return 0;
+
   uint32_t fid = ++_lastFileId;
 
-  [_catalog setObject:[NSNumber numberWithUnsignedInt:fid] forKey:rel_path];
+  [_catalog1 setObject:[NSNumber numberWithUnsignedInt:fid] forKey:rel_path];
+  _catalogDirty = YES;
 
   return fid;
+}
+
+- (uint32_t)fileIdOfPath:(NSString *)path
+{
+  return [self fileIdOfPath:path onlyIfExists:NO];
 }
 
 static NSSet *
