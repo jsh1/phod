@@ -88,7 +88,9 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
 - (void)setImage:(PDImage *)im
 {
-  if (_image != im)
+  BOOL usesRAW = [im usesRAW];
+
+  if (_image != im || _imageUsesRAW != usesRAW)
     {
       if (_addedImageHost)
 	{
@@ -100,8 +102,13 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
       [CATransaction lock];
 
-      [_image release];
-      _image = [im retain];
+      if (_image != im)
+	{
+	  [_image release];
+	  _image = [im retain];
+	}
+
+      _imageUsesRAW = usesRAW;
 
       [CATransaction unlock];
 

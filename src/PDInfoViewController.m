@@ -56,6 +56,16 @@
 {
   [super viewDidLoad];
 
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(selectionChanged:)
+   name:PDImageListDidChange object:_controller];
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(selectionChanged:)
+   name:PDSelectionDidChange object:_controller];
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(imagePropertyChanged:)
+   name:PDImagePropertyDidChange object:nil];
+
   _metadataGroups = [[[NSUserDefaults standardUserDefaults]
 		      objectForKey:@"PDMetadataGroups"] copy];
   _metadataGroupOrder = [[[NSUserDefaults standardUserDefaults]
@@ -80,8 +90,6 @@
       else
 	[self setActiveGroup:_activeGroup];
     }
-
-  [_metadataView viewDidLoad];
 }
 
 - (NSString *)activeGroup
@@ -98,6 +106,17 @@
 
   [_popupButton selectItemAtIndex:
    [_popupMenu indexOfItemWithRepresentedObject:name]];
+}
+
+- (void)selectionChanged:(NSNotification *)note
+{
+  [_metadataView update];
+}
+
+- (void)imagePropertyChanged:(NSNotification *)note
+{
+  if ([note object] == [_controller primarySelectedImage])
+    [_metadataView update];
 }
 
 - (NSDictionary *)savedViewState
@@ -117,13 +136,13 @@
 
 - (NSString *)localizedImagePropertyForKey:(NSString *)key
 {
-  return [[[self controller] primarySelectedImage]
+  return [[_controller primarySelectedImage]
 	  localizedImagePropertyForKey:key];
 }
 
 - (void)setLocalizedImageProperty:(NSString *)str forKey:(NSString *)key
 {
-  [[[self controller] primarySelectedImage]
+  [[_controller primarySelectedImage]
    setLocalizedImageProperty:str forKey:key];
 }
 

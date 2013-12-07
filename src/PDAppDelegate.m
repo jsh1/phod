@@ -130,6 +130,8 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 	    [item setState:[_windowController flaggedState]];
 	  else if (sel == @selector(toggleHiddenAction:))
 	    [item setState:[_windowController hiddenState]];
+	  else if (sel == @selector(toggleRawAction:))
+	    [item setState:[_windowController rawState]];
 	}
     }
   else if (menu == _viewMenu)

@@ -59,9 +59,11 @@ typedef int PDImageCompareKey;
 
   BOOL _pendingJSONWrite;
 
+  NSString *_jpegType;			/* nil or absolute */
   NSString *_jpegPath;			/* nil or absolute */
   uint32_t _jpegId;
 
+  NSString *_rawType;
   NSString *_rawPath;			/* nil or absolute */
   uint32_t _rawId;
 
@@ -98,7 +100,9 @@ typedef int PDImageCompareKey;
 
 /* Convience for ActiveType and FileTypes properties. */
 
-@property(nonatomic, readonly) BOOL usesRAW;
+@property(nonatomic) BOOL usesRAW;
+
+- (BOOL)supportsUsesRAW:(BOOL)flag;
 
 /* These automatically switch between JPEG and RAW files. */
 

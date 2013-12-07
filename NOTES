@@ -17,13 +17,15 @@ Issues
 
   - Dragging a subfolder should move it in the file system.
 
-3. Rename folders in library view by editing their name.
+3. Renaming library items by editing their name
+
+  - Top level items or albums just change their displayed name
+
+  - Items backed by directories rename the directory.
 
 4. Allow image metadata to be edited
 
-  - Title, caption, copyright, keywords etc.
-
-  - Allow image names to be changed?
+  - Title, caption, copyright, keywords etc. [done, in inspector]
 
   - Dedicated tagging/keywording UI? (Panel showing tag list, with
   those that are applied sorted forwards and highlighted?)
@@ -35,6 +37,12 @@ Issues
   - Ratings etc..
 
 6. Command to select RAW vs JPEG source file
+
+  PARTIALLY RESOLVED: added the command, everything updates and caches
+  correctly. But decoding full-size RAW data on the fly is too slow to
+  be useful. Will probably need to cache a full-size "developed" image,
+  and work from that. But the devil is in the details (depth, color
+  space, compression, etc..)
 
 7. Custom image list filters
 
@@ -140,10 +148,8 @@ Issues
   - after startup is complete, GC files from each mounted library that
   no longer exist (and aren't marked archived)
 
-  - no more use of broken hashes to cache files. If files move, we
-  always regenerate the hash. If an old file is replaced by a new file,
-  its mtime had better get updated!
+  - no more use of partial hashes to cache files. If files move, we
+  regenerate the cache. If an old file is replaced, its mtime had
+  better get updated!
 
-  - NSURL has -bookmarkDataWithContentsOfURL:error: to get an NSData
-  blob somehow referencing the file without using its path. But I'd
-  prefer not to rely on this kind of OS-specific magic.
+  RESOLVED: implemented this, and using it to cache image properties. 

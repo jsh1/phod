@@ -48,17 +48,6 @@
   return self;
 }
 
-- (void)viewDidLoad
-{
-  [[NSNotificationCenter defaultCenter]
-   addObserver:self selector:@selector(selectionDidChange:)
-   name:PDImageListDidChange object:[self controller]];
-
-  [[NSNotificationCenter defaultCenter]
-   addObserver:self selector:@selector(selectionDidChange:)
-   name:PDSelectionDidChange object:[self controller]];
-}
-
 - (NSArray *)imageProperties
 {
   NSMutableArray *array = [[NSMutableArray alloc] init];
@@ -120,7 +109,7 @@
     [subview update];
 }
 
-- (void)selectionDidChange:(NSNotification *)note
+- (void)update
 {
   for (PDMetadataItemView *subview in [self subviews])
     [subview update];

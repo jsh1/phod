@@ -428,6 +428,13 @@
                                     <action selector="toggleHiddenAction:" target="-1" id="vRq-AF-Pns"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="YZW-iN-Duk"/>
+                            <menuItem title="Use RAW as Original" id="5ed-ga-HfL">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleRawAction:" target="-1" id="Huz-D5-UWS"/>
+                                </connections>
+                            </menuItem>
                         </items>
                         <connections>
                             <outlet property="delegate" destination="494" id="NLj-Yw-cPS"/>

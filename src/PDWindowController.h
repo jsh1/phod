@@ -159,6 +159,10 @@ enum PDContentMode
 - (IBAction)toggleHiddenAction:(id)sender;
 - (NSInteger)hiddenState;
 
+- (IBAction)toggleRawAction:(id)sender;
+- (NSInteger)rawState;
+- (BOOL)isToggleRawSupported;
+
 - (IBAction)zoomIn:(id)sender;
 - (IBAction)zoomOut:(id)sender;
 - (IBAction)zoomActualSize:(id)sender;

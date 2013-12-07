@@ -33,7 +33,7 @@
 
 @property(nonatomic, copy) NSArray *imageProperties;
 
-- (void)viewDidLoad;
+- (void)update;
 
 - (CGFloat)heightForWidth:(CGFloat)width;
 - (void)layoutSubviews;

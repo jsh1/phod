@@ -71,6 +71,8 @@
 			<string>file_path</string>
 			<string>file_date</string>
 			<string>file_size</string>
+			<string>file_types</string>
+			<string>active_type</string>
 		</array>
 	</dict>
 	<key>PDMetadataGroupOrder</key>

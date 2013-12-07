@@ -402,15 +402,17 @@ static NSOperationQueue *_narrowQueue;
   /* This needs to be set even when NO, to prevent trying to
      load the implicit properties to find the ActiveType key. */
 
-  NSString *jpeg_type = _jpegPath != nil ? @"public.jpeg" : nil;
-  NSString *raw_type = _rawPath != nil
-	? type_identifier_for_extension([_rawPath pathExtension]) : nil;
+  if (_jpegPath != nil)
+    _jpegType = [@"public.jpeg" copy];
 
-  if (jpeg_type != nil || raw_type != nil)
+  if (_rawPath != nil)
+    _rawType = [type_identifier_for_extension([_rawPath pathExtension]) copy];
+
+  if (_jpegType != nil || _rawType != nil)
     {
       if ([_properties objectForKey:PDImage_ActiveType] == nil)
 	{
-	  [_properties setObject:jpeg_type ? jpeg_type : raw_type
+	  [_properties setObject:_jpegType ? _jpegType : _rawType
 	   forKey:PDImage_ActiveType];
 	}
 
@@ -418,24 +420,15 @@ static NSOperationQueue *_narrowQueue;
 	{
 	  id objects[2];
 	  size_t count = 0;
-	  if (jpeg_type != nil)
-	    objects[count++] = jpeg_type;
-	  if (raw_type != nil)
-	    objects[count++] = raw_type;
+	  if (_jpegType != nil)
+	    objects[count++] = _jpegType;
+	  if (_rawType != nil)
+	    objects[count++] = _rawType;
 
 	  [_properties setObject:[NSArray arrayWithObjects:objects count:count]
 	   forKey:PDImage_FileTypes];
 	}
     }
-
-  /* Pull both file ids from the library catalog to tell the library
-     they're still valid. But don't generate new ids until we actually
-     access the caches. */
-
-  if (_jpegPath != nil)
-    _jpegId = [_library fileIdOfPath:_jpegPath onlyIfExists:YES];
-  if (_rawPath != nil)
-    _rawId = [_library fileIdOfPath:_rawPath onlyIfExists:YES];
 
   [self loadImageProperties];
 
@@ -449,7 +442,9 @@ static NSOperationQueue *_narrowQueue;
   [_library release];
   [_libraryDirectory release];
   [_jsonPath release];
+  [_jpegType release];
   [_jpegPath release];
+  [_rawType release];
   [_rawPath release];
 
   [_properties release];
@@ -546,7 +541,12 @@ static NSOperationQueue *_narrowQueue;
   id value = [_properties objectForKey:key];
 
   if (value == nil)
-    value = [_implicitProperties objectForKey:key];
+    {
+      if (_implicitProperties == nil)
+	[self loadImageProperties];
+
+      value = [_implicitProperties objectForKey:key];
+    }
 
   if (value == nil)
     {
@@ -602,6 +602,15 @@ static NSOperationQueue *_narrowQueue;
 	      || [key isEqualToString:PDImage_DigitizedDate]))
 	{
 	  [_date release], _date = nil;
+	}
+
+      if (_donePrefetch && [key isEqualToString:PDImage_ActiveType])
+	{
+	  [_prefetchOp release];
+	  _prefetchOp = nil;
+	  _donePrefetch = NO;
+	  [_implicitProperties release];
+	  _implicitProperties = nil;
 	}
 
       [[NSNotificationCenter defaultCenter]
@@ -866,11 +875,27 @@ static NSOperationQueue *_narrowQueue;
 
 - (BOOL)usesRAW
 {
-  NSString *str = [self imagePropertyForKey:PDImage_ActiveType];
-  if (str == nil || _rawPath == nil)
+  if (_rawType == nil)
     return NO;
+
+  return [[self imagePropertyForKey:PDImage_ActiveType]
+	  isEqualToString:_rawType];
+}
+
+- (void)setUsesRAW:(BOOL)flag
+{
+  if (flag && _rawType != nil)
+    [self setImageProperty:_rawType forKey:PDImage_ActiveType];
+  else if (!flag && _jpegType != nil)
+    [self setImageProperty:_jpegType forKey:PDImage_ActiveType];
+}
+
+- (BOOL)supportsUsesRAW:(BOOL)flag
+{
+  if (flag)
+    return _rawType != nil;
   else
-    return ![str isEqualToString:@"public.jpeg"];
+    return _jpegType != nil;
 }
 
 - (CGSize)pixelSize
@@ -903,10 +928,7 @@ static NSOperationQueue *_narrowQueue;
      Using JSON serialization, it's about 1/2 the size of
      NSKeyedArchiver and faster to load. (Speed is important, we load
      properties on startup as they're usually needed to sort the list
-     of displayed images, which can be the entire library.)
-
-     FIXME: if we switch from JPEG to RAW or vice versa, should we
-     invalidate and reload these properties? */
+     of displayed images, which can be the entire library.) */
 
   uint32_t file_id = [self imageId];
   NSString *image_path = [self imagePath];
@@ -1158,7 +1180,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
      FIXME: we should be tiling large images here. */
 
-  if (!thumb && max_size != type_size)
+  if ([ops count] == 0 || (!thumb && max_size != type_size))
     {
       /* Using 'id' so the block retains it, actually CGColorSpaceRef. */
 

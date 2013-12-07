@@ -955,8 +955,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   __block BOOL all_set = YES, all_clear = YES;
 
   [self foreachSelectedImage:^(PDImage *image) {
-    BOOL flagged = [[image imagePropertyForKey:PDImage_Flagged] boolValue];
-    if (flagged)
+    if ([[image imagePropertyForKey:PDImage_Flagged] boolValue])
       all_clear = NO;
     else
       all_set = NO;
@@ -979,14 +978,46 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   __block BOOL all_set = YES, all_clear = YES;
 
   [self foreachSelectedImage:^(PDImage *image) {
-    BOOL hidden = [image isHidden];
-    if (hidden)
+    if ([image isHidden])
       all_clear = NO;
     else
       all_set = NO;
   }];
 
   return all_set ? NSOnState : all_clear ? NSOffState : NSMixedState;
+}
+
+- (IBAction)toggleRawAction:(id)sender
+{
+  [self foreachSelectedImage:^(PDImage *image) {
+    [image setUsesRAW:![image usesRAW]];
+  }];
+}
+
+- (NSInteger)rawState
+{
+  __block BOOL all_set = YES, all_clear = YES;
+
+  [self foreachSelectedImage:^(PDImage *image) {
+    if ([image usesRAW])
+      all_clear = NO;
+    else
+      all_set = NO;
+  }];
+
+  return all_set ? NSOnState : all_clear ? NSOffState : NSMixedState;
+}
+
+- (BOOL)isToggleRawSupported
+{
+  __block BOOL supported = NO;
+
+  [self foreachSelectedImage:^(PDImage *image) {
+    if ([image supportsUsesRAW:![image usesRAW]])
+      supported = YES;
+  }];
+
+  return supported;
 }
 
 - (IBAction)zoomIn:(id)sender
@@ -1078,6 +1109,11 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
       || sel == @selector(rotateRight:))
     {
       return [_selectedImageIndexes count] != 0;
+    }
+
+  if (sel == @selector(toggleRawAction:))
+    {
+      return [self isToggleRawSupported];
     }
 
   return YES;

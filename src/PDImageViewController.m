@@ -160,15 +160,18 @@
   if ([_imageView image] != image)
     return;
 
-  NSString *key = [[note userInfo] objectForKey:@"key"];
-  if (![key isEqualToString:PDImage_Title]
-      && ![key isEqualToString:PDImage_Name]
-      && ![key isEqualToString:PDImage_Rating]
-      && ![key isEqualToString:PDImage_Flagged]
-      && ![key isEqualToString:PDImage_Orientation])
-    return;
+  static NSSet *keys;
+  static dispatch_once_t once;
 
-  [_imageView setNeedsDisplay:YES];
+  dispatch_once(&once, ^{
+    keys = [[NSSet alloc] initWithObjects:PDImage_Title, PDImage_Name,
+	    PDImage_Rating, PDImage_Flagged, PDImage_Hidden,
+	    PDImage_Orientation, PDImage_ActiveType, nil];
+  });
+
+  NSString *key = [[note userInfo] objectForKey:@"key"];
+  if ([keys containsObject:key])
+    [_imageView setNeedsDisplay:YES];
 }
 
 - (BOOL)displaysMetadata

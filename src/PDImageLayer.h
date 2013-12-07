@@ -29,6 +29,7 @@
 @interface PDImageLayer : CALayer <PDImageHost>
 {
   PDImage *_image;
+  BOOL _imageUsesRAW;
   BOOL _thumbnail;
   CGColorSpaceRef _colorSpace;
 
