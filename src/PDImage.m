@@ -55,6 +55,7 @@ enum
 
 @interface PDImage ()
 - (void)loadImageProperties;
+- (NSString *)imageFile;
 @end
 
 NSString *const PDImagePropertyDidChange = @"PDImagePropertyDidChange";
@@ -244,13 +245,6 @@ cache_path_for_type(PDImageLibrary *lib, uint32_t file_id, NSInteger type)
   return [lib cachePathForFileId:file_id base:name];
 }
 
-static BOOL
-valid_cache_image(PDImageLibrary *lib, NSString *filePath,
-		  uint32_t file_id, NSInteger type)
-{
-  return file_newer_than(cache_path_for_type(lib, file_id, type), filePath);
-}
-
 static NSString *
 type_identifier_for_extension(NSString *ext)
 {
@@ -291,7 +285,7 @@ type_identifier_for_extension(NSString *ext)
 
 @synthesize library = _library;
 @synthesize libraryDirectory = _libraryDirectory;
-@synthesize JSONPath = _jsonPath;
+@synthesize JSONPath = _jsonFile;
 
 static NSOperationQueue *_wideQueue;
 static NSOperationQueue *_narrowQueue;
@@ -354,6 +348,19 @@ static NSOperationQueue *_narrowQueue;
     }
 }
 
+static NSString *
+library_file_path(PDImage *self, NSString *file)
+{
+  return [self->_libraryDirectory stringByAppendingPathComponent:file];
+}
+
+static NSString *
+file_path(PDImage *self, NSString *file)
+{
+  return [[self->_library path] stringByAppendingPathComponent:
+	  library_file_path(self, file)];
+}
+
 /* Originally I did the usual thing and deferred all I/O until it's
    actually needed to implement a method. But that tends to lead to
    non-deterministic blocking later. It's better to do all I/O up front
@@ -361,8 +368,8 @@ static NSOperationQueue *_narrowQueue;
    ahead-of-time / asynchronously. */
 
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
-    name:(NSString *)name JSONPath:(NSString *)json_path
-    JPEGPath:(NSString *)jpeg_path RAWPath:(NSString *)raw_path
+    name:(NSString *)name JSONFile:(NSString *)json_file
+    JPEGFile:(NSString *)jpeg_file RAWFile:(NSString *)raw_file
 {
   self = [super init];
   if (self == nil)
@@ -374,14 +381,14 @@ static NSOperationQueue *_narrowQueue;
 
   _library = [lib retain];
   _libraryDirectory = [dir copy];
+  _jsonFile = [json_file copy];
+  _jpegFile = [jpeg_file copy];
+  _rawFile = [raw_file copy];
 
-  _jsonPath = [json_path copy];
-  _jpegPath = [jpeg_path copy];
-  _rawPath = [raw_path copy];
-
-  if (_jsonPath != nil)
+  if (_jsonFile != nil)
     {
-      NSData *data = [[NSData alloc] initWithContentsOfFile:_jsonPath];
+      NSString *json_path = file_path(self, _jsonFile);
+      NSData *data = [[NSData alloc] initWithContentsOfFile:json_path];
 
       if (data != nil)
 	{
@@ -402,11 +409,11 @@ static NSOperationQueue *_narrowQueue;
   /* This needs to be set even when NO, to prevent trying to
      load the implicit properties to find the ActiveType key. */
 
-  if (_jpegPath != nil)
+  if (_jpegFile != nil)
     _jpegType = [@"public.jpeg" copy];
 
-  if (_rawPath != nil)
-    _rawType = [type_identifier_for_extension([_rawPath pathExtension]) copy];
+  if (_rawFile != nil)
+    _rawType = [type_identifier_for_extension([_rawFile pathExtension]) copy];
 
   if (_jpegType != nil || _rawType != nil)
     {
@@ -441,11 +448,11 @@ static NSOperationQueue *_narrowQueue;
 {
   [_library release];
   [_libraryDirectory release];
-  [_jsonPath release];
+  [_jsonFile release];
   [_jpegType release];
-  [_jpegPath release];
+  [_jpegFile release];
   [_rawType release];
-  [_rawPath release];
+  [_rawFile release];
 
   [_properties release];
   [_implicitProperties release];
@@ -473,12 +480,11 @@ static NSOperationQueue *_narrowQueue;
 {
   if (!_pendingJSONWrite)
     {
-      if (_jsonPath == nil)
+      if (_jsonFile == nil)
 	{
-	  _jsonPath = [[[[_library path] stringByAppendingPathComponent:
-			 _libraryDirectory] stringByAppendingPathComponent:
-			[[self name] stringByAppendingPathExtension:
-			 @METADATA_EXTENSION]] copy];
+	  _jsonFile = [[[[self imageFile] stringByDeletingPathExtension]
+			stringByAppendingPathExtension:@METADATA_EXTENSION]
+		       copy];
 	}
 
       dispatch_time_t then
@@ -493,15 +499,14 @@ static NSOperationQueue *_narrowQueue;
 	NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
 			      [NSDictionary dictionaryWithDictionary:
 			       _properties], @"Properties", nil];
-	NSString *path = [_jsonPath copy];
+
+	NSString *path = file_path(self, _jsonFile);
 
 	NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
 	  NSData *data = [NSJSONSerialization dataWithJSONObject:dict
 			  options:NSJSONWritingPrettyPrinted error:nil];
 	  [data writeToFile:path atomically:YES];
 	}];
-
-	[path release];
 
 	[[PDImage writeQueue] addOperation:op];
 	_pendingJSONWrite = NO;
@@ -519,9 +524,14 @@ static NSOperationQueue *_narrowQueue;
   return str;
 }
 
+- (NSString *)imageFile
+{
+  return [self usesRAW] ? _rawFile : _jpegFile;
+}
+
 - (NSString *)imagePath
 {
-  return [self usesRAW] ? _rawPath : _jpegPath;
+  return file_path(self, [self imageFile]);
 }
 
 - (uint32_t)imageId
@@ -531,7 +541,10 @@ static NSOperationQueue *_narrowQueue;
   uint32_t *id_ptr = uses_raw ? &_rawId : &_jpegId;
 
   if (*id_ptr == 0)
-    *id_ptr = [_library fileIdOfPath:uses_raw ? _rawPath : _jpegPath];
+    {
+      *id_ptr = [_library fileIdOfRelativePath:
+		 library_file_path(self, uses_raw ? _rawFile : _jpegFile)];
+    }
 
   return *id_ptr;
 }
@@ -554,7 +567,7 @@ static NSOperationQueue *_narrowQueue;
 
       if ([key isEqualToString:PDImage_FileName])
 	{
-	  value = [[self imagePath] lastPathComponent];
+	  value = [self imageFile];
 	}
       else if ([key isEqualToString:PDImage_FilePath])
 	{
@@ -606,9 +619,11 @@ static NSOperationQueue *_narrowQueue;
 
       if (_donePrefetch && [key isEqualToString:PDImage_ActiveType])
 	{
+	  [self stopPrefetching];
 	  [_prefetchOp release];
 	  _prefetchOp = nil;
 	  _donePrefetch = NO;
+
 	  [_implicitProperties release];
 	  _implicitProperties = nil;
 	}
@@ -680,8 +695,8 @@ static NSOperationQueue *_narrowQueue;
 	      NSString *key;
 
 	    case PDImageCompare_FileName: {
-	      NSString *s1 = [[obj1 imagePath] lastPathComponent];
-	      NSString *s2 = [[obj2 imagePath] lastPathComponent];
+	      NSString *s1 = [obj1 imageFile];
+	      NSString *s2 = [obj2 imageFile];
 	      ret = [s1 compare:s2];
 	      goto got_ret; }
 
@@ -930,9 +945,10 @@ static NSOperationQueue *_narrowQueue;
      properties on startup as they're usually needed to sort the list
      of displayed images, which can be the entire library.) */
 
-  uint32_t file_id = [self imageId];
+  NSString *cache_path
+    = [_library cachePathForFileId:[self imageId] base:@"p.json"];
+
   NSString *image_path = [self imagePath];
-  NSString *cache_path = [_library cachePathForFileId:file_id base:@"p.json"];
 
   if (file_newer_than(cache_path, image_path))
     {
@@ -952,7 +968,7 @@ static NSOperationQueue *_narrowQueue;
 
   if (_implicitProperties == nil)
     {
-      CGImageSourceRef src = create_image_source_from_path([self imagePath]);
+      CGImageSourceRef src = create_image_source_from_path(image_path);
 
       if (src != NULL)
 	{
@@ -982,11 +998,11 @@ static NSOperationQueue *_narrowQueue;
 
       PDImageLibrary *lib = [self library];
       uint32_t file_id = [self imageId];
-      NSString *path = [self imagePath];
+      NSString *image_path = [self imagePath];
 
       NSString *tiny_path = cache_path_for_type(lib, file_id, PDImage_Tiny);
 
-      if (file_newer_than(tiny_path, path))
+      if (file_newer_than(tiny_path, image_path))
 	{
 	  _donePrefetch = YES;
 	  return;
@@ -994,7 +1010,7 @@ static NSOperationQueue *_narrowQueue;
 
       _prefetchOp = [NSBlockOperation blockOperationWithBlock:^{
 
-	CGImageSourceRef src = create_image_source_from_path(path);
+	CGImageSourceRef src = create_image_source_from_path(image_path);
 	if (src == NULL)
 	  return;
 
@@ -1021,8 +1037,8 @@ static NSOperationQueue *_narrowQueue;
 
 	    if (im != NULL)
 	      {
-		NSString *cachePath = cache_path_for_type(lib, file_id, type);
-		write_image_to_path(im, cachePath, CACHE_QUALITY);
+		NSString *cache_path = cache_path_for_type(lib, file_id, type);
+		write_image_to_path(im, cache_path, CACHE_QUALITY);
 		CGImageRelease(src_im);
 		src_im = im;
 	      }
@@ -1084,7 +1100,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
   PDImageLibrary *lib = [self library];
   uint32_t file_id = [self imageId];
-  NSString *path = [self imagePath];
+  NSString *image_path = [self imagePath];
 
   NSSize imageSize = [self pixelSize];
   if (imageSize.width == 0 || imageSize.height == 0)
@@ -1109,7 +1125,9 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
   else
     type = PDImage_Medium, type_size = PDImage_MediumSize;
 
-  BOOL cache_is_valid = valid_cache_image(lib, path, file_id, type);
+  NSString *type_path = cache_path_for_type(lib, file_id, type);
+
+  BOOL cache_is_valid = file_newer_than(type_path, image_path);
 
   NSMutableArray *ops = [NSMutableArray array];
 
@@ -1121,7 +1139,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
   if (thumb && !cache_is_valid)
     {
       NSOperation *thumb_op = [NSBlockOperation blockOperationWithBlock:^{
-	CGImageSourceRef src = create_image_source_from_path(path);
+	CGImageSourceRef src = create_image_source_from_path(image_path);
 	if (src != NULL)
 	  {
 	    CGImageRef im = create_cropped_thumbnail_image(src);
@@ -1149,8 +1167,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
   if (cache_is_valid || thumb)
     {
       NSOperation *cache_op = [NSBlockOperation blockOperationWithBlock:^{
-	NSString *cachedPath = cache_path_for_type(lib, file_id, type);
-	CGImageSourceRef src = create_image_source_from_path(cachedPath);
+	CGImageSourceRef src = create_image_source_from_path(type_path);
 	if (src != NULL)
 	  {
 	    CGImageRef im = CGImageSourceCreateImageAtIndex(src, 0, NULL);
@@ -1187,8 +1204,8 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
       id space = [opts objectForKey:PDImageHost_ColorSpace];
 
       NSOperation *full_op = [NSBlockOperation blockOperationWithBlock:^{
-	NSString *src_path = (max_size > type_size || !cache_is_valid ? path
-			      : cache_path_for_type(lib, file_id, type));
+	NSString *src_path = (max_size > type_size || !cache_is_valid
+			      ? image_path : type_path);
 
 	CGImageSourceRef src = create_image_source_from_path(src_path);
 	if (src != NULL)

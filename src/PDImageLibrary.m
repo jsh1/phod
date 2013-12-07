@@ -358,17 +358,8 @@ convert_hexdigit(int c)
   return [[self cachePath] stringByAppendingPathComponent:base];
 }
 
-- (uint32_t)fileIdOfPath:(NSString *)path onlyIfExists:(BOOL)flag
+- (uint32_t)fileIdOfRelativePath:(NSString *)rel_path
 {
-  if (![path hasPrefix:_path])
-    return 0;
-
-  NSInteger len = [_path length];
-  if ([path characterAtIndex:len] == '/')
-    len++;
-
-  NSString *rel_path = [path substringFromIndex:len];
-
   NSNumber *obj = [_catalog1 objectForKey:rel_path];
 
   if (obj == nil)
@@ -393,20 +384,12 @@ convert_hexdigit(int c)
   if (obj != nil)
     return [obj unsignedIntValue];
 
-  if (flag)
-    return 0;
-
   uint32_t fid = ++_lastFileId;
 
   [_catalog1 setObject:[NSNumber numberWithUnsignedInt:fid] forKey:rel_path];
   _catalogDirty = YES;
 
   return fid;
-}
-
-- (uint32_t)fileIdOfPath:(NSString *)path
-{
-  return [self fileIdOfPath:path onlyIfExists:NO];
 }
 
 static NSSet *
@@ -428,28 +411,26 @@ raw_extensions(void)
 /* 'ext' must be lowercase. */
 
 static NSString *
-filename_with_extension(NSString *path, NSSet *filenames,
-			NSString *stem, NSString *ext)
+filename_with_extension(NSSet *filenames, NSString *stem, NSString *ext)
 {
   NSString *lower = [stem stringByAppendingPathExtension:ext];
   if ([filenames containsObject:lower])
-    return [path stringByAppendingPathComponent:lower];
+    return lower;
 
   NSString *upper = [stem stringByAppendingPathExtension:
 		     [ext uppercaseString]];
   if ([filenames containsObject:upper])
-    return [path stringByAppendingPathComponent:upper];
+    return upper;
 
   return nil;
 }
 
 static NSString *
-filename_with_extension_in_set(NSString *path, NSSet *filenames,
-			       NSString *stem, NSSet *exts)
+filename_with_extension_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
 {
   for (NSString *ext in exts)
     {
-      NSString *ret = filename_with_extension(path, filenames, stem, ext);
+      NSString *ret = filename_with_extension(filenames, stem, ext);
       if (ret != nil)
 	return ret;
     }
@@ -497,23 +478,20 @@ filename_with_extension_in_set(NSString *path, NSSet *filenames,
 
 	  [stems addObject:stem];
 
-	  NSString *json_path
-	    = filename_with_extension(dir_path, filenames,
-				      stem, @METADATA_EXTENSION);
-	  NSString *jpeg_path
-	    = filename_with_extension(dir_path, filenames, stem, @"jpg");
-	  if (jpeg_path == nil)
-	    {
-	      jpeg_path = filename_with_extension(dir_path, filenames,
-						  stem, @"jpeg");
-	    }
-	  NSString *raw_path
-	    = filename_with_extension_in_set(dir_path, filenames,
-					     stem, raw_extensions());
+	  NSString *json_file
+	    = filename_with_extension(filenames, stem, @METADATA_EXTENSION);
+
+	  NSString *jpeg_file
+	    = filename_with_extension(filenames, stem, @"jpg");
+	  if (jpeg_file == nil)
+	    jpeg_file = filename_with_extension(filenames, stem, @"jpeg");
+
+	  NSString *raw_file
+	    = filename_with_extension_in_set(filenames, stem, raw_extensions());
 
 	  PDImage *image = [[PDImage alloc] initWithLibrary:self
-			    directory:dir name:stem JSONPath:json_path
-			    JPEGPath:jpeg_path RAWPath:raw_path];
+			    directory:dir name:stem JSONFile:json_file
+			    JPEGFile:jpeg_file RAWFile:raw_file];
 	  if (image != nil)
 	    {
 	      block(image);

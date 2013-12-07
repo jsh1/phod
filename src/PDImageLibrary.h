@@ -53,8 +53,9 @@
 @property(nonatomic, readonly) NSString *path;
 @property(nonatomic, readonly) NSString *cachePath;
 
-- (uint32_t)fileIdOfPath:(NSString *)path;
-- (uint32_t)fileIdOfPath:(NSString *)path onlyIfExists:(BOOL)flag;
+/* 'path' is relative to the root of the library. */
+
+- (uint32_t)fileIdOfRelativePath:(NSString *)path;
 
 - (NSString *)cachePathForFileId:(uint32_t)file_id base:(NSString *)str;
 

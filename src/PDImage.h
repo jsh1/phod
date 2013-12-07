@@ -55,16 +55,16 @@ typedef int PDImageCompareKey;
   PDImageLibrary *_library;
   NSString *_libraryDirectory;		/* relative to _libraryRoot */
 
-  NSString *_jsonPath;			/* absolute */
+  NSString *_jsonFile;			/* may be nil */
 
   BOOL _pendingJSONWrite;
 
-  NSString *_jpegType;			/* nil or absolute */
-  NSString *_jpegPath;			/* nil or absolute */
+  NSString *_jpegType;
+  NSString *_jpegFile;			/* non-nil iff _jpegType non-nil */
   uint32_t _jpegId;
 
   NSString *_rawType;
-  NSString *_rawPath;			/* nil or absolute */
+  NSString *_rawFile;			/* non-nil iff _rawType non-nil */
   uint32_t _rawId;
 
   NSMutableDictionary *_properties;
@@ -85,8 +85,8 @@ typedef int PDImageCompareKey;
 + (PDImageCompareKey)imageCompareKeyFromString:(NSString *)str;
 
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
-    name:(NSString *)name JSONPath:(NSString *)json_path
-    JPEGPath:(NSString *)jpeg_path RAWPath:(NSString *)raw_path;
+    name:(NSString *)name JSONFile:(NSString *)json_file
+    JPEGFile:(NSString *)jpeg_file RAWFile:(NSString *)raw_file;
 
 @property(nonatomic, readonly) PDImageLibrary *library;
 
