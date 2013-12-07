@@ -285,7 +285,9 @@ type_identifier_for_extension(NSString *ext)
 
 @synthesize library = _library;
 @synthesize libraryDirectory = _libraryDirectory;
-@synthesize JSONPath = _jsonFile;
+@synthesize JSONFile = _jsonFile;
+@synthesize JPEGFile = _jpegFile;
+@synthesize RAWFile = _rawFile;
 
 static NSOperationQueue *_wideQueue;
 static NSOperationQueue *_narrowQueue;
@@ -368,8 +370,8 @@ file_path(PDImage *self, NSString *file)
    ahead-of-time / asynchronously. */
 
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
-    name:(NSString *)name JSONFile:(NSString *)json_file
-    JPEGFile:(NSString *)jpeg_file RAWFile:(NSString *)raw_file
+    JSONFile:(NSString *)json_file JPEGFile:(NSString *)jpeg_file
+    RAWFile:(NSString *)raw_file
 {
   self = [super init];
   if (self == nil)
@@ -377,13 +379,9 @@ file_path(PDImage *self, NSString *file)
 
   _properties = [[NSMutableDictionary alloc] init];
 
-  [_properties setObject:name forKey:PDImage_Name];
-
   _library = [lib retain];
   _libraryDirectory = [dir copy];
   _jsonFile = [json_file copy];
-  _jpegFile = [jpeg_file copy];
-  _rawFile = [raw_file copy];
 
   if (_jsonFile != nil)
     {
@@ -397,44 +395,57 @@ file_path(PDImage *self, NSString *file)
 	  if (dict != nil)
 	    {
 	      NSDictionary *props = [dict objectForKey:@"Properties"];
-
 	      if (props != nil)
 		[_properties addEntriesFromDictionary:props];
+
+	      _jpegFile = [[dict objectForKey:@"JPEGFile"] copy];
+	      _rawFile = [[dict objectForKey:@"RAWFile"] copy];
 	    }
 
 	  [data release];
 	}
     }
 
-  /* This needs to be set even when NO, to prevent trying to
-     load the implicit properties to find the ActiveType key. */
+  if (_jpegFile == nil)
+    _jpegFile = [jpeg_file copy];
+  if (_rawFile == nil)
+    _rawFile = [raw_file copy];
 
   if (_jpegFile != nil)
     _jpegType = [@"public.jpeg" copy];
-
   if (_rawFile != nil)
     _rawType = [type_identifier_for_extension([_rawFile pathExtension]) copy];
 
-  if (_jpegType != nil || _rawType != nil)
+  if (_jpegType == nil && _rawType == nil)
     {
-      if ([_properties objectForKey:PDImage_ActiveType] == nil)
-	{
-	  [_properties setObject:_jpegType ? _jpegType : _rawType
-	   forKey:PDImage_ActiveType];
-	}
+      [self release];
+      return nil;
+    }
 
-      if ([_properties objectForKey:PDImage_FileTypes] == nil)
-	{
-	  id objects[2];
-	  size_t count = 0;
-	  if (_jpegType != nil)
-	    objects[count++] = _jpegType;
-	  if (_rawType != nil)
-	    objects[count++] = _rawType;
+  if ([_properties objectForKey:PDImage_ActiveType] == nil)
+    {
+      [_properties setObject:_jpegType ? _jpegType : _rawType
+       forKey:PDImage_ActiveType];
+    }
 
-	  [_properties setObject:[NSArray arrayWithObjects:objects count:count]
-	   forKey:PDImage_FileTypes];
-	}
+  if ([_properties objectForKey:PDImage_FileTypes] == nil)
+    {
+      id objects[2];
+      size_t count = 0;
+      if (_jpegType != nil)
+	objects[count++] = _jpegType;
+      if (_rawType != nil)
+	objects[count++] = _rawType;
+
+      [_properties setObject:[NSArray arrayWithObjects:objects count:count]
+       forKey:PDImage_FileTypes];
+    }
+
+  if ([_properties objectForKey:PDImage_Name] == nil)
+    {
+      NSString *name = [_jpegFile != nil ? _jpegFile : _rawFile
+			stringByDeletingPathExtension];
+      [_properties setObject:name forKey:PDImage_Name];
     }
 
   [self loadImageProperties];
@@ -468,14 +479,6 @@ file_path(PDImage *self, NSString *file)
   [super dealloc];
 }
 
-- (void)didLoadJSONDictionary:(NSDictionary *)dict
-{
-  NSDictionary *props = [dict objectForKey:@"Properties"];
-
-  if (props != nil)
-    [_properties addEntriesFromDictionary:props];
-}
-
 - (void)writeJSONFile
 {
   if (!_pendingJSONWrite)
@@ -492,13 +495,19 @@ file_path(PDImage *self, NSString *file)
 
       dispatch_after(then, dispatch_get_main_queue(), ^{
 
-	/* Copying data out of self, as operation runs asynchronously.
+	/* Copying mutable data out of self, as op runs asynchronously.
 
 	   FIXME: what else should be added to this dictionary? */
 
-	NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
-			      [NSDictionary dictionaryWithDictionary:
-			       _properties], @"Properties", nil];
+	NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+
+	[dict setObject:[NSDictionary dictionaryWithDictionary:_properties]
+	 forKey:@"Properties"];
+
+	if (_jpegFile != nil)
+	  [dict setObject:_jpegFile forKey:@"JPEGFile"];
+	if (_rawFile != nil)
+	  [dict setObject:_rawFile forKey:@"RAWFile"];
 
 	NSString *path = file_path(self, _jsonFile);
 

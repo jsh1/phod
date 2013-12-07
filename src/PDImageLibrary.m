@@ -408,10 +408,37 @@ raw_extensions(void)
   return set;
 }
 
+static NSSet *
+jpeg_extensions(void)
+{
+  static NSSet *set;
+  static dispatch_once_t once;
+
+  dispatch_once(&once, ^{
+    set = [[NSSet alloc] initWithObjects:@"jpg", @"jpeg", @"jpe", nil];
+  });
+
+  return set;
+}
+
+static NSSet *
+jpeg_and_raw_extensions(void)
+{
+  static NSSet *set;
+  static dispatch_once_t once;
+
+  dispatch_once(&once, ^{
+    set = [[raw_extensions()
+	    setByAddingObjectsFromSet:jpeg_extensions()] copy];
+  });
+
+  return set;
+}
+
 /* 'ext' must be lowercase. */
 
 static NSString *
-filename_with_extension(NSSet *filenames, NSString *stem, NSString *ext)
+filename_with_ext(NSSet *filenames, NSString *stem, NSString *ext)
 {
   NSString *lower = [stem stringByAppendingPathExtension:ext];
   if ([filenames containsObject:lower])
@@ -426,11 +453,11 @@ filename_with_extension(NSSet *filenames, NSString *stem, NSString *ext)
 }
 
 static NSString *
-filename_with_extension_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
+filename_with_ext_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
 {
   for (NSString *ext in exts)
     {
-      NSString *ret = filename_with_extension(filenames, stem, ext);
+      NSString *ret = filename_with_ext(filenames, stem, ext);
       if (ret != nil)
 	return ret;
     }
@@ -445,63 +472,74 @@ filename_with_extension_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
 
   NSString *dir_path = [_path stringByAppendingPathComponent:dir];
 
-  NSSet *filenames = [[NSSet alloc] initWithArray:
-		      [fm contentsOfDirectoryAtPath:dir_path error:nil]];
+  NSArray *files = [fm contentsOfDirectoryAtPath:dir_path error:nil];
+  NSMutableSet *unused_files = [[NSMutableSet alloc] initWithArray:files];
 
-  NSMutableSet *stems = [[NSMutableSet alloc] init];
+  /* Two passes so we can read .phod files first. These may reference
+     JPEG / RAW files, and if so we don't want to add those images
+     separately. */
 
-  for (NSString *file in filenames)
+  for (int pass = 0; pass < 2; pass++)
     {
-      @autoreleasepool
-        {
-	  if ([file characterAtIndex:0] == '.')
-	    continue;
-
-	  NSString *path = [dir_path stringByAppendingPathComponent:file];
-	  BOOL is_dir = NO;
-	  if (![fm fileExistsAtPath:path isDirectory:&is_dir] || is_dir)
-	    continue;
-
-	  NSString *ext = [[file pathExtension] lowercaseString];
-
-	  if (![ext isEqualToString:@METADATA_EXTENSION]
-	      && ![ext isEqualToString:@"jpg"]
-	      && ![ext isEqualToString:@"jpeg"]
-	      && ![raw_extensions() containsObject:ext])
+      for (NSString *file in files)
+	{
+	  @autoreleasepool
 	    {
-	      continue;
-	    }
+	      if ([file characterAtIndex:0] == '.')
+		continue;
+	      if (![unused_files containsObject:file])
+		continue;
 
-	  NSString *stem = [file stringByDeletingPathExtension];
-	  if ([stems containsObject:stem])
-	    continue;
+	      NSString *ext = [[file pathExtension] lowercaseString];
 
-	  [stems addObject:stem];
+	      if (pass == 0 && ![ext isEqualToString:@METADATA_EXTENSION])
+		continue;
+	      if (pass == 1 && ![jpeg_and_raw_extensions() containsObject:ext])
+		continue;
 
-	  NSString *json_file
-	    = filename_with_extension(filenames, stem, @METADATA_EXTENSION);
+	      NSString *path = [dir_path stringByAppendingPathComponent:file];
+	      BOOL is_dir = NO;
+	      if (![fm fileExistsAtPath:path isDirectory:&is_dir] || is_dir)
+		continue;
 
-	  NSString *jpeg_file
-	    = filename_with_extension(filenames, stem, @"jpg");
-	  if (jpeg_file == nil)
-	    jpeg_file = filename_with_extension(filenames, stem, @"jpeg");
+	      NSString *stem = [file stringByDeletingPathExtension];
 
-	  NSString *raw_file
-	    = filename_with_extension_in_set(filenames, stem, raw_extensions());
+	      NSString *json_file = filename_with_ext(unused_files,
+						stem, @METADATA_EXTENSION);
+	      NSString *jpeg_file
+	        = filename_with_ext_in_set(unused_files, stem,
+						jpeg_extensions());
+	      NSString *raw_file
+	        = filename_with_ext_in_set(unused_files, stem,
+						raw_extensions());
 
-	  PDImage *image = [[PDImage alloc] initWithLibrary:self
-			    directory:dir name:stem JSONFile:json_file
-			    JPEGFile:jpeg_file RAWFile:raw_file];
-	  if (image != nil)
-	    {
-	      block(image);
-	      [image release];
+	      PDImage *image = [[PDImage alloc] initWithLibrary:self
+				directory:dir JSONFile:json_file
+				JPEGFile:jpeg_file RAWFile:raw_file];
+
+	      if (image != nil)
+		{
+		  block(image);
+
+		  json_file = [image JSONFile];
+		  if (json_file != nil)
+		    [unused_files removeObject:json_file];
+
+		  jpeg_file = [image JPEGFile];
+		  if (jpeg_file != nil)
+		    [unused_files removeObject:jpeg_file];
+
+		  raw_file = [image RAWFile];
+		  if (raw_file != nil)
+		    [unused_files removeObject:raw_file];
+
+		  [image release];
+		}
 	    }
 	}
     }
 
-  [stems release];
-  [filenames release];
+  [unused_files release];
 }
 
 @end

@@ -85,14 +85,18 @@ typedef int PDImageCompareKey;
 + (PDImageCompareKey)imageCompareKeyFromString:(NSString *)str;
 
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
-    name:(NSString *)name JSONFile:(NSString *)json_file
-    JPEGFile:(NSString *)jpeg_file RAWFile:(NSString *)raw_file;
+    JSONFile:(NSString *)json_file JPEGFile:(NSString *)jpeg_file
+    RAWFile:(NSString *)raw_file;
 
 @property(nonatomic, readonly) PDImageLibrary *library;
 
-@property(nonatomic, readonly) NSString *JSONPath;
-
 @property(nonatomic, readonly) NSString *libraryDirectory;
+
+/* File names relative to 'libraryDirectory'. */
+
+@property(nonatomic, readonly) NSString *JSONFile;
+@property(nonatomic, readonly) NSString *JPEGFile;
+@property(nonatomic, readonly) NSString *RAWFile;
 
 /* Convenience for titles. */
 
