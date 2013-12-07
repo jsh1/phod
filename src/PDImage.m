@@ -53,6 +53,10 @@ enum
   PDImage_MediumSize = 1024,
 };
 
+@interface PDImage ()
+- (void)loadImageProperties;
+@end
+
 NSString *const PDImagePropertyDidChange = @"PDImagePropertyDidChange";
 
 NSString * const PDImageHost_Size = @"Size";
@@ -424,16 +428,7 @@ static NSOperationQueue *_narrowQueue;
 	}
     }
 
-  /* FIXME: if we switch from JPEG to RAW or vice versa, should we
-     invalidate and reload these properties? */
-
-  CGImageSourceRef src = create_image_source_from_path([self imagePath]);
-
-  if (src != NULL)
-    {
-      _implicitProperties = PDImageSourceCopyProperties(src);
-      CFRelease(src);
-    }
+  [self loadImageProperties];
 
   _imageHosts = [[NSMapTable strongToStrongObjectsMapTable] retain];
 
@@ -896,6 +891,61 @@ static NSOperationQueue *_narrowQueue;
     return pixelSize;
   else
     return CGSizeMake(pixelSize.height, pixelSize.width);
+}
+
+- (void)loadImageProperties
+{
+  /* Translated image properties are written into the library's cache.
+     Using JSON serialization, it's about 1/2 the size of
+     NSKeyedArchiver and faster to load. (Speed is important, we load
+     properties on startup as they're usually needed to sort the list
+     of displayed images, which can be the entire library.)
+
+     FIXME: if we switch from JPEG to RAW or vice versa, should we
+     invalidate and reload these properties? */
+
+  uint32_t file_id = [self imageId];
+  NSString *image_path = [self imagePath];
+  NSString *cache_path = [_library cachePathForFileId:file_id base:@"p.json"];
+
+  if (file_newer_than(cache_path, image_path))
+    {
+      NSData *data = [[NSData alloc] initWithContentsOfFile:cache_path];
+
+      if (data != nil)
+	{
+	  id obj = [NSJSONSerialization
+		    JSONObjectWithData:data options:0 error:nil];
+
+	  if (obj != nil)
+	    _implicitProperties = [obj copy];
+
+	  [data release];
+	}
+    }
+
+  if (_implicitProperties == nil)
+    {
+      CGImageSourceRef src = create_image_source_from_path([self imagePath]);
+
+      if (src != NULL)
+	{
+	  _implicitProperties = PDImageSourceCopyProperties(src);
+	  CFRelease(src);
+	}
+
+      if (_implicitProperties != nil)
+	{
+	  id obj = _implicitProperties;
+	  NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
+	    NSData *data = [NSJSONSerialization dataWithJSONObject:obj
+			    options:0 error:nil];
+	    [data writeToFile:cache_path atomically:YES];
+	  }];
+
+	  [[PDImage writeQueue] addOperation:op];
+	}
+    }
 }
 
 - (void)startPrefetching
