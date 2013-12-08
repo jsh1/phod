@@ -78,6 +78,8 @@ enum PDContentMode
   NSInteger _primarySelectionIndex;
 }
 
+- (void)invalidate;
+
 @property(nonatomic) NSInteger sidebarMode;
 @property(nonatomic) NSInteger contentMode;
 

@@ -55,9 +55,17 @@
   return self;
 }
 
-- (void)dealloc
+- (void)invalidate
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+  for (PDViewController *controller in _subviewControllers)
+    [controller invalidate];
+}
+
+- (void)dealloc
+{
+  [self invalidate];
 
   [_subviewControllers release];
 

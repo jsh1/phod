@@ -101,10 +101,18 @@ NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
   return self;
 }
 
-- (void)dealloc
+- (void)invalidate
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [NSRunLoop cancelPreviousPerformRequestsWithTarget:self];
+
+  for (PDViewController *controller in _viewControllers)
+    [controller invalidate];
+}
+
+- (void)dealloc
+{
+  [self invalidate];
 
   [_predicatePanelController release];
   [_viewControllers release];
@@ -150,6 +158,8 @@ NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
   [self synchronize];
 
   [self saveWindowState];
+
+  [self invalidate];
 
   [NSApp terminate:self];
 }

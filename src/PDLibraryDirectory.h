@@ -31,8 +31,6 @@
   PDImageLibrary *_library;
   NSString *_libraryDirectory;
   NSArray *_subitems;
-  NSArray *_images;
-  NSInteger _imageCount;
   NSMutableArray *_subimages;
   NSInteger _titleImageName;
 }

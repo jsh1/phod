@@ -153,3 +153,9 @@ Issues
   better get updated!
 
   RESOLVED: implemented this, and using it to cache image properties. 
+
+15. Color tint change when switching from proxy to full-size
+
+  Possibly because proxies are matched to sRGB? (This means they're
+  also downsampled in the sRGB space, but it's more likely to be a
+  gamut clipping issue? Greens seem to be the worst.)

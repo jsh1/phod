@@ -44,6 +44,7 @@ extern NSString *const PDLibrarySelectionDidChange;
   NSMutableArray *_albums;
 
   NSMutableArray *_items;
+  PDLibraryGroup *_devicesGroup;
   PDLibraryGroup *_libraryGroup;
   PDLibraryGroup *_albumsGroup;
 
@@ -51,6 +52,8 @@ extern NSString *const PDLibrarySelectionDidChange;
 }
 
 @property(nonatomic, readonly) NSArray *allImages;
+
+- (void)rescanVolumes;
 
 - (void)addSmartFolder:(NSString *)name predicate:(NSPredicate *)pred;
 

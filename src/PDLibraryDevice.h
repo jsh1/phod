@@ -22,51 +22,19 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import <Foundation/Foundation.h>
+#import "PDLibraryItem.h"
 
-@class PDImage;
+@class PDImageLibrary;
 
-@interface PDImageLibrary : NSObject
+@interface PDLibraryDevice : PDLibraryItem
 {
-  NSString *_name;
-  NSString *_path;
-  NSString *_cachePath;
-  uint32_t _libraryId;
-  uint32_t _lastFileId;
-  NSMutableDictionary *_catalog0;
-  NSMutableDictionary *_catalog1;
-  uint32_t _catalogDirty;
+  PDImageLibrary *_library;
+  NSMutableArray *_subimages;
+  NSImage *_icon;
 }
 
-+ (void)removeInvalidLibraries;
+- (id)initWithLibrary:(PDImageLibrary *)lib;
 
-+ (NSArray *)allLibraries;
-
-+ (PDImageLibrary *)libraryWithPath:(NSString *)path;
-+ (PDImageLibrary *)libraryWithId:(uint32_t)lid;
-
-- (id)initWithPath:(NSString *)path;
-
-- (id)initWithPropertyList:(id)obj;
-- (id)propertyList;
-
-@property(nonatomic, copy) NSString *name;
-@property(nonatomic, readonly) uint32_t libraryId;
-@property(nonatomic, readonly) NSString *path;
-@property(nonatomic, readonly) NSString *cachePath;
-
-/* 'path' is relative to the root of the library. */
-
-- (uint32_t)fileIdOfRelativePath:(NSString *)path;
-
-- (NSString *)cachePathForFileId:(uint32_t)file_id base:(NSString *)str;
-
-- (void)synchronize;
-- (void)validateCaches;
-- (void)emptyCaches;
-- (void)remove;
-
-- (void)loadImagesInSubdirectory:(NSString *)path recursively:(BOOL)flag
-    handler:(void (^)(PDImage *))block;
+@property(nonatomic, readonly) PDImageLibrary *library;
 
 @end

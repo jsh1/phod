@@ -44,6 +44,15 @@
 
 @end
 
+@interface NSOutlineView (PDAppKitExtensions)
+
+- (NSArray *)selectedItems;
+- (void)setSelectedItems:(NSArray *)array;
+
+- (void)reloadDataPreservingSelectedRows;
+
+@end
+
 enum
 {
   PDImage_Computer,

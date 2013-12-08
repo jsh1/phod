@@ -41,6 +41,8 @@
 
 - (id)initWithController:(PDWindowController *)controller;
 
+- (void)invalidate;
+
 @property(nonatomic, readonly) BOOL viewHasBeenLoaded;
 
 - (void)viewDidLoad;

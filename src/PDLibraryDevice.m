@@ -22,27 +22,23 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDLibraryDirectory.h"
+#import "PDLibraryDevice.h"
 
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
 #import "PDImageLibrary.h"
 
-@implementation PDLibraryDirectory
+@implementation PDLibraryDevice
 
 @synthesize library = _library;
-@synthesize libraryDirectory = _libraryDirectory;
-@synthesize titleImageName = _titleImageName;
 
-- (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
+- (id)initWithLibrary:(PDImageLibrary *)lib
 {
   self = [super init];
   if (self == nil)
     return nil;
 
   _library = [lib retain];
-  _libraryDirectory = [dir copy];
-  _titleImageName = PDImage_GenericFolder;
 
   return self;
 }
@@ -50,30 +46,12 @@
 - (void)dealloc
 {
   [_library release];
-  [_libraryDirectory release];
-  for (PDLibraryItem *item in _subitems)
-    [item setParent:nil];
-  [_subitems release];
   [_subimages release];
+  [_icon release];
   [super dealloc];
 }
 
-- (BOOL)applySearchString:(NSString *)str
-{
-  BOOL matches = [super applySearchString:str];
-
-  NSString *title = [self titleString];
-
-  if (title != nil)
-    {
-      if ([title rangeOfString:str options:NSCaseInsensitiveSearch].length > 0)
-	matches = YES;
-    }
-
-  [self setHidden:!matches];
-
-  return matches;
-}
+/* FIXME: copied from -[PDLibraryDirectory loadSubimages]. */
 
 - (void)loadSubimages
 {
@@ -83,7 +61,7 @@
       static dispatch_once_t once;
 
       dispatch_once(&once, ^{
-	queue = dispatch_queue_create("PDLibraryDirectory",
+	queue = dispatch_queue_create("PDLibraryDevice",
 				      DISPATCH_QUEUE_SERIAL);
       });
 
@@ -93,7 +71,7 @@
 	NSMutableArray *array = [[NSMutableArray alloc] init];
 	__block CFTimeInterval last_t = CACurrentMediaTime();
 
-	[_library loadImagesInSubdirectory:_libraryDirectory recursively:NO
+	[_library loadImagesInSubdirectory:@"" recursively:YES
 	 handler:^(PDImage *im) {
 	   [array addObject:im];
 
@@ -126,86 +104,18 @@
     }
 }
 
-- (NSString *)path
-{
-  return [[_library path] stringByAppendingPathComponent:_libraryDirectory];
-}
-
-- (NSArray *)subitems
-{
-  NSFileManager *fm;
-  NSMutableArray *array;
-  NSString *path;
-  BOOL dir;
-  PDLibraryDirectory *subitem;
-
-  if (_subitems == nil)
-    {
-      fm = [NSFileManager defaultManager];
-      array = [[NSMutableArray alloc] init];
-
-      NSString *dir_path = [self path];
-
-      for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
-	{
-	  if ([file characterAtIndex:0] == '.')
-	    continue;
-
-	  path = [dir_path stringByAppendingPathComponent:file];
-	  dir = NO;
-	  if (![fm fileExistsAtPath:path isDirectory:&dir])
-	    continue;
-
-	  if (dir)
-	    {
-	      NSString *subdir = [_libraryDirectory
-				  stringByAppendingPathComponent:file];
-
-	      subitem = [[PDLibraryDirectory alloc]
-			 initWithLibrary:_library directory:subdir];
-
-	      if (subitem != nil)
-		{
-		  [subitem setParent:self];
-		  [array addObject:subitem];
-		  [subitem release];
-		}
-	    }
-	}
-
-      _subitems = [array copy];
-      [array release];
-    }
-
-  return _subitems;
-}
-
 - (NSArray *)subimages
 {
   if (_subimages == nil)
     [self loadSubimages];
 
-  NSMutableArray *images = [NSMutableArray array];
-
-  [images addObjectsFromArray:_subimages];
-
-  for (PDLibraryDirectory *item in [self subitems])
-    {
-      if (![item isHidden])
-	[images addObjectsFromArray:[item subimages]];
-    }
-
-  return images;
+  return _subimages;
 }
 
 - (NSString *)titleString
 {
-  NSString *title = [_libraryDirectory lastPathComponent];
-  if ([title length] != 0)
-    title = [title stringByReplacingOccurrencesOfString:@":" withString:@"/"];
-  else
-    title = [_library name];
-  return title;
+  return [[[_library path] stringByDeletingLastPathComponent]
+	  lastPathComponent];
 }
 
 - (BOOL)hasTitleImage
@@ -215,12 +125,16 @@
 
 - (NSImage *)titleImage
 {
-  return PDImageWithName(_titleImageName);
-}
+  if (_icon == nil)
+    {
+      _icon = [[NSWorkspace sharedWorkspace] iconForFile:
+	       [[_library path] stringByDeletingLastPathComponent]];
+      if (_icon == nil)
+	_icon = PDImageWithName(PDImage_GenericRemovableDisk);
+      [_icon retain];
+    }
 
-- (BOOL)isExpandable
-{
-  return [[self subitems] count] != 0;
+  return _icon;
 }
 
 - (BOOL)hasBadge
@@ -235,9 +149,7 @@
 
 - (NSString *)identifier
 {
-  return ([_libraryDirectory length] == 0
-	  ? [[_library path] stringByAbbreviatingWithTildeInPath]
-	  : [_libraryDirectory lastPathComponent]);
+  return nil;
 }
 
 - (BOOL)needsUpdate

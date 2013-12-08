@@ -86,6 +86,58 @@
 
 @end
 
+@implementation NSOutlineView (PDAppKitExtensions)
+
+- (NSArray *)selectedItems
+{
+  NSIndexSet *sel = [self selectedRowIndexes];
+
+  if ([sel count] == 0)
+    return [NSArray array];
+
+  NSMutableArray *array = [NSMutableArray array];
+
+  NSInteger idx;
+  for (idx = [sel firstIndex]; idx != NSNotFound;
+       idx = [sel indexGreaterThanIndex:idx])
+    {
+      [array addObject:[self itemAtRow:idx]];
+    }
+
+  return array;
+}
+
+- (void)setSelectedItems:(NSArray *)array
+{
+  if ([array count] == 0)
+    {
+      [self selectRowIndexes:[NSIndexSet indexSet] byExtendingSelection:NO];
+      return;
+    }
+
+  NSMutableIndexSet *sel = [NSMutableIndexSet indexSet];
+
+  for (id item in array)
+    {
+      NSInteger idx = [self rowForItem:item];
+      if (idx >= 0)
+	[sel addIndex:idx];
+    }
+
+  [self selectRowIndexes:sel byExtendingSelection:NO];
+}
+
+- (void)reloadDataPreservingSelectedRows
+{
+  NSArray *sel = [self selectedItems];
+
+  [self reloadData];
+
+  [self setSelectedItems:sel];
+}
+
+@end
+
 NSImage *
 PDImageWithName(NSInteger name)
 {

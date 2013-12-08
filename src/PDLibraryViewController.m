@@ -27,6 +27,7 @@
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
 #import "PDImageLibrary.h"
+#import "PDLibraryDevice.h"
 #import "PDLibraryDirectory.h"
 #import "PDLibraryItem.h"
 #import "PDLibraryGroup.h"
@@ -40,6 +41,8 @@
 NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
 @interface PDLibraryViewController ()
+- (PDLibraryDevice *)addVolumeAtPath:(NSString *)path;
+- (void)removeVolumeAtPath:(NSString *)path;
 - (void)updateControls;
 @end
 
@@ -97,6 +100,11 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 
   _items = [[NSMutableArray alloc] init];
 
+  _devicesGroup = [[PDLibraryGroup alloc] init];
+  [_devicesGroup setName:@"DEVICES"];
+  [_items addObject:_devicesGroup];
+  [_devicesGroup release];
+
   _libraryGroup = [[PDLibraryGroup alloc] init];
   [_libraryGroup setName:@"LIBRARIES"];
   [_items addObject:_libraryGroup];
@@ -110,6 +118,14 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   _itemViewState = [[NSMapTable strongToStrongObjectsMapTable] retain];
 
   return self;
+}
+
+- (void)invalidate
+{
+  for (PDLibraryDevice *item in [_devicesGroup subitems])
+    {
+      [[item library] remove];
+    }
 }
 
 - (void)dealloc
@@ -128,6 +144,8 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 - (void)viewDidLoad
 {
   [super viewDidLoad];
+
+  [PDImageLibrary removeInvalidLibraries];
 
   for (id obj in [[NSUserDefaults standardUserDefaults]
 		  arrayForKey:@"PDImageLibraries"])
@@ -161,13 +179,24 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
    selector:@selector(showsHiddenImagesDidChange:)
    name:PDShowsHiddenImagesDidChange object:_controller];
 
+  NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
+  [[workspace notificationCenter]
+   addObserver:self selector:@selector(volumeDidMount:)
+   name:NSWorkspaceDidMountNotification object:nil];
+  [[workspace notificationCenter]
+   addObserver:self selector:@selector(volumeDidUnmount:)
+   name:NSWorkspaceDidUnmountNotification object:nil];
+
   [[_searchField cell] setBackgroundColor:[NSColor grayColor]];
 
   for (NSTableColumn *col in [_outlineView tableColumns])
     [[col dataCell] setVerticallyCentered:YES];
 
+  [_outlineView expandItem:_devicesGroup];
   [_outlineView expandItem:_libraryGroup];
   [_outlineView expandItem:_albumsGroup];
+
+  [self rescanVolumes];
 
   [self updateControls];
 }
@@ -365,13 +394,133 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   [_outlineView reloadData];
 }
 
+- (void)rescanVolumes
+{
+  NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
+
+  NSMutableSet *items = [NSMutableSet setWithArray:[_devicesGroup subitems]];
+
+  for (NSString *path in [workspace mountedLocalVolumePaths])
+    {
+      PDLibraryDevice *item = [self addVolumeAtPath:path];
+      if (item != nil)
+	[items removeObject:item];
+    }
+
+  for (NSString *path in [workspace mountedRemovableMedia])
+    {
+      PDLibraryDevice *item = [self addVolumeAtPath:path];
+      if (item != nil)
+	[items removeObject:item];
+    }
+
+  if ([items count] != 0)
+    {
+      for (PDLibraryDevice *item in items)
+	{
+	  [[item library] remove];
+	  [_devicesGroup removeSubitem:item];
+	}
+    }
+
+  [_devicesGroup setHidden:[[_devicesGroup subitems] count] == 0];
+  [_outlineView reloadDataPreservingSelectedRows];
+}
+
+- (PDLibraryDevice *)addVolumeAtPath:(NSString *)path
+{
+  NSString *dcim_path = [path stringByAppendingPathComponent:@"DCIM"];
+
+  BOOL isdir = NO;
+  NSFileManager *fm = [NSFileManager defaultManager];
+  if (![fm fileExistsAtPath:dcim_path isDirectory:&isdir] || !isdir)
+    return nil;
+
+  PDImageLibrary *lib = [PDImageLibrary libraryWithPath:dcim_path];
+
+  if (lib != nil)
+    {
+      for (PDLibraryDevice *item in [_devicesGroup subitems])
+	{
+	  if ([item library] == lib)
+	    {
+	      if ([item needsUpdate])
+		[_outlineView reloadItem:item];
+	      return item;
+	    }
+	}
+    }
+  else
+    {
+      lib = [[[PDImageLibrary alloc] initWithPath:dcim_path] autorelease];
+      if (lib == nil)
+	return nil;
+    }
+
+  PDLibraryDevice *item = [[PDLibraryDevice alloc] initWithLibrary:lib];
+  if (item == nil)
+    return nil;
+
+  [_devicesGroup addSubitem:item];
+  [_devicesGroup setHidden:NO];
+
+  [_outlineView reloadDataPreservingSelectedRows];
+  [_outlineView expandItem:_devicesGroup];
+
+  return item;
+}
+
+- (void)removeVolumeAtPath:(NSString *)path
+{
+  NSString *dcim_path = [path
+			 stringByAppendingPathComponent:@"DCIM"];
+
+  PDImageLibrary *lib = [PDImageLibrary libraryWithPath:dcim_path];
+  if (lib == nil)
+    return;
+
+  BOOL changed = NO;
+
+  for (PDLibraryDevice *item in [_devicesGroup subitems])
+    {
+      if ([item library] == lib)
+	{
+	  [lib remove];
+	  [_devicesGroup removeSubitem:item];
+	  changed = YES;
+	  break;
+	}
+    }
+
+  if (changed)
+    {
+      [_devicesGroup setHidden:[[_devicesGroup subitems] count] == 0];
+      [_outlineView reloadDataPreservingSelectedRows];
+
+      /* FIXME: why is this necessary? */
+      [self sourceListSelectionDidChange:nil];
+    }
+}
+
+- (void)volumeDidMount:(NSNotification *)note
+{
+  [self addVolumeAtPath:[[[note userInfo] objectForKey:
+			  NSWorkspaceVolumeURLKey] path]];
+}
+
+- (void)volumeDidUnmount:(NSNotification *)note
+{
+  [self removeVolumeAtPath:[[[note userInfo] objectForKey:
+			     NSWorkspaceVolumeURLKey] path]];
+}
+
 - (void)updateImageLibraries
 {
   NSMutableArray *array = [NSMutableArray array];
 
-  for (PDImageLibrary *lib in [PDImageLibrary allLibraries])
+  for (PDLibraryDirectory *item in [_libraryGroup subitems])
     {
-      id obj = [lib propertyList];
+      id obj = [[item library] propertyList];
       if (obj != nil)
 	[array addObject:obj];
     }
@@ -419,7 +568,7 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 	 if (changed)
 	   {
 	     [self updateImageLibraries];
-	     [_outlineView reloadData];
+	     [_outlineView reloadDataPreservingSelectedRows];
 	   }
        }
    }];
@@ -483,6 +632,12 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 	      changed = YES;
 	    }
 	}
+      else if ([item isKindOfClass:[PDLibraryDevice class]])
+	{
+	  NSString *path = [[[(PDLibraryDevice *)item library] path]
+			    stringByDeletingLastPathComponent];
+	  [[NSWorkspace sharedWorkspace] unmountAndEjectDeviceAtPath:path];
+	}
     }
 
   if (changed)
@@ -492,7 +647,7 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
       [[NSUserDefaults standardUserDefaults] setObject:_albums
        forKey:@"PDLibraryAlbums"];
 
-      [_outlineView reloadData];
+      [_outlineView reloadDataPreservingSelectedRows];
     }
 
   [self updateImageList];
@@ -502,15 +657,12 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 {
   NSString *str = [_searchField stringValue];
 
-  for (PDLibraryItem *item in _items)
-    {
-      if ([str length] != 0)
-	[item applySearchString:str];
-      else
-	[item resetSearchState];
-    }
+  if ([str length] != 0)
+    [_libraryGroup applySearchString:str];
+  else
+    [_libraryGroup resetSearchState];
 
-  [_outlineView reloadData];
+  [_outlineView reloadDataPreservingSelectedRows];
 }
 
 - (IBAction)controlAction:(id)sender
@@ -671,8 +823,11 @@ item_for_path(NSArray *items, NSArray *path)
 {
   [self updateImageLibraries];
 
-  for (PDImageLibrary *lib in [PDImageLibrary allLibraries])
-    [lib synchronize];
+  /* Don't synchronize transient libraries (i.e. automounted devices),
+     they'll be removed before we quit. */
+
+  for (PDLibraryDirectory *item in [_libraryGroup subitems])
+    [[item library] synchronize];
 }
 
 - (NSDictionary *)savedViewState
@@ -680,7 +835,12 @@ item_for_path(NSArray *items, NSArray *path)
   NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
   for (PDLibraryItem *item in _items)
-    [self addItem:item viewState:dict];
+    {
+      if (item == _devicesGroup)
+	continue;
+
+      [self addItem:item viewState:dict];
+    }
 
   NSMutableArray *selected = [NSMutableArray array];
   NSIndexSet *sel = [_outlineView selectedRowIndexes];

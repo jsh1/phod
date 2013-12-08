@@ -54,6 +54,44 @@ add_library(PDImageLibrary *lib)
   [_allLibraries addObject:lib];
 }
 
+static NSString *
+cache_root(void)
+{
+  NSArray *paths = (NSSearchPathForDirectoriesInDomains
+		    (NSCachesDirectory, NSUserDomainMask, YES));
+
+  return [[[paths lastObject] stringByAppendingPathComponent:
+	   [[NSBundle mainBundle] bundleIdentifier]]
+	  stringByAppendingPathComponent:@"library"];
+}
+
++ (void)removeInvalidLibraries
+{
+  /* For now, simply remove any libraries that don't have catalogs. By
+     definition they're useless to us. (E.g. transient libraries for
+     SD cards that were left around after an app crash.) */
+
+  assert(_allLibraries == nil);
+
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  NSString *dir = cache_root();
+
+  for (NSString *file in [fm contentsOfDirectoryAtPath:dir error:nil])
+    {
+      NSString *path = [dir stringByAppendingPathComponent:file];
+
+      NSString *catalog_path
+        = [path stringByAppendingPathComponent:@CATALOG_FILE];
+
+      if (![fm fileExistsAtPath:catalog_path])
+	{
+	  NSLog(@"PDImageLibrary: orphan library: %@", file);
+	  [fm removeItemAtPath:path error:nil];
+	}
+    }
+}
+
 + (NSArray *)allLibraries
 {
   if (_allLibraries == nil)
@@ -326,15 +364,7 @@ convert_hexdigit(int c)
 {
   if (_cachePath == nil)
     {
-      NSArray *paths = (NSSearchPathForDirectoriesInDomains
-			(NSCachesDirectory, NSUserDomainMask, YES));
-
-      NSString *cache_root
-        = [[[paths lastObject] stringByAppendingPathComponent:
-	    [[NSBundle mainBundle] bundleIdentifier]]
-	   stringByAppendingPathComponent:@"library"];
-
-      _cachePath = [[cache_root stringByAppendingPathComponent:
+      _cachePath = [[cache_root() stringByAppendingPathComponent:
 		     [NSString stringWithFormat:@"%08x", _libraryId]] copy];
 
       NSFileManager *fm = [NSFileManager defaultManager];
@@ -466,7 +496,7 @@ filename_with_ext_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
 }
 
 - (void)loadImagesInSubdirectory:(NSString *)dir
-    handler:(void (^)(PDImage *))block
+    recursively:(BOOL)flag handler:(void (^)(PDImage *))block
 {
   NSFileManager *fm = [NSFileManager defaultManager];
 
@@ -490,16 +520,26 @@ filename_with_ext_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
 	      if (![unused_files containsObject:file])
 		continue;
 
+	      NSString *path = [dir_path stringByAppendingPathComponent:file];
+	      BOOL is_dir = NO;
+	      if (![fm fileExistsAtPath:path isDirectory:&is_dir])
+		continue;
+	      if (is_dir)
+		{
+		  if (flag && pass == 0)
+		    {
+		      [self loadImagesInSubdirectory:
+		       [dir stringByAppendingPathComponent:file]
+		       recursively:YES handler:block];
+		    }
+		  continue;
+		}
+
 	      NSString *ext = [[file pathExtension] lowercaseString];
 
 	      if (pass == 0 && ![ext isEqualToString:@METADATA_EXTENSION])
 		continue;
 	      if (pass == 1 && ![jpeg_and_raw_extensions() containsObject:ext])
-		continue;
-
-	      NSString *path = [dir_path stringByAppendingPathComponent:file];
-	      BOOL is_dir = NO;
-	      if (![fm fileExistsAtPath:path isDirectory:&is_dir] || is_dir)
 		continue;
 
 	      NSString *stem = [file stringByDeletingPathExtension];
