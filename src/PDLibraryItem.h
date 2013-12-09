@@ -44,31 +44,31 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 
 /* Array of PDLibraryItem. Includes hidden items. */
 
-- (NSArray *)subitems;
+@property(nonatomic, copy, readonly) NSArray *subitems;
 
 /* Array of PDImage, all images recursively under self. */
 
-- (NSArray *)subimages;
+@property(nonatomic, copy, readonly) NSArray *subimages;
 
-- (NSInteger)numberOfSubimages;
+@property(nonatomic, readonly) NSInteger numberOfSubimages;
 
-/* For outline view. */
+@property(nonatomic, copy, readonly) NSString *titleString;
 
-- (NSString *)titleString;
+@property(nonatomic, retain, readonly) NSImage *titleImage;
 
-- (NSImage *)titleImage;
-- (BOOL)hasTitleImage;
+@property(nonatomic, readonly) BOOL hasTitleImage;
 
-- (BOOL)isExpandable;
+@property(nonatomic, readonly, getter=isExpandable)  BOOL expandable;
 
-- (BOOL)hasBadge;
-- (NSInteger)badgeValue;
+@property(nonatomic, readonly) BOOL hasBadge;
 
-- (BOOL)badgeValueIsNumberOfSubimages;
+@property(nonatomic, readonly) NSInteger badgeValue;
+
+@property(nonatomic, readonly) BOOL badgeValueIsNumberOfSubimages;
 
 /* For saving view state. */
 
-- (NSString *)identifier;
+@property(nonatomic, copy, readonly) NSString *identifier;
 
 /* Should [recursively] check if anything has changed, return YES if
    something has. */

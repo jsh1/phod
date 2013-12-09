@@ -33,7 +33,7 @@
                                 <color key="backgroundColor" red="0.2196078431372549" green="0.45882352941176469" blue="0.84313725490196079" alpha="0.0" colorSpace="deviceRGB"/>
                                 <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                 <tableColumns>
-                                    <tableColumn identifier="" editable="NO" width="284" minWidth="16" maxWidth="1000" id="CLK-kg-0Tl">
+                                    <tableColumn identifier="" width="284" minWidth="16" maxWidth="1000" id="CLK-kg-0Tl">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                             <font key="font" metaFont="smallSystem"/>
                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>

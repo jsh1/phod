@@ -267,6 +267,49 @@ again:
     [_allLibraries removeObjectAtIndex:idx];
 }
 
+- (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName
+{
+  /* Calling this method is preferred but optional. If directories are
+     renamed without doing so we'd just recreate the caches under the
+     new names and purge the old state after relaunching a couple of
+     times. */
+
+  NSInteger old_len = [oldName length];
+
+  for (int pass = 0; pass < 2; pass++)
+    {
+      NSMutableDictionary *catalog = pass == 0 ? _catalog0 : _catalog1;
+
+      /* Cons up the list of known files under the moved directory
+	 (can't modify the dictionary while iterating over its keys). */
+
+      NSMutableArray *matches = [[NSMutableArray alloc] init];
+
+      NSString *oldDir = [oldName stringByAppendingString:@"/"];
+
+      for (NSString *key in catalog)
+	{
+	  if ([key hasPrefix:oldDir])
+	    [matches addObject:key];
+	}
+
+      if ([matches count] != 0)
+	{
+	  for (NSString *key in matches)
+	    {
+	      NSString *new_key = [newName stringByAppendingPathComponent:
+				   [key substringFromIndex:old_len + 1]];
+	      [catalog setObject:[catalog objectForKey:key] forKey:new_key];
+	      [catalog removeObjectForKey:key];
+	    }
+
+	  _catalogDirty = YES;
+	}
+
+      [matches release];
+    }
+}
+
 static unsigned int
 convert_hexdigit(int c)
 {

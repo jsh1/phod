@@ -23,6 +23,8 @@ Issues
 
   - Items backed by directories rename the directory.
 
+  RESOLVED: implemented.
+
 4. Allow image metadata to be edited
 
   - Title, caption, copyright, keywords etc. [done, in inspector]

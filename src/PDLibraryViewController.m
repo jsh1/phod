@@ -653,6 +653,78 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   [self updateImageList];
 }
 
+static NSString *
+find_unique_name(NSString *root, NSString *file)
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  for (int i = 0;; i++)
+    {
+      NSString *tem
+        = i == 0 ? file : [NSString stringWithFormat:@"%@-%d", file, i];
+      if (![fm fileExistsAtPath:[root stringByAppendingPathComponent:tem]])
+	return tem;
+    }
+
+  /* not reached. */
+}
+
+- (void)renameItem:(PDLibraryItem *)item name:(NSString *)str
+{
+  if ([item isKindOfClass:[PDLibraryDirectory class]])
+    {
+      PDImageLibrary *lib = [(PDLibraryDirectory *)item library];
+
+      if ([[(PDLibraryDirectory *)item libraryDirectory] length] == 0)
+	{
+	  /* Top-level item. Just rename the library. */
+
+	  [lib setName:str];
+	  [self updateImageLibraries];
+	}
+      else
+	{
+	  /* Rename the actual library directory. */
+
+	  NSString *root = [lib path];
+	  NSString *old_dir = [(PDLibraryDirectory *)item libraryDirectory];
+	  NSString *new_dir = [[old_dir stringByDeletingLastPathComponent]
+			       stringByAppendingPathComponent:str];
+
+	  new_dir = find_unique_name(root, new_dir);
+
+	  NSFileManager *fm = [NSFileManager defaultManager];
+
+	  if ([fm moveItemAtPath:[root stringByAppendingPathComponent:old_dir]
+	       toPath:[root stringByAppendingPathComponent:new_dir] error:nil])
+	    {
+	      [(PDLibraryDirectory *)item setLibraryDirectory:new_dir];
+
+	      [lib didRenameDirectory:old_dir to:new_dir];
+	    }
+	}
+    }
+  else if ([item isKindOfClass:[PDLibraryQuery class]])
+    {
+      NSInteger idx = [[_albumsGroup subitems] indexOfObjectIdenticalTo:item];
+
+      if (idx != NSNotFound)
+	{
+	  [(PDLibraryQuery *)item setName:str];
+
+	  NSMutableDictionary *d = [[_albums objectAtIndex:idx] mutableCopy];
+	  [d setObject:str forKey:@"name"];
+	  [_albums replaceObjectAtIndex:idx withObject:d];
+	  [d release];
+
+	  [[NSUserDefaults standardUserDefaults] setObject:_albums
+	   forKey:@"PDLibraryAlbums"];
+	}
+    }
+
+  [_outlineView reloadItem:item];
+}
+
 - (IBAction)searchAction:(id)sender
 {
   NSString *str = [_searchField stringValue];
@@ -928,6 +1000,11 @@ item_for_path(NSArray *items, NSArray *path)
   return [(PDLibraryItem *)item titleString];
 }
 
+- (void)sourceList:(PXSourceList*)lst setObjectValue:(id)value forItem:(id)item
+{
+  [self renameItem:item name:value];
+}
+
 - (BOOL)sourceList:(PXSourceList *)lst isItemExpandable:(id)item
 {
   return [(PDLibraryItem *)item isExpandable];
@@ -968,7 +1045,8 @@ item_for_path(NSArray *items, NSArray *path)
 
 - (BOOL)sourceList:(PXSourceList *)lst shouldEditItem:(id)item
 {
-  return NO;
+  return ([item isKindOfClass:[PDLibraryDirectory class]]
+	  || [item isKindOfClass:[PDLibraryQuery class]]);
 }
 
 - (void)sourceListSelectionDidChange:(NSNotification *)note

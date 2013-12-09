@@ -200,12 +200,15 @@
 
 - (NSString *)titleString
 {
+  if ([_libraryDirectory length] == 0)
+    return [_library name];
+
   NSString *title = [_libraryDirectory lastPathComponent];
-  if ([title length] != 0)
-    title = [title stringByReplacingOccurrencesOfString:@":" withString:@"/"];
-  else
-    title = [_library name];
-  return title;
+
+  if ([title length] == 0)
+    title = _libraryDirectory;
+
+  return [title stringByReplacingOccurrencesOfString:@":" withString:@"/"];
 }
 
 - (BOOL)hasTitleImage

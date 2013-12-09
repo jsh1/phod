@@ -38,7 +38,7 @@
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 
 @property(nonatomic, readonly) PDImageLibrary *library;
-@property(nonatomic, readonly) NSString *libraryDirectory;
+@property(nonatomic, copy) NSString *libraryDirectory;
 
 /* convenience that appends libraryDirectory onto [library path]. */
 @property(nonatomic, readonly) NSString *path;

@@ -61,6 +61,8 @@
 
 - (NSString *)cachePathForFileId:(uint32_t)file_id base:(NSString *)str;
 
+- (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName;
+
 - (void)synchronize;
 - (void)validateCaches;
 - (void)emptyCaches;
