@@ -148,7 +148,7 @@
 
   CGFloat v_spacing = GRID_SPACING + (_displaysMetadata ? TITLE_HEIGHT : 0);
   CGFloat height = ceil(GRID_MARGIN*2 + _size * _rows
-			+ v_spacing * (_rows - 1));
+			+ v_spacing * (_rows - 1)) + MAX_OUTSET;
 
   if (height != frame.size.height)
     {
