@@ -35,6 +35,7 @@
 @property(nonatomic, copy) NSArray *subitems;
 
 - (void)addSubitem:(PDLibraryItem *)item;
+- (void)insertSubitem:(PDLibraryItem *)item atIndex:(NSInteger)idx;
 - (void)removeSubitem:(PDLibraryItem *)item;
 
 @end

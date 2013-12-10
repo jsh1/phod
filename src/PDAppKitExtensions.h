@@ -49,6 +49,8 @@
 - (NSArray *)selectedItems;
 - (void)setSelectedItems:(NSArray *)array;
 
+- (void)callPreservingSelectedRows:(void (^)(void))thunk;
+
 - (void)reloadDataPreservingSelectedRows;
 
 @end

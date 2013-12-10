@@ -69,6 +69,22 @@
     }
 }
 
+- (void)insertSubitem:(PDLibraryItem *)item atIndex:(NSInteger)idx
+{
+  if (_subitems == nil
+      || [_subitems indexOfObjectIdenticalTo:item] == NSNotFound)
+    {
+      if (_subitems == nil)
+	_subitems = [[NSMutableArray alloc] init];
+      if (idx < 0)
+	idx = 0;
+      else if (idx > [_subitems count])
+	idx = [_subitems count];
+      [_subitems insertObject:item atIndex:idx];
+      [item setParent:self];
+    }
+}
+
 - (void)removeSubitem:(PDLibraryItem *)item
 {
   if (_subitems != nil)

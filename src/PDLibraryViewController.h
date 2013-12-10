@@ -41,14 +41,15 @@ extern NSString *const PDLibrarySelectionDidChange;
   IBOutlet NSButton *_removeButton;
   IBOutlet NSButton *_actionButton;
 
-  NSMutableArray *_albums;
-
   NSMutableArray *_items;
   PDLibraryGroup *_devicesGroup;
   PDLibraryGroup *_libraryGroup;
   PDLibraryGroup *_albumsGroup;
 
   NSMapTable *_itemViewState;		/* PDLibraryItem -> NSDictionary */
+
+  NSArray *_draggedItems;
+  NSPasteboard *_draggedPasteboard;
 }
 
 @property(nonatomic, readonly) NSArray *allImages;

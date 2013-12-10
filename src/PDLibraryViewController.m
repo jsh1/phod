@@ -46,6 +46,8 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 - (void)updateControls;
 @end
 
+NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
+
 @implementation PDLibraryViewController
 
 + (NSString *)viewNibName
@@ -133,10 +135,11 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   [_outlineView setDataSource:nil];
   [_outlineView setDelegate:nil];
 
-  [_albums release];
-
   [_items release];
   [_itemViewState release];
+
+  [_draggedItems release];
+  [_draggedPasteboard release];
 
   [super dealloc];
 }
@@ -158,13 +161,11 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 	}
     }
 
-  _albums = [[[NSUserDefaults standardUserDefaults]
-	      arrayForKey:@"PDLibraryAlbums"] mutableCopy];
-  if (_albums == nil)
-    _albums = [[NSMutableArray alloc] init];
-
-  for (NSDictionary *dict in _albums)
-    [self addAlbumItem:dict];
+  for (NSDictionary *dict in [[NSUserDefaults standardUserDefaults]
+			      arrayForKey:@"PDLibraryAlbums"])
+    {
+      [self addAlbumItem:dict];
+    }
 
   [[NSNotificationCenter defaultCenter] addObserver:self
    selector:@selector(libraryItemSubimagesDidChange:)
@@ -195,6 +196,8 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   [_outlineView expandItem:_devicesGroup];
   [_outlineView expandItem:_libraryGroup];
   [_outlineView expandItem:_albumsGroup];
+
+  [_outlineView registerForDraggedTypes:@[PDLibraryItemType]];
 
   [self rescanVolumes];
 
@@ -529,6 +532,24 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
    setObject:array forKey:@"PDImageLibraries"];
 }
 
+- (void)updateImageAlbums
+{
+  NSMutableArray *array = [NSMutableArray array];
+
+  for (PDLibraryQuery *item in [_albumsGroup subitems])
+    {
+      NSString *name = [item name];
+      NSString *pred = [[item predicate] predicateFormat];
+      if (pred == nil)
+	pred = @"";
+
+      [array addObject:@{@"name": name, @"predicate": pred}];
+    }
+
+  [[NSUserDefaults standardUserDefaults] setObject:array
+   forKey:@"PDLibraryAlbums"];
+}
+
 - (IBAction)addLibraryAction:(id)sender
 {
   NSOpenPanel *panel = [NSOpenPanel openPanel];
@@ -585,12 +606,9 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
     @"predicate": query
   };
 
-  [_albums addObject:dict];
-
   [self addAlbumItem:dict];
 
-  [[NSUserDefaults standardUserDefaults] setObject:_albums
-   forKey:@"PDLibraryAlbums"];
+  [self updateImageAlbums];
 
   [_outlineView reloadItem:_albumsGroup reloadChildren:YES];
 }
@@ -627,7 +645,6 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
 	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
 	  if (idx != NSNotFound)
 	    {
-	      [_albums removeObjectAtIndex:idx];
 	      [_albumsGroup removeSubitem:[subitems objectAtIndex:idx]];
 	      changed = YES;
 	    }
@@ -643,9 +660,7 @@ NSString *const PDLibrarySelectionDidChange = @"PDLibrarySelectionDidChange";
   if (changed)
     {
       [self updateImageLibraries];
-
-      [[NSUserDefaults standardUserDefaults] setObject:_albums
-       forKey:@"PDLibraryAlbums"];
+      [self updateImageAlbums];
 
       [_outlineView reloadDataPreservingSelectedRows];
     }
@@ -712,13 +727,7 @@ find_unique_name(NSString *root, NSString *file)
 	{
 	  [(PDLibraryQuery *)item setName:str];
 
-	  NSMutableDictionary *d = [[_albums objectAtIndex:idx] mutableCopy];
-	  [d setObject:str forKey:@"name"];
-	  [_albums replaceObjectAtIndex:idx withObject:d];
-	  [d release];
-
-	  [[NSUserDefaults standardUserDefaults] setObject:_albums
-	   forKey:@"PDLibraryAlbums"];
+	  [self updateImageAlbums];
 	}
     }
 
@@ -1000,7 +1009,8 @@ item_for_path(NSArray *items, NSArray *path)
   return [(PDLibraryItem *)item titleString];
 }
 
-- (void)sourceList:(PXSourceList*)lst setObjectValue:(id)value forItem:(id)item
+- (void)sourceList:(PXSourceList *)lst setObjectValue:(id)value
+    forItem:(id)item
 {
   [self renameItem:item name:value];
 }
@@ -1033,6 +1043,107 @@ item_for_path(NSArray *items, NSArray *path)
   return [(PDLibraryItem *)item titleImage];
 }
 
+- (BOOL)sourceList:(PXSourceList *)lst writeItems:(NSArray *)items
+    toPasteboard:(NSPasteboard *)pboard
+{
+  [pboard declareTypes:@[PDLibraryItemType] owner:self];
+  [_draggedItems release];
+  _draggedItems = [items copy];
+  _draggedPasteboard = [pboard retain];
+  return YES;
+}
+
+- (NSDragOperation)sourceList:(PXSourceList *)lst
+    validateDrop:(id<NSDraggingInfo>)info proposedItem:(id)obj
+    proposedChildIndex:(NSInteger)idx
+{
+  PDLibraryItem *item = obj;
+  NSPasteboard *pboard = [info draggingPasteboard];
+
+  /* FIXME: support dropping images into libraries as well. */
+
+  NSString *type = [pboard availableTypeFromArray:@[PDLibraryItemType]];
+
+  if ([type isEqualToString:PDLibraryItemType])
+    {
+      if (_draggedItems == nil)
+	return NSDragOperationNone;
+
+      if (item == _libraryGroup || item == _albumsGroup)
+	{
+	  Class required_class = (item == _libraryGroup
+				  ? [PDLibraryDirectory class]
+				  : [PDLibraryQuery class]);
+
+	  for (PDLibraryItem *dragged_item in _draggedItems)
+	    {
+	      if (![dragged_item isKindOfClass:required_class])
+		return NSDragOperationNone;
+	    }
+
+	  return NSDragOperationMove;
+	}
+      else if ([item isKindOfClass:[PDLibraryDirectory class]])
+	{
+	  /* FIXME: implement this. */
+	}
+    }
+
+  return NSDragOperationNone;
+}
+
+- (BOOL)sourceList:(PXSourceList *)lst acceptDrop:(id<NSDraggingInfo>)info
+    item:(id)item childIndex:(NSInteger)idx
+{
+  NSPasteboard *pboard = [info draggingPasteboard];
+
+  /* FIXME: support dropping images into libraries as well. */
+
+  NSString *type = [pboard availableTypeFromArray:@[PDLibraryItemType]];
+
+  if ([type isEqualToString:PDLibraryItemType])
+    {
+      if (_draggedItems == nil)
+	return NSDragOperationNone;
+
+      if (item == _libraryGroup || item == _albumsGroup)
+	{
+	  [_outlineView callPreservingSelectedRows:^{
+	    NSInteger i = idx;
+
+	    for (PDLibraryItem *dragged_item in _draggedItems)
+	      {
+		NSInteger item_idx
+		  = [[item subitems] indexOfObjectIdenticalTo:dragged_item];
+		if (item_idx == NSNotFound)
+		  continue;
+		[item removeSubitem:dragged_item];
+		if (item_idx < i)
+		  i--;
+	      }
+
+	    for (PDLibraryItem *dragged_item in _draggedItems)
+	      [item insertSubitem:dragged_item atIndex:i++];
+
+	    [_outlineView reloadItem:item reloadChildren:YES];
+	  }];
+
+	  if (item == _libraryGroup)
+	    [self updateImageLibraries];
+	  else
+	    [self updateImageAlbums];
+
+	  return YES;
+	}
+      else if ([item isKindOfClass:[PDLibraryDirectory class]])
+	{
+	  /* FIXME: implement this. */
+	}
+    }
+
+  return NO;
+}
+
 // PXSourceListDelegate methods
 
 - (CGFloat)sourceList:(PXSourceList *)lst heightOfRowByItem:(id)item
@@ -1062,6 +1173,23 @@ item_for_path(NSArray *items, NSArray *path)
 
   [[NSNotificationCenter defaultCenter]
    postNotificationName:PDLibrarySelectionDidChange object:_controller];
+}
+
+// NSPasteboardOwner methods
+
+- (void)pasteboard:(NSPasteboard *)sender provideDataForType:(NSString *)type
+{
+}
+
+- (void)pasteboardChangedOwner:(NSPasteboard *)sender
+{
+  if (_draggedPasteboard == sender)
+    {
+      [_draggedItems release];
+      _draggedItems = nil;
+      [_draggedPasteboard release];
+      _draggedPasteboard = nil;
+    }
 }
 
 @end

@@ -127,13 +127,20 @@
   [self selectRowIndexes:sel byExtendingSelection:NO];
 }
 
-- (void)reloadDataPreservingSelectedRows
+- (void)callPreservingSelectedRows:(void (^)(void))thunk;
 {
   NSArray *sel = [self selectedItems];
 
-  [self reloadData];
+  thunk();
 
   [self setSelectedItems:sel];
+}
+
+- (void)reloadDataPreservingSelectedRows
+{
+  [self callPreservingSelectedRows:^{
+    [self reloadData];
+  }];
 }
 
 @end

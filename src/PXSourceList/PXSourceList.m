@@ -750,7 +750,10 @@ NSString * const PXSLDeleteKeyPressedOnRowsNotification = @"PXSourceListDeleteKe
 
 #pragma mark 10.7 only methods
 
-#ifdef MAC_OS_X_VERSION_10_7
+/* FIXME: jsh: comment out these methods, otherwise AppKit won't call
+   the old methods. See http://stackoverflow.com/questions/19665307 */
+
+#if 0 //def MAC_OS_X_VERSION_10_7
 
 - (id <NSPasteboardWriting>)outlineView:(NSOutlineView *)outlineView pasteboardWriterForItem:(id)item
 {
