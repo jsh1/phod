@@ -45,6 +45,7 @@
 @property(nonatomic) BOOL displaysMetadata;
 
 - (CGFloat)scaleToFitScale;
+- (CGFloat)scaleToFillScale;
 
 - (void)setImageScale:(CGFloat)scale preserveOrigin:(BOOL)flag;
 

@@ -29,6 +29,7 @@ extern NSString *const PDSelectionDidChange;
 extern NSString *const PDShowsHiddenImagesDidChange;
 extern NSString *const PDImagePredicateDidChange;
 extern NSString *const PDImageSortOptionsDidChange;
+extern NSString *const PDImportModeDidChange;
 
 enum PDSidebarMode
 {
@@ -45,6 +46,12 @@ enum PDContentMode
   PDContentMode_Image,
 };
 
+enum PDAccessoryMode
+{
+  PDAccessoryMode_Nil,
+  PDAccessoryMode_Import,
+};
+
 @class PDViewController, PDPredicatePanelController;
 @class PDSplitView, PDImage;
 
@@ -54,6 +61,7 @@ enum PDContentMode
   IBOutlet NSSegmentedControl *_sidebarControl;
   IBOutlet NSView *_sidebarView;
   IBOutlet NSView *_contentView;
+  IBOutlet NSView *_accessoryView;
 
   PDPredicatePanelController *_predicatePanelController;
 
@@ -61,6 +69,7 @@ enum PDContentMode
 
   NSInteger _sidebarMode;
   NSInteger _contentMode;
+  NSInteger _accessoryMode;
 
   BOOL _showsHiddenImages;
 
@@ -76,12 +85,17 @@ enum PDContentMode
 
   NSIndexSet *_selectedImageIndexes;
   NSInteger _primarySelectionIndex;
+
+  BOOL _importMode;
 }
 
 - (void)invalidate;
 
 @property(nonatomic) NSInteger sidebarMode;
 @property(nonatomic) NSInteger contentMode;
+@property(nonatomic) NSInteger accessoryMode;
+
+@property(nonatomic) BOOL importMode;
 
 @property(nonatomic) BOOL showsHiddenImages;
 
@@ -168,10 +182,12 @@ enum PDContentMode
 - (IBAction)zoomIn:(id)sender;
 - (IBAction)zoomOut:(id)sender;
 - (IBAction)zoomActualSize:(id)sender;
+- (IBAction)zoomToFill:(id)sender;
 
 - (IBAction)rotateLeft:(id)sender;
 - (IBAction)rotateRight:(id)sender;
 
 - (IBAction)newSmartFolderAction:(id)sender;
+- (IBAction)importAction:(id)sender;
 
 @end

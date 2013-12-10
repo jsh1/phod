@@ -22,28 +22,41 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDViewController.h"
+#import "PDImportViewController.h"
 
-@class PDImageView;
+#import "PDWindowController.h"
 
-@interface PDImageViewController : PDViewController
+@implementation PDImportViewController
+
++ (NSString *)viewNibName
 {
-  IBOutlet NSTextField *_titleLabel;
-  IBOutlet PDImageView *_imageView;
-  IBOutlet NSButton *_rotateLeftButton;
-  IBOutlet NSButton *_rotateRightButton;
-  IBOutlet NSSlider *_scaleSlider;
+  return @"PDImportView";
 }
-  
-@property(nonatomic) BOOL displaysMetadata;
 
-- (IBAction)toggleMetadata:(id)sender;
+- (id)initWithController:(PDWindowController *)controller
+{
+  self = [super initWithController:controller];
+  if (self == nil)
+    return nil;
 
-- (IBAction)zoomIn:(id)sender;
-- (IBAction)zoomOut:(id)sender;
-- (IBAction)zoomActualSize:(id)sender;
-- (IBAction)zoomToFill:(id)sender;
+  return self;
+}
 
-- (IBAction)controlAction:(id)sender;
+- (void)viewDidLoad
+{
+  [super viewDidLoad];
+}
+
+- (IBAction)controlAction:(id)sender
+{
+  if (sender == _okButton)
+    {
+      /* FIXME: something. */
+    }
+  else if (sender == _cancelButton)
+    {
+      [_controller setImportMode:NO];
+    }
+}
 
 @end

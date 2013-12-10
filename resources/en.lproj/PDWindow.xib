@@ -6,7 +6,8 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PDWindowController">
             <connections>
-                <outlet property="_contentView" destination="1Ym-RE-Xke" id="f4J-jm-BQX"/>
+                <outlet property="_accessoryView" destination="GrO-KW-djp" id="L1h-DB-Bj5"/>
+                <outlet property="_contentView" destination="VXV-iT-buA" id="w5g-xz-bhJ"/>
                 <outlet property="_sidebarControl" destination="evu-pS-PWE" id="b2e-UI-wvK"/>
                 <outlet property="_sidebarView" destination="Xq2-Da-fg5" id="Qfj-NQ-DXq"/>
                 <outlet property="_splitView" destination="xhd-G3-IhX" id="zXk-tk-wpd"/>
@@ -30,11 +31,11 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <customView id="UqU-qP-f1I">
-                                <rect key="frame" x="0.0" y="0.0" width="288" height="659"/>
+                                <rect key="frame" x="0.0" y="0.0" width="308" height="659"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
                                     <customView id="Xq2-Da-fg5">
-                                        <rect key="frame" x="4" y="0.0" width="284" height="632"/>
+                                        <rect key="frame" x="4" y="0.0" width="304" height="632"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     </customView>
                                     <segmentedControl verticalHuggingPriority="750" id="evu-pS-PWE">
@@ -54,9 +55,19 @@
                                     </segmentedControl>
                                 </subviews>
                             </customView>
-                            <customView id="1Ym-RE-Xke">
-                                <rect key="frame" x="289" y="0.0" width="694" height="659"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                            <customView id="Lwf-c5-nPN">
+                                <rect key="frame" x="309" y="0.0" width="674" height="659"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <subviews>
+                                    <customView id="VXV-iT-buA">
+                                        <rect key="frame" x="0.0" y="0.0" width="674" height="659"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    </customView>
+                                    <customView id="GrO-KW-djp">
+                                        <rect key="frame" x="374" y="0.0" width="300" height="659"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" heightSizable="YES"/>
+                                    </customView>
+                                </subviews>
                             </customView>
                         </subviews>
                         <holdingPriorities>

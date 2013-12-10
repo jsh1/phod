@@ -24,25 +24,11 @@
 
 #import "PDViewController.h"
 
-@class PDImageView;
-
-@interface PDImageViewController : PDViewController
+@interface PDImportViewController : PDViewController
 {
-  IBOutlet NSTextField *_titleLabel;
-  IBOutlet PDImageView *_imageView;
-  IBOutlet NSButton *_rotateLeftButton;
-  IBOutlet NSButton *_rotateRightButton;
-  IBOutlet NSSlider *_scaleSlider;
+  IBOutlet NSButton *_okButton;
+  IBOutlet NSButton *_cancelButton;
 }
-  
-@property(nonatomic) BOOL displaysMetadata;
-
-- (IBAction)toggleMetadata:(id)sender;
-
-- (IBAction)zoomIn:(id)sender;
-- (IBAction)zoomOut:(id)sender;
-- (IBAction)zoomActualSize:(id)sender;
-- (IBAction)zoomToFill:(id)sender;
 
 - (IBAction)controlAction:(id)sender;
 

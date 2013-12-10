@@ -179,6 +179,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   [[NSNotificationCenter defaultCenter] addObserver:self
    selector:@selector(showsHiddenImagesDidChange:)
    name:PDShowsHiddenImagesDidChange object:_controller];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+   selector:@selector(importModeDidChange:)
+   name:PDImportModeDidChange object:_controller];
 
   NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
   [[workspace notificationCenter]
@@ -211,21 +214,42 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
 - (void)updateControls
 {
+  if ([_controller importMode] && [[_devicesGroup subitems] count] == 0)
+    {
+      _ignoreNotifications++;
+      [_controller setImportMode:NO];
+      _ignoreNotifications--;
+    }
+
+  BOOL non_empty = NO;
   BOOL can_delete = NO;
+  BOOL importable = YES;
 
   NSIndexSet *sel = [_outlineView selectedRowIndexes];
-  NSInteger idx;
-  for (idx = [sel firstIndex]; idx != NSNotFound;
-       idx = [sel indexGreaterThanIndex:idx])
+  for (NSInteger idx = [sel firstIndex];
+       idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
     {
       PDLibraryItem *item = [_outlineView itemAtRow:idx];
 
+      non_empty = YES;
+
       if ([[item parent] isKindOfClass:[PDLibraryGroup class]])
 	can_delete = YES;
+
+      if (![item isKindOfClass:[PDLibraryDevice class]])
+	importable = NO;
     }
+
+  if (!non_empty)
+    importable = NO;
+
+  [_controller setAccessoryMode:[_controller importMode]
+   && importable ? PDAccessoryMode_Import : PDAccessoryMode_Nil];
 
   [_removeButton setEnabled:can_delete];
   [_actionButton setEnabled:NO];
+  [_importButton setState:[_controller importMode]];
+  [_importButton setEnabled:importable];
 }
 
 - (NSArray *)allImages
@@ -375,9 +399,8 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
   if (!selected)
     {
-      NSInteger idx;
-      for (idx = [sel firstIndex]; idx != NSNotFound;
-	   idx = [sel indexGreaterThanIndex:idx])
+      for (NSInteger idx = [sel firstIndex];
+	   idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
 	{
 	  PDLibraryItem *item = [_outlineView itemAtRow:idx];
 	  if ([item isKindOfClass:[PDLibraryQuery class]])
@@ -517,6 +540,8 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 {
   [self removeVolumeAtPath:[[[note userInfo] objectForKey:
 			     NSWorkspaceVolumeURLKey] path]];
+
+  [self updateControls];
 }
 
 - (void)updateImageLibraries
@@ -667,7 +692,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
       [_outlineView reloadDataPreservingSelectedRows];
     }
 
-  [self updateImageList];
+  [self sourceListSelectionDidChange:nil];
 }
 
 static NSString *
@@ -748,6 +773,57 @@ find_unique_name(NSString *root, NSString *file)
   [_outlineView reloadDataPreservingSelectedRows];
 }
 
+- (IBAction)importAction:(id)sender
+{
+  if (sender == _importButton)
+    [_controller setImportMode:[_importButton state]];
+}
+
+- (void)importModeDidChange:(NSNotification *)note
+{
+  if (_ignoreNotifications)
+    return;
+
+  BOOL non_empty = NO;
+  BOOL importable = YES;
+
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+  for (NSInteger idx = [sel firstIndex];
+       idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
+    {
+      non_empty = YES;
+      PDLibraryItem *item = [_outlineView itemAtRow:idx];
+      if (![item isKindOfClass:[PDLibraryDevice class]])
+	importable = NO;
+    }
+
+  if (!non_empty)
+    importable = NO;
+
+  if (!importable)
+    {
+      NSArray *array = [_devicesGroup subitems];
+      NSInteger count = [array count];
+
+      if (count != 0)
+	{
+	  [_outlineView expandItem:_devicesGroup];
+
+	  NSMutableIndexSet *set = [NSMutableIndexSet indexSet];
+	  for (PDLibraryItem *item in array)
+	    {
+	      NSInteger row = [_outlineView rowForItem:item];
+	      if (row >= 0)
+		[set addIndex:row];
+	    }
+
+	  [_outlineView selectRowIndexes:set byExtendingSelection:NO];
+	}
+    }
+
+  [self updateControls];
+}
+
 - (IBAction)controlAction:(id)sender
 {
 }
@@ -775,9 +851,8 @@ find_unique_name(NSString *root, NSString *file)
   if ([opts count] == 0)
     opts = nil;
 
-  NSInteger idx;
-  for (idx = [sel firstIndex]; idx != NSNotFound;
-       idx = [sel indexGreaterThanIndex:idx])
+  for (NSInteger idx = [sel firstIndex];
+       idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
     {
       PDLibraryItem *item = [_outlineView itemAtRow:idx];
       if (opts != nil)
@@ -930,10 +1005,9 @@ item_for_path(NSArray *items, NSArray *path)
 
   NSMutableArray *selected = [NSMutableArray array];
   NSIndexSet *sel = [_outlineView selectedRowIndexes];
-  NSInteger idx;
 
-  for (idx = [sel firstIndex]; idx != NSNotFound;
-       idx = [sel indexGreaterThanIndex:idx])
+  for (NSInteger idx = [sel firstIndex];
+       idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
     {
       NSArray *path = path_for_item([_outlineView itemAtRow:idx]);
       if (path != nil)

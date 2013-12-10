@@ -8,6 +8,7 @@
             <connections>
                 <outlet property="_actionButton" destination="ZLw-gH-KnI" id="lh9-FE-sKk"/>
                 <outlet property="_addButton" destination="bv5-Rg-fp3" id="zvv-IF-TZB"/>
+                <outlet property="_importButton" destination="bQF-17-sdk" id="OIg-1d-6ZM"/>
                 <outlet property="_outlineView" destination="FXk-bX-Rgc" id="59e-NB-nH5"/>
                 <outlet property="_removeButton" destination="eid-hj-H2P" id="dkb-D4-aWZ"/>
                 <outlet property="_searchField" destination="wy1-9V-NIi" id="EsE-cV-OJF"/>
@@ -65,7 +66,7 @@
                     </scroller>
                 </scrollView>
                 <searchField toolTip="Search library." verticalHuggingPriority="750" id="wy1-9V-NIi">
-                    <rect key="frame" x="0.0" y="652" width="246" height="19"/>
+                    <rect key="frame" x="0.0" y="652" width="220" height="19"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search Library" usesSingleLineMode="YES" bezelStyle="round" recentsAutosaveName="PDLibraryViewController.searches" id="cs9-Rs-aYE">
                         <font key="font" metaFont="smallSystem"/>
@@ -89,8 +90,19 @@
                         <action selector="controlAction:" target="-2" id="oq8-95-QKK"/>
                     </connections>
                 </button>
-                <button toolTip="Remove image folder." verticalHuggingPriority="750" id="eid-hj-H2P">
+                <button toolTip="Toggle image-import mode." verticalHuggingPriority="750" id="bQF-17-sdk">
                     <rect key="frame" x="290" y="651" width="22" height="22"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="smallSquare" title="⬇︎" bezelStyle="smallSquare" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Ahl-MT-Oa3">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                        <font key="font" metaFont="smallSystem"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="importAction:" target="-2" id="hXt-4M-17y"/>
+                    </connections>
+                </button>
+                <button toolTip="Remove image folder." verticalHuggingPriority="750" id="eid-hj-H2P">
+                    <rect key="frame" x="266" y="651" width="22" height="22"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSRemoveTemplate" imagePosition="only" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="FUb-bs-M5w">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -101,7 +113,7 @@
                     </connections>
                 </button>
                 <button toolTip="Add image folder." verticalHuggingPriority="750" id="bv5-Rg-fp3">
-                    <rect key="frame" x="266" y="651" width="22" height="22"/>
+                    <rect key="frame" x="242" y="651" width="22" height="22"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSAddTemplate" imagePosition="only" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="dQ8-lV-cxD">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>

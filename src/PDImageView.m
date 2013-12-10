@@ -122,6 +122,23 @@
   return scale < 1 ? scale : 1;
 }
 
+- (CGFloat)scaleToFillScale
+{
+  if (_image == nil)
+    return 1;
+
+  CGSize pixelSize = [_image orientedPixelSize];
+
+  NSRect bounds = [self bounds];
+
+  CGFloat sx = (bounds.size.width - IMAGE_MARGIN*2) / pixelSize.width;
+  CGFloat sy = (bounds.size.height - IMAGE_MARGIN*2) / pixelSize.height;
+
+  CGFloat scale = sx > sy ? sx : sy;
+
+  return scale < 1 ? scale : 1;
+}
+
 - (void)setImageScale:(CGFloat)scale preserveOrigin:(BOOL)flag
 {
   if (!flag)

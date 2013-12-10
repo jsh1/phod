@@ -31,6 +31,7 @@
 #import "PDImageLibrary.h"
 #import "PDImageViewController.h"
 #import "PDImageListViewController.h"
+#import "PDImportViewController.h"
 #import "PDInfoViewController.h"
 #import "PDSplitView.h"
 #import "PDLibraryViewController.h"
@@ -41,6 +42,7 @@ NSString *const PDSelectionDidChange = @"PDSelectionDidChange";
 NSString *const PDShowsHiddenImagesDidChange = @"PDShowsHiddenImagesDidChange";
 NSString *const PDImagePredicateDidChange = @"PDImagePredicateDidChange";
 NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
+NSString *const PDImportModeDidChange = @"PDImportModeDidChange";
 
 @implementation PDWindowController
 
@@ -74,6 +76,7 @@ NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
 
   _sidebarMode = PDSidebarMode_Nil;
   _contentMode = PDContentMode_Nil;
+  _accessoryMode = PDAccessoryMode_Nil;
 
   _imageSortKey = PDImageCompare_Date;
   _imageSortReversed = NO;
@@ -88,7 +91,8 @@ NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
 		      [PDInfoViewController class],
 		      [PDAdjustmentsViewController class],
 		      [PDImageListViewController class],
-		      [PDImageViewController class]])
+		      [PDImageViewController class],
+		      [PDImportViewController class]])
     {
       PDViewController *controller = [[cls alloc] initWithController:self];
       if (controller != nil)
@@ -138,6 +142,9 @@ NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
   [self setSidebarMode:PDSidebarMode_Library];
   [self setContentMode:PDContentMode_List];
 
+  _accessoryMode = -1;
+  [self setAccessoryMode:PDAccessoryMode_Nil];
+
   [self applySavedWindowState];
 
   [[NSNotificationCenter defaultCenter]
@@ -184,32 +191,28 @@ NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
 	[controllers setObject:sub forKey:[controller identifier]];
     }
 
-  NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
-			controllers, @"PDViewControllers",
-			[_splitView savedViewState], @"PDSplitViewState",
-			nil];
+  NSDictionary *dict = @{
+    @"PDViewControllers": controllers,
+    @"PDSplitViewState": [_splitView savedViewState],
+  };
 
-  NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-
-  [defaults setObject:dict forKey:@"PDSavedWindowState"];
+  [[NSUserDefaults standardUserDefaults]
+   setObject:dict forKey:@"PDSavedWindowState"];
 }
 
 - (void)applySavedWindowState
 {
-  NSDictionary *state, *dict, *sub;
-
-  state = [[NSUserDefaults standardUserDefaults]
-	   dictionaryForKey:@"PDSavedWindowState"];
+  NSDictionary *state = [[NSUserDefaults standardUserDefaults]
+			 dictionaryForKey:@"PDSavedWindowState"];
   if (state == nil)
     return;
 
-  dict = [state objectForKey:@"PDViewControllers"];
-
+  NSDictionary *dict = [state objectForKey:@"PDViewControllers"];
   if (dict != nil)
     {
       for (PDViewController *controller in _viewControllers)
 	{
-	  sub = [dict objectForKey:[controller identifier]];
+	  NSDictionary *sub = [dict objectForKey:[controller identifier]];
 	  if (sub != nil)
 	    [controller applySavedViewState:sub];
 	}
@@ -247,6 +250,18 @@ contentClassForMode(enum PDContentMode mode)
       return [PDImageListViewController class];
     case PDContentMode_Image:
       return [PDImageViewController class];
+    }
+}
+
+static Class
+accessoryClassForMode(enum PDAccessoryMode mode)
+{
+  switch (mode)
+    {
+    case PDAccessoryMode_Nil:
+      return nil;
+    case PDAccessoryMode_Import:
+      return [PDImportViewController class];
     }
 }
 
@@ -318,6 +333,62 @@ wasFirstResponder(NSView *view)
 
       if (wasFirst)
 	[[self window] makeFirstResponder:[controller initialFirstResponder]];
+    }
+}
+
+- (NSInteger)accessoryMode
+{
+  return _accessoryMode;
+}
+
+- (void)setAccessoryMode:(NSInteger)mode
+{
+  Class cls;
+  PDViewController *controller;
+
+  if (_accessoryMode != mode)
+    {
+      cls = accessoryClassForMode(_accessoryMode);
+      controller = [self viewControllerWithClass:cls];
+
+      BOOL wasFirst = wasFirstResponder([controller view]);
+
+      [controller removeFromContainer];
+
+      _accessoryMode = mode;
+
+      cls = accessoryClassForMode(_accessoryMode);
+      controller = [self viewControllerWithClass:cls];
+      [controller addToContainerView:_accessoryView];
+
+      [_accessoryView setHidden:controller == nil];
+
+      NSRect aframe = [_accessoryView frame];
+      CGFloat llx = aframe.origin.x;
+      CGFloat urx = llx + aframe.size.width;
+
+      NSRect cframe = [_contentView frame];
+      cframe.size.width = (mode == PDAccessoryMode_Nil ? urx : llx) - cframe.origin.x;
+      [_contentView setFrame:cframe];
+
+      if (wasFirst && controller != nil)
+	[[self window] makeFirstResponder:[controller initialFirstResponder]];
+    }
+}
+
+- (BOOL)importMode
+{
+  return _importMode;
+}
+
+- (void)setImportMode:(BOOL)flag
+{
+  if (_importMode != flag)
+    {
+      _importMode = flag;
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImportModeDidChange object:self];
     }
 }
 
@@ -1057,6 +1128,15 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
     }
 }
 
+- (IBAction)zoomToFill:(id)sender
+{
+  if (_contentMode == PDContentMode_Image)
+    {
+      [(PDImageViewController *)[self viewControllerWithClass:
+	[PDImageViewController class]] zoomToFill:sender];
+    }
+}
+
 - (void)rotateUsingMap:(const int *)map
 {
   [self foreachSelectedImage:^(PDImage *image) {
@@ -1099,13 +1179,19 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
    [PDLibraryViewController class]] addSmartFolder:format predicate:pred];
 }
 
+- (IBAction)importAction:(id)sender
+{
+  [self setImportMode:YES];
+}
+
 - (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem
 {
   SEL sel = [anItem action];
 
   if (sel == @selector(zoomIn:)
       || sel == @selector(zoomOut:)
-      || sel == @selector(zoomActualSize:))
+      || sel == @selector(zoomActualSize:)
+      || sel == @selector(zoomToFill:))
     {
       return (_contentMode == PDContentMode_Image
 	      && _primarySelectionIndex >= 0);

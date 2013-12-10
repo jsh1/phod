@@ -39,6 +39,7 @@ extern NSString *const PDLibrarySelectionDidChange;
   IBOutlet NSSearchField *_searchField;
   IBOutlet NSButton *_addButton;
   IBOutlet NSButton *_removeButton;
+  IBOutlet NSButton *_importButton;
   IBOutlet NSButton *_actionButton;
 
   NSMutableArray *_items;
@@ -61,10 +62,9 @@ extern NSString *const PDLibrarySelectionDidChange;
 - (void)addSmartFolder:(NSString *)name predicate:(NSPredicate *)pred;
 
 - (IBAction)addLibraryAction:(id)sender;
-
 - (IBAction)removeAction:(id)sender;
-
 - (IBAction)searchAction:(id)sender;
+- (IBAction)importAction:(id)sender;
 
 - (IBAction)controlAction:(id)sender;
 

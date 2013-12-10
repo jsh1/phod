@@ -246,6 +246,11 @@
   [_imageView setImageScale:scale preserveOrigin:YES];
 }
 
+- (IBAction)zoomToFill:(id)sender
+{
+  [_imageView setImageScale:[_imageView scaleToFillScale] preserveOrigin:YES];
+}
+
 - (IBAction)controlAction:(id)sender
 {
   if (sender == _scaleSlider)
