@@ -323,9 +323,11 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
       /* Install sort/filter options before modifying the image list,
 	 so that they only get applied once. */
 
+      _ignoreNotifications++;
       [_controller setImageSortKey:sortKey];
       [_controller setImageSortReversed:sortRev];
       [_controller setImagePredicate:pred];
+      _ignoreNotifications--;
 
       [_controller setImageListTitle:title];
       [_controller setImageList:array];
@@ -752,6 +754,9 @@ find_unique_name(NSString *root, NSString *file)
 
 - (void)imageViewOptionsDidChange:(NSNotification *)note
 {
+  if (_ignoreNotifications != 0)
+    return;
+
   NSIndexSet *sel = [_outlineView selectedRowIndexes];
 
   int key = [_controller imageSortKey];
