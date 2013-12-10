@@ -1085,7 +1085,19 @@ item_for_path(NSArray *items, NSArray *path)
 	}
       else if ([item isKindOfClass:[PDLibraryDirectory class]])
 	{
-	  /* FIXME: implement this. */
+	  PDImageLibrary *lib = [(PDLibraryDirectory *)item library];
+
+	  for (PDLibraryDirectory *dragged_item in _draggedItems)
+	    {
+	      if (![dragged_item isKindOfClass:[PDLibraryDirectory class]])
+		return NSDragOperationNone;
+	      if ([dragged_item library] != lib)
+		return NSDragOperationNone;
+	      if ([item isDescendantOf:dragged_item])
+		return NSDragOperationNone;
+	    }
+
+	  return NSDragOperationMove;
 	}
     }
 
@@ -1137,7 +1149,45 @@ item_for_path(NSArray *items, NSArray *path)
 	}
       else if ([item isKindOfClass:[PDLibraryDirectory class]])
 	{
-	  /* FIXME: implement this. */
+	  /* -callPreservingSelectedRows: doesn't work as we cause the
+	     library items to be destroyed and recreated. */
+
+	  PDImageLibrary *lib = [(PDLibraryDirectory *)item library];
+
+	  NSString *item_dir = [(PDLibraryDirectory *)item libraryDirectory];
+
+	  NSFileManager *fm = [NSFileManager defaultManager];
+
+	  for (PDLibraryDirectory *dragged_item in _draggedItems)
+	    {
+	      NSString *src_dir = [dragged_item libraryDirectory];
+	      NSString *dst_dir = [item_dir stringByAppendingPathComponent:
+				   [src_dir lastPathComponent]];
+
+	      NSString *src_path = [[lib path]
+				    stringByAppendingPathComponent:src_dir];
+	      NSString *dst_path = [[lib path]
+				    stringByAppendingPathComponent:dst_dir];
+
+	      if ([fm moveItemAtPath:src_path toPath:dst_path error:nil])
+		[lib didRenameDirectory:src_dir to:dst_dir];
+
+	      [(PDLibraryDirectory *)[dragged_item parent]
+	       invalidateContents];
+	    }
+
+	  [(PDLibraryDirectory *)item invalidateContents];
+
+	  [_outlineView reloadItem:_libraryGroup reloadChildren:YES];
+
+	  NSInteger row = [_outlineView rowForItem:item];
+	  if (row >= 0)
+	    {
+	      [_outlineView selectRowIndexes:
+	       [NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+	    }
+
+	  return YES;
 	}
     }
 

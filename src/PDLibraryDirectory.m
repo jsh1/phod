@@ -87,7 +87,9 @@
 				      DISPATCH_QUEUE_SERIAL);
       });
 
-      _subimages = [[NSMutableArray alloc] init];
+      NSMutableArray *subimages = [NSMutableArray array];
+
+      _subimages = [subimages retain];
 
       dispatch_async(queue, ^{
 	NSMutableArray *array = [[NSMutableArray alloc] init];
@@ -102,7 +104,7 @@
 	     {
 	       last_t = t;
 	       dispatch_async(dispatch_get_main_queue(), ^{
-		 [_subimages addObjectsFromArray:array];
+		 [subimages addObjectsFromArray:array];
 		 [array removeAllObjects];
 		 [[NSNotificationCenter defaultCenter]
 		  postNotificationName:PDLibraryItemSubimagesDidChange
@@ -114,7 +116,7 @@
 	if ([array count] != 0)
 	  {
 	    dispatch_async(dispatch_get_main_queue(), ^{
-	      [_subimages addObjectsFromArray:array];
+	      [subimages addObjectsFromArray:array];
 	      [[NSNotificationCenter defaultCenter]
 	       postNotificationName:PDLibraryItemSubimagesDidChange
 	       object:self];
@@ -241,6 +243,18 @@
   return ([_libraryDirectory length] == 0
 	  ? [[_library path] stringByAbbreviatingWithTildeInPath]
 	  : [_libraryDirectory lastPathComponent]);
+}
+
+- (void)invalidateContents
+{
+  for (PDLibraryItem *item in _subitems)
+    [item setParent:nil];
+
+  [_subitems release];
+  _subitems = nil;
+
+  [_subimages release];
+  _subimages = nil;
 }
 
 - (BOOL)needsUpdate

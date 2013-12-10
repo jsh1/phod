@@ -122,6 +122,17 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
   return [self titleString];
 }
 
+- (BOOL)isDescendantOf:(PDLibraryItem *)item
+{
+  for (PDLibraryItem *tem = self; tem != nil; tem = [tem parent])
+    {
+      if (tem == item)
+	return YES;
+    }
+
+  return NO;
+}
+
 - (BOOL)needsUpdate
 {
   return NO;

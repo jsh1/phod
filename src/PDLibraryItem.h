@@ -75,4 +75,6 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 
 - (BOOL)needsUpdate;
 
+- (BOOL)isDescendantOf:(PDLibraryItem *)item;
+
 @end

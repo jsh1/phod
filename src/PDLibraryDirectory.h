@@ -45,4 +45,6 @@
 
 @property(nonatomic) NSInteger titleImageName;
 
+- (void)invalidateContents;
+
 @end
