@@ -53,6 +53,8 @@ extern NSString *const PDLibrarySelectionDidChange;
   NSPasteboard *_draggedPasteboard;
 
   int _ignoreNotifications;
+
+  NSArray *_preImportSelection;
 }
 
 @property(nonatomic, readonly) NSArray *allImages;

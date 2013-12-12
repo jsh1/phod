@@ -22,30 +22,47 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDViewController.h"
+#import "PDFoundationExtensions.h"
 
-@interface PDImportViewController : PDViewController
+@implementation NSArray (PDFoundationExtensions)
+
+/* FIXME: using variably-sized arrays is lazy and dangerous, but it's
+   ok for my uses (small arrays) for now. */
+
+- (NSArray *)mappedArray:(id (^)(id))f
 {
-  IBOutlet NSPopUpButton *_libraryButton;
-  IBOutlet NSTextField *_directoryField;
-  IBOutlet NSButton *_directoryButton;
-  IBOutlet NSTextField *_nameField;
+  NSInteger count = [self count];
+  if (count == 0)
+    return [NSArray array];
 
-  IBOutlet NSButton *_renameButton;
-  IBOutlet NSTextField *_renameField;
-  IBOutlet NSTextField *_renameFieldLabel;
+  id objects[count];
 
-  IBOutlet NSButton *_importButton;
-  IBOutlet NSButton *_activeTypeButton;
+  NSInteger i = 0;
+  for (id obj in self)
+    objects[i++] = f(obj);
 
-  IBOutlet NSTextField *_keywordsField;
-
-  IBOutlet NSTextField *_descriptionLabel;
-
-  IBOutlet NSButton *_okButton;
-  IBOutlet NSButton *_cancelButton;
+  return [NSArray arrayWithObjects:objects count:count];
 }
 
-- (IBAction)controlAction:(id)sender;
+- (NSArray *)filteredArray:(BOOL (^)(id))f
+{
+  NSInteger count = [self count];
+  if (count == 0)
+    return [NSArray array];
+  
+  id objects[count];
+
+  count = 0;
+  for (id obj in self)
+    {
+      if (f(obj))
+	objects[count++] = obj;
+    }
+
+  if (count == 0)
+    return [NSArray array];
+  else
+    return [NSArray arrayWithObjects:objects count:count];
+}
 
 @end

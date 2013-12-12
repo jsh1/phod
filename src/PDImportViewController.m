@@ -24,7 +24,14 @@
 
 #import "PDImportViewController.h"
 
+#import "PDImageLibrary.h"
+#import "PDFoundationExtensions.h"
 #import "PDWindowController.h"
+
+@interface PDImportViewController ()
+- (void)updateControls;
+- (void)updateDescription;
+@end
 
 @implementation PDImportViewController
 
@@ -45,6 +52,157 @@
 - (void)viewDidLoad
 {
   [super viewDidLoad];
+
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(selectedImagesDidChange:)
+   name:PDSelectionDidChange object:_controller];
+
+  time_t date = time(NULL);
+  struct tm tm = {0};
+  localtime_r(&date, &tm);
+  char buf[2048];
+
+  NSString *format = [[NSUserDefaults standardUserDefaults]
+		      stringForKey:@"PDImportParentNameTemplate"];
+  if ([format length] != 0)
+    {
+      strftime(buf, sizeof(buf), [format UTF8String], &tm);
+      [_directoryField setStringValue:[NSString stringWithUTF8String:buf]];
+    }
+
+  format = [[NSUserDefaults standardUserDefaults]
+	    stringForKey:@"PDImportProjectNameTemplate"];
+  if ([format length] != 0)
+    {
+      strftime(buf, sizeof(buf), [format UTF8String], &tm);
+      [_nameField setStringValue:[NSString stringWithUTF8String:buf]];
+    }
+}
+
+- (void)viewWillAppear
+{
+  [self updateControls];
+  [self updateDescription];
+}
+
+- (void)updateDescription
+{
+  if (![_okButton isEnabled])
+    {
+      [_descriptionLabel setStringValue:@""];
+      return;
+    }
+
+  NSInteger count = [[_controller selectedImageIndexes] count];
+
+  PDImageLibrary *lib = [[_libraryButton selectedItem] representedObject];
+
+  NSString *folder = [_directoryField stringValue];
+  NSString *name = [_nameField stringValue];
+
+  NSString *dir = [folder stringByAppendingPathComponent:name];
+
+  NSMutableString *desc = [NSMutableString string];
+
+  if (count == 1)
+    [desc appendString:@"Import 1 image"];
+  else
+    [desc appendFormat:@"Import %d images", (int)count];
+
+  if ([dir length] == 0)
+    [desc appendString:@" into root"];
+  else
+    [desc appendFormat:@" into folder \"%@\"", dir];
+
+  [desc appendFormat:@" of library \"%@\".", [lib name]];
+
+  [_descriptionLabel setStringValue:desc];
+}
+
+- (void)updateControls
+{
+  PDImageLibrary *selected_lib
+    = [[_libraryButton selectedItem] representedObject];
+
+  NSArray *all_libs = [PDImageLibrary allLibraries];
+  NSArray *current_libs = [[_libraryButton itemArray] mappedArray:
+			   ^id (id obj) {
+			     return [(NSMenuItem *)obj representedObject];}];
+
+  if (![current_libs isEqual:all_libs])
+    {
+      [_libraryButton removeAllItems];
+      for (PDImageLibrary *lib in all_libs)
+	{
+	  if (![lib isTransient])
+	    {
+	      [_libraryButton addItemWithTitle:[lib name]];
+	      NSMenuItem *item = [_libraryButton lastItem];
+	      [item setRepresentedObject:lib];
+	      if (lib == selected_lib)
+		[_libraryButton selectItem:item];
+	    }
+	}
+
+      selected_lib = [[_libraryButton selectedItem] representedObject];
+    }
+}
+
+- (void)chooseDestinationFolder
+{
+  NSOpenPanel *panel = [NSOpenPanel openPanel];
+
+  [panel setCanChooseDirectories:YES];
+  [panel setCanChooseFiles:NO];
+  [panel setAllowsMultipleSelection:NO];
+  [panel setPrompt:@"Destination Folder"];
+  [panel setTitle:@"Select destination folder"];
+
+  PDImageLibrary *lib = [[_libraryButton selectedItem] representedObject];
+
+  if (lib != nil)
+    {
+      NSString *dir = [_directoryField stringValue];
+      NSString *path = [[lib path] stringByAppendingPathComponent:dir];
+
+      NSFileManager *fm = [NSFileManager defaultManager];
+      while ([path length] != 0 && ![fm fileExistsAtPath:path])
+	path = [path stringByDeletingLastPathComponent];
+
+      if ([path length] != 0)
+	[panel setDirectoryURL:[NSURL fileURLWithPath:path]];
+    }
+
+  [panel beginWithCompletionHandler:
+   ^(NSInteger status) {
+     if (status == NSFileHandlingPanelOKButton)
+       {
+	 NSString *path = [[panel URL] path];
+	 NSString *lib_path = [lib path];
+
+	 if ([path hasPrefix:lib_path])
+	   {
+	     NSInteger len = [lib_path length];
+	     if ([path length] == len)
+	       [_directoryField setStringValue:@""];
+	     else if ([path characterAtIndex:len] == '/')
+	       [_directoryField setStringValue:[path substringFromIndex:len+1]];
+	     else
+	       NSBeep();
+	   }
+	 else
+	   NSBeep();
+
+	 [self updateDescription];
+       }
+   }];
+}
+
+- (void)selectedImagesDidChange:(NSNotification *)note
+{
+  [_okButton setEnabled:[[_controller selectedImageIndexes] count] != 0];
+
+  [self updateDescription];
 }
 
 - (IBAction)controlAction:(id)sender
@@ -52,11 +210,19 @@
   if (sender == _okButton)
     {
       /* FIXME: something. */
+      return;
     }
   else if (sender == _cancelButton)
     {
       [_controller setImportMode:NO];
+      return;
     }
+  else if (sender == _directoryButton)
+    {
+      [self chooseDestinationFolder];
+    }
+
+  [self updateDescription];
 }
 
 @end

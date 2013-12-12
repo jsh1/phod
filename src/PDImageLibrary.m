@@ -39,6 +39,7 @@
 @synthesize path = _path;
 @synthesize name = _name;
 @synthesize libraryId = _libraryId;
+@synthesize transient = _transient;
 
 static NSMutableArray *_allLibraries;
 

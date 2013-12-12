@@ -22,30 +22,11 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDViewController.h"
+#import <Foundation/Foundation.h>
 
-@interface PDImportViewController : PDViewController
-{
-  IBOutlet NSPopUpButton *_libraryButton;
-  IBOutlet NSTextField *_directoryField;
-  IBOutlet NSButton *_directoryButton;
-  IBOutlet NSTextField *_nameField;
+@interface NSArray (PDFoundationExtensions)
 
-  IBOutlet NSButton *_renameButton;
-  IBOutlet NSTextField *_renameField;
-  IBOutlet NSTextField *_renameFieldLabel;
-
-  IBOutlet NSButton *_importButton;
-  IBOutlet NSButton *_activeTypeButton;
-
-  IBOutlet NSTextField *_keywordsField;
-
-  IBOutlet NSTextField *_descriptionLabel;
-
-  IBOutlet NSButton *_okButton;
-  IBOutlet NSButton *_cancelButton;
-}
-
-- (IBAction)controlAction:(id)sender;
+- (NSArray *)mappedArray:(id (^)(id))f;
+- (NSArray *)filteredArray:(BOOL (^)(id))f;
 
 @end

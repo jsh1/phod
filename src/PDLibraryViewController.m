@@ -141,6 +141,8 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   [_draggedItems release];
   [_draggedPasteboard release];
 
+  [_preImportSelection release];
+
   [super dealloc];
 }
 
@@ -483,6 +485,8 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
       lib = [[[PDImageLibrary alloc] initWithPath:dcim_path] autorelease];
       if (lib == nil)
 	return nil;
+
+      [lib setTransient:YES];
     }
 
   PDLibraryDevice *item = [[PDLibraryDevice alloc] initWithLibrary:lib];
@@ -784,41 +788,59 @@ find_unique_name(NSString *root, NSString *file)
   if (_ignoreNotifications)
     return;
 
-  BOOL non_empty = NO;
-  BOOL importable = YES;
-
-  NSIndexSet *sel = [_outlineView selectedRowIndexes];
-  for (NSInteger idx = [sel firstIndex];
-       idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
+  if ([_controller importMode])
     {
-      non_empty = YES;
-      PDLibraryItem *item = [_outlineView itemAtRow:idx];
-      if (![item isKindOfClass:[PDLibraryDevice class]])
-	importable = NO;
-    }
+      BOOL non_empty = NO;
+      BOOL importable = YES;
 
-  if (!non_empty)
-    importable = NO;
-
-  if (!importable)
-    {
-      NSArray *array = [_devicesGroup subitems];
-      NSInteger count = [array count];
-
-      if (count != 0)
+      NSIndexSet *sel = [_outlineView selectedRowIndexes];
+      for (NSInteger idx = [sel firstIndex];
+	   idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
 	{
-	  [_outlineView expandItem:_devicesGroup];
-
-	  NSMutableIndexSet *set = [NSMutableIndexSet indexSet];
-	  for (PDLibraryItem *item in array)
-	    {
-	      NSInteger row = [_outlineView rowForItem:item];
-	      if (row >= 0)
-		[set addIndex:row];
-	    }
-
-	  [_outlineView selectRowIndexes:set byExtendingSelection:NO];
+	  non_empty = YES;
+	  PDLibraryItem *item = [_outlineView itemAtRow:idx];
+	  if (![item isKindOfClass:[PDLibraryDevice class]])
+	    importable = NO;
 	}
+
+      if (!non_empty)
+	importable = NO;
+
+      [_preImportSelection release];
+      _preImportSelection = nil;
+
+      if (!importable)
+	{
+	  NSArray *array = [_devicesGroup subitems];
+	  NSInteger count = [array count];
+
+	  if (count != 0)
+	    {
+	      [_outlineView expandItem:_devicesGroup];
+
+	      NSMutableIndexSet *set = [NSMutableIndexSet indexSet];
+	      for (PDLibraryItem *item in array)
+		{
+		  NSInteger row = [_outlineView rowForItem:item];
+		  if (row >= 0)
+		    [set addIndex:row];
+		}
+
+	      NSArray *old_sel = [[_outlineView selectedItems] copy];
+
+	      [_outlineView selectRowIndexes:set byExtendingSelection:NO];
+
+	      _preImportSelection = old_sel;
+	    }
+	}
+    }
+  else
+    {
+      if ([_preImportSelection count] != 0)
+	[_outlineView setSelectedItems:_preImportSelection];
+
+      [_preImportSelection release];
+      _preImportSelection = nil;
     }
 
   [self updateControls];
@@ -1291,6 +1313,12 @@ item_for_path(NSArray *items, NSArray *path)
 
 - (void)sourceListSelectionDidChange:(NSNotification *)note
 {
+  if (_ignoreNotifications != 0)
+    return;
+
+  [_preImportSelection release];
+  _preImportSelection = nil;
+
   [self updateImageList];
   [self updateControls];
 

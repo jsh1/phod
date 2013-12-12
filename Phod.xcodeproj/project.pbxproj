@@ -16,6 +16,7 @@
 		5727CDA3184A3EB3007BF7E8 /* PDPredicatePanelController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5727CDA2184A3EB3007BF7E8 /* PDPredicatePanelController.m */; };
 		5727CDA6184A3EC7007BF7E8 /* PDPredicatePanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5727CDA4184A3EC7007BF7E8 /* PDPredicatePanel.xib */; };
 		5744D74F1854CCDA0079F8CD /* PDLibraryDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 5744D74E1854CCDA0079F8CD /* PDLibraryDevice.m */; };
+		574B786E185917BC0095FC87 /* PDFoundationExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 574B786D185917BB0095FC87 /* PDFoundationExtensions.m */; };
 		575167721852451800163CD8 /* PDImageLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = 575167711852451800163CD8 /* PDImageLibrary.m */; };
 		5760022B1844FB7000B398D1 /* image-properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = 576002291844FB7000B398D1 /* image-properties.strings */; };
 		577BDBF3182D792800116AF2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 577BDBF1182D792800116AF2 /* InfoPlist.strings */; };
@@ -76,6 +77,8 @@
 		5727CDA5184A3EC7007BF7E8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDPredicatePanel.xib; sourceTree = "<group>"; };
 		5744D74D1854CCDA0079F8CD /* PDLibraryDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryDevice.h; sourceTree = "<group>"; };
 		5744D74E1854CCDA0079F8CD /* PDLibraryDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryDevice.m; sourceTree = "<group>"; };
+		574B786C185917BB0095FC87 /* PDFoundationExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFoundationExtensions.h; sourceTree = "<group>"; };
+		574B786D185917BB0095FC87 /* PDFoundationExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDFoundationExtensions.m; sourceTree = "<group>"; };
 		575167701852451800163CD8 /* PDImageLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageLibrary.h; sourceTree = "<group>"; };
 		575167711852451800163CD8 /* PDImageLibrary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageLibrary.m; sourceTree = "<group>"; };
 		5760022A1844FB7000B398D1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = "en.lproj/image-properties.strings"; sourceTree = "<group>"; };
@@ -313,8 +316,6 @@
 				5717B44C18424A6000149627 /* PDMetadataView.m */,
 				5717B44918424A6000149627 /* PDMetadataItemView.h */,
 				5717B44A18424A6000149627 /* PDMetadataItemView.m */,
-				57C180FF182E9644002B8DB2 /* PDAppKitExtensions.h */,
-				57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */,
 				57C1810E182FDCF9002B8DB2 /* PDColor.h */,
 				57C1810F182FDCF9002B8DB2 /* PDColor.m */,
 				57CE6A1E182D863E000BF04E /* PDSplitView.h */,
@@ -328,6 +329,10 @@
 		57C18114182FDD57002B8DB2 /* Misc */ = {
 			isa = PBXGroup;
 			children = (
+				57C180FF182E9644002B8DB2 /* PDAppKitExtensions.h */,
+				57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */,
+				574B786C185917BB0095FC87 /* PDFoundationExtensions.h */,
+				574B786D185917BB0095FC87 /* PDFoundationExtensions.m */,
 				577BDBF6182D792800116AF2 /* Phod-Prefix.pch */,
 				577BDBF4182D792800116AF2 /* main.m */,
 			);
@@ -440,6 +445,7 @@
 				57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */,
 				57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */,
 				5727CDA3184A3EB3007BF7E8 /* PDPredicatePanelController.m in Sources */,
+				574B786E185917BC0095FC87 /* PDFoundationExtensions.m in Sources */,
 				57B1FAF9184FCBDB00FEF7DB /* PXSourceList.m in Sources */,
 				57C1810A182F0ED3002B8DB2 /* PDLibraryItem.m in Sources */,
 				57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */,

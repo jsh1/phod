@@ -36,6 +36,7 @@
   NSMutableDictionary *_catalog0;
   NSMutableDictionary *_catalog1;
   uint32_t _catalogDirty;
+  BOOL _transient;
 }
 
 + (void)removeInvalidLibraries;
@@ -54,6 +55,7 @@
 @property(nonatomic, readonly) uint32_t libraryId;
 @property(nonatomic, readonly) NSString *path;
 @property(nonatomic, readonly) NSString *cachePath;
+@property(nonatomic, getter=isTransient) BOOL transient;
 
 /* 'path' is relative to the root of the library. */
 
