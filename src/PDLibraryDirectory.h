@@ -45,6 +45,8 @@
 
 @property(nonatomic) NSInteger titleImageName;
 
+- (PDLibraryDirectory *)subitemContainingDirectory:(NSString *)dir;
+
 - (void)invalidateContents;
 
 @end

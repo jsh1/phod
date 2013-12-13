@@ -53,7 +53,7 @@ enum PDAccessoryMode
 };
 
 @class PDViewController, PDPredicatePanelController;
-@class PDSplitView, PDImage;
+@class PDSplitView, PDImage, PDImageLibrary;
 
 @interface PDWindowController : NSWindowController <NSSplitViewDelegate>
 {
@@ -131,6 +131,8 @@ enum PDAccessoryMode
 - (void)setSelectedImages:(NSArray *)array primary:(PDImage *)im;
 
 - (void)clearSelection;
+- (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
+
 - (void)selectImage:(PDImage *)image withEvent:(NSEvent *)e;
 
 - (void)movePrimarySelectionRight:(NSInteger)delta

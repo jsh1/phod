@@ -98,6 +98,11 @@ typedef int PDImageCompareKey;
 @property(nonatomic, readonly) NSString *JPEGFile;
 @property(nonatomic, readonly) NSString *RAWFile;
 
+/* Absolute paths. */
+
+@property(nonatomic, readonly) NSString *JPEGPath;
+@property(nonatomic, readonly) NSString *RAWPath;
+
 /* Convenience for titles. */
 
 @property(nonatomic, readonly) NSString *lastLibraryPathComponent;
@@ -110,6 +115,7 @@ typedef int PDImageCompareKey;
 
 /* These automatically switch between JPEG and RAW files. */
 
+@property(nonatomic, readonly) NSString *imageFile;
 @property(nonatomic, readonly) NSString *imagePath;
 @property(nonatomic, readonly) uint32_t imageId;
 
@@ -129,6 +135,11 @@ typedef int PDImageCompareKey;
    keys look up the formatted image properties. */
 
 - (id)expressionValues;
+
+/* Access to the properties that aren't stored in the image's metadata,
+   or that override that storage. */
+
+- (NSDictionary *)explicitProperties;
 
 /* Convenience accessors for misc image properties. */
 

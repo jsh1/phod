@@ -25,6 +25,7 @@
 #import "PDLibraryDirectory.h"
 
 #import "PDAppKitExtensions.h"
+#import "PDFoundationExtensions.h"
 #import "PDImage.h"
 #import "PDImageLibrary.h"
 
@@ -243,6 +244,27 @@
   return ([_libraryDirectory length] == 0
 	  ? [[_library path] stringByAbbreviatingWithTildeInPath]
 	  : [_libraryDirectory lastPathComponent]);
+}
+
+- (PDLibraryDirectory *)subitemContainingDirectory:(NSString *)dir
+{
+  if (![dir hasPathPrefix:_libraryDirectory])
+    return nil;
+
+  if ([_libraryDirectory isEqualToString:dir])
+    return self;
+
+  for (PDLibraryDirectory *item in [self subitems])
+    {
+      item = [item subitemContainingDirectory:dir];
+      if (item != nil)
+	return item;
+    }
+
+  /* Not an exact match, but we don't have a subitem for the actual
+     directory requested (yet). */
+
+  return self;
 }
 
 - (void)invalidateContents

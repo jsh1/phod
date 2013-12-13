@@ -30,3 +30,10 @@
 - (NSArray *)filteredArray:(BOOL (^)(id))f;
 
 @end
+
+
+@interface NSString (PDFoundationExtensions)
+
+- (BOOL)hasPathPrefix:(NSString *)path;
+
+@end

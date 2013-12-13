@@ -8,6 +8,7 @@
             <connections>
                 <outlet property="_activeTypeButton" destination="T4R-0M-QjC" id="zM9-kX-eUk"/>
                 <outlet property="_cancelButton" destination="pfR-Mq-FXz" id="wDs-Jf-423"/>
+                <outlet property="_deleteAfterButton" destination="YZg-6j-QMw" id="lEA-LO-utn"/>
                 <outlet property="_descriptionLabel" destination="CAT-Xj-SDl" id="SdG-4Q-Oe0"/>
                 <outlet property="_directoryButton" destination="pqb-dp-c2C" id="PGA-kK-ywZ"/>
                 <outlet property="_directoryField" destination="fRc-tI-Xvz" id="BiN-3W-hFS"/>
@@ -100,9 +101,6 @@ Gw
                             </items>
                         </menu>
                     </popUpButtonCell>
-                    <connections>
-                        <action selector="controlAction:" target="-2" id="beu-2u-3fH"/>
-                    </connections>
                 </popUpButton>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="hZT-8P-iMJ">
                     <rect key="frame" x="43" y="450" width="50" height="14"/>
@@ -154,9 +152,6 @@ Gw
                             </items>
                         </menu>
                     </popUpButtonCell>
-                    <connections>
-                        <action selector="controlAction:" target="-2" id="H4o-Pe-uNP"/>
-                    </connections>
                 </popUpButton>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="fGW-nI-NhA">
                     <rect key="frame" x="53" y="537" width="41" height="14"/>
@@ -241,9 +236,6 @@ Gw
                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <connections>
-                        <action selector="controlAction:" target="-2" id="zEG-E6-dVw"/>
-                    </connections>
                 </textField>
                 <textField verticalHuggingPriority="750" id="lkD-oU-FGW">
                     <rect key="frame" x="99" y="222" width="160" height="72"/>
@@ -253,9 +245,6 @@ Gw
                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <connections>
-                        <action selector="controlAction:" target="-2" id="UqI-bX-S1h"/>
-                    </connections>
                 </textField>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="Bde-VK-Uba">
                     <rect key="frame" x="50" y="510" width="45" height="14"/>
@@ -298,6 +287,23 @@ Gw
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="0eQ-DV-e1V">
+                    <rect key="frame" x="17" y="188" width="73" height="14"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Source Files" id="44E-PY-IdC">
+                        <font key="font" metaFont="smallSystemBold"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <button id="YZg-6j-QMw">
+                    <rect key="frame" x="96" y="163" width="127" height="20"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="check" title="Delete after import." bezelStyle="regularSquare" imagePosition="left" controlSize="small" inset="2" id="XSI-oS-pXJ">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="smallSystem"/>
+                    </buttonCell>
+                </button>
             </subviews>
         </customView>
     </objects>

@@ -66,3 +66,23 @@
 }
 
 @end
+
+
+@implementation NSString (PDFoundationExtensions)
+
+- (BOOL)hasPathPrefix:(NSString *)path
+{
+  NSInteger l1 = [self length];
+  NSInteger l2 = [path length];
+
+  if (l2 == 0)
+    return YES;
+  else if (l1 == l2)
+    return [self isEqualToString:path];
+  else if (l2 > l1)
+    return NO;
+  else
+    return [self characterAtIndex:l2] == '/' && [self hasPrefix:path];
+}
+
+@end

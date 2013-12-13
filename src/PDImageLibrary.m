@@ -24,6 +24,7 @@
 
 #import "PDImageLibrary.h"
 
+#import "PDAppDelegate.h"
 #import "PDImage.h"
 
 #import <stdlib.h>
@@ -33,6 +34,9 @@
 #define METADATA_EXTENSION "phod"
 #define CACHE_BITS 6
 #define CACHE_SEP '$'
+
+NSString *const PDImageLibraryDidImportFiles = @"PDImageLibraryDidImportFiles";
+NSString *const PDImageLibraryDidCopyImageFile = @"PDImageLibraryDidCopyImageFile";
 
 @implementation PDImageLibrary
 
@@ -138,6 +142,7 @@ cache_root(void)
   [_cachePath release];
   [_catalog0 release];
   [_catalog1 release];
+  [_activeImports release];
   [super dealloc];
 }
 
@@ -262,6 +267,8 @@ again:
 - (void)remove
 {
   [self emptyCaches];
+
+  [self waitForImportsToComplete];
 
   NSInteger idx = [_allLibraries indexOfObjectIdenticalTo:self];
   if (idx != NSNotFound)
@@ -624,6 +631,312 @@ filename_with_ext_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
     }
 
   [unused_files release];
+}
+
+static NSString *
+find_unique_name(NSString *path)
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+  NSString *ext = [path pathExtension];
+  NSString *rest = [path stringByDeletingPathExtension];
+
+  for (int i = 0;; i++)
+    {
+      NSString *tem;
+      if (i == 0)
+	tem = rest;
+      else
+	tem = [NSString stringWithFormat:@"%@-%d.%@", rest, i, ext];
+      if (![fm fileExistsAtPath:tem])
+	return tem;
+    }
+
+  /* not reached. */
+}
+
+static NSOperationQueue *_copyQueue;
+
++ (NSOperationQueue *)copyQueue
+{
+  static dispatch_once_t once;
+
+  dispatch_once(&once, ^{
+    _copyQueue = [[NSOperationQueue alloc] init];
+    [_copyQueue setName:@"PDImageLibrary.copyQueue"];
+    [_copyQueue setMaxConcurrentOperationCount:1];
+    [_copyQueue addObserver:(id)self
+     forKeyPath:@"operationCount" options:0 context:NULL];
+  });
+
+  return _copyQueue;
+}
+
++ (void)observeValueForKeyPath:(NSString *)path ofObject:(id)obj
+    change:(NSDictionary *)dict context:(void *)ctx
+{
+  if ([path isEqualToString:@"operationCount"])
+    {
+      dispatch_async(dispatch_get_main_queue(), ^{
+	NSInteger count = [_copyQueue operationCount];
+	PDAppDelegate *delegate = [NSApp delegate];
+	if (count != 0)
+	  [delegate addBackgroundActivity:@"PDImageLibrary"];
+	else
+	  [delegate removeBackgroundActivity:@"PDImageLibrary"];
+      });
+    }
+}
+
+- (void)reclaimImportBlocks
+{
+  NSInteger i = 0, count = [_activeImports count];
+
+  while (i < count)
+    {
+      NSOperation *op = [_activeImports objectAtIndex:i];
+      if ([op isFinished])
+	{
+	  [_activeImports removeObjectAtIndex:i];
+	  count--;
+	}
+      else
+	i++;
+    }
+}
+
+- (void)waitForImportsToComplete
+{
+  for (NSOperation *op in _activeImports)
+    {
+      [op waitUntilFinished];
+    }
+
+  [_activeImports removeAllObjects];
+}
+
+- (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
+    fileTypes:(NSSet *)types preferredType:(NSString *)active_type
+    filenameMap:(NSString *(^)(PDImage *src, NSString *name))f
+    properties:(NSDictionary *)dict
+{
+  if ([images count] == 0)
+    return;
+
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  NSString *dir_path = [_path stringByAppendingPathComponent:dir];
+  BOOL new_dir = NO;
+
+  /* FIXME: check that dir_path is under _path? */
+
+  BOOL is_dir = NO;
+  if (![fm fileExistsAtPath:dir_path isDirectory:&is_dir])
+    {
+      new_dir = YES;
+      if (![fm createDirectoryAtPath:dir_path withIntermediateDirectories:YES
+	   attributes:nil error:nil])
+	return;
+    }
+  else if (!is_dir)
+    return;
+
+  NSDictionary *notification_info = @{
+    @"libraryDirectory": dir,
+  };
+
+  NSOperationQueue *queue = [PDImageLibrary copyQueue];
+
+  NSMutableSet *all_libraries = [NSMutableSet set];
+  [all_libraries addObject:self];
+  for (PDImage *src_im in images)
+    [all_libraries addObject:[src_im library]];
+
+  NSOperation *final_op = [NSBlockOperation blockOperationWithBlock:^{
+    dispatch_async(dispatch_get_main_queue(), ^{
+      for (PDImageLibrary *lib in all_libraries)
+	[lib reclaimImportBlocks];
+    });
+  }];
+
+  for (PDImage *src_im in images)
+    {
+      NSString *name = [[src_im imageFile] stringByDeletingPathExtension];
+      if (f != NULL)
+	name = f(src_im, name);
+      if (name == nil)
+	continue;
+
+      NSArray *src_types = [src_im imagePropertyForKey:PDImage_FileTypes];
+      NSMutableArray *dst_types = [NSMutableArray array];
+      NSMutableArray *dst_paths = [NSMutableArray array];
+
+      NSString *JPEG_file = nil;
+      NSString *RAW_file = nil;
+
+      NSOperation *JPEG_op = nil;
+      NSOperation *RAW_op = nil;
+
+      for (NSString *type in src_types)
+	{
+	  NSString *src_path = nil;
+	  NSString **dst_file_ptr = NULL;
+	  NSOperation **op_ptr = NULL;
+
+	  if (JPEG_file == nil
+	      && [type isEqualToString:@"public.jpeg"]
+	      && [types containsObject:type])
+	    {
+	      src_path = [src_im JPEGPath];
+	      dst_file_ptr = &JPEG_file;
+	      op_ptr = &JPEG_op;
+	    }
+	  else if (RAW_file == nil
+		   && ![type isEqualToString:@"public.jpeg"]
+		   && [types containsObject:@"public.camera-raw-image"])
+	    {
+	      src_path = [src_im RAWPath];
+	      dst_file_ptr = &RAW_file;
+	      op_ptr = &RAW_op;
+	    }
+
+	  if (src_path != nil)
+	    {
+	      NSString *dst_file = [name stringByAppendingPathExtension:
+				    [src_path pathExtension]];
+	      NSString *dst_path = [dir_path stringByAppendingPathComponent:
+				    dst_file];
+                             
+	      /* FIXME: if file already exists at destination path,
+		check if it's the same file and merge the two? */
+
+	      if ([fm fileExistsAtPath:dst_path])
+		{
+		  dst_path = find_unique_name(dst_path);
+		  dst_file = [dst_path lastPathComponent];
+		}
+
+	      *dst_file_ptr = dst_file;
+	      [dst_types addObject:type];
+	      [dst_paths addObject:dst_path];
+
+	      *op_ptr = [NSBlockOperation blockOperationWithBlock:^{
+		[fm copyItemAtPath:src_path toPath:dst_path error:nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName:
+		 PDImageLibraryDidCopyImageFile object:self userInfo:@{
+		   @"srcPath": src_path,
+		   @"dstPath": dst_path,
+		   @"libraryDirectory": dir_path}];
+	      }];
+	    }
+	}
+
+      if ([dst_types count] != 0)
+	{
+	  NSMutableDictionary *dst_props = [NSMutableDictionary dictionary];
+
+	  static NSSet *ignored_keys;
+	  static dispatch_once_t once;
+
+	  dispatch_once(&once, ^{
+	    ignored_keys = [[NSSet alloc] initWithObjects:PDImage_Name,
+			    PDImage_FileTypes, PDImage_ActiveType, nil];
+	  });
+
+	  NSDictionary *src_props = [src_im explicitProperties];
+	  for (NSString *key in src_props)
+	    {
+	      if (![ignored_keys containsObject:key])
+		[dst_props setObject:[src_props objectForKey:key] forKey:key];
+	    }
+
+	  if (dict != nil)
+	    [dst_props addEntriesFromDictionary:dict];
+
+	  [dst_props setObject:dst_types forKey:PDImage_FileTypes];
+
+	  NSString *dst_active = active_type;
+	  if (![dst_types containsObject:dst_active])
+	    dst_active = [dst_types firstObject];
+
+	  [dst_props setObject:dst_active forKey:PDImage_ActiveType];
+
+	  NSOperation *main_op = nil, *secondary_op = nil;
+
+	  if ([active_type isEqualToString:@"public.jpeg"])
+	    main_op = JPEG_op, secondary_op = RAW_op;
+	  else
+	    main_op = RAW_op, secondary_op = JPEG_op;
+	
+	  NSMutableDictionary *json_dict = [NSMutableDictionary dictionary];
+
+	  [json_dict setObject:dst_props forKey:@"Properties"];
+
+	  if (JPEG_file != nil)
+	    [json_dict setObject:JPEG_file forKey:@"JPEGFile"];
+	  if (RAW_file != nil)
+	    [json_dict setObject:RAW_file forKey:@"RAWFile"];
+
+	  NSString *json_path = [dir_path stringByAppendingPathComponent:
+				 [name stringByAppendingPathExtension:
+				  @METADATA_EXTENSION]];
+
+	  if ([fm fileExistsAtPath:json_path])
+	    json_path = find_unique_name(json_path);
+
+	  NSOperation *json_op = [NSBlockOperation blockOperationWithBlock:^{
+	    NSData *data = [NSJSONSerialization dataWithJSONObject:json_dict
+			    options:NSJSONWritingPrettyPrinted error:nil];
+	    [data writeToFile:json_path atomically:YES];
+
+	    dispatch_async(dispatch_get_main_queue(), ^{
+	      if (!_pendingImportNotification)
+		{
+		  _pendingImportNotification = YES;
+		  dispatch_time_t when = dispatch_time(DISPATCH_TIME_NOW,
+						       1LL * NSEC_PER_SEC);
+		  dispatch_after(when, dispatch_get_main_queue(), ^{
+		    _pendingImportNotification = NO;
+		    [[NSNotificationCenter defaultCenter] postNotificationName:
+		     PDImageLibraryDidImportFiles object:self
+		     userInfo:notification_info];
+		  });
+		}
+	    });
+	  }];
+
+	  if (main_op != nil)
+	    {
+	      [queue addOperation:main_op];
+	      [final_op addDependency:main_op];
+	    }
+
+	  if (secondary_op != nil)
+	    {
+	      [secondary_op setQueuePriority:NSOperationQueuePriorityLow];
+	      [queue addOperation:secondary_op];
+	      [final_op addDependency:secondary_op];
+	    }
+
+	  [json_op setQueuePriority:NSOperationQueuePriorityHigh];
+	  [json_op addDependency:main_op];
+	  [queue addOperation:json_op];
+
+	  [final_op addDependency:json_op];
+	}
+    }
+
+  for (PDImageLibrary *lib in all_libraries)
+    {
+      if (lib->_activeImports == nil)
+	lib->_activeImports = [[NSMutableArray alloc] init];
+
+      [lib->_activeImports addObject:final_op];
+    }
+
+  [queue addOperation:final_op];
+
+  [[NSNotificationCenter defaultCenter] postNotificationName:
+   PDImageLibraryDidImportFiles object:self userInfo:notification_info];
 }
 
 @end

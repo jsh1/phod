@@ -185,6 +185,10 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
    selector:@selector(importModeDidChange:)
    name:PDImportModeDidChange object:_controller];
 
+  [[NSNotificationCenter defaultCenter] addObserver:self
+   selector:@selector(libraryDidImportFiles:)
+   name:PDImageLibraryDidImportFiles object:nil];
+
   NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
   [[workspace notificationCenter]
    addObserver:self selector:@selector(volumeDidMount:)
@@ -684,6 +688,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 	{
 	  NSString *path = [[[(PDLibraryDevice *)item library] path]
 			    stringByDeletingLastPathComponent];
+	  [[(PDLibraryDevice *)item library] waitForImportsToComplete];
 	  [[NSWorkspace sharedWorkspace] unmountAndEjectDeviceAtPath:path];
 	}
     }
@@ -844,6 +849,58 @@ find_unique_name(NSString *root, NSString *file)
     }
 
   [self updateControls];
+}
+
+static void
+expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
+{
+  if (item != nil)
+    {
+      expand_item_recursively(view, [item parent]);
+      [view expandItem:item];
+    }
+}
+
+- (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
+{
+  for (PDLibraryDirectory *item in [_libraryGroup subitems])
+    {
+      if ([item library] != lib)
+	continue;
+
+      item = [item subitemContainingDirectory:dir];
+      if (item == nil)
+	continue;
+
+      expand_item_recursively(_outlineView, item);
+
+      NSInteger row = [_outlineView rowForItem:item];
+      if (row >= 0)
+	{
+	  [_outlineView selectRowIndexes:[NSIndexSet indexSetWithIndex:row]
+	   byExtendingSelection:NO];
+	}
+    }
+}
+
+- (void)libraryDidImportFiles:(NSNotification *)note
+{
+  PDImageLibrary *lib = [note object];
+  NSDictionary *info = [note userInfo];
+  NSString *lib_dir = [info objectForKey:@"libraryDirectory"];
+
+  for (PDLibraryDirectory *item in [_libraryGroup subitems])
+    {
+      if ([item library] == lib)
+	{
+	  item = [item subitemContainingDirectory:lib_dir];
+	  if (item != nil)
+	    {
+	      [item invalidateContents];
+	      [_outlineView reloadItem:item reloadChildren:YES];
+	    }
+	}
+    }
 }
 
 - (IBAction)controlAction:(id)sender

@@ -35,10 +35,12 @@
   IBOutlet NSTextField *_renameField;
   IBOutlet NSTextField *_renameFieldLabel;
 
-  IBOutlet NSButton *_importButton;
-  IBOutlet NSButton *_activeTypeButton;
+  IBOutlet NSPopUpButton *_importButton;
+  IBOutlet NSPopUpButton *_activeTypeButton;
 
   IBOutlet NSTextField *_keywordsField;
+
+  IBOutlet NSButton *_deleteAfterButton;
 
   IBOutlet NSTextField *_descriptionLabel;
 

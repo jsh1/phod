@@ -761,6 +761,13 @@ convert_array_to_index_set(NSArray *array, NSArray *image_list)
   [self setSelectedImageIndexes:[NSIndexSet indexSet] primary:-1];
 }
 
+- (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
+{
+  [(PDLibraryViewController *)[self viewControllerWithClass:
+   [PDLibraryViewController class]] selectLibrary:lib directory:dir];
+  
+}
+
 - (void)selectImage:(PDImage *)image withEvent:(NSEvent *)e;
 {
   NSInteger idx = [_filteredImageList indexOfObjectIdenticalTo:image];

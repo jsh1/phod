@@ -55,7 +55,6 @@ enum
 
 @interface PDImage ()
 - (void)loadImageProperties;
-- (NSString *)imageFile;
 @end
 
 NSString *const PDImagePropertyDidChange = @"PDImagePropertyDidChange";
@@ -525,6 +524,22 @@ file_path(PDImage *self, NSString *file)
     }
 }
 
+- (NSString *)JPEGPath
+{
+  if (_jpegFile != nil)
+    return file_path(self, _jpegFile);
+  else
+    return nil;
+}
+
+- (NSString *)RAWPath
+{
+  if (_rawFile != nil)
+    return file_path(self, _rawFile);
+  else
+    return nil;
+}
+
 - (NSString *)lastLibraryPathComponent
 {
   NSString *str = [_libraryDirectory lastPathComponent];
@@ -683,6 +698,11 @@ file_path(PDImage *self, NSString *file)
 - (id)expressionValues
 {
   return PDImageExpressionValues(self);
+}
+
+- (NSDictionary *)explicitProperties
+{
+  return _properties;
 }
 
 + (void)callWithImageComparator:(PDImageCompareKey)key

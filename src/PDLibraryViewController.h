@@ -30,7 +30,7 @@
 /* posted to window controller. */
 extern NSString *const PDLibrarySelectionDidChange;
 
-@class PDLibraryGroup;
+@class PDLibraryGroup, PDImageLibrary;
 
 @interface PDLibraryViewController : PDViewController
     <PXSourceListDataSource, PXSourceListDelegate>
@@ -58,6 +58,8 @@ extern NSString *const PDLibrarySelectionDidChange;
 }
 
 @property(nonatomic, readonly) NSArray *allImages;
+
+- (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 
 - (void)rescanVolumes;
 

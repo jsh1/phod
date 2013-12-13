@@ -26,6 +26,9 @@
 
 @class PDImage;
 
+extern NSString *const PDImageLibraryDidImportFiles;
+extern NSString *const PDImageLibraryDidCopyImageFile;
+
 @interface PDImageLibrary : NSObject
 {
   NSString *_name;
@@ -37,6 +40,8 @@
   NSMutableDictionary *_catalog1;
   uint32_t _catalogDirty;
   BOOL _transient;
+  BOOL _pendingImportNotification;
+  NSMutableArray *_activeImports;
 }
 
 + (void)removeInvalidLibraries;
@@ -68,9 +73,15 @@
 - (void)synchronize;
 - (void)validateCaches;
 - (void)emptyCaches;
+- (void)waitForImportsToComplete;
 - (void)remove;
 
 - (void)loadImagesInSubdirectory:(NSString *)path recursively:(BOOL)flag
     handler:(void (^)(PDImage *))block;
+
+- (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
+    fileTypes:(NSSet *)types preferredType:(NSString *)type
+    filenameMap:(NSString *(^)(PDImage *src, NSString *name))f
+    properties:(NSDictionary *)dict;
 
 @end

@@ -24,6 +24,7 @@
 
 #import "PDImportViewController.h"
 
+#import "PDImage.h"
 #import "PDImageLibrary.h"
 #import "PDFoundationExtensions.h"
 #import "PDWindowController.h"
@@ -198,6 +199,65 @@
    }];
 }
 
+- (void)doImport
+{
+  PDImageLibrary *lib = [[_libraryButton selectedItem] representedObject];
+  if (lib == nil)
+    return;
+
+  NSString *dir = [_directoryField stringValue];
+  NSString *name = [_nameField stringValue];
+  if ([dir length] != 0)
+    dir = [dir stringByAppendingPathComponent:name];
+  else
+    dir = name;
+  if ([dir length] == 0)
+    return;
+
+  NSMutableSet *types = [NSMutableSet set];
+  switch ([_importButton indexOfSelectedItem])
+    {
+    case 0:
+      [types addObject:@"public.jpeg"];
+      [types addObject:@"public.camera-raw-image"];
+      break;
+    case 1:
+      [types addObject:@"public.jpeg"];
+      break;
+    case 2:
+      [types addObject:@"public.camera-raw-image"];
+      break;
+    }
+
+  NSString *active_type = nil;
+  switch ([_activeTypeButton indexOfSelectedItem])
+    {
+    case 0:
+      active_type = @"public.jpeg";
+      break;
+    case 1:
+      active_type = @"public.camera-raw-image";
+      break;
+    }
+
+  NSMutableDictionary *metadata = [NSMutableDictionary dictionary];
+
+  NSString *keywords_str = [_keywordsField stringValue];
+  if ([keywords_str length] != 0)
+    {
+      NSArray *keywords = [keywords_str componentsSeparatedByCharactersInSet:
+			   [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+      if ([keywords count] != 0)
+	[metadata setObject:keywords forKey:PDImage_Keywords];
+    }
+
+  [lib importImages:[_controller selectedImages] toDirectory:dir
+   fileTypes:types preferredType:active_type filenameMap:NULL
+   properties:metadata];
+
+  [_controller selectLibrary:lib directory:dir];
+}
+
 - (void)selectedImagesDidChange:(NSNotification *)note
 {
   [_okButton setEnabled:[[_controller selectedImageIndexes] count] != 0];
@@ -209,7 +269,8 @@
 {
   if (sender == _okButton)
     {
-      /* FIXME: something. */
+      [self doImport];
+      [_controller setImportMode:NO];
       return;
     }
   else if (sender == _cancelButton)
