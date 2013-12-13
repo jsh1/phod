@@ -40,7 +40,6 @@ extern NSString *const PDImageLibraryDidCopyImageFile;
   NSMutableDictionary *_catalog1;
   uint32_t _catalogDirty;
   BOOL _transient;
-  BOOL _pendingImportNotification;
   NSMutableArray *_activeImports;
 }
 
@@ -82,6 +81,6 @@ extern NSString *const PDImageLibraryDidCopyImageFile;
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
     fileTypes:(NSSet *)types preferredType:(NSString *)type
     filenameMap:(NSString *(^)(PDImage *src, NSString *name))f
-    properties:(NSDictionary *)dict;
+    properties:(NSDictionary *)dict deleteSourceFiles:(BOOL)delete_sources;
 
 @end

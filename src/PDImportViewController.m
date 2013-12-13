@@ -251,9 +251,11 @@
 	[metadata setObject:keywords forKey:PDImage_Keywords];
     }
 
+  BOOL delete_sources = [_deleteAfterButton intValue] != 0;
+
   [lib importImages:[_controller selectedImages] toDirectory:dir
    fileTypes:types preferredType:active_type filenameMap:NULL
-   properties:metadata];
+   properties:metadata deleteSourceFiles:delete_sources];
 
   [_controller selectLibrary:lib directory:dir];
 }

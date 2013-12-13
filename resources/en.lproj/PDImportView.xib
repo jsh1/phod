@@ -58,7 +58,7 @@ Gw
                     </connections>
                 </button>
                 <popUpButton verticalHuggingPriority="750" id="VTz-qT-Lxt">
-                    <rect key="frame" x="95.999999350681904" y="559" width="166" height="22"/>
+                    <rect key="frame" x="96" y="559" width="165.99999864871631" height="22"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="dxk-YT-rCk">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -112,7 +112,7 @@ Gw
                     </textFieldCell>
                 </textField>
                 <popUpButton verticalHuggingPriority="750" id="kzP-wu-UgX">
-                    <rect key="frame" x="95.999999350681904" y="445" width="166" height="22"/>
+                    <rect key="frame" x="95.999998648716314" y="445" width="166" height="22"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <popUpButtonCell key="cell" type="push" title="None" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="jCA-Yr-VQA" id="BmZ-Ny-ndT">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -208,7 +208,7 @@ Gw
                     </textFieldCell>
                 </textField>
                 <textField verticalHuggingPriority="750" id="fRc-tI-Xvz">
-                    <rect key="frame" x="99.999999228645805" y="535" width="136" height="19"/>
+                    <rect key="frame" x="99.999998313479736" y="535" width="136" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="u39-Kn-S1w">
                         <font key="font" metaFont="smallSystem"/>
@@ -298,7 +298,7 @@ Gw
                 </textField>
                 <button id="YZg-6j-QMw">
                     <rect key="frame" x="96" y="163" width="127" height="20"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="check" title="Delete after import." bezelStyle="regularSquare" imagePosition="left" controlSize="small" inset="2" id="XSI-oS-pXJ">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="smallSystem"/>

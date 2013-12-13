@@ -29,11 +29,16 @@
 #import "PDImage.h"
 #import "PDImageLibrary.h"
 
+@interface PDLibraryDirectory ()
+@property(nonatomic, getter=isMarked) BOOL marked;
+@end
+
 @implementation PDLibraryDirectory
 
 @synthesize library = _library;
 @synthesize libraryDirectory = _libraryDirectory;
 @synthesize titleImageName = _titleImageName;
+@synthesize marked = _marked;
 
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 {
@@ -44,6 +49,8 @@
   _library = [lib retain];
   _libraryDirectory = [dir copy];
   _titleImageName = PDImage_GenericFolder;
+  _subitemsNeedUpdate = YES;
+  _subimagesNeedUpdate = YES;
 
   return self;
 }
@@ -76,57 +83,57 @@
   return matches;
 }
 
-- (void)loadSubimages
+- (void)updateSubimages
 {
-  if (_subimages == nil)
-    {
-      static dispatch_queue_t queue;
-      static dispatch_once_t once;
+  static dispatch_queue_t queue;
+  static dispatch_once_t once;
 
-      dispatch_once(&once, ^{
-	queue = dispatch_queue_create("PDLibraryDirectory",
-				      DISPATCH_QUEUE_SERIAL);
-      });
+  dispatch_once(&once, ^{
+    queue = dispatch_queue_create("PDLibraryDirectory",
+				  DISPATCH_QUEUE_SERIAL);
+  });
 
-      NSMutableArray *subimages = [NSMutableArray array];
+  NSMutableArray *subimages = [NSMutableArray array];
 
-      _subimages = [subimages retain];
+  [_subimages release];
+  _subimages = [subimages retain];
 
-      dispatch_async(queue, ^{
-	NSMutableArray *array = [[NSMutableArray alloc] init];
-	__block CFTimeInterval last_t = CACurrentMediaTime();
+  dispatch_async(queue, ^{
+    NSMutableArray *array = [[NSMutableArray alloc] init];
+    __block CFTimeInterval last_t = CACurrentMediaTime();
 
-	[_library loadImagesInSubdirectory:_libraryDirectory recursively:NO
-	 handler:^(PDImage *im) {
-	   [array addObject:im];
+    [_library loadImagesInSubdirectory:_libraryDirectory recursively:NO
+     handler:^(PDImage *im) {
+       [array addObject:im];
 
-	   CFTimeInterval t = CACurrentMediaTime();
-	   if (t - last_t > .5)
-	     {
-	       last_t = t;
-	       dispatch_async(dispatch_get_main_queue(), ^{
-		 [subimages addObjectsFromArray:array];
-		 [array removeAllObjects];
-		 [[NSNotificationCenter defaultCenter]
-		  postNotificationName:PDLibraryItemSubimagesDidChange
-		  object:self];
-	       });
-	     }
-	 }];
+       CFTimeInterval t = CACurrentMediaTime();
+       if (t - last_t > .5)
+	 {
+	   last_t = t;
+	   dispatch_async(dispatch_get_main_queue(), ^{
+	     [subimages addObjectsFromArray:array];
+	     [array removeAllObjects];
+	     [[NSNotificationCenter defaultCenter]
+	      postNotificationName:PDLibraryItemSubimagesDidChange
+	      object:self];
+	   });
+	   }
+       }];
 
-	if ([array count] != 0)
-	  {
-	    dispatch_async(dispatch_get_main_queue(), ^{
-	      [subimages addObjectsFromArray:array];
-	      [[NSNotificationCenter defaultCenter]
-	       postNotificationName:PDLibraryItemSubimagesDidChange
-	       object:self];
-	    });
-	  }
-	  
-	[array release];
-      });
-    }
+    if ([array count] != 0)
+      {
+	dispatch_async(dispatch_get_main_queue(), ^{
+	  [subimages addObjectsFromArray:array];
+	  [[NSNotificationCenter defaultCenter]
+	   postNotificationName:PDLibraryItemSubimagesDidChange
+	   object:self];
+	});
+      }
+      
+    [array release];
+  });
+
+  _subimagesNeedUpdate = NO;
 }
 
 - (NSString *)path
@@ -134,59 +141,99 @@
   return [[_library path] stringByAppendingPathComponent:_libraryDirectory];
 }
 
-- (NSArray *)subitems
+/* Returns true if contents of _subitems array was changed. */
+
+- (BOOL)updateSubitems
 {
-  NSFileManager *fm;
-  NSMutableArray *array;
-  NSString *path;
-  BOOL dir;
-  PDLibraryDirectory *subitem;
+  BOOL changed = NO;
 
-  if (_subitems == nil)
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  NSString *dir_path = [self path];
+
+  /* Rebuild the subitems array nondestructively. */
+
+  NSMutableArray *new_subitems = [_subitems mutableCopy];
+  if (new_subitems == nil)
+    new_subitems = [[NSMutableArray alloc] init];
+
+  for (PDLibraryDirectory *item in new_subitems)
+    [item setMarked:YES];
+
+  for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
     {
-      fm = [NSFileManager defaultManager];
-      array = [[NSMutableArray alloc] init];
+      if ([file characterAtIndex:0] == '.')
+	continue;
 
-      NSString *dir_path = [self path];
+      BOOL is_dir = NO;
+      NSString *path = [dir_path stringByAppendingPathComponent:file];
+      if (![fm fileExistsAtPath:path isDirectory:&is_dir] || !is_dir)
+	continue;
 
-      for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
+      NSString *subdir = [_libraryDirectory
+			  stringByAppendingPathComponent:file];
+
+      BOOL found = NO;
+
+      for (PDLibraryDirectory *item in new_subitems)
 	{
-	  if ([file characterAtIndex:0] == '.')
-	    continue;
-
-	  path = [dir_path stringByAppendingPathComponent:file];
-	  dir = NO;
-	  if (![fm fileExistsAtPath:path isDirectory:&dir])
-	    continue;
-
-	  if (dir)
+	  if ([[item libraryDirectory] isEqualToString:subdir])
 	    {
-	      NSString *subdir = [_libraryDirectory
-				  stringByAppendingPathComponent:file];
-
-	      subitem = [[PDLibraryDirectory alloc]
-			 initWithLibrary:_library directory:subdir];
-
-	      if (subitem != nil)
-		{
-		  [subitem setParent:self];
-		  [array addObject:subitem];
-		  [subitem release];
-		}
+	      [item setMarked:NO];
+	      found = YES;
+	      break;
 	    }
 	}
 
-      _subitems = [array copy];
-      [array release];
+      if (!found)
+	{
+	  PDLibraryDirectory *item = [[PDLibraryDirectory alloc]
+				      initWithLibrary:_library
+				      directory:subdir];
+	  if (item != nil)
+	    {
+	      [item setParent:self];
+	      [new_subitems addObject:item];
+	      [item release];
+	      changed = YES;
+	    }
+	}
     }
+
+  NSInteger count = [new_subitems count];
+  for (NSInteger i = 0; i < count;)
+    {
+      PDLibraryDirectory *item = [new_subitems objectAtIndex:i];
+      if ([item isMarked])
+	{
+	  [new_subitems removeObjectAtIndex:i];
+	  [item setParent:nil];
+	  count--;
+	}
+      else
+	i++;
+    }
+
+  _subitems = [new_subitems copy];
+  [new_subitems release];
+
+  _subitemsNeedUpdate = NO;
+
+  return changed;
+}
+
+- (NSArray *)subitems
+{
+  if (_subitemsNeedUpdate)
+    [self updateSubitems];
 
   return _subitems;
 }
 
 - (NSArray *)subimages
 {
-  if (_subimages == nil)
-    [self loadSubimages];
+  if (_subimagesNeedUpdate)
+    [self updateSubimages];
 
   NSMutableArray *images = [NSMutableArray array];
 
@@ -269,21 +316,22 @@
 
 - (void)invalidateContents
 {
-  for (PDLibraryItem *item in _subitems)
-    [item setParent:nil];
-
-  [_subitems release];
-  _subitems = nil;
-
-  [_subimages release];
-  _subimages = nil;
+  _subitemsNeedUpdate = YES;
+  _subimagesNeedUpdate = YES;
 }
 
 - (BOOL)needsUpdate
 {
-  // FIXME: do this correctly.
+  BOOL ret = [super needsUpdate];
 
-  return [super needsUpdate];
+  if ([self updateSubitems])
+    ret = YES;
+
+  /* FIXME: should also rescan subimages somehow, but don't need to
+     return YES from here if they have changed (as they don't affect
+     the source list structure). */
+
+  return ret;
 }
 
 @end

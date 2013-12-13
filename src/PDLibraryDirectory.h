@@ -33,6 +33,9 @@
   NSArray *_subitems;
   NSMutableArray *_subimages;
   NSInteger _titleImageName;
+  BOOL _subitemsNeedUpdate;
+  BOOL _subimagesNeedUpdate;
+  BOOL _marked;
 }
 
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
