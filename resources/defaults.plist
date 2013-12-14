@@ -2,6 +2,33 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>PDLibraryFixed</key>
+	<array>
+ 		<dict>
+			<key>name</key>
+			<string>All Photos</string>
+			<key>predicate</key>
+			<string>TRUEPREDICATE</string>
+		</dict>
+ 		<dict>
+			<key>name</key>
+			<string>Last 12 Months</string>
+			<key>predicate</key>
+			<string>date > CAST(CAST(now(), 'NSNumber') - 31536000, 'NSDate')</string>
+		</dict>
+ 		<dict>
+			<key>name</key>
+			<string>Flagged</string>
+			<key>predicate</key>
+			<string>flagged == 1</string>
+		</dict>
+ 		<dict>
+			<key>name</key>
+			<string>Rejected</string>
+			<key>predicate</key>
+			<string>rating &lt; 0</string>
+		</dict>
+	</array>
 	<key>PDImageLibraries</key>
 	<array>
 		<dict>
@@ -26,7 +53,7 @@
 			<string>caption</string>
 			<string>keywords</string>
 			<string>copyright</string>
-			<string>digitized_date</string>
+			<string>date</string>
 			<string>pixel_size</string>
 			<string>file_size</string>
 			<string>iso_speed</string>

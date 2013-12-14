@@ -382,6 +382,7 @@ static const type_pair type_map[] =
   {"color_model", type_string},
   {"contrast", type_contrast},
   {"copyright", type_string},
+  {"date", type_unix_date},
   {"digitized_date", type_unix_date},
   {"direction", type_direction},
   {"direction_ref", type_string},
@@ -934,8 +935,8 @@ static NSPredicateEditorRowTemplate *
 predicate_date_template(void)
 {
   NSMutableArray *date_keys = [NSMutableArray array];
-  for (NSString *key in @[PDImage_FileDate, PDImage_OriginalDate,
-			  PDImage_DigitizedDate])
+  for (NSString *key in @[PDImage_Date, PDImage_FileDate,
+			  PDImage_OriginalDate, PDImage_DigitizedDate])
     {
       [date_keys addObject:[NSExpression expressionForKeyPath:key]];
     }
@@ -1091,6 +1092,7 @@ NSString * const PDImage_SensitivityType = @"sensitivity_type";
 NSString * const PDImage_Sharpness = @"sharpness";
 NSString * const PDImage_WhiteBalance = @"white_balance";
 
+NSString * const PDImage_Date = @"date";
 NSString * const PDImage_FileName = @"file_name";
 NSString * const PDImage_FilePath = @"file_path";
 NSString * const PDImage_FileDate = @"file_date";

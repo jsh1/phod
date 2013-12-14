@@ -66,11 +66,14 @@ Issues
   the OK button has been clicked will the smart folder's permanent
   state be updated, cancelling returns it to the original state.
 
-  PARTIALLY RESOLVED: added top-level smart folders that filter the
-  complete set of images. No way to rename them. No way to drag/create
-  them under a normal folder.
+  MOSTLY RESOLVED: added top-level albums (aka smart folders) that
+  filter the complete set of images. But currently no way to drag
+  beneath a folder to filter only that directory.
 
 9. "Preview" mode where the fullsize image isn't loaded?
+
+  Would definitely be useful for RAW images right now :-( Could also
+  have a preview mode where RAW images display their JPEG twin?
 
 10. Viewer should be able to display multiple images?
 
@@ -161,3 +164,11 @@ Issues
   Possibly because proxies are matched to sRGB? (This means they're
   also downsampled in the sRGB space, but it's more likely to be a
   gamut clipping issue? Greens seem to be the worst.)
+
+16. Import from folder
+
+  Import from DCIM volume is mostly implemented. Need to decide how to
+  handle importing from normal directories of images. E.g. should we 
+  just require them to be added as libraries, then copied from? And if
+  so, do we still need to allow all the import options (RAW+JPEG etc)
+

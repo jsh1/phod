@@ -32,32 +32,29 @@
 @implementation PDLibraryQuery
 
 @synthesize name = _name;
+@synthesize iconImage = _iconImage;
 @synthesize predicate = _predicate;
 
 - (void)dealloc
 {
   [_name release];
+  [_iconImage release];
   [_predicate release];
   [super dealloc];
 }
 
-- (NSArray *)subimages
+- (void)foreachSubimage:(void (^)(PDImage *))thunk
 {
-  if (_predicate == nil)
-    return [NSArray array];
-
-  PDWindowController *controller
-    = [(PDAppDelegate *)[NSApp delegate] windowController];
-
-  NSMutableArray *ret = [NSMutableArray array];
-
-  for (PDImage *im in [controller allImages])
+  if (_predicate != nil)
     {
-      if ([_predicate evaluateWithObject:[im expressionValues]])
-	[ret addObject:im];
-    }
+      PDWindowController *controller
+	= [(PDAppDelegate *)[NSApp delegate] windowController];
 
-  return ret;
+      [controller foreachImage:^(PDImage *im) {
+	if ([_predicate evaluateWithObject:[im expressionValues]])
+	  thunk(im);
+      }];
+    }
 }
 
 - (NSString *)titleString
@@ -72,7 +69,7 @@
 
 - (NSImage *)titleImage
 {
-  return PDImageWithName(PDImage_SmartFolder);
+  return _iconImage != nil ? _iconImage : PDImageWithName(PDImage_SmartFolder);
 }
 
 - (BOOL)hasBadge

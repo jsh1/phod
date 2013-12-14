@@ -589,7 +589,12 @@ file_path(PDImage *self, NSString *file)
     {
       /* A few specially coded properties. */
 
-      if ([key isEqualToString:PDImage_FileName])
+      if ([key isEqualToString:PDImage_Date])
+	{
+	  value = [NSNumber numberWithUnsignedLong:
+		   [[self date] timeIntervalSince1970]];
+	}
+      else if ([key isEqualToString:PDImage_FileName])
 	{
 	  value = [self imageFile];
 	}

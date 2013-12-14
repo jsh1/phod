@@ -65,21 +65,13 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
   return [NSArray array];
 }
 
-- (NSArray *)subimages
+- (void)foreachSubimage:(void (^)(PDImage *))thunk
 {
-  NSMutableArray *ret = [NSMutableArray array];
-
   for (PDLibraryItem *subitem in [self subitems])
     {
-      [ret addObjectsFromArray:[subitem subimages]];
+      if (![subitem isHidden])
+	[subitem foreachSubimage:thunk];
     }
-
-  return ret;
-}
-
-- (NSInteger)numberOfSubimages
-{
-  return [[self subimages] count];
 }
 
 - (BOOL)hasTitleImage

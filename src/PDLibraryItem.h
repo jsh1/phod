@@ -26,6 +26,8 @@
 
 extern NSString * const PDLibraryItemSubimagesDidChange;
 
+@class PDImage;
+
 @interface PDLibraryItem : NSObject
 {
   PDLibraryItem *_parent;
@@ -46,11 +48,9 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 
 @property(nonatomic, copy, readonly) NSArray *subitems;
 
-/* Array of PDImage, all images recursively under self. */
+/* Iterates over all images recursively under self. */
 
-@property(nonatomic, copy, readonly) NSArray *subimages;
-
-@property(nonatomic, readonly) NSInteger numberOfSubimages;
+- (void)foreachSubimage:(void (^)(PDImage *))thunk;
 
 @property(nonatomic, copy, readonly) NSString *titleString;
 

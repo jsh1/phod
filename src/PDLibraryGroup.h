@@ -27,10 +27,13 @@
 @interface PDLibraryGroup : PDLibraryItem
 {
   NSString *_name;
+  NSString *_identifier;
   NSMutableArray *_subitems;
 }
 
 @property(nonatomic, copy) NSString *name;
+
+@property(nonatomic, copy) NSString *identifier;
 
 @property(nonatomic, copy) NSArray *subitems;
 

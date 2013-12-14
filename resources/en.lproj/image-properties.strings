@@ -51,6 +51,7 @@
 "sharpness" = "Sharpness";
 "white_balance" = "White Balance";
 
+"date" = "Date";
 "file_name" = "File Name";
 "file_size" = "File Size";
 "file_date" = "File Date";

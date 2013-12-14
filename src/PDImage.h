@@ -235,6 +235,7 @@ extern NSString * const PDImage_WhiteBalance;	// NSNumber
 
 /* Read-only implicit properties. */
 
+extern NSString * const PDImage_Date;		// NSNumber
 extern NSString * const PDImage_FileName;	// NSString
 extern NSString * const PDImage_FilePath;	// NSString
 extern NSString * const PDImage_FileDate;	// NSNumber

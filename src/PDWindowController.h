@@ -97,7 +97,7 @@ enum PDAccessoryMode
 
 @property(nonatomic) BOOL showsHiddenImages;
 
-@property(nonatomic, readonly) NSArray *allImages;
+- (void)foreachImage:(void (^)(PDImage *))thunk;
 
 @property(nonatomic, copy) NSArray *imageList;
 

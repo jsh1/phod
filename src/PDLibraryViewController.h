@@ -30,7 +30,7 @@
 /* posted to window controller. */
 extern NSString *const PDLibrarySelectionDidChange;
 
-@class PDLibraryGroup, PDImageLibrary, PDImageTextCell;
+@class PDLibraryGroup, PDImage, PDImageLibrary, PDImageTextCell;
 
 @interface PDLibraryViewController : PDViewController
     <PXSourceListDataSource, PXSourceListDelegate>
@@ -45,8 +45,9 @@ extern NSString *const PDLibrarySelectionDidChange;
   IBOutlet NSButton *_actionButton;
 
   NSMutableArray *_items;
-  PDLibraryGroup *_devicesGroup;
   PDLibraryGroup *_libraryGroup;
+  PDLibraryGroup *_devicesGroup;
+  PDLibraryGroup *_foldersGroup;
   PDLibraryGroup *_albumsGroup;
 
   NSMapTable *_itemViewState;		/* PDLibraryItem -> NSDictionary */
@@ -59,7 +60,7 @@ extern NSString *const PDLibrarySelectionDidChange;
   NSArray *_selectedItems;
 }
 
-@property(nonatomic, readonly) NSArray *allImages;
+- (void)foreachImage:(void (^)(PDImage *))thunk;
 
 - (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 

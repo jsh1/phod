@@ -27,10 +27,12 @@
 @interface PDLibraryQuery : PDLibraryItem
 {
   NSString *_name;
+  NSImage *_iconImage;
   NSPredicate *_predicate;
 }
 
 @property(nonatomic, copy) NSString *name;
+@property(nonatomic, retain) NSImage *iconImage;
 @property(nonatomic, copy) NSPredicate *predicate;
 
 @end

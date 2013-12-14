@@ -423,10 +423,10 @@ wasFirstResponder(NSView *view)
   [self rebuildImageList];
 }
 
-- (NSArray *)allImages
+- (void)foreachImage:(void (^)(PDImage *))thunk;
 {
   return [(PDLibraryViewController *)[self viewControllerWithClass:
-	  [PDLibraryViewController class]] allImages];
+	  [PDLibraryViewController class]] foreachImage:thunk];
 }
 
 - (BOOL)showsHiddenImages
@@ -500,9 +500,12 @@ wasFirstResponder(NSView *view)
     {
       [_imageList release];
       _imageList = [array copy];
-
-      [self rebuildImageList];
     }
+
+  /* Callers rely on this always happening, e.g. because they've changed
+     the sorting/filtering options. */
+
+  [self rebuildImageList];
 }
 
 - (NSString *)imageListTitle

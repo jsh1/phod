@@ -63,12 +63,12 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
   [item setTitleImageName:PDImage_GenericHardDisk];
 
-  [_libraryGroup addSubitem:item];
+  [_foldersGroup addSubitem:item];
 
   [item release];
 }
 
-- (void)addAlbumItem:(NSDictionary *)dict
+- (void)addAlbumItem:(NSDictionary *)dict toItem:(PDLibraryGroup *)parent
 {
   NSString *name = [dict objectForKey:@"name"];
   NSString *pred_str = [dict objectForKey:@"predicate"];
@@ -82,15 +82,21 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
       if (pred != nil)
 	{
 	  PDLibraryQuery *tem = [[PDLibraryQuery alloc] init];
+
 	  [tem setName:name];
 	  [tem setPredicate:pred];
+
+	  NSString *icon_name = [dict objectForKey:@"icon"];
+	  if (icon_name != nil)
+	    [tem setIconImage:[NSImage imageNamed:icon_name]];
+
 	  item = tem;
 	}
     }
 
   if (item != nil)
     {
-      [_albumsGroup addSubitem:item];
+      [parent addSubitem:item];
       [item release];
     }
 }
@@ -103,18 +109,27 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
   _items = [[NSMutableArray alloc] init];
 
-  _devicesGroup = [[PDLibraryGroup alloc] init];
-  [_devicesGroup setName:@"DEVICES"];
-  [_items addObject:_devicesGroup];
-  [_devicesGroup release];
-
   _libraryGroup = [[PDLibraryGroup alloc] init];
-  [_libraryGroup setName:@"LIBRARIES"];
+  [_libraryGroup setName:@"LIBRARY"];
+  [_libraryGroup setIdentifier:@"library"];
   [_items addObject:_libraryGroup];
   [_libraryGroup release];
 
+  _devicesGroup = [[PDLibraryGroup alloc] init];
+  [_devicesGroup setName:@"DEVICES"];
+  [_devicesGroup setIdentifier:@"devices"];
+  [_items addObject:_devicesGroup];
+  [_devicesGroup release];
+
+  _foldersGroup = [[PDLibraryGroup alloc] init];
+  [_foldersGroup setName:@"FOLDERS"];
+  [_foldersGroup setIdentifier:@"folders"];
+  [_items addObject:_foldersGroup];
+  [_foldersGroup release];
+
   _albumsGroup = [[PDLibraryGroup alloc] init];
   [_albumsGroup setName:@"ALBUMS"];
+  [_albumsGroup setIdentifier:@"albums"];
   [_items addObject:_albumsGroup];
   [_albumsGroup release];
 
@@ -155,6 +170,12 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
   [PDImageLibrary removeInvalidLibraries];
 
+  for (NSDictionary *dict in [[NSUserDefaults standardUserDefaults]
+			      arrayForKey:@"PDLibraryFixed"])
+    {
+      [self addAlbumItem:dict toItem:_libraryGroup];
+    }
+
   for (id obj in [[NSUserDefaults standardUserDefaults]
 		  arrayForKey:@"PDImageLibraries"])
     {
@@ -169,7 +190,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   for (NSDictionary *dict in [[NSUserDefaults standardUserDefaults]
 			      arrayForKey:@"PDLibraryAlbums"])
     {
-      [self addAlbumItem:dict];
+      [self addAlbumItem:dict toItem:_albumsGroup];
     }
 
   [[NSNotificationCenter defaultCenter] addObserver:self
@@ -205,8 +226,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   for (NSTableColumn *col in [_outlineView tableColumns])
     [[col dataCell] setVerticallyCentered:YES];
 
-  [_outlineView expandItem:_devicesGroup];
   [_outlineView expandItem:_libraryGroup];
+  [_outlineView expandItem:_devicesGroup];
+  [_outlineView expandItem:_foldersGroup];
   [_outlineView expandItem:_albumsGroup];
 
   [_outlineView registerForDraggedTypes:@[PDLibraryItemType]];
@@ -232,7 +254,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     {
       for (PDLibraryItem *item in _selectedItems)
 	{
-	  if ([[item parent] isKindOfClass:[PDLibraryGroup class]])
+	  PDLibraryItem *parent = [item parent];
+
+	  if (parent == _foldersGroup || parent == _albumsGroup)
 	    can_delete = YES;
 	}
     }
@@ -246,9 +270,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   [_importButton setEnabled:non_empty];
 }
 
-- (NSArray *)allImages
+- (void)foreachImage:(void (^)(PDImage *))thunk
 {
-  return [_libraryGroup subimages];
+  [_foldersGroup foreachSubimage:thunk];
 }
 
 - (void)updateSelectedItems
@@ -277,29 +301,17 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 	  if (viewState == nil)
 	    viewState = [_itemViewState objectForKey:item];
 
-	  NSArray *subimages = [item subimages];
-	  if ([subimages count] == 0)
-	    continue;
+	  __block BOOL need_title = NO;
 
-	  BOOL none = NO;
+	  [item foreachSubimage:^(PDImage *im) {
+	    if (showsHidden || ![im isHidden])
+	      {
+		[array addObject:im];
+		need_title = YES;
+	      }
+	  }];
 
-	  if (showsHidden)
-	    {
-	      [array addObjectsFromArray:subimages];
-	    }
-	  else
-	    {
-	      none = YES;
-	      for (PDImage *im in subimages)
-		{
-		  if ([im isHidden])
-		    continue;
-		  [array addObject:im];
-		  none = NO;
-		}
-	    }
-
-	  if (!none)
+	  if (need_title)
 	    {
 	      NSString *item_title = [item titleString];
 	      if ([item_title length] != 0)
@@ -355,22 +367,14 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
 - (NSInteger)imageListSizeFromItem:(PDLibraryItem *)item
 {
-  NSArray *subimages = [item subimages];
-  if ([subimages count] == 0)
-    return 0;
-
   BOOL showsHidden = [_controller showsHiddenImages];
-  if (showsHidden)
-    return [subimages count];
 
-  NSInteger count = 0;
+  __block NSInteger count = 0;
 
-  for (PDImage *im in subimages)
-    {
-      if ([im isHidden])
-	continue;
+  [item foreachSubimage:^(PDImage *im) {
+    if (showsHidden || ![im isHidden])
       count++;
-    }
+  }];
 
   return count;
 }
@@ -541,7 +545,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 {
   NSMutableArray *array = [NSMutableArray array];
 
-  for (PDLibraryDirectory *item in [_libraryGroup subitems])
+  for (PDLibraryDirectory *item in [_foldersGroup subitems])
     {
       id obj = [[item library] propertyList];
       if (obj != nil)
@@ -626,7 +630,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     @"predicate": query
   };
 
-  [self addAlbumItem:dict];
+[self addAlbumItem:dict toItem:_albumsGroup];
 
   [self updateImageAlbums];
 
@@ -639,22 +643,21 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
   for (PDLibraryItem *item in _selectedItems)
     {
-      if (![[item parent] isKindOfClass:[PDLibraryGroup class]])
-	continue;
+      PDLibraryItem *parent = [item parent];
 
-      if ([item isKindOfClass:[PDLibraryDirectory class]])
+      if (parent == _foldersGroup)
 	{
-	  NSArray *subitems = [_libraryGroup subitems];
+	  NSArray *subitems = [_foldersGroup subitems];
 	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
 	  if (idx != NSNotFound)
 	    {
 	      PDImageLibrary *lib = [(PDLibraryDirectory *)item library];
 	      [lib remove];
-	      [_libraryGroup removeSubitem:[subitems objectAtIndex:idx]];
+	      [_foldersGroup removeSubitem:[subitems objectAtIndex:idx]];
 	      changed = YES;
 	    }
 	}
-      else if ([item isKindOfClass:[PDLibraryQuery class]])
+      else if (parent == _albumsGroup)
 	{
 	  NSArray *subitems = [_albumsGroup subitems];
 	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
@@ -664,7 +667,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 	      changed = YES;
 	    }
 	}
-      else if ([item isKindOfClass:[PDLibraryDevice class]])
+      else if (parent == _devicesGroup)
 	{
 	  NSString *path = [[[(PDLibraryDevice *)item library] path]
 			    stringByDeletingLastPathComponent];
@@ -702,40 +705,39 @@ find_unique_name(NSString *root, NSString *file)
 
 - (void)renameItem:(PDLibraryItem *)item name:(NSString *)str
 {
-  if ([item isKindOfClass:[PDLibraryDirectory class]])
+  PDLibraryItem *parent = [item parent];
+
+  if (parent == _foldersGroup)
     {
+      /* Top-level directory item. Just rename the library. */
+
+      [[(PDLibraryDirectory *)item library] setName:str];
+      [self updateImageLibraries];
+    }
+  else if ([item isKindOfClass:[PDLibraryDirectory class]])
+    {
+      /* Non-top-level directory -- rename the directory. */
+
       PDImageLibrary *lib = [(PDLibraryDirectory *)item library];
 
-      if ([[(PDLibraryDirectory *)item libraryDirectory] length] == 0)
+      NSString *root = [lib path];
+      NSString *old_dir = [(PDLibraryDirectory *)item libraryDirectory];
+      NSString *new_dir = [[old_dir stringByDeletingLastPathComponent]
+			   stringByAppendingPathComponent:str];
+
+      new_dir = find_unique_name(root, new_dir);
+
+      NSFileManager *fm = [NSFileManager defaultManager];
+
+      if ([fm moveItemAtPath:[root stringByAppendingPathComponent:old_dir]
+	   toPath:[root stringByAppendingPathComponent:new_dir] error:nil])
 	{
-	  /* Top-level item. Just rename the library. */
+	  [(PDLibraryDirectory *)item setLibraryDirectory:new_dir];
 
-	  [lib setName:str];
-	  [self updateImageLibraries];
-	}
-      else
-	{
-	  /* Rename the actual library directory. */
-
-	  NSString *root = [lib path];
-	  NSString *old_dir = [(PDLibraryDirectory *)item libraryDirectory];
-	  NSString *new_dir = [[old_dir stringByDeletingLastPathComponent]
-			       stringByAppendingPathComponent:str];
-
-	  new_dir = find_unique_name(root, new_dir);
-
-	  NSFileManager *fm = [NSFileManager defaultManager];
-
-	  if ([fm moveItemAtPath:[root stringByAppendingPathComponent:old_dir]
-	       toPath:[root stringByAppendingPathComponent:new_dir] error:nil])
-	    {
-	      [(PDLibraryDirectory *)item setLibraryDirectory:new_dir];
-
-	      [lib didRenameDirectory:old_dir to:new_dir];
-	    }
+	  [lib didRenameDirectory:old_dir to:new_dir];
 	}
     }
-  else if ([item isKindOfClass:[PDLibraryQuery class]])
+  else if (parent == _albumsGroup)
     {
       NSInteger idx = [[_albumsGroup subitems] indexOfObjectIdenticalTo:item];
 
@@ -755,9 +757,9 @@ find_unique_name(NSString *root, NSString *file)
   NSString *str = [_searchField stringValue];
 
   if ([str length] != 0)
-    [_libraryGroup applySearchString:str];
+    [_foldersGroup applySearchString:str];
   else
-    [_libraryGroup resetSearchState];
+    [_foldersGroup resetSearchState];
 
   [_outlineView reloadDataPreservingSelectedRows];
 }
@@ -837,7 +839,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
 
 - (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
 {
-  for (PDLibraryDirectory *item in [_libraryGroup subitems])
+  for (PDLibraryDirectory *item in [_foldersGroup subitems])
     {
       if ([item library] != lib)
 	continue;
@@ -863,7 +865,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
   NSDictionary *info = [note userInfo];
   NSString *lib_dir = [info objectForKey:@"libraryDirectory"];
 
-  for (PDLibraryDirectory *item in [_libraryGroup subitems])
+  for (PDLibraryDirectory *item in [_foldersGroup subitems])
     {
       if ([item library] == lib)
 	{
@@ -1036,7 +1038,7 @@ item_for_path(NSArray *items, NSArray *path)
   /* Don't synchronize transient libraries (i.e. automounted devices),
      they'll be removed before we quit. */
 
-  for (PDLibraryDirectory *item in [_libraryGroup subitems])
+  for (PDLibraryDirectory *item in [_foldersGroup subitems])
     [[item library] synchronize];
 }
 
@@ -1195,9 +1197,9 @@ item_for_path(NSArray *items, NSArray *path)
       if (_draggedItems == nil)
 	return NSDragOperationNone;
 
-      if (item == _libraryGroup || item == _albumsGroup)
+      if (item == _foldersGroup || item == _albumsGroup)
 	{
-	  Class required_class = (item == _libraryGroup
+	  Class required_class = (item == _foldersGroup
 				  ? [PDLibraryDirectory class]
 				  : [PDLibraryQuery class]);
 
@@ -1244,7 +1246,7 @@ item_for_path(NSArray *items, NSArray *path)
       if (_draggedItems == nil)
 	return NSDragOperationNone;
 
-      if (item == _libraryGroup || item == _albumsGroup)
+      if (item == _foldersGroup || item == _albumsGroup)
 	{
 	  [_outlineView callPreservingSelectedRows:^{
 	    NSInteger i = idx;
@@ -1266,7 +1268,7 @@ item_for_path(NSArray *items, NSArray *path)
 	    [_outlineView reloadItem:item reloadChildren:YES];
 	  }];
 
-	  if (item == _libraryGroup)
+	  if (item == _foldersGroup)
 	    [self updateImageLibraries];
 	  else
 	    [self updateImageAlbums];
@@ -1304,7 +1306,7 @@ item_for_path(NSArray *items, NSArray *path)
 
 	  [(PDLibraryDirectory *)item invalidateContents];
 
-	  [_outlineView reloadItem:_libraryGroup reloadChildren:YES];
+	  [_outlineView reloadItem:_foldersGroup reloadChildren:YES];
 
 	  NSInteger row = [_outlineView rowForItem:item];
 	  if (row >= 0)
@@ -1322,18 +1324,10 @@ item_for_path(NSArray *items, NSArray *path)
 
 // PXSourceListDelegate methods
 
-- (CGFloat)sourceList:(PXSourceList *)lst heightOfRowByItem:(id)item
-{
-  if ([item isKindOfClass:[PDLibraryGroup class]])
-    return 24;
-  else
-    return 22;
-}
-
 - (BOOL)sourceList:(PXSourceList *)lst shouldEditItem:(id)item
 {
   return ([item isKindOfClass:[PDLibraryDirectory class]]
-	  || [item isKindOfClass:[PDLibraryQuery class]]);
+	  || [(PDLibraryItem *)item parent] == _albumsGroup);
 }
 
 - (NSCell *)sourceList:(PXSourceList *)lst dataCellForItem:(id)item
@@ -1365,7 +1359,7 @@ item_for_path(NSArray *items, NSArray *path)
     {
       for (PDLibraryItem *item in [_outlineView selectedItems])
 	{
-	  if (![item isKindOfClass:[PDLibraryDevice class]])
+	  if ([item parent] != _devicesGroup)
 	    {
 	      allow_change = NO;
 	      break;

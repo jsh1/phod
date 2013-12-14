@@ -31,10 +31,25 @@
 - (void)dealloc
 {
   [_name release];
+  [_identifier release];
   for (PDLibraryItem *item in _subitems)
     [item setParent:nil];
   [_subitems release];
   [super dealloc];
+}
+
+- (NSString *)identifier
+{
+  return _identifier != nil ? _identifier : _name;
+}
+
+- (void)setIdentifier:(NSString *)str
+{
+  if (_identifier != str)
+    {
+      [_identifier release];
+      _identifier = [str copy];
+    }
 }
 
 - (NSArray *)subitems

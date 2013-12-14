@@ -104,12 +104,15 @@
     }
 }
 
-- (NSArray *)subimages
+- (void)foreachSubimage:(void (^)(PDImage *))thunk
 {
   if (_subimages == nil)
     [self loadSubimages];
 
-  return _subimages;
+  for (PDImage *im in _subimages)
+    thunk(im);
+
+  [super foreachSubimage:thunk];
 }
 
 - (NSString *)titleString

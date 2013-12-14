@@ -230,22 +230,15 @@
   return _subitems;
 }
 
-- (NSArray *)subimages
+- (void)foreachSubimage:(void (^)(PDImage *))thunk
 {
   if (_subimagesNeedUpdate)
     [self updateSubimages];
 
-  NSMutableArray *images = [NSMutableArray array];
+  for (PDImage *im in _subimages)
+    thunk(im);
 
-  [images addObjectsFromArray:_subimages];
-
-  for (PDLibraryDirectory *item in [self subitems])
-    {
-      if (![item isHidden])
-	[images addObjectsFromArray:[item subimages]];
-    }
-
-  return images;
+  [super foreachSubimage:thunk];
 }
 
 - (NSString *)titleString
