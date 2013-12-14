@@ -392,6 +392,14 @@ wasFirstResponder(NSView *view)
     }
 }
 
+- (void)setImportDestinationLibrary:(PDImageLibrary *)lib
+    directory:(NSString *)dir
+{
+  [(PDImportViewController *)[self viewControllerWithClass:
+   [PDImportViewController class]] setImportDestinationLibrary:lib
+   directory:dir];
+}
+
 - (PDPredicatePanelController *)predicatePanelController
 {
   if (_predicatePanelController == nil)
@@ -1188,7 +1196,8 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 
 - (IBAction)importAction:(id)sender
 {
-  [self setImportMode:YES];
+  [(PDLibraryViewController *)[self viewControllerWithClass:
+   [PDLibraryViewController class]] importAction:sender];
 }
 
 - (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem

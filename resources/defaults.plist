@@ -14,10 +14,8 @@
 	<key>PDLibraryAlbums</key>
 	<array>
 	</array>
-	<key>PDImportParentNameTemplate</key>
-	<string>%Y</string>
 	<key>PDImportProjectNameTemplate</key>
-	<string>%Y-%m-%d</string>
+	<string>%Y-%m-%d Untitled</string>
 	<key>PDMetadataGroups</key>
 	<dict>
 		<key>General</key>

@@ -24,6 +24,8 @@
 
 #import "PDViewController.h"
 
+@class PDImageLibrary;
+
 @interface PDImportViewController : PDViewController
 {
   IBOutlet NSPopUpButton *_libraryButton;
@@ -47,6 +49,9 @@
   IBOutlet NSButton *_okButton;
   IBOutlet NSButton *_cancelButton;
 }
+
+- (void)setImportDestinationLibrary:(PDImageLibrary *)lib
+    directory:(NSString *)dir;
 
 - (IBAction)controlAction:(id)sender;
 

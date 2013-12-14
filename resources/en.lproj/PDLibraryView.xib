@@ -9,6 +9,7 @@
                 <outlet property="_actionButton" destination="ZLw-gH-KnI" id="lh9-FE-sKk"/>
                 <outlet property="_addButton" destination="bv5-Rg-fp3" id="zvv-IF-TZB"/>
                 <outlet property="_importButton" destination="bQF-17-sdk" id="OIg-1d-6ZM"/>
+                <outlet property="_normalCell" destination="Sme-G4-0Ic" id="gnX-V4-J6d"/>
                 <outlet property="_outlineView" destination="FXk-bX-Rgc" id="59e-NB-nH5"/>
                 <outlet property="_removeButton" destination="eid-hj-H2P" id="dkb-D4-aWZ"/>
                 <outlet property="_searchField" destination="wy1-9V-NIi" id="EsE-cV-OJF"/>

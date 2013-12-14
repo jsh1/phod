@@ -178,6 +178,10 @@ PDImageWithName(NSInteger name)
 	    case PDImage_SmartFolder:
 	      imageName = NSImageNameFolderSmart;
 	      break;
+
+	    case PDImage_ImportFolder:
+	      imageName = @"import-icon";
+	      break;
 	    }
 
 	  if (imageName != nil)

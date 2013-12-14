@@ -27,6 +27,7 @@
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
 #import "PDImageLibrary.h"
+#import "PDImageTextCell.h"
 #import "PDLibraryDevice.h"
 #import "PDLibraryDirectory.h"
 #import "PDLibraryItem.h"
@@ -135,13 +136,15 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   [_outlineView setDataSource:nil];
   [_outlineView setDelegate:nil];
 
+  [_importCell release];
+
   [_items release];
   [_itemViewState release];
 
   [_draggedItems release];
   [_draggedPasteboard release];
 
-  [_preImportSelection release];
+  [_selectedItems release];
 
   [super dealloc];
 }
@@ -220,42 +223,27 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
 - (void)updateControls
 {
-  if ([_controller importMode] && [[_devicesGroup subitems] count] == 0)
-    {
-      _ignoreNotifications++;
-      [_controller setImportMode:NO];
-      _ignoreNotifications--;
-    }
-
-  BOOL non_empty = NO;
   BOOL can_delete = NO;
-  BOOL importable = YES;
+  BOOL non_empty = YES;
 
-  NSIndexSet *sel = [_outlineView selectedRowIndexes];
-  for (NSInteger idx = [sel firstIndex];
-       idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
+  if ([_selectedItems count] == 0)
+    non_empty = NO;
+  else
     {
-      PDLibraryItem *item = [_outlineView itemAtRow:idx];
-
-      non_empty = YES;
-
-      if ([[item parent] isKindOfClass:[PDLibraryGroup class]])
-	can_delete = YES;
-
-      if (![item isKindOfClass:[PDLibraryDevice class]])
-	importable = NO;
+      for (PDLibraryItem *item in _selectedItems)
+	{
+	  if ([[item parent] isKindOfClass:[PDLibraryGroup class]])
+	    can_delete = YES;
+	}
     }
-
-  if (!non_empty)
-    importable = NO;
 
   [_controller setAccessoryMode:[_controller importMode]
-   && importable ? PDAccessoryMode_Import : PDAccessoryMode_Nil];
+   ? PDAccessoryMode_Import : PDAccessoryMode_Nil];
 
   [_removeButton setEnabled:can_delete];
   [_actionButton setEnabled:NO];
   [_importButton setState:[_controller importMode]];
-  [_importButton setEnabled:importable];
+  [_importButton setEnabled:non_empty];
 }
 
 - (NSArray *)allImages
@@ -263,11 +251,15 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   return [_libraryGroup subimages];
 }
 
+- (void)updateSelectedItems
+{
+  [_selectedItems release];
+  _selectedItems = [[_outlineView selectedItems] copy];
+}
+
 - (void)updateImageList
 {
-  NSIndexSet *sel = [_outlineView selectedRowIndexes];
-
-  if ([sel count] == 0)
+  if ([_selectedItems count] == 0)
     {
       [_controller setImageListTitle:@""];
       [_controller setImageList:[NSArray array]];
@@ -280,11 +272,8 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
       NSInteger count = 0;
       NSDictionary *viewState = nil;
 
-      for (NSInteger row = [sel firstIndex];
-	   row != NSNotFound; row = [sel indexGreaterThanIndex:row])
+      for (PDLibraryItem *item in _selectedItems)
 	{
-	  PDLibraryItem *item = [_outlineView itemAtRow:row];
-
 	  if (viewState == nil)
 	    viewState = [_itemViewState objectForKey:item];
 
@@ -389,35 +378,31 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 - (void)libraryItemSubimagesDidChange:(NSNotification *)note
 {
   PDLibraryItem *item = [note object];
-  NSIndexSet *sel = [_outlineView selectedRowIndexes];
-  BOOL selected = NO;
+  BOOL need_update = NO;
 
   while (item != nil)
     {
       [_outlineView reloadItem:item];
 
-      NSInteger row = [_outlineView rowForItem:item];
-      if (row != NSNotFound && [sel containsIndex:row])
-	selected = YES;
+      if ([_selectedItems indexOfObjectIdenticalTo:item] != NSNotFound)
+	need_update = YES;
 
       item = [item parent];
     }
 
-  if (!selected)
+  if (!need_update)
     {
-      for (NSInteger idx = [sel firstIndex];
-	   idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
+      for (PDLibraryItem *item in _selectedItems)
 	{
-	  PDLibraryItem *item = [_outlineView itemAtRow:idx];
 	  if ([item isKindOfClass:[PDLibraryQuery class]])
 	    {
-	      selected = YES;
+	      need_update = YES;
 	      break;
 	    }
 	}
     }
 
-  if (selected)
+  if (need_update)
     [self updateImageList];
 }
 
@@ -651,14 +636,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 - (IBAction)removeAction:(id)sender
 {
   BOOL changed = NO;
-  NSIndexSet *sel = [_outlineView selectedRowIndexes];
-  NSInteger idx;
 
-  for (idx = [sel lastIndex]; idx != NSNotFound;
-       idx = [sel indexLessThanIndex:idx])
+  for (PDLibraryItem *item in _selectedItems)
     {
-      PDLibraryItem *item = [_outlineView itemAtRow:idx];
-
       if (![[item parent] isKindOfClass:[PDLibraryGroup class]])
 	continue;
 
@@ -786,6 +766,8 @@ find_unique_name(NSString *root, NSString *file)
 {
   if (sender == _importButton)
     [_controller setImportMode:[_importButton state]];
+  else
+    [_controller setImportMode:YES];
 }
 
 - (void)importModeDidChange:(NSNotification *)note
@@ -795,60 +777,52 @@ find_unique_name(NSString *root, NSString *file)
 
   if ([_controller importMode])
     {
-      BOOL non_empty = NO;
-      BOOL importable = YES;
+      NSMutableArray *import_items = [NSMutableArray array];
 
-      NSIndexSet *sel = [_outlineView selectedRowIndexes];
-      for (NSInteger idx = [sel firstIndex];
-	   idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
+      for (PDLibraryItem *item in _selectedItems)
 	{
-	  non_empty = YES;
-	  PDLibraryItem *item = [_outlineView itemAtRow:idx];
-	  if (![item isKindOfClass:[PDLibraryDevice class]])
-	    importable = NO;
+	  if ([item isKindOfClass:[PDLibraryDevice class]])
+	    [import_items addObject:item];
 	}
 
-      if (!non_empty)
-	importable = NO;
-
-      [_preImportSelection release];
-      _preImportSelection = nil;
-
-      if (!importable)
+      if ([import_items count] == 0)
 	{
-	  NSArray *array = [_devicesGroup subitems];
-	  NSInteger count = [array count];
+	  [_outlineView expandItem:_devicesGroup];
 
-	  if (count != 0)
+	  PDLibraryItem *item = [[_devicesGroup subitems] firstObject];
+	  if (item != nil)
+	    [import_items addObject:item];
+	}
+
+      if ([import_items count] != 0)
+	{
+	  [_selectedItems release];
+	  _selectedItems = [import_items copy];
+
+	  [self updateImageList];
+	  [self updateControls];
+
+	  for (PDLibraryItem *item in [_outlineView selectedItems])
 	    {
-	      [_outlineView expandItem:_devicesGroup];
-
-	      NSMutableIndexSet *set = [NSMutableIndexSet indexSet];
-	      for (PDLibraryItem *item in array)
+	      if ([item isKindOfClass:[PDLibraryDirectory class]])
 		{
-		  NSInteger row = [_outlineView rowForItem:item];
-		  if (row >= 0)
-		    [set addIndex:row];
+		  [_controller setImportDestinationLibrary:
+		   [(PDLibraryDirectory *)item library]
+		   directory:[(PDLibraryDirectory *)item libraryDirectory]];
+		  break;
 		}
-
-	      NSArray *old_sel = [[_outlineView selectedItems] copy];
-
-	      [_outlineView selectRowIndexes:set byExtendingSelection:NO];
-
-	      _preImportSelection = old_sel;
 	    }
 	}
+      else
+	[_controller setImportMode:NO];
     }
   else
     {
-      if ([_preImportSelection count] != 0)
-	[_outlineView setSelectedItems:_preImportSelection];
-
-      [_preImportSelection release];
-      _preImportSelection = nil;
+      [self sourceListSelectionDidChange:nil];
+      [self updateControls];
     }
 
-  [self updateControls];
+  [_outlineView reloadData];
 }
 
 static void
@@ -912,8 +886,6 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
   if (_ignoreNotifications != 0)
     return;
 
-  NSIndexSet *sel = [_outlineView selectedRowIndexes];
-
   int key = [_controller imageSortKey];
   BOOL rev = [_controller isImageSortReversed];
   NSPredicate *pred = [_controller imagePredicate];
@@ -930,10 +902,8 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
   if ([opts count] == 0)
     opts = nil;
 
-  for (NSInteger idx = [sel firstIndex];
-       idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
+  for (PDLibraryItem *item in _selectedItems)
     {
-      PDLibraryItem *item = [_outlineView itemAtRow:idx];
       if (opts != nil)
 	[_itemViewState setObject:opts forKey:item];
       else
@@ -1083,12 +1053,10 @@ item_for_path(NSArray *items, NSArray *path)
     }
 
   NSMutableArray *selected = [NSMutableArray array];
-  NSIndexSet *sel = [_outlineView selectedRowIndexes];
 
-  for (NSInteger idx = [sel firstIndex];
-       idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
+  for (PDLibraryItem *item in _selectedItems)
     {
-      NSArray *path = path_for_item([_outlineView itemAtRow:idx]);
+      NSArray *path = path_for_item(item);
       if (path != nil)
 	[selected addObject:path];
     }
@@ -1368,25 +1336,72 @@ item_for_path(NSArray *items, NSArray *path)
 	  || [item isKindOfClass:[PDLibraryQuery class]]);
 }
 
+- (NSCell *)sourceList:(PXSourceList *)lst dataCellForItem:(id)item
+{
+  if ([_controller importMode]
+      && [_selectedItems indexOfObjectIdenticalTo:item] != NSNotFound)
+    {
+      if (_importCell == nil)
+	{
+	  _importCell = [_normalCell copy];
+	  [_importCell setImage:PDImageWithName(PDImage_ImportFolder)];
+	}
+
+      return _importCell;
+    }
+  else
+    return _normalCell;
+}
+
 - (void)sourceListSelectionDidChange:(NSNotification *)note
 {
   if (_ignoreNotifications != 0)
     return;
 
-  [_preImportSelection release];
-  _preImportSelection = nil;
+  BOOL import_mode = [_controller importMode];
+  BOOL allow_change = YES;
 
-  [self updateImageList];
-  [self updateControls];
-
-  if ([[_controller filteredImageList] count] > 0
-      && [[_controller selectedImageIndexes] count] == 0)
+  if (import_mode)
     {
-      [_controller setSelectedImageIndexes:[NSIndexSet indexSetWithIndex:0]];
+      for (PDLibraryItem *item in [_outlineView selectedItems])
+	{
+	  if (![item isKindOfClass:[PDLibraryDevice class]])
+	    {
+	      allow_change = NO;
+	      break;
+	    }
+	}
     }
 
-  [[NSNotificationCenter defaultCenter]
-   postNotificationName:PDLibrarySelectionDidChange object:_controller];
+  if (allow_change)
+    {
+      [self updateSelectedItems];
+      [self updateImageList];
+      [self updateControls];
+
+      if ([[_controller filteredImageList] count] > 0
+	  && [[_controller selectedImageIndexes] count] == 0)
+	{
+	  [_controller setSelectedImageIndexes:
+	   [NSIndexSet indexSetWithIndex:0]];
+	}
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDLibrarySelectionDidChange object:_controller];
+    }
+  else if (import_mode)
+    {
+      for (PDLibraryItem *item in [_outlineView selectedItems])
+	{
+	  if ([item isKindOfClass:[PDLibraryDirectory class]])
+	    {
+	      [_controller setImportDestinationLibrary:
+	       [(PDLibraryDirectory *)item library]
+	       directory:[(PDLibraryDirectory *)item libraryDirectory]];
+	      break;
+	    }
+	}
+    }
 }
 
 // NSPasteboardOwner methods

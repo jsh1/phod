@@ -30,12 +30,14 @@
 /* posted to window controller. */
 extern NSString *const PDLibrarySelectionDidChange;
 
-@class PDLibraryGroup, PDImageLibrary;
+@class PDLibraryGroup, PDImageLibrary, PDImageTextCell;
 
 @interface PDLibraryViewController : PDViewController
     <PXSourceListDataSource, PXSourceListDelegate>
 {
   IBOutlet PXSourceList *_outlineView;
+  IBOutlet PDImageTextCell *_normalCell;
+  IBOutlet PDImageTextCell *_importCell;
   IBOutlet NSSearchField *_searchField;
   IBOutlet NSButton *_addButton;
   IBOutlet NSButton *_removeButton;
@@ -54,7 +56,7 @@ extern NSString *const PDLibrarySelectionDidChange;
 
   int _ignoreNotifications;
 
-  NSArray *_preImportSelection;
+  NSArray *_selectedItems;
 }
 
 @property(nonatomic, readonly) NSArray *allImages;

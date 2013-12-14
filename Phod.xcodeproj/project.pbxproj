@@ -59,6 +59,7 @@
 		57DADC0B1831865C006D0BC1 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 57DADC0A1831865C006D0BC1 /* libsqlite3.dylib */; };
 		57DADC0E1833C40F006D0BC1 /* PDImageGridView.m in Sources */ = {isa = PBXBuildFile; fileRef = 57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */; };
 		57E053B71830576A00123059 /* PDThumbnailLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 57E053B61830576A00123059 /* PDThumbnailLayer.m */; };
+		57E4366F185BD0BB0043540F /* import-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 57E4366E185BD0BB0043540F /* import-icon.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -149,6 +150,7 @@
 		57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageGridView.m; sourceTree = "<group>"; };
 		57E053B51830576A00123059 /* PDThumbnailLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDThumbnailLayer.h; sourceTree = "<group>"; };
 		57E053B61830576A00123059 /* PDThumbnailLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDThumbnailLayer.m; sourceTree = "<group>"; };
+		57E4366E185BD0BB0043540F /* import-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "import-icon.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -344,6 +346,7 @@
 			children = (
 				576002291844FB7000B398D1 /* image-properties.strings */,
 				570701D718400506008D39D4 /* app-icon.icns */,
+				57E4366E185BD0BB0043540F /* import-icon.png */,
 				57CC5330183D1395009D6E19 /* defaults.plist */,
 				577BDBF0182D792800116AF2 /* Phod-Info.plist */,
 				577BDBF1182D792800116AF2 /* InfoPlist.strings */,
@@ -413,6 +416,7 @@
 				577BDC01182D792800116AF2 /* Images.xcassets in Resources */,
 				570701D818400506008D39D4 /* app-icon.icns in Resources */,
 				578F0FD3182D91FD001A5152 /* PDImageView.xib in Resources */,
+				57E4366F185BD0BB0043540F /* import-icon.png in Resources */,
 				578F0FD0182D91FD001A5152 /* MainMenu.xib in Resources */,
 				578F0FD1182D91FD001A5152 /* PDAdjustmentsView.xib in Resources */,
 				5706FE841857AF1B00E57ECA /* PDImportView.xib in Resources */,

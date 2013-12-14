@@ -95,8 +95,6 @@ enum PDAccessoryMode
 @property(nonatomic) NSInteger contentMode;
 @property(nonatomic) NSInteger accessoryMode;
 
-@property(nonatomic) BOOL importMode;
-
 @property(nonatomic) BOOL showsHiddenImages;
 
 @property(nonatomic, readonly) NSArray *allImages;
@@ -141,6 +139,11 @@ enum PDAccessoryMode
     columns:(NSInteger)cols byExtendingSelection:(BOOL)extend;
 
 - (void)foreachSelectedImage:(void (^)(PDImage *))block;
+
+@property(nonatomic) BOOL importMode;
+
+- (void)setImportDestinationLibrary:(PDImageLibrary *)lib
+    directory:(NSString *)dir;
 
 - (PDViewController *)viewControllerWithClass:(Class)cls;
 

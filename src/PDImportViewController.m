@@ -58,23 +58,14 @@
    addObserver:self selector:@selector(selectedImagesDidChange:)
    name:PDSelectionDidChange object:_controller];
 
-  time_t date = time(NULL);
-  struct tm tm = {0};
-  localtime_r(&date, &tm);
-  char buf[2048];
-
   NSString *format = [[NSUserDefaults standardUserDefaults]
-		      stringForKey:@"PDImportParentNameTemplate"];
+		      stringForKey:@"PDImportProjectNameTemplate"];
   if ([format length] != 0)
     {
-      strftime(buf, sizeof(buf), [format UTF8String], &tm);
-      [_directoryField setStringValue:[NSString stringWithUTF8String:buf]];
-    }
-
-  format = [[NSUserDefaults standardUserDefaults]
-	    stringForKey:@"PDImportProjectNameTemplate"];
-  if ([format length] != 0)
-    {
+      time_t date = time(NULL);
+      struct tm tm = {0};
+      localtime_r(&date, &tm);
+      char buf[2048];
       strftime(buf, sizeof(buf), [format UTF8String], &tm);
       [_nameField setStringValue:[NSString stringWithUTF8String:buf]];
     }
@@ -146,6 +137,18 @@
 	}
 
       selected_lib = [[_libraryButton selectedItem] representedObject];
+    }
+}
+
+- (void)setImportDestinationLibrary:(PDImageLibrary *)lib
+    directory:(NSString *)dir
+{
+  NSInteger idx = [_libraryButton indexOfItemWithRepresentedObject:lib];
+
+  if (idx >= 0)
+    {
+      [_libraryButton selectItemAtIndex:idx];
+      [_directoryField setStringValue:dir];
     }
 }
 
