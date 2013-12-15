@@ -128,15 +128,20 @@ enum PDAccessoryMode
 @property(nonatomic, retain) PDImage *primarySelectedImage;
 - (void)setSelectedImages:(NSArray *)array primary:(PDImage *)im;
 
-- (void)clearSelection;
-- (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
-
 - (void)selectImage:(PDImage *)image withEvent:(NSEvent *)e;
 
 - (void)movePrimarySelectionRight:(NSInteger)delta
     byExtendingSelection:(BOOL)extend;
 - (void)movePrimarySelectionDown:(NSInteger)delta rows:(NSInteger)rows
     columns:(NSInteger)cols byExtendingSelection:(BOOL)extend;
+
+- (void)selectAll:(id)sender;
+- (void)deselectAll:(id)sender;
+
+- (void)selectFirstByExtendingSelection:(BOOL)flag;
+- (void)selectLastByExtendingSelection:(BOOL)flag;
+
+- (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 
 - (void)foreachSelectedImage:(void (^)(PDImage *))block;
 
@@ -146,6 +151,8 @@ enum PDAccessoryMode
     directory:(NSString *)dir;
 
 - (PDViewController *)viewControllerWithClass:(Class)cls;
+
+- (void)contentKeyDown:(NSEvent *)e makeKey:(BOOL)flag;
 
 - (void)synchronize;
 

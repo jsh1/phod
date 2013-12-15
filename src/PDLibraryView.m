@@ -22,50 +22,46 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import <AppKit/AppKit.h>
+#import "PDLibraryView.h"
 
-@interface NSView (PDAppKitExtensions)
+#import "PDLibraryViewController.h"
+#import "PDWindowController.h"
 
-- (void)scrollRectToVisible:(NSRect)rect animated:(BOOL)flag;
+@implementation PDLibraryView
 
-- (void)flashScrollersIfNeeded;
-
-@end
-
-
-@interface NSCell (PDAppKitExtensions)
-
-@property(getter=isVerticallyCentered) BOOL verticallyCentered;
-  
-@end
-
-
-@interface NSTableView (PDAppKitExtensions)
-
-- (void)reloadDataForRow:(NSInteger)row;
-
-@end
-
-@interface NSOutlineView (PDAppKitExtensions)
-
-- (NSArray *)selectedItems;
-- (void)setSelectedItems:(NSArray *)array;
-
-- (void)callPreservingSelectedRows:(void (^)(void))thunk;
-
-- (void)reloadDataPreservingSelectedRows;
-
-@end
-
-enum
+- (void)keyDown:(NSEvent *)e
 {
-  PDImage_Computer,
-  PDImage_GenericFolder,
-  PDImage_GenericHardDisk,
-  PDImage_GenericRemovableDisk,
-  PDImage_SmartFolder,
-  PDImage_ImportFolder,
-  PDImageCount,
-};
+  NSString *chars = [e charactersIgnoringModifiers];
 
-extern NSImage *PDImageWithName(NSInteger name);
+  if ([chars length] == 1)
+    {
+      switch ([chars characterAtIndex:0])
+	{
+	case NSLeftArrowFunctionKey:
+	case NSRightArrowFunctionKey:
+	  [[_controller controller] contentKeyDown:e makeKey:YES];
+	  return;
+
+	case NSHomeFunctionKey:
+	case NSEndFunctionKey:
+	case NSPageUpFunctionKey:
+	case NSPageDownFunctionKey:
+	  [[_controller controller] contentKeyDown:e makeKey:NO];
+	  return;
+	}
+    }
+
+  [super keyDown:e];
+}
+
+- (IBAction)selectAll:(id)sender
+{
+  [[_controller controller] selectAll:sender];
+}
+
+- (IBAction)deselectAll:(id)sender
+{
+  [[_controller controller] deselectAll:sender];
+}
+
+@end

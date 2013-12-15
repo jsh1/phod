@@ -26,32 +26,42 @@
 
 @implementation NSView (PDAppKitExtensions)
 
+/* -[NSView scrollRectToVisible:] seems to randomly pick animated or
+   non-animated, I can't figure out how to control it.. */
+
 - (void)scrollRectToVisible:(NSRect)rect animated:(BOOL)flag
 {
-  if (!flag)
-    [self scrollRectToVisible:rect];
+  NSScrollView *scrollView = [self enclosingScrollView];
+  NSClipView *clipView = [scrollView contentView];
+
+  NSRect bounds = [clipView bounds];
+
+  if (rect.origin.x < bounds.origin.x)
+    bounds.origin.x = rect.origin.x;
+  else if (rect.origin.x + rect.size.width > bounds.origin.x + bounds.size.width)
+    bounds.origin.x = rect.origin.x + rect.size.width - bounds.size.width;
+
+  if (rect.origin.y < bounds.origin.y)
+    bounds.origin.y = rect.origin.y;
+  else if (rect.origin.y + rect.size.height > bounds.origin.y + bounds.size.height)
+    bounds.origin.y = rect.origin.y + rect.size.height - bounds.size.height;
+
+  bounds = [clipView constrainBoundsRect:bounds];
+
+  if (flag)
+    [[clipView animator] setBounds:bounds];
   else
-    {
-      NSScrollView *scrollView = [self enclosingScrollView];
-      NSClipView *clipView = [scrollView contentView];
+    [clipView setBounds:bounds];
 
-      NSRect bounds = [clipView bounds];
+  [scrollView reflectScrolledClipView:clipView];
+}
 
-      if (rect.origin.x < bounds.origin.x)
-	bounds.origin.x = rect.origin.x;
-      else if (rect.origin.x + rect.size.width > bounds.origin.x + bounds.size.width)
-	bounds.origin.x = rect.origin.x + rect.size.width - bounds.size.width;
+- (void)flashScrollersIfNeeded
+{
+  NSScrollView *scrollView = [self enclosingScrollView];
 
-      if (rect.origin.y < bounds.origin.y)
-	bounds.origin.y = rect.origin.y;
-      else if (rect.origin.y + rect.size.height > bounds.origin.y + bounds.size.height)
-	bounds.origin.y = rect.origin.y + rect.size.height - bounds.size.height;
-
-      bounds = [clipView constrainBoundsRect:bounds];
-
-      [[clipView animator] setBounds:bounds];
-      [scrollView reflectScrolledClipView:clipView];
-    }
+  if ([self frame].size.height > [scrollView bounds].size.height)
+    [scrollView flashScrollers];
 }
 
 @end

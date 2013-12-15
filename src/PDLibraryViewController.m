@@ -267,12 +267,13 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   [_removeButton setEnabled:can_delete];
   [_actionButton setEnabled:NO];
   [_importButton setState:[_controller importMode]];
-  [_importButton setEnabled:non_empty];
+  [_importButton setEnabled:[[_devicesGroup subitems] count] != 0];
 }
 
 - (void)foreachImage:(void (^)(PDImage *))thunk
 {
   [_foldersGroup foreachSubimage:thunk];
+  [_devicesGroup foreachSubimage:thunk];
 }
 
 - (void)updateSelectedItems

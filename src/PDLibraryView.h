@@ -22,50 +22,13 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import <AppKit/AppKit.h>
+#import "PXSourceList.h"
 
-@interface NSView (PDAppKitExtensions)
+@class PDLibraryViewController;
 
-- (void)scrollRectToVisible:(NSRect)rect animated:(BOOL)flag;
-
-- (void)flashScrollersIfNeeded;
-
-@end
-
-
-@interface NSCell (PDAppKitExtensions)
-
-@property(getter=isVerticallyCentered) BOOL verticallyCentered;
-  
-@end
-
-
-@interface NSTableView (PDAppKitExtensions)
-
-- (void)reloadDataForRow:(NSInteger)row;
-
-@end
-
-@interface NSOutlineView (PDAppKitExtensions)
-
-- (NSArray *)selectedItems;
-- (void)setSelectedItems:(NSArray *)array;
-
-- (void)callPreservingSelectedRows:(void (^)(void))thunk;
-
-- (void)reloadDataPreservingSelectedRows;
-
-@end
-
-enum
+@interface PDLibraryView : PXSourceList
 {
-  PDImage_Computer,
-  PDImage_GenericFolder,
-  PDImage_GenericHardDisk,
-  PDImage_GenericRemovableDisk,
-  PDImage_SmartFolder,
-  PDImage_ImportFolder,
-  PDImageCount,
-};
+  IBOutlet PDLibraryViewController *_controller;
+}
 
-extern NSImage *PDImageWithName(NSInteger name);
+@end

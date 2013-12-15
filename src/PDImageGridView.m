@@ -153,10 +153,7 @@
   if (height != frame.size.height)
     {
       [self setFrameSize:NSMakeSize(frame.size.width, height)];
-
-      NSScrollView *scrollView = [self enclosingScrollView];
-      if (height > [scrollView bounds].size.height)
-	[scrollView flashScrollers];
+      [self flashScrollersIfNeeded];
     }
 }
 
@@ -285,7 +282,8 @@
 
   NSRect bounds = [self bounds];
 
-  CGFloat v_spacing = GRID_SPACING + (_displaysMetadata ? TITLE_HEIGHT : 0);
+  CGFloat title_height = _displaysMetadata ? TITLE_HEIGHT : 0;
+  CGFloat v_spacing = GRID_SPACING + title_height;
 
   NSRect rect;
   rect.origin.x = (bounds.origin.x + GRID_MARGIN
@@ -293,7 +291,7 @@
   rect.origin.y = (bounds.origin.y + GRID_MARGIN
 		   + (_size + v_spacing) * y - MAX_OUTSET);
   rect.size.width = _size + MAX_OUTSET*2;
-  rect.size.height = _size + MAX_OUTSET*2;
+  rect.size.height = _size + v_spacing + MAX_OUTSET*2;
 
   return rect;
 }
@@ -305,6 +303,20 @@
       [self scrollRectToVisible:
        [self boundingRectOfItemAtIndex:_primarySelection] animated:flag];
     }
+}
+
+- (void)scrollPageUpAnimated:(BOOL)flag
+{
+  NSRect rect = [self visibleRect];
+  rect.origin.y -= rect.size.height;
+  [self scrollRectToVisible:rect animated:flag];
+}
+
+- (void)scrollPageDownAnimated:(BOOL)flag
+{
+  NSRect rect = [self visibleRect];
+  rect.origin.y += rect.size.height;
+  [self scrollRectToVisible:rect animated:flag];
 }
 
 /* 'p' is in coordinate space of our superview. */
@@ -348,7 +360,7 @@
       if (image != nil)
 	[[_controller controller] selectImage:image withEvent:e];
       else
-	[[_controller controller] clearSelection];
+	[[_controller controller] deselectAll:nil];
 
       [self scrollToPrimaryAnimated:YES];
 
@@ -410,30 +422,34 @@
 	   byExtendingSelection:([e modifierFlags] & NSShiftKeyMask) != 0];
 	  [self scrollToPrimaryAnimated:YES];
 	  return;
+
+	case NSHomeFunctionKey:
+	  [[_controller controller] selectFirstByExtendingSelection:
+	   ([e modifierFlags] & NSShiftKeyMask) != 0];
+	  [self scrollToPrimaryAnimated:NO];
+	  [self flashScrollersIfNeeded];
+	  return;
+
+	case NSEndFunctionKey:
+	  [[_controller controller] selectLastByExtendingSelection:
+	   ([e modifierFlags] & NSShiftKeyMask) != 0];
+	  [self scrollToPrimaryAnimated:NO];
+	  [self flashScrollersIfNeeded];
+	  return;
+
+	case NSPageUpFunctionKey:
+	  [self scrollPageUpAnimated:NO];
+	  [self flashScrollersIfNeeded];
+	  return;
+
+	case NSPageDownFunctionKey:
+	  [self scrollPageDownAnimated:NO];
+	  [self flashScrollersIfNeeded];
+	  return;
 	}
     }
 
   [super keyDown:e];
-}
-
-- (void)selectAll:(id)sender
-{
-  NSInteger count = [_images count];
-  if (count == 0)
-    return;
-
-  NSInteger idx = _primarySelection;
-  if (idx < 0)
-    idx = 0;
-
-  [[_controller controller] setSelectedImageIndexes:
-   [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, count)] primary:idx];
-}
-
-- (void)deselectAll:(id)sender
-{
-  [[_controller controller] setSelectedImageIndexes:
-   [NSIndexSet indexSet] primary:-1];
 }
 
 @end

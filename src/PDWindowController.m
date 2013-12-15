@@ -400,6 +400,24 @@ wasFirstResponder(NSView *view)
    directory:dir];
 }
 
+- (void)contentKeyDown:(NSEvent *)e makeKey:(BOOL)flag
+{
+  PDViewController *controller = [self viewControllerWithClass:
+				  contentClassForMode(_contentMode)];
+
+  NSView *view = [controller initialFirstResponder];
+
+  if (view != nil)
+    {
+      if (flag && ([e modifierFlags] & (NSShiftKeyMask|NSCommandKeyMask)) == 0)
+	{
+	  [[self window] makeFirstResponder:view];
+	}
+
+      [view keyDown:e];
+    }
+}
+
 - (PDPredicatePanelController *)predicatePanelController
 {
   if (_predicatePanelController == nil)
@@ -767,18 +785,6 @@ convert_array_to_index_set(NSArray *array, NSArray *image_list)
    primary:convert_image_to_index(im, _filteredImageList)];
 }
 
-- (void)clearSelection
-{
-  [self setSelectedImageIndexes:[NSIndexSet indexSet] primary:-1];
-}
-
-- (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
-{
-  [(PDLibraryViewController *)[self viewControllerWithClass:
-   [PDLibraryViewController class]] selectLibrary:lib directory:dir];
-  
-}
-
 - (void)selectImage:(PDImage *)image withEvent:(NSEvent *)e;
 {
   NSInteger idx = [_filteredImageList indexOfObjectIdenticalTo:image];
@@ -831,7 +837,7 @@ convert_array_to_index_set(NSArray *array, NSArray *image_list)
       [sel release];
     }
   else
-    [self clearSelection];
+    [self deselectAll:nil];
 }
 
 static NSIndexSet *
@@ -913,6 +919,60 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 				    _primarySelectionIndex, idx, extend);
 
   [self setSelectedImageIndexes:sel primary:idx];
+}
+
+- (void)selectAll:(id)sender
+{
+  NSInteger count = [_filteredImageList count];
+  if (count == 0)
+    return;
+
+  NSInteger idx = _primarySelectionIndex;
+  if (idx < 0)
+    idx = 0;
+
+  [self setSelectedImageIndexes:
+   [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, count)] primary:idx];
+}
+
+- (void)deselectAll:(id)sender
+{
+  [self setSelectedImageIndexes:[NSIndexSet indexSet] primary:-1];
+}
+
+- (void)selectFirstByExtendingSelection:(BOOL)extend
+{
+  NSInteger count = [_filteredImageList count];
+  if (count == 0)
+    return;
+
+  NSInteger idx = 0;
+
+  NSIndexSet *sel = extendSelection(_selectedImageIndexes,
+				    _primarySelectionIndex, idx, extend);
+
+  [self setSelectedImageIndexes:sel primary:idx];
+}
+
+- (void)selectLastByExtendingSelection:(BOOL)extend
+{
+  NSInteger count = [_filteredImageList count];
+  if (count == 0)
+    return;
+
+  NSInteger idx = count - 1;
+
+  NSIndexSet *sel = extendSelection(_selectedImageIndexes,
+				    _primarySelectionIndex, idx, extend);
+
+  [self setSelectedImageIndexes:sel primary:idx];
+}
+
+- (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
+{
+  [(PDLibraryViewController *)[self viewControllerWithClass:
+   [PDLibraryViewController class]] selectLibrary:lib directory:dir];
+  
 }
 
 - (void)foreachSelectedImage:(void (^)(PDImage *))block

@@ -24,6 +24,7 @@
 
 #import "PDImageListViewController.h"
 
+#import "PDAppKitExtensions.h"
 #import "PDColor.h"
 #import "PDImage.h"
 #import "PDImageGridView.h"
@@ -142,7 +143,7 @@
 
 - (void)librarySelectionDidChange:(NSNotification *)note
 {
-  [_gridView scrollPoint:NSZeroPoint];
+  [_gridView scrollRectToVisible:NSMakeRect(0, 0, 1, 1) animated:NO];
 }
 
 - (void)imagePredicateDidChange:(NSNotification *)note
