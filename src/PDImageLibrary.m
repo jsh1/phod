@@ -165,7 +165,6 @@ again:
     }
 
   _catalog1 = [[NSMutableDictionary alloc] init];
-  _catalogDirty = YES;
 
   add_library(self);
 
@@ -229,7 +228,6 @@ again:
     }
 
   _catalog1 = [[NSMutableDictionary alloc] init];
-  _catalogDirty = YES;
 
   [self validateCaches];
 
@@ -250,7 +248,12 @@ again:
 
 - (void)synchronize
 {
-  if (_catalogDirty)
+  /* _catalogDirty is only set when files are renamed or new ids are
+     added to _catalog1. So we also check if _catalog0 is non-empty,
+     in that case the current state is different to what was read from
+     the file system. */
+
+  if (_catalogDirty || [_catalog0 count] != 0)
     {
       NSString *path = [[self cachePath]
 			stringByAppendingPathComponent:@CATALOG_FILE];
@@ -259,7 +262,12 @@ again:
 		      dataWithJSONObject:_catalog1 options:0 error:nil];
 
       if ([data writeToFile:path atomically:YES])
-	_catalogDirty = NO;
+	{
+	  _catalogDirty = NO;
+
+	  [_catalog0 release];
+	  _catalog0 = nil;
+	}
       else
 	[[NSFileManager defaultManager] removeItemAtPath:path error:nil];
     }
@@ -459,7 +467,6 @@ convert_hexdigit(int c)
 	{
 	  [_catalog1 setObject:obj forKey:rel_path];
 	  [_catalog0 removeObjectForKey:rel_path];
-	  _catalogDirty = YES;
 	}
     }
 
