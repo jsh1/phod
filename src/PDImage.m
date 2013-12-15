@@ -26,7 +26,9 @@
 
 #import "PDAppDelegate.h"
 #import "PDImageLibrary.h"
+#import "PDImageName.h"
 #import "PDImageProperty.h"
+#import "PDWindowController.h"
 
 #import <QuartzCore/CATransaction.h>
 

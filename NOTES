@@ -17,6 +17,8 @@ Issues
 
   - Dragging a subfolder should move it in the file system.
 
+  RESOLVED: implemented.
+
 3. Renaming library items by editing their name
 
   - Top level items or albums just change their displayed name
@@ -68,7 +70,8 @@ Issues
 
   MOSTLY RESOLVED: added top-level albums (aka smart folders) that
   filter the complete set of images. But currently no way to drag
-  beneath a folder to filter only that directory.
+  beneath a folder to filter only that directory, or to edit the folder
+  query after adding it.
 
 9. "Preview" mode where the fullsize image isn't loaded?
 
@@ -171,4 +174,8 @@ Issues
   handle importing from normal directories of images. E.g. should we 
   just require them to be added as libraries, then copied from? And if
   so, do we still need to allow all the import options (RAW+JPEG etc)
+
+17. Albums don't update image names that change
+
+  LibraryViewController should listen for a notification and do this.
 

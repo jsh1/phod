@@ -485,23 +485,7 @@ wasFirstResponder(NSView *view)
 
   [PDImage callWithImageComparator:_imageSortKey reversed:_imageSortReversed
    block:^(NSComparator cmp) {
-     ret = [array sortedArrayUsingComparator:
-	    ^NSComparisonResult (id obj1, id obj2) {
-
-	      NSComparisonResult ret = cmp(obj1, obj2);
-
-	      /* We don't want sorting by key1 then key2 to give
-		 different results to sorting by key3 then key2. */
-
-	      if (ret == NSOrderedSame)
-		{
-		  ret = (obj1 < obj2 ? NSOrderedAscending
-			 : obj1 > obj2 ? NSOrderedDescending
-			 : NSOrderedSame);
-		}
-
-	      return ret;
-	    }];
+     ret = [array sortedArrayUsingComparator:cmp];
    }];
 
   return ret;
@@ -1245,7 +1229,13 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
   [self rotateUsingMap:rotate_right_map];
 }
 
-- (IBAction)newSmartFolderAction:(id)sender
+- (IBAction)newAlbumAction:(id)sender
+{
+  [(PDLibraryViewController *)[self viewControllerWithClass:
+   [PDLibraryViewController class]] newAlbumAction:sender];
+}
+
+- (IBAction)newSmartAlbumAction:(id)sender
 {
   NSPredicate *pred = [[self predicatePanelController] predicate];
   if (pred == nil)
@@ -1254,7 +1244,7 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
   NSString *format = [pred predicateFormat];
 
   [(PDLibraryViewController *)[self viewControllerWithClass:
-   [PDLibraryViewController class]] addSmartFolder:format predicate:pred];
+   [PDLibraryViewController class]] addSmartAlbum:format predicate:pred];
 }
 
 - (IBAction)importAction:(id)sender

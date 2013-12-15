@@ -26,7 +26,7 @@
 
 @class PDImageListViewController, PDImage;
 
-@interface PDImageGridView : NSView
+@interface PDImageGridView : NSView <NSDraggingSource>
 {
   IBOutlet PDImageListViewController *_controller;
 
@@ -39,6 +39,8 @@
   CGFloat _size;
   NSInteger _columns;
   NSInteger _rows;
+
+  BOOL _mouseDownOverImage;
 }
 
 @property(nonatomic, copy) NSArray *images;

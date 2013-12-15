@@ -88,7 +88,7 @@ Gw
                             <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                         </buttonCell>
                         <connections>
-                            <action selector="newSmartFolderAction:" target="-2" id="dl1-lJ-C2h"/>
+                            <action selector="newSmartAlbumAction:" target="-2" id="Ue1-dA-L7U"/>
                         </connections>
                     </button>
                 </subviews>

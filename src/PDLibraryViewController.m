@@ -25,9 +25,12 @@
 #import "PDLibraryViewController.h"
 
 #import "PDAppKitExtensions.h"
+#import "PDFoundationExtensions.h"
 #import "PDImage.h"
 #import "PDImageLibrary.h"
+#import "PDImageName.h"
 #import "PDImageTextCell.h"
+#import "PDLibraryAlbum.h"
 #import "PDLibraryDevice.h"
 #import "PDLibraryDirectory.h"
 #import "PDLibraryItem.h"
@@ -70,11 +73,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
 - (void)addAlbumItem:(NSDictionary *)dict toItem:(PDLibraryGroup *)parent
 {
-  NSString *name = [dict objectForKey:@"name"];
+  PDLibraryGroup *item = nil;
+
   NSString *pred_str = [dict objectForKey:@"predicate"];
-
-  PDLibraryItem *item = nil;
-
   if (pred_str != nil)
     {
       NSPredicate *pred = [_controller imagePredicateWithFormat:pred_str];
@@ -83,12 +84,22 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 	{
 	  PDLibraryQuery *tem = [[PDLibraryQuery alloc] init];
 
-	  [tem setName:name];
 	  [tem setPredicate:pred];
 
-	  NSString *icon_name = [dict objectForKey:@"icon"];
-	  if (icon_name != nil)
-	    [tem setIconImage:[NSImage imageNamed:icon_name]];
+	  item = tem;
+	}
+    }
+  else
+    {
+      NSArray *names = [dict objectForKey:@"imageNames"];
+
+      if (names != nil)
+	{
+	  PDLibraryAlbum *tem = [[PDLibraryAlbum alloc] init];
+
+	  [tem setImageNames:[names mappedArray:^(id obj) {
+	    return [PDImageName imageNameFromPropertyList:obj];
+	  }]];
 
 	  item = tem;
 	}
@@ -96,6 +107,14 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
   if (item != nil)
     {
+      NSString *name = [dict objectForKey:@"name"];
+      if (name != nil)
+	[item setName:name];
+
+      NSString *icon_name = [dict objectForKey:@"icon"];
+      if (icon_name != nil)
+	[item setIconImage:[NSImage imageNamed:icon_name]];
+
       [parent addSubitem:item];
       [item release];
     }
@@ -231,7 +250,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   [_outlineView expandItem:_foldersGroup];
   [_outlineView expandItem:_albumsGroup];
 
-  [_outlineView registerForDraggedTypes:@[PDLibraryItemType]];
+  [_outlineView registerForDraggedTypes:@[PDLibraryItemType, PDImageNameType]];
 
   [self rescanVolumes];
 
@@ -291,7 +310,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     }
   else
     {
-      NSMutableArray *array = [NSMutableArray array];
+      NSMutableArray *images = [NSMutableArray array];
       NSMutableString *title = [NSMutableString string];
       BOOL showsHidden = [_controller showsHiddenImages];
       NSInteger count = 0;
@@ -307,7 +326,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 	  [item foreachSubimage:^(PDImage *im) {
 	    if (showsHidden || ![im isHidden])
 	      {
-		[array addObject:im];
+		[images addObject:im];
 		need_title = YES;
 	      }
 	  }];
@@ -362,7 +381,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
       _ignoreNotifications--;
 
       [_controller setImageListTitle:title];
-      [_controller setImageList:array];
+      [_controller setImageList:images];
     }
 }
 
@@ -399,7 +418,8 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     {
       for (PDLibraryItem *item in _selectedItems)
 	{
-	  if ([item isKindOfClass:[PDLibraryQuery class]])
+	  if ([item isKindOfClass:[PDLibraryQuery class]]
+	      || [item isKindOfClass:[PDLibraryAlbum class]])
 	    {
 	      need_update = YES;
 	      break;
@@ -561,14 +581,30 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 {
   NSMutableArray *array = [NSMutableArray array];
 
-  for (PDLibraryQuery *item in [_albumsGroup subitems])
+  for (PDLibraryItem *item in [_albumsGroup subitems])
     {
-      NSString *name = [item name];
-      NSString *pred = [[item predicate] predicateFormat];
-      if (pred == nil)
-	pred = @"";
+      if ([item isKindOfClass:[PDLibraryQuery class]])
+	{
+	  PDLibraryQuery *q_item = (PDLibraryQuery *)item;
 
-      [array addObject:@{@"name": name, @"predicate": pred}];
+	  NSString *name = [q_item name];
+	  NSString *pred = [[q_item predicate] predicateFormat];
+	  if (pred == nil)
+	    pred = @"";
+
+	  [array addObject:@{@"name": name, @"predicate": pred}];
+	}
+      else if ([item isKindOfClass:[PDLibraryAlbum class]])
+	{
+	  PDLibraryAlbum *a_item = (PDLibraryAlbum *)item;
+
+	  NSString *name = [a_item name];
+	  NSArray *names = [[a_item imageNames] mappedArray:^(id obj) {
+	    return [(PDImageName *)obj propertyList];
+	  }];
+
+	  [array addObject:@{@"name": name, @"imageNames": names}];
+	}
     }
 
   [[NSUserDefaults standardUserDefaults] setObject:array
@@ -620,7 +656,21 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
    }];
 }
 
-- (void)addSmartFolder:(NSString *)name predicate:(NSPredicate *)pred
+- (IBAction)newAlbumAction:(id)sender
+{
+  NSDictionary *dict = @{
+    @"name": @"Untitled",
+    @"imageNames": @[]
+  };
+
+  [self addAlbumItem:dict toItem:_albumsGroup];
+
+  [self updateImageAlbums];
+
+  [_outlineView reloadItem:_albumsGroup reloadChildren:YES];
+}
+
+- (void)addSmartAlbum:(NSString *)name predicate:(NSPredicate *)pred
 {
   NSString *query = [pred predicateFormat];
   if (query == nil)
@@ -631,7 +681,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     @"predicate": query
   };
 
-[self addAlbumItem:dict toItem:_albumsGroup];
+  [self addAlbumItem:dict toItem:_albumsGroup];
 
   [self updateImageAlbums];
 
@@ -1191,22 +1241,29 @@ item_for_path(NSArray *items, NSArray *path)
 
   /* FIXME: support dropping images into libraries as well. */
 
-  NSString *type = [pboard availableTypeFromArray:@[PDLibraryItemType]];
+  NSString *type = [pboard availableTypeFromArray:
+		    @[PDLibraryItemType, PDImageNameType]];
 
   if ([type isEqualToString:PDLibraryItemType])
     {
       if (_draggedItems == nil)
 	return NSDragOperationNone;
 
-      if (item == _foldersGroup || item == _albumsGroup)
+      if (item == _albumsGroup)
 	{
-	  Class required_class = (item == _foldersGroup
-				  ? [PDLibraryDirectory class]
-				  : [PDLibraryQuery class]);
-
 	  for (PDLibraryItem *dragged_item in _draggedItems)
 	    {
-	      if (![dragged_item isKindOfClass:required_class])
+	      if ([dragged_item parent] != _albumsGroup)
+		return NSDragOperationNone;
+	    }
+
+	  return NSDragOperationMove;
+	}
+      else if (item == _foldersGroup)
+	{
+	  for (PDLibraryItem *dragged_item in _draggedItems)
+	    {
+	      if (![dragged_item isKindOfClass:[PDLibraryDirectory class]])
 		return NSDragOperationNone;
 	    }
 
@@ -1229,6 +1286,17 @@ item_for_path(NSArray *items, NSArray *path)
 	  return NSDragOperationMove;
 	}
     }
+  else if ([type isEqualToString:PDImageNameType])
+    {
+      if ([(PDLibraryItem *)item parent] == _albumsGroup
+	  && [item isKindOfClass:[PDLibraryAlbum class]])
+	{
+	  [info setDraggingFormation:NSDraggingFormationDefault];
+	  return NSDragOperationCopy;
+	}
+
+      return NSDragOperationNone;
+    }
 
   return NSDragOperationNone;
 }
@@ -1240,7 +1308,8 @@ item_for_path(NSArray *items, NSArray *path)
 
   /* FIXME: support dropping images into libraries as well. */
 
-  NSString *type = [pboard availableTypeFromArray:@[PDLibraryItemType]];
+  NSString *type = [pboard availableTypeFromArray:
+		    @[PDLibraryItemType, PDImageNameType]];
 
   if ([type isEqualToString:PDLibraryItemType])
     {
@@ -1315,6 +1384,29 @@ item_for_path(NSArray *items, NSArray *path)
 	      [_outlineView selectRowIndexes:
 	       [NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
 	    }
+
+	  return YES;
+	}
+    }
+  else if ([type isEqualToString:PDImageNameType])
+    {
+      if ([(PDLibraryItem *)item parent] == _albumsGroup
+	  && [item isKindOfClass:[PDLibraryAlbum class]])
+	{
+	  NSArray *names = [pboard readObjectsForClasses:
+			    @[[PDImageName class]] options:nil];
+
+	  for (PDImageName *name in names)
+	    {
+	      [(PDLibraryAlbum *)item addImageNamed:name];
+	    }
+
+	  [_outlineView reloadItem:item];
+
+	  if ([_selectedItems indexOfObjectIdenticalTo:item] != NSNotFound)
+	    [self updateImageList];
+
+	  [self updateImageAlbums];
 
 	  return YES;
 	}

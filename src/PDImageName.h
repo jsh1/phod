@@ -22,13 +22,29 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDLibraryGroup.h"
+#import <Foundation/NSObject.h>
 
-@interface PDLibraryQuery : PDLibraryGroup
+@class PDImage;
+
+extern NSString *const PDImageNameType;
+
+@interface PDImageName : NSObject
+    <NSCopying, NSPasteboardWriting, NSPasteboardReading>
 {
-  NSPredicate *_predicate;
+  uint32_t _libraryId;
+  NSString *_name;
+  NSString *_directory;
 }
 
-@property(nonatomic, copy) NSPredicate *predicate;
++ (PDImageName *)nameOfImage:(PDImage *)image;
+
+@property(nonatomic) uint32_t libraryId;
+@property(nonatomic, copy) NSString *name;
+@property(nonatomic, copy) NSString *directory;
+
+- (BOOL)matchesImage:(PDImage *)image;
+
+- (id)propertyList;
++ (PDImageName *)imageNameFromPropertyList:(id)obj;
 
 @end

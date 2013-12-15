@@ -28,6 +28,7 @@
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
 #import "PDImageListViewController.h"
+#import "PDImageName.h"
 #import "PDThumbnailLayer.h"
 #import "PDWindowController.h"
 
@@ -335,15 +336,20 @@
     return nil;
 }
 
-- (BOOL)imageMayBeVisible:(PDImage *)image
+- (CALayer *)layerForImage:(PDImage *)image
 {
   for (PDThumbnailLayer *layer in [[self layer] sublayers])
     {
       if ([layer image] == image)
-	return YES;
+	return layer;
     }
 
-  return NO;
+  return nil;
+}
+
+- (BOOL)imageMayBeVisible:(PDImage *)image
+{
+  return [self layerForImage:image] != nil;
 }
 
 - (void)mouseDown:(NSEvent *)e
@@ -364,6 +370,8 @@
 
       [self scrollToPrimaryAnimated:YES];
 
+      _mouseDownOverImage = image != nil;
+
       if ([e type] == NSRightMouseDown
 	  || ([e modifierFlags] & NSControlKeyMask) != 0)
 	{
@@ -382,6 +390,82 @@
 - (void)rightMouseDown:(NSEvent *)e
 {
   [self mouseDown:e];
+}
+
+static CGImageRef
+copy_layer_snapshot(CALayer *layer)
+{
+  CGRect bounds = [layer bounds];
+
+  size_t w = ceil(bounds.size.width);
+  size_t h = ceil(bounds.size.height);
+
+  CGColorSpaceRef space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+
+  CGContextRef ctx = CGBitmapContextCreate(NULL, w, h, 8, 0, space,
+		kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
+
+  CGImageRef im = NULL;
+
+  if (ctx != NULL)
+    {
+      CGContextTranslateCTM(ctx, 0, h);
+      CGContextScaleCTM(ctx, 1, -1);
+
+      [layer renderInContext:ctx];
+
+      im = CGBitmapContextCreateImage(ctx);
+
+      CGContextRelease(ctx);
+    }
+
+  CGColorSpaceRelease(space);
+
+  return im;
+}
+
+- (void)mouseDragged:(NSEvent *)e
+{
+  if ([e clickCount] != 1)
+    return;
+
+  if (!_mouseDownOverImage)
+    {
+      /* FIXME: rubber-band selection. */
+    }
+  else
+    {
+      NSMutableArray *items = [NSMutableArray array];
+
+      for (NSInteger idx = [_selection firstIndex]; idx != NSNotFound;
+	   idx = [_selection indexGreaterThanIndex:idx])
+	{
+	  PDImage *image = [_images objectAtIndex:idx];
+	  NSDraggingItem *item = [[NSDraggingItem alloc]
+				  initWithPasteboardWriter:
+				  [PDImageName nameOfImage:image]];
+	  CALayer *layer = [self layerForImage:image];
+	  if (layer != nil)
+	    {
+	      CGRect r = [layer convertRect:[layer bounds]
+			  toLayer:[self layer]];
+	      [item setDraggingFrame:r];
+	      [item setImageComponentsProvider:^{
+		CGImageRef im = copy_layer_snapshot(layer);
+		NSDraggingImageComponent *comp = [NSDraggingImageComponent
+		draggingImageComponentWithKey:NSDraggingImageComponentIconKey];
+		[comp setFrame:NSMakeRect(0, 0, r.size.width, r.size.height)];
+		[comp setContents:(id)im];
+		CGImageRelease(im);
+		return @[comp];
+	      }];
+	    }
+	  [items addObject:item];
+	  [item release];
+	}
+
+      [self beginDraggingSessionWithItems:items event:e source:self];
+    }
 }
 
 - (BOOL)acceptsFirstResponder
@@ -450,6 +534,14 @@
     }
 
   [super keyDown:e];
+}
+
+// NSDraggingSource methods
+
+- (NSDragOperation)draggingSession:(NSDraggingSession *)session
+    sourceOperationMaskForDraggingContext:(NSDraggingContext)ctx
+{
+  return NSDragOperationGeneric;
 }
 
 @end

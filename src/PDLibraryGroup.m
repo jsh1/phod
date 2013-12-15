@@ -27,20 +27,17 @@
 @implementation PDLibraryGroup
 
 @synthesize name = _name;
+@synthesize iconImage = _iconImage;
 
 - (void)dealloc
 {
   [_name release];
+  [_iconImage release];
   [_identifier release];
   for (PDLibraryItem *item in _subitems)
     [item setParent:nil];
   [_subitems release];
   [super dealloc];
-}
-
-- (NSString *)identifier
-{
-  return _identifier != nil ? _identifier : _name;
 }
 
 - (void)setIdentifier:(NSString *)str
@@ -118,9 +115,24 @@
   return _name;
 }
 
+- (BOOL)hasTitleImage
+{
+  return _iconImage != nil;
+}
+
+- (NSImage *)titleImage
+{
+  return _iconImage;
+}
+
 - (BOOL)isExpandable
 {
-  return YES;
+  return [_subitems count] != 0;
+}
+
+- (NSString *)identifier
+{
+  return _identifier != nil ? _identifier : _name;
 }
 
 @end

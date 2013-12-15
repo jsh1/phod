@@ -44,6 +44,6 @@ extern NSString * const PDPredicateDidChange;
 
 - (IBAction)controlAction:(id)sender;
 
-- (IBAction)newSmartFolderAction:(id)sender;
+- (IBAction)newSmartAlbumAction:(id)sender;
 
 @end

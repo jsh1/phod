@@ -128,10 +128,10 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
     }
 }
 
-- (IBAction)newSmartFolderAction:(id)sender
+- (IBAction)newSmartAlbumAction:(id)sender
 {
   [[(PDAppDelegate *)[NSApp delegate] windowController]
-   newSmartFolderAction:sender];
+   newSmartAlbumAction:sender];
 }
 
 @end

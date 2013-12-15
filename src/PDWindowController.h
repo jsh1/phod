@@ -199,7 +199,8 @@ enum PDAccessoryMode
 - (IBAction)rotateLeft:(id)sender;
 - (IBAction)rotateRight:(id)sender;
 
-- (IBAction)newSmartFolderAction:(id)sender;
+- (IBAction)newAlbumAction:(id)sender;
+- (IBAction)newSmartAlbumAction:(id)sender;
 - (IBAction)importAction:(id)sender;
 
 @end

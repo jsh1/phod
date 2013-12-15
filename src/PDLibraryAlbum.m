@@ -22,35 +22,80 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDLibraryQuery.h"
+#import "PDLibraryAlbum.h"
 
 #import "PDAppDelegate.h"
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
+#import "PDImageName.h"
 #import "PDWindowController.h"
 
-@implementation PDLibraryQuery
+@implementation PDLibraryAlbum
 
-@synthesize predicate = _predicate;
+- (id)init
+{
+  self = [super init];
+  if (self == nil)
+    return nil;
+
+  _imageNames = [[NSMutableArray alloc] init];
+  _map = [[NSMutableDictionary alloc] init];
+
+  return self;
+}
 
 - (void)dealloc
 {
-  [_predicate release];
+  [_imageNames release];
+  [_map release];
   [super dealloc];
+}
+
+- (NSArray *)imageNames
+{
+  return _imageNames;
+}
+
+- (void)setImageNames:(NSArray *)obj
+{
+  if (_imageNames != obj)
+    {
+      [_imageNames release];
+      _imageNames = [obj mutableCopy];
+
+      [_map removeAllObjects];
+      for (PDImageName *name in _imageNames)
+	[_map setObject:name forKey:[name name]];
+    }
+}
+
+- (void)addImageNamed:(PDImageName *)name
+{
+  NSString *key = [name name];
+
+  if ([_map objectForKey:key] == nil)
+    {
+      [_imageNames addObject:name];
+      [_map setObject:name forKey:[name name]];
+    }
+}
+
+- (void)removeImageNamed:(PDImageName *)name
+{
+  [_imageNames removeObject:name];
+  [_map removeObjectForKey:[name name]];
 }
 
 - (void)foreachSubimage:(void (^)(PDImage *))thunk
 {
-  if (_predicate != nil)
-    {
-      PDWindowController *controller
-	= [(PDAppDelegate *)[NSApp delegate] windowController];
+  PDWindowController *controller
+    = [(PDAppDelegate *)[NSApp delegate] windowController];
 
-      [controller foreachImage:^(PDImage *im) {
-	if ([_predicate evaluateWithObject:[im expressionValues]])
-	  thunk(im);
-      }];
-    }
+  [controller foreachImage:^(PDImage *im) {
+    PDImageName *name = [_map objectForKey:[im name]];
+    if (name != nil && [name matchesImage:im])
+      thunk(im);
+  }];
 }
 
 - (BOOL)hasTitleImage
@@ -61,12 +106,17 @@
 - (NSImage *)titleImage
 {
   NSImage *image = [super titleImage];
-  return image != nil ? image : PDImageWithName(PDImage_SmartFolder);
+  return image != nil ? image : PDImageWithName(PDImage_GenericFolder);
 }
 
 - (BOOL)hasBadge
 {
-  return NO;
+  return YES;
+}
+
+- (NSInteger)badgeValue
+{
+  return [_imageNames count];
 }
 
 @end

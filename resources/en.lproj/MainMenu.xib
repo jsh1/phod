@@ -65,6 +65,19 @@
                 <menuItem title="File" id="83">
                     <menu key="submenu" title="File" id="81">
                         <items>
+                            <menuItem title="New Album" keyEquivalent="l" id="Ymr-UK-syq">
+                                <connections>
+                                    <action selector="newAlbumAction:" target="-1" id="fIe-rh-A84"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="New Smart Album" keyEquivalent="L" id="tZT-ul-TgE">
+                                <connections>
+                                    <action selector="newSmartAlbumAction:" target="-1" id="t0t-EV-WaF"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="nFZ-PB-y60">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
                             <menuItem title="Import…" keyEquivalent="i" id="82">
                                 <connections>
                                     <action selector="importAction:" target="-1" id="gXo-vq-w0a"/>

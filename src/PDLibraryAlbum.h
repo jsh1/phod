@@ -24,11 +24,17 @@
 
 #import "PDLibraryGroup.h"
 
-@interface PDLibraryQuery : PDLibraryGroup
+@class PDImageName;
+
+@interface PDLibraryAlbum : PDLibraryGroup
 {
-  NSPredicate *_predicate;
+  NSMutableArray *_imageNames;
+  NSMutableDictionary *_map;
 }
 
-@property(nonatomic, copy) NSPredicate *predicate;
+@property(nonatomic, copy) NSArray *imageNames;
+
+- (void)addImageNamed:(PDImageName *)name;
+- (void)removeImageNamed:(PDImageName *)name;
 
 @end
