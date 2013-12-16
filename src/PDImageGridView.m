@@ -39,6 +39,8 @@
 #define TITLE_HEIGHT 15
 #define MAX_OUTSET 10
 
+#define DRAG_THRESH 3
+
 @implementation PDImageGridView
 
 - (id)initWithFrame:(NSRect)frame
@@ -359,9 +361,12 @@
       PDImage *image;
 
     case 1:
-      image = [self imageAtSuperviewPoint:
-	       [[self superview] convertPoint:
-		[e locationInWindow] fromView:nil]];
+      _mouseDownLocation = [[self superview] convertPoint:
+			    [e locationInWindow] fromView:nil];
+
+      image = [self imageAtSuperviewPoint:_mouseDownLocation];
+
+      _mouseDownOverImage = image != nil;
 
       if (image != nil)
 	[[_controller controller] selectImage:image withEvent:e];
@@ -369,8 +374,6 @@
 	[[_controller controller] deselectAll:nil];
 
       [self scrollToPrimaryAnimated:YES];
-
-      _mouseDownOverImage = image != nil;
 
       if ([e type] == NSRightMouseDown
 	  || ([e modifierFlags] & NSControlKeyMask) != 0)
@@ -424,6 +427,45 @@ copy_layer_snapshot(CALayer *layer)
   return im;
 }
 
+- (void)beginDraggingSessionWithEvent:(NSEvent *)e
+{
+  NSMutableArray *items = [NSMutableArray array];
+
+  for (NSInteger idx = [_selection firstIndex]; idx != NSNotFound;
+       idx = [_selection indexGreaterThanIndex:idx])
+    {
+      PDImage *image = [_images objectAtIndex:idx];
+
+      NSDraggingItem *item
+        = [[NSDraggingItem alloc] initWithPasteboardWriter:
+	   [PDImageName nameOfImage:image]];
+
+      CALayer *layer = [self layerForImage:image];
+
+      if (layer != nil)
+	{
+	  CGRect r = [layer convertRect:[layer bounds] toLayer:[self layer]];
+
+	  [item setDraggingFrame:r];
+
+	  [item setImageComponentsProvider:^{
+	    CGImageRef im = copy_layer_snapshot(layer);
+	    NSDraggingImageComponent *comp = [NSDraggingImageComponent
+		draggingImageComponentWithKey:NSDraggingImageComponentIconKey];
+	    [comp setFrame:NSMakeRect(0, 0, r.size.width, r.size.height)];
+	    [comp setContents:(id)im];
+	    CGImageRelease(im);
+	    return @[comp];
+	  }];
+	}
+
+      [items addObject:item];
+      [item release];
+    }
+
+  [self beginDraggingSessionWithItems:items event:e source:self];
+}
+
 - (void)mouseDragged:(NSEvent *)e
 {
   if ([e clickCount] != 1)
@@ -435,36 +477,14 @@ copy_layer_snapshot(CALayer *layer)
     }
   else
     {
-      NSMutableArray *items = [NSMutableArray array];
+      NSPoint p = [[self superview] convertPoint:
+		   [e locationInWindow] fromView:nil];
 
-      for (NSInteger idx = [_selection firstIndex]; idx != NSNotFound;
-	   idx = [_selection indexGreaterThanIndex:idx])
+      if (fabs(p.x - _mouseDownLocation.x) > DRAG_THRESH
+	  || fabs(p.y - _mouseDownLocation.y) > DRAG_THRESH)
 	{
-	  PDImage *image = [_images objectAtIndex:idx];
-	  NSDraggingItem *item = [[NSDraggingItem alloc]
-				  initWithPasteboardWriter:
-				  [PDImageName nameOfImage:image]];
-	  CALayer *layer = [self layerForImage:image];
-	  if (layer != nil)
-	    {
-	      CGRect r = [layer convertRect:[layer bounds]
-			  toLayer:[self layer]];
-	      [item setDraggingFrame:r];
-	      [item setImageComponentsProvider:^{
-		CGImageRef im = copy_layer_snapshot(layer);
-		NSDraggingImageComponent *comp = [NSDraggingImageComponent
-		draggingImageComponentWithKey:NSDraggingImageComponentIconKey];
-		[comp setFrame:NSMakeRect(0, 0, r.size.width, r.size.height)];
-		[comp setContents:(id)im];
-		CGImageRelease(im);
-		return @[comp];
-	      }];
-	    }
-	  [items addObject:item];
-	  [item release];
+	  [self beginDraggingSessionWithEvent:e];
 	}
-
-      [self beginDraggingSessionWithItems:items event:e source:self];
     }
 }
 

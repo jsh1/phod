@@ -40,6 +40,7 @@
   NSInteger _columns;
   NSInteger _rows;
 
+  NSPoint _mouseDownLocation;
   BOOL _mouseDownOverImage;
 }
 
