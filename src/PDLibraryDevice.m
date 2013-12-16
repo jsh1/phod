@@ -104,15 +104,20 @@
     }
 }
 
-- (void)foreachSubimage:(void (^)(PDImage *))thunk
+- (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk
 {
   if (_subimages == nil)
     [self loadSubimages];
 
   for (PDImage *im in _subimages)
-    thunk(im);
+    {
+      BOOL stop = NO;
+      thunk(im, &stop);
+      if (stop)
+	return NO;
+    }
 
-  [super foreachSubimage:thunk];
+  return [super foreachSubimage:thunk];
 }
 
 - (NSString *)titleString
@@ -153,6 +158,12 @@
 - (NSString *)identifier
 {
   return nil;
+}
+
+- (void)invalidateContents
+{
+  [_subimages release];
+  _subimages = nil;
 }
 
 - (BOOL)needsUpdate

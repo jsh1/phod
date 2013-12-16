@@ -26,6 +26,18 @@
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
                             <menuItem title="Preferences…" keyEquivalent="," id="129"/>
+                            <menuItem isSeparatorItem="YES" id="IlD-oR-Yhf">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Empty Trash" id="lA7-Nv-t0e">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+CA
+</string>
+                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                <connections>
+                                    <action selector="emptyTrashAction:" target="-1" id="ZUd-Ar-glu"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="143">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
@@ -410,10 +422,7 @@ CA
                                 </connections>
                             </menuItem>
                             <menuItem title="Deleted" id="lGt-hO-5Ol">
-                                <string key="keyEquivalent" base64-UTF8="YES">
-CA
-</string>
-                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleDeletedAction:" target="-1" id="nzz-MU-9rw"/>
                                 </connections>

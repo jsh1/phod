@@ -77,6 +77,8 @@ typedef int PDImageCompareKey;
   NSOperation *_prefetchOp;
 
   NSDate *_date;			/* cached lazily */
+
+  BOOL _deleted;
 }
 
 + (void)callWithImageComparator:(PDImageCompareKey)key
@@ -159,6 +161,10 @@ typedef int PDImageCompareKey;
 
 @property(nonatomic, getter=isHidden) BOOL hidden;
 @property(nonatomic, getter=isDeleted) BOOL deleted;
+
+/* Delete all traces of the image from the filesystem. */
+
+- (NSError *)remove;
 
 /* Fill proxy caches asynchronously. */
 

@@ -60,7 +60,7 @@ extern NSString *const PDLibrarySelectionDidChange;
   NSArray *_selectedItems;
 }
 
-- (void)foreachImage:(void (^)(PDImage *))thunk;
+- (BOOL)foreachImage:(void (^)(PDImage *im, BOOL *stop))thunk;
 
 - (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 

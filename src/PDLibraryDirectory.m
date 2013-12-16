@@ -230,15 +230,20 @@
   return _subitems;
 }
 
-- (void)foreachSubimage:(void (^)(PDImage *))thunk
+- (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk
 {
   if (_subimagesNeedUpdate)
     [self updateSubimages];
 
   for (PDImage *im in _subimages)
-    thunk(im);
+    {
+      BOOL stop = NO;
+      thunk(im, &stop);
+      if (stop)
+	return NO;
+    }
 
-  [super foreachSubimage:thunk];
+  return [super foreachSubimage:thunk];
 }
 
 - (NSString *)titleString

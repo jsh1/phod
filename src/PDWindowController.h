@@ -30,6 +30,7 @@ extern NSString *const PDShowsHiddenImagesDidChange;
 extern NSString *const PDImagePredicateDidChange;
 extern NSString *const PDImageSortOptionsDidChange;
 extern NSString *const PDImportModeDidChange;
+extern NSString *const PDTrashWasEmptied;
 
 enum PDSidebarMode
 {
@@ -97,7 +98,7 @@ enum PDAccessoryMode
 
 @property(nonatomic) BOOL showsHiddenImages;
 
-- (void)foreachImage:(void (^)(PDImage *))thunk;
+- (BOOL)foreachImage:(void (^)(PDImage *, BOOL *stop))thunk;
 
 @property(nonatomic, copy) NSArray *imageList;
 
@@ -206,5 +207,9 @@ enum PDAccessoryMode
 - (IBAction)newAlbumAction:(id)sender;
 - (IBAction)newSmartAlbumAction:(id)sender;
 - (IBAction)importAction:(id)sender;
+
+- (IBAction)emptyTrashAction:(id)sender;
+
+@property(nonatomic, readonly, getter=isTrashEmpty) BOOL trashEmpty;
 
 @end

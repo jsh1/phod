@@ -40,20 +40,23 @@
   [super dealloc];
 }
 
-- (void)foreachSubimage:(void (^)(PDImage *))thunk
+- (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk
 {
   if (_predicate != nil)
     {
       PDWindowController *controller
 	= [(PDAppDelegate *)[NSApp delegate] windowController];
 
-      [controller foreachImage:^(PDImage *im) {
+      BOOL saw_all = [controller foreachImage:^(PDImage *im, BOOL *stop) {
 	if ([_predicate evaluateWithObject:[im expressionValues]])
-	  thunk(im);
+	  thunk(im, stop);
       }];
+
+      if (!saw_all)
+	return NO;
     }
 
-  [super foreachSubimage:thunk];
+  return [super foreachSubimage:thunk];
 }
 
 - (BOOL)hasTitleImage

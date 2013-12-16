@@ -86,18 +86,21 @@
   [_imageUUIDs removeObject:uuid];
 }
 
-- (void)foreachSubimage:(void (^)(PDImage *))thunk
+- (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk
 {
   PDWindowController *controller
     = [(PDAppDelegate *)[NSApp delegate] windowController];
 
-  [controller foreachImage:^(PDImage *im) {
+  BOOL saw_all = [controller foreachImage:^(PDImage *im, BOOL *stop) {
     NSUUID *uuid = [im UUIDIfDefined];
     if (uuid != nil && [_allUUIDs containsObject:uuid])
-      thunk(im);
+      thunk(im, stop);
   }];
 
-  [super foreachSubimage:thunk];
+  if (!saw_all)
+    return NO;
+
+  return [super foreachSubimage:thunk];
 }
 
 - (BOOL)hasTitleImage

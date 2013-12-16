@@ -48,9 +48,10 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 
 @property(nonatomic, copy, readonly) NSArray *subitems;
 
-/* Iterates over all images recursively under self. */
+/* Iterates over all images recursively under self. Returns YES if saw
+   all images (i.e. wasn't stopped prematurely). */
 
-- (void)foreachSubimage:(void (^)(PDImage *))thunk;
+- (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk;
 
 @property(nonatomic, readonly, getter=isTrashcan) BOOL trashcan;
 

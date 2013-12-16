@@ -327,6 +327,21 @@ again:
     }
 }
 
+- (void)didRemoveFileWithRelativePath:(NSString *)rel_path
+{
+  for (int pass = 0; pass < 2; pass++)
+    {
+      NSMutableDictionary *catalog = pass == 0 ? _catalog0 : _catalog1;
+
+      if (!_catalogDirty && [catalog objectForKey:rel_path] != nil)
+	_catalogDirty = YES;
+
+      [catalog removeObjectForKey:rel_path];
+
+      /* FIXME: also remove anything in the cache for these ids? */
+    }
+}
+
 static unsigned int
 convert_hexdigit(int c)
 {

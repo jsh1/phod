@@ -231,6 +231,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   [[NSNotificationCenter defaultCenter] addObserver:self
    selector:@selector(importModeDidChange:)
    name:PDImportModeDidChange object:_controller];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+   selector:@selector(trashWasEmptied:)
+   name:PDTrashWasEmptied object:_controller];
 
   [[NSNotificationCenter defaultCenter] addObserver:self
    selector:@selector(libraryDidImportFiles:)
@@ -293,10 +296,15 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   [_importButton setEnabled:[[_devicesGroup subitems] count] != 0];
 }
 
-- (void)foreachImage:(void (^)(PDImage *))thunk
+- (BOOL)foreachImage:(void (^)(PDImage *im, BOOL *stop))thunk
 {
-  [_foldersGroup foreachSubimage:thunk];
-  [_devicesGroup foreachSubimage:thunk];
+  if (![_foldersGroup foreachSubimage:thunk])
+    return NO;
+
+  if (![_devicesGroup foreachSubimage:thunk])
+    return NO;
+
+  return YES;
 }
 
 - (void)updateSelectedItems
@@ -334,7 +342,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
 	  __block BOOL need_title = NO;
 
-	  [item foreachSubimage:^(PDImage *im) {
+	  [item foreachSubimage:^(PDImage *im, BOOL *stop) {
 	    if ((showsHidden || ![im isHidden])
 		&& [im isDeleted] == trash_item)
 	      {
@@ -404,7 +412,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
   __block NSInteger count = 0;
 
-  [item foreachSubimage:^(PDImage *im) {
+  [item foreachSubimage:^(PDImage *im, BOOL *stop) {
     if ((showsHidden || ![im isHidden])
 	&& [im isDeleted] == trash_item)
       count++;
@@ -892,6 +900,57 @@ find_unique_name(NSString *root, NSString *file)
     }
 
   [_outlineView reloadData];
+}
+
+- (void)trashWasEmptied:(NSNotification *)note
+{
+  NSArray *images = [[note userInfo] objectForKey:@"imagesRemoved"];
+
+  NSMutableSet *items = [NSMutableSet set];
+
+  for (PDImage *image in images)
+    {
+      PDImageLibrary *lib = [image library];
+      NSString *lib_dir = [image libraryDirectory];
+
+      for (PDLibraryDirectory *item in [_foldersGroup subitems])
+	{
+	  if ([item library] == lib)
+	    {
+	      item = [item subitemContainingDirectory:lib_dir];
+	      if (item != nil)
+		{
+		  [item invalidateContents];
+		  [items addObject:item];
+		}
+	    }
+	}
+
+      for (PDLibraryDevice *item in [_devicesGroup subitems])
+	{
+	  if ([item library] == lib)
+	    {
+	      [item invalidateContents];
+	      [items addObject:item];
+	    }
+	}
+
+      for (PDLibraryItem *item in [_libraryGroup subitems])
+	{
+	  if ([item isTrashcan])
+	    [items addObject:item];
+	}
+    }
+
+  if ([items count] != 0)
+    {
+      for (PDLibraryItem *item in items)
+	{
+	  [_outlineView reloadItem:item reloadChildren:YES];
+	}
+
+      [self updateImageList];
+    }
 }
 
 static void

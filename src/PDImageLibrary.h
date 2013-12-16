@@ -68,6 +68,7 @@ extern NSString *const PDImageLibraryDidCopyImageFile;
 - (NSString *)cachePathForFileId:(uint32_t)file_id base:(NSString *)str;
 
 - (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName;
+- (void)didRemoveFileWithRelativePath:(NSString *)rel_path;
 
 - (void)synchronize;
 - (void)validateCaches;

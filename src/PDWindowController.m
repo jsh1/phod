@@ -43,6 +43,7 @@ NSString *const PDShowsHiddenImagesDidChange = @"PDShowsHiddenImagesDidChange";
 NSString *const PDImagePredicateDidChange = @"PDImagePredicateDidChange";
 NSString *const PDImageSortOptionsDidChange = @"PDImageSortOptionsDidChange";
 NSString *const PDImportModeDidChange = @"PDImportModeDidChange";
+NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
 
 @implementation PDWindowController
 
@@ -441,7 +442,7 @@ wasFirstResponder(NSView *view)
   [self rebuildImageList];
 }
 
-- (void)foreachImage:(void (^)(PDImage *))thunk;
+- (BOOL)foreachImage:(void (^)(PDImage *im, BOOL *stop))thunk;
 {
   return [(PDLibraryViewController *)[self viewControllerWithClass:
 	  [PDLibraryViewController class]] foreachImage:thunk];
@@ -1280,6 +1281,50 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
    [PDLibraryViewController class]] importAction:sender];
 }
 
+- (IBAction)emptyTrashAction:(id)sender
+{
+  __block NSError *error = nil;
+
+  NSMutableArray *removed = [NSMutableArray array];
+
+  [self foreachImage:^(PDImage *image, BOOL *stop) {
+    if ([image isDeleted])
+      {
+	NSError *err = [image remove];
+	if (err == nil)
+	  {
+	    [removed addObject:image];
+	  }
+	else if (error == nil)
+	  {
+	    error = err;
+	    *stop = YES;
+	  }
+      }
+  }];
+
+  if ([removed count] != 0)
+    {
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDTrashWasEmptied object:self
+       userInfo:@{@"imagesRemoved": removed}];
+    }
+
+  if (error != nil)
+    {
+      NSAlert *alert = [NSAlert alertWithError:error];
+      [alert runModal];
+    }
+}
+
+- (BOOL)isTrashEmpty
+{
+  return [self foreachImage:^(PDImage *image, BOOL *stop) {
+    if ([image isDeleted])
+      *stop = YES;
+  }];
+}
+
 - (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem
 {
   SEL sel = [anItem action];
@@ -1307,6 +1352,11 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
   if (sel == @selector(toggleRawAction:))
     {
       return [self isToggleRawSupported];
+    }
+
+  if (sel == @selector(emptyTrashAction:))
+    {
+      return ![self isTrashEmpty];
     }
 
   return YES;

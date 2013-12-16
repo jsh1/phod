@@ -486,7 +486,7 @@ file_path(PDImage *self, NSString *file)
 
 - (void)writeJSONFile
 {
-  if (!_pendingJSONWrite)
+  if (!_deleted && !_pendingJSONWrite)
     {
       if (_jsonFile == nil)
 	{
@@ -499,33 +499,36 @@ file_path(PDImage *self, NSString *file)
         = dispatch_time(DISPATCH_TIME_NOW, 2LL * NSEC_PER_SEC);
 
       dispatch_after(then, dispatch_get_main_queue(), ^{
+	if (!_deleted)
+	  {
+	    /* Copying mutable data out of self, as op runs asynchronously.
 
-	/* Copying mutable data out of self, as op runs asynchronously.
+	       FIXME: what else should be added to this dictionary? */
 
-	   FIXME: what else should be added to this dictionary? */
+	    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
-	NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+	    if (_uuid != nil)
+	      [dict setObject:[_uuid UUIDString] forKey:@"UUID"];
 
-	if (_uuid != nil)
-	  [dict setObject:[_uuid UUIDString] forKey:@"UUID"];
+	    if (_jpegFile != nil)
+	      [dict setObject:_jpegFile forKey:@"JPEGFile"];
+	    if (_rawFile != nil)
+	      [dict setObject:_rawFile forKey:@"RAWFile"];
 
-	if (_jpegFile != nil)
-	  [dict setObject:_jpegFile forKey:@"JPEGFile"];
-	if (_rawFile != nil)
-	  [dict setObject:_rawFile forKey:@"RAWFile"];
+	    [dict setObject:[NSDictionary dictionaryWithDictionary:_properties]
+	     forKey:@"Properties"];
 
-	[dict setObject:[NSDictionary dictionaryWithDictionary:_properties]
-	 forKey:@"Properties"];
+	    NSString *path = file_path(self, _jsonFile);
 
-	NSString *path = file_path(self, _jsonFile);
+	    NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
+	      NSData *data = [NSJSONSerialization dataWithJSONObject:dict
+			      options:0 error:nil];
+	      [data writeToFile:path atomically:YES];
+	    }];
 
-	NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
-	  NSData *data = [NSJSONSerialization dataWithJSONObject:dict
-			  options:0 error:nil];
-	  [data writeToFile:path atomically:YES];
-	}];
+	    [[PDImage writeQueue] addOperation:op];
+	  }
 
-	[[PDImage writeQueue] addOperation:op];
 	_pendingJSONWrite = NO;
       });
 
@@ -1062,6 +1065,62 @@ file_path(PDImage *self, NSString *file)
 	  [[PDImage writeQueue] addOperation:op];
 	}
     }
+}
+
+- (NSError *)remove
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+  NSError *err = nil;
+
+  /* In case JSON file is being written. */
+
+  [[PDImage writeQueue] waitUntilAllOperationsAreFinished];
+
+  if (_jpegFile != nil)
+    {
+      if (![fm removeItemAtPath:[self JPEGPath] error:&err])
+	return err;
+
+      [_library didRemoveFileWithRelativePath:
+       library_file_path(self, _jpegFile)];
+
+      [_jpegType release];
+      _jpegType = nil;
+      [_jpegFile release];
+      _jpegFile = nil;
+      _jpegId = 0;
+    }
+
+  if (_rawFile != nil)
+    {
+      if (![fm removeItemAtPath:[self RAWPath] error:&err])
+	return err;
+
+      [_library didRemoveFileWithRelativePath:
+       library_file_path(self, _rawFile)];
+
+      [_rawType release];
+      _rawType = nil;
+      [_rawFile release];
+      _rawFile = nil;
+      _rawId = 0;
+    }
+
+  if (_jsonFile != nil)
+    {
+      if (![fm removeItemAtPath:file_path(self, _jsonFile) error:&err])
+	return err;
+
+      [_jsonFile release];
+      _jsonFile = nil;
+    }
+
+  [_properties setObject:@[] forKey:PDImage_FileTypes];
+  [_properties removeObjectForKey:PDImage_ActiveType];
+
+  _deleted = YES;
+
+  return nil;
 }
 
 - (void)startPrefetching

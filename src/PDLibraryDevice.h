@@ -37,4 +37,6 @@
 
 @property(nonatomic, readonly) PDImageLibrary *library;
 
+- (void)invalidateContents;
+
 @end
