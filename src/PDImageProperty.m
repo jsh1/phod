@@ -26,7 +26,7 @@
 
 #import <time.h>
 
-#define N_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
+#import "PDMacros.h"
 
 CA_HIDDEN @interface PDImageExpressionObject : NSObject
 {
@@ -133,17 +133,17 @@ property_map(void)
 	};
 
       CFDictionaryRef tiff_map = CFDictionaryCreate(NULL, tiff_keys,
-	tiff_values, sizeof(tiff_keys) / sizeof(tiff_keys[0]),
-	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	tiff_values, N_ELEMENTS(tiff_keys), &kCFTypeDictionaryKeyCallBacks,
+	&kCFTypeDictionaryValueCallBacks);
       CFDictionaryRef exif_map = CFDictionaryCreate(NULL, exif_keys,
-	exif_values, sizeof(exif_keys) / sizeof(exif_keys[0]),
-	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	exif_values, N_ELEMENTS(exif_keys), &kCFTypeDictionaryKeyCallBacks,
+	&kCFTypeDictionaryValueCallBacks);
       CFDictionaryRef exif_aux_map = CFDictionaryCreate(NULL, exif_aux_keys,
-	exif_aux_values, sizeof(exif_aux_keys) / sizeof(exif_aux_keys[0]),
+	exif_aux_values, N_ELEMENTS(exif_aux_keys),
 	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
       CFDictionaryRef iptc_map = CFDictionaryCreate(NULL, iptc_keys,
-	iptc_values, sizeof(iptc_keys) / sizeof(iptc_keys[0]),
-	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	iptc_values, N_ELEMENTS(iptc_keys), &kCFTypeDictionaryKeyCallBacks,
+	&kCFTypeDictionaryValueCallBacks);
 
       const void *keys[] =
 	{
@@ -174,7 +174,7 @@ property_map(void)
 	  kCFNull,
 	};
       
-      map = CFDictionaryCreate(NULL, keys, values, sizeof(keys) / sizeof(keys[0]),
+      map = CFDictionaryCreate(NULL, keys, values, N_ELEMENTS(keys),
 	&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
       CFRelease(tiff_map);

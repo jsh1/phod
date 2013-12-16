@@ -88,6 +88,7 @@
 		575167701852451800163CD8 /* PDImageLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageLibrary.h; sourceTree = "<group>"; };
 		575167711852451800163CD8 /* PDImageLibrary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageLibrary.m; sourceTree = "<group>"; };
 		5760022A1844FB7000B398D1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = "en.lproj/image-properties.strings"; sourceTree = "<group>"; };
+		5767ADA6185E7E820019EF43 /* PDMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDMacros.h; sourceTree = "<group>"; };
 		577BDBE5182D792800116AF2 /* Phod.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Phod.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		577BDBEB182D792800116AF2 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		577BDBED182D792800116AF2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -346,6 +347,7 @@
 		57C18114182FDD57002B8DB2 /* Misc */ = {
 			isa = PBXGroup;
 			children = (
+				5767ADA6185E7E820019EF43 /* PDMacros.h */,
 				57C180FF182E9644002B8DB2 /* PDAppKitExtensions.h */,
 				57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */,
 				574B786C185917BB0095FC87 /* PDFoundationExtensions.h */,

@@ -30,6 +30,8 @@
 #import "PDImageName.h"
 #import "PDWindowController.h"
 
+#import "PDMacros.h"
+
 @implementation PDLibraryAlbum
 
 - (id)init
@@ -69,19 +71,19 @@
 
       for (PDImageName *name in _imageNames)
 	{
-	  uintptr_t ident = [name imageId];
-	  CFDictionarySetValue(_map, (void *)ident, name);
+	  uint32_t ident = [name imageId];
+	  CFDictionarySetValue(_map, UINT_TO_POINTER(ident), name);
 	}
     }
 }
 
 - (void)addImageNamed:(PDImageName *)name
 {
-  uintptr_t ident = [name imageId];
-  if (CFDictionaryGetValue(_map, (void *)ident) == NULL)
+  uint32_t ident = [name imageId];
+  if (CFDictionaryGetValue(_map, UINT_TO_POINTER(ident)) == NULL)
     {
       [_imageNames addObject:name];
-      CFDictionarySetValue(_map, (void *)ident, name);
+      CFDictionarySetValue(_map, POINTER_TO_UINT(ident), name);
     }
 }
 
@@ -97,10 +99,11 @@
     = [(PDAppDelegate *)[NSApp delegate] windowController];
 
   [controller foreachImage:^(PDImage *im) {
-    uintptr_t ident = [im imageIdIfDefined];
+    uint32_t ident = [im imageIdIfDefined];
     if (ident != 0)
       {
-	PDImageName *name = (id)CFDictionaryGetValue(_map, (void *)ident);
+	PDImageName *name
+	  = (id)CFDictionaryGetValue(_map, UINT_TO_POINTER(ident));
 	if (name != nil && [name matchesImage:im])
 	  thunk(im);
       }

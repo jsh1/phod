@@ -24,10 +24,9 @@
 
 #import "PDFoundationExtensions.h"
 
-@implementation NSArray (PDFoundationExtensions)
+#import "PDMacros.h"
 
-/* FIXME: using variably-sized arrays is lazy and dangerous, but it's
-   ok for my uses (small arrays) for now. */
+@implementation NSArray (PDFoundationExtensions)
 
 - (NSArray *)mappedArray:(id (^)(id))f
 {
@@ -35,13 +34,17 @@
   if (count == 0)
     return [NSArray array];
 
-  id objects[count];
+  id *objects = STACK_ALLOC(id, count);
 
   NSInteger i = 0;
   for (id obj in self)
     objects[i++] = f(obj);
 
-  return [NSArray arrayWithObjects:objects count:count];
+  NSArray *ret = [NSArray arrayWithObjects:objects count:count];
+
+  STACK_FREE(id, count, objects);
+
+  return ret;
 }
 
 - (NSArray *)filteredArray:(BOOL (^)(id))f
@@ -50,19 +53,24 @@
   if (count == 0)
     return [NSArray array];
   
-  id objects[count];
+  id *objects = STACK_ALLOC(id, count);
 
-  count = 0;
+  NSInteger idx = 0;
   for (id obj in self)
     {
       if (f(obj))
-	objects[count++] = obj;
+	objects[idx++] = obj;
     }
 
-  if (count == 0)
-    return [NSArray array];
+  NSArray *ret;
+  if (idx == 0)
+    ret = [NSArray array];
   else
-    return [NSArray arrayWithObjects:objects count:count];
+    ret = [NSArray arrayWithObjects:objects count:idx];
+
+  STACK_FREE(id, count, objects);
+
+  return ret;
 }
 
 @end
