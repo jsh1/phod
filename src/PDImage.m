@@ -399,6 +399,15 @@ file_path(PDImage *self, NSString *file)
 	      if (props != nil)
 		[_properties addEntriesFromDictionary:props];
 
+	      NSArray *ident = [dict objectForKey:@"ImageID"];
+	      if (ident != nil)
+		{
+		  uint32_t image_id = [[ident firstObject] unsignedIntValue];
+		  uint32_t lib_id = [[ident lastObject] unsignedIntValue];
+		  if (lib_id == [_library libraryId])
+		    _imageId = image_id;
+		}
+
 	      _jpegFile = [[dict objectForKey:@"JPEGFile"] copy];
 	      _rawFile = [[dict objectForKey:@"RAWFile"] copy];
 	    }
@@ -502,19 +511,28 @@ file_path(PDImage *self, NSString *file)
 
 	NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
-	[dict setObject:[NSDictionary dictionaryWithDictionary:_properties]
-	 forKey:@"Properties"];
+	if (_imageId != 0)
+	  {
+	    /* Need to store both IDs, just in case the file is later
+	       used by another library, so it can sanity-check. */
+
+	    NSArray *ident = @[@(_imageId), @([_library libraryId])];
+	    [dict setObject:ident forKey:@"ImageID"];
+	  }
 
 	if (_jpegFile != nil)
 	  [dict setObject:_jpegFile forKey:@"JPEGFile"];
 	if (_rawFile != nil)
 	  [dict setObject:_rawFile forKey:@"RAWFile"];
 
+	[dict setObject:[NSDictionary dictionaryWithDictionary:_properties]
+	 forKey:@"Properties"];
+
 	NSString *path = file_path(self, _jsonFile);
 
 	NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
 	  NSData *data = [NSJSONSerialization dataWithJSONObject:dict
-			  options:NSJSONWritingPrettyPrinted error:nil];
+			  options:0 error:nil];
 	  [data writeToFile:path atomically:YES];
 	}];
 
@@ -560,7 +578,7 @@ file_path(PDImage *self, NSString *file)
   return file_path(self, [self imageFile]);
 }
 
-- (uint32_t)imageId
+- (uint32_t)imageFileId
 {
   BOOL uses_raw = [self usesRAW];
 
@@ -909,6 +927,22 @@ file_path(PDImage *self, NSString *file)
   return _date;
 }
 
+- (uint32_t)imageId
+{
+  if (_imageId == 0)
+    {
+      _imageId = [_library nextImageId];
+      [self writeJSONFile];
+    }
+
+  return _imageId;
+}
+
+- (uint32_t)imageIdIfDefined
+{
+  return _imageId;
+}
+
 - (NSString *)name
 {
   return [self imagePropertyForKey:PDImage_Name];
@@ -982,7 +1016,7 @@ file_path(PDImage *self, NSString *file)
      of displayed images, which can be the entire library.) */
 
   NSString *cache_path
-    = [_library cachePathForFileId:[self imageId] base:@"p.json"];
+    = [_library cachePathForFileId:[self imageFileId] base:@"p.json"];
 
   NSString *image_path = [self imagePath];
 
@@ -1033,7 +1067,7 @@ file_path(PDImage *self, NSString *file)
       /* Prevent the block retaining self. */
 
       PDImageLibrary *lib = [self library];
-      uint32_t file_id = [self imageId];
+      uint32_t file_id = [self imageFileId];
       NSString *image_path = [self imagePath];
 
       NSString *tiny_path = cache_path_for_type(lib, file_id, PDImage_Tiny);
@@ -1135,7 +1169,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
   assert([_imageHosts objectForKey:obj] == nil);
 
   PDImageLibrary *lib = [self library];
-  uint32_t file_id = [self imageId];
+  uint32_t file_id = [self imageFileId];
   NSString *image_path = [self imagePath];
 
   NSSize imageSize = [self pixelSize];

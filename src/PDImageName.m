@@ -32,23 +32,14 @@ NSString *const PDImageNameType = @"org.unfactored.Phod.PDImageName";
 @implementation PDImageName
 
 @synthesize libraryId = _libraryId;
-@synthesize name = _name;
-@synthesize directory = _directory;
+@synthesize imageId = _imageId;
 
 + (PDImageName *)nameOfImage:(PDImage *)image
 {
   PDImageName *name = [[PDImageName alloc] init];
   name->_libraryId = [[image library] libraryId];
-  name->_name = [[image name] copy];
-  name->_directory = [[image libraryDirectory] copy];
+  name->_imageId = [image imageId];
   return [name autorelease];
-}
-
-- (void)dealloc
-{
-  [_name release];
-  [_directory release];
-  [super dealloc];
 }
 
 - (BOOL)isEqual:(id)obj
@@ -57,29 +48,25 @@ NSString *const PDImageNameType = @"org.unfactored.Phod.PDImageName";
     return NO;
 
   PDImageName *rhs = obj;
-  return (_libraryId == rhs->_libraryId
-	  && [_name isEqualToString:rhs->_name]
-	  && [_directory isEqualToString:rhs->_directory]);
+  return _libraryId == rhs->_libraryId && _imageId == rhs->_imageId;
 }
 
 - (NSUInteger)hash
 {
-  return [_name hash];
+  return _libraryId + (_imageId * 33);
 }
 
 - (BOOL)matchesImage:(PDImage *)image
 {
   return (_libraryId == [[image library] libraryId]
-	  && [_name isEqualToString:[image name]]
-	  && [_directory isEqualToString:[image libraryDirectory]]);
+	  && _imageId == [image imageIdIfDefined]);
 }
 
 - (id)propertyList
 {
   return @{
     @"libraryId": @(_libraryId),
-    @"name": _name,
-    @"directory": _directory,
+    @"imageId": @(_imageId),
   };
 }
 
@@ -90,8 +77,7 @@ NSString *const PDImageNameType = @"org.unfactored.Phod.PDImageName";
     return nil;
 
   _libraryId = [[obj objectForKey:@"libraryId"] unsignedIntValue];
-  _name = [[obj objectForKey:@"name"] copy];
-  _directory = [[obj objectForKey:@"directory"] copy];
+  _imageId = [[obj objectForKey:@"imageId"] unsignedIntValue];
 
   return self;
 }
@@ -105,8 +91,7 @@ NSString *const PDImageNameType = @"org.unfactored.Phod.PDImageName";
 {
   PDImageName *name = [[PDImageName alloc] init];
   name->_libraryId = _libraryId;
-  name->_name = [_name retain];
-  name->_directory = [_directory retain];
+  name->_imageId = _imageId;
   return name;
 }
 
@@ -144,9 +129,7 @@ NSString *const PDImageNameType = @"org.unfactored.Phod.PDImageName";
 - (id)initWithPasteboardPropertyList:(id)obj ofType:(NSString *)type
 {
   if ([type isEqualToString:PDImageNameType])
-    {
-      return [self initWithPropertyList:obj];
-    }
+    return [self initWithPropertyList:obj];
 
   [self release];
   return nil;

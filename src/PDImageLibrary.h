@@ -36,6 +36,7 @@ extern NSString *const PDImageLibraryDidCopyImageFile;
   NSString *_cachePath;
   uint32_t _libraryId;
   uint32_t _lastFileId;
+  uint32_t _lastImageId;
   NSMutableDictionary *_catalog0;
   NSMutableDictionary *_catalog1;
   uint32_t _catalogDirty;
@@ -64,6 +65,8 @@ extern NSString *const PDImageLibraryDidCopyImageFile;
 /* 'path' is relative to the root of the library. */
 
 - (uint32_t)fileIdOfRelativePath:(NSString *)path;
+
+- (uint32_t)nextImageId;
 
 - (NSString *)cachePathForFileId:(uint32_t)file_id base:(NSString *)str;
 

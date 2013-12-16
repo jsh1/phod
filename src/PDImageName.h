@@ -32,15 +32,13 @@ extern NSString *const PDImageNameType;
     <NSCopying, NSPasteboardWriting, NSPasteboardReading>
 {
   uint32_t _libraryId;
-  NSString *_name;
-  NSString *_directory;
+  uint32_t _imageId;
 }
 
 + (PDImageName *)nameOfImage:(PDImage *)image;
 
 @property(nonatomic) uint32_t libraryId;
-@property(nonatomic, copy) NSString *name;
-@property(nonatomic, copy) NSString *directory;
+@property(nonatomic) uint32_t imageId;
 
 - (BOOL)matchesImage:(PDImage *)image;
 

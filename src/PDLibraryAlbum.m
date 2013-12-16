@@ -39,7 +39,8 @@
     return nil;
 
   _imageNames = [[NSMutableArray alloc] init];
-  _map = [[NSMutableDictionary alloc] init];
+  _map = CFDictionaryCreateMutable(NULL, 0, NULL,
+		&kCFTypeDictionaryValueCallBacks);
 
   return self;
 }
@@ -47,7 +48,8 @@
 - (void)dealloc
 {
   [_imageNames release];
-  [_map release];
+  if (_map != NULL)
+    CFRelease(_map);
   [super dealloc];
 }
 
@@ -63,27 +65,30 @@
       [_imageNames release];
       _imageNames = [obj mutableCopy];
 
-      [_map removeAllObjects];
+      CFDictionaryRemoveAllValues(_map);
+
       for (PDImageName *name in _imageNames)
-	[_map setObject:name forKey:[name name]];
+	{
+	  uintptr_t ident = [name imageId];
+	  CFDictionarySetValue(_map, (void *)ident, name);
+	}
     }
 }
 
 - (void)addImageNamed:(PDImageName *)name
 {
-  NSString *key = [name name];
-
-  if ([_map objectForKey:key] == nil)
+  uintptr_t ident = [name imageId];
+  if (CFDictionaryGetValue(_map, (void *)ident) == NULL)
     {
       [_imageNames addObject:name];
-      [_map setObject:name forKey:[name name]];
+      CFDictionarySetValue(_map, (void *)ident, name);
     }
 }
 
 - (void)removeImageNamed:(PDImageName *)name
 {
   [_imageNames removeObject:name];
-  [_map removeObjectForKey:[name name]];
+  CFDictionaryRemoveAllValues(_map);
 }
 
 - (void)foreachSubimage:(void (^)(PDImage *))thunk
@@ -92,9 +97,13 @@
     = [(PDAppDelegate *)[NSApp delegate] windowController];
 
   [controller foreachImage:^(PDImage *im) {
-    PDImageName *name = [_map objectForKey:[im name]];
-    if (name != nil && [name matchesImage:im])
-      thunk(im);
+    uintptr_t ident = [im imageIdIfDefined];
+    if (ident != 0)
+      {
+	PDImageName *name = (id)CFDictionaryGetValue(_map, (void *)ident);
+	if (name != nil && [name matchesImage:im])
+	  thunk(im);
+      }
   }];
 }
 

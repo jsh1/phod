@@ -55,6 +55,8 @@ typedef int PDImageCompareKey;
   PDImageLibrary *_library;
   NSString *_libraryDirectory;		/* relative to _libraryRoot */
 
+  uint32_t _imageId;			/* zero if unallocated */
+
   NSString *_jsonFile;			/* may be nil */
 
   BOOL _pendingJSONWrite;
@@ -92,6 +94,15 @@ typedef int PDImageCompareKey;
 
 @property(nonatomic, readonly) NSString *libraryDirectory;
 
+/* Allocates a new identifier (library-unique and persistent) when
+   first called. */
+
+@property(nonatomic, readonly) uint32_t imageId;
+
+/* Doesn't allocate an identifier if none yet assigned. */
+
+- (uint32_t)imageIdIfDefined;
+
 /* File names relative to 'libraryDirectory'. */
 
 @property(nonatomic, readonly) NSString *JSONFile;
@@ -117,7 +128,7 @@ typedef int PDImageCompareKey;
 
 @property(nonatomic, readonly) NSString *imageFile;
 @property(nonatomic, readonly) NSString *imagePath;
-@property(nonatomic, readonly) uint32_t imageId;
+@property(nonatomic, readonly) uint32_t imageFileId;
 
 - (id)imagePropertyForKey:(NSString *)key;
 - (void)setImageProperty:(id)obj forKey:(NSString *)key;

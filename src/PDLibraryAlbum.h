@@ -29,7 +29,7 @@
 @interface PDLibraryAlbum : PDLibraryGroup
 {
   NSMutableArray *_imageNames;
-  NSMutableDictionary *_map;
+  CFMutableDictionaryRef _map;
 }
 
 @property(nonatomic, copy) NSArray *imageNames;

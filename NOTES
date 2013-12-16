@@ -179,3 +179,5 @@ Issues
 
   LibraryViewController should listen for a notification and do this.
 
+  RESOLVED: PDImageName no longer uses name property, images in albums
+  are given a library-unique ID.
