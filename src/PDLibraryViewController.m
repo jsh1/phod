@@ -85,6 +85,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 	  PDLibraryQuery *tem = [[PDLibraryQuery alloc] init];
 
 	  [tem setPredicate:pred];
+	  [tem setTrashcan:[[dict objectForKey:@"trashcan"] boolValue]];
 
 	  item = tem;
 	}
@@ -232,6 +233,10 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
    selector:@selector(libraryDidImportFiles:)
    name:PDImageLibraryDidImportFiles object:nil];
 
+  [[NSNotificationCenter defaultCenter]
+   addObserver:self selector:@selector(imagePropertyDidChange:)
+   name:PDImagePropertyDidChange object:nil];
+
   NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
   [[workspace notificationCenter]
    addObserver:self selector:@selector(volumeDidMount:)
@@ -318,13 +323,21 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
       for (PDLibraryItem *item in _selectedItems)
 	{
+	  /* FIXME: checking trash state here is ugly, but it's not
+	     possible to make the library item classes do it without
+	     introducing a lot of extra code (since the query class
+	     uses the other classes to prepare the list it queries). */
+
+	  BOOL trash_item = [item isTrashcan];
+
 	  if (viewState == nil)
 	    viewState = [_itemViewState objectForKey:item];
 
 	  __block BOOL need_title = NO;
 
 	  [item foreachSubimage:^(PDImage *im) {
-	    if (showsHidden || ![im isHidden])
+	    if ((showsHidden || ![im isHidden])
+		&& [im isDeleted] == trash_item)
 	      {
 		[images addObject:im];
 		need_title = YES;
@@ -388,11 +401,13 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 - (NSInteger)imageListSizeFromItem:(PDLibraryItem *)item
 {
   BOOL showsHidden = [_controller showsHiddenImages];
+  BOOL trash_item = [item isTrashcan];
 
   __block NSInteger count = 0;
 
   [item foreachSubimage:^(PDImage *im) {
-    if (showsHidden || ![im isHidden])
+    if ((showsHidden || ![im isHidden])
+	&& [im isDeleted] == trash_item)
       count++;
   }];
 
@@ -928,6 +943,20 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
 	    }
 	}
     }
+}
+
+- (void)imagePropertyDidChange:(NSNotification *)note
+{
+  static NSSet *keys;
+  static dispatch_once_t once;
+
+  dispatch_once(&once, ^{
+    keys = [[NSSet alloc] initWithObjects:
+	    PDImage_Deleted, PDImage_Hidden, nil];
+  });
+
+  if ([keys containsObject:[[note userInfo] objectForKey:@"key"]])
+    [self updateImageList];
 }
 
 - (IBAction)controlAction:(id)sender

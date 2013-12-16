@@ -27,8 +27,10 @@
 @interface PDLibraryQuery : PDLibraryGroup
 {
   NSPredicate *_predicate;
+  BOOL _trashcan;
 }
 
 @property(nonatomic, copy) NSPredicate *predicate;
+@property(nonatomic, getter=isTrashcan) BOOL trashcan;
 
 @end

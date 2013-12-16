@@ -74,6 +74,11 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
     }
 }
 
+- (BOOL)isTrashcan
+{
+  return NO;
+}
+
 - (BOOL)hasTitleImage
 {
   return [self titleImage] != nil;

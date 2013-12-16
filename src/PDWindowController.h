@@ -187,6 +187,10 @@ enum PDAccessoryMode
 - (IBAction)toggleHiddenAction:(id)sender;
 - (NSInteger)hiddenState;
 
+- (IBAction)delete:(id)sender;
+- (IBAction)toggleDeletedAction:(id)sender;
+- (NSInteger)deletedState;
+
 - (IBAction)toggleRawAction:(id)sender;
 - (NSInteger)rawState;
 - (BOOL)isToggleRawSupported;

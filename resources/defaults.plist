@@ -27,6 +27,18 @@
 			<string>Rejected</string>
 			<key>predicate</key>
 			<string>rating &lt; 0</string>
+			<key>icon</key>
+			<string>NSStopProgressTemplate</string>
+		</dict>
+ 		<dict>
+			<key>name</key>
+			<string>Trash</string>
+			<key>predicate</key>
+			<string>TRUEPREDICATE</string>
+			<key>trashcan</key>
+			<true/>
+			<key>icon</key>
+			<string>NSTrashEmpty</string>
 		</dict>
 	</array>
 	<key>PDImageLibraries</key>

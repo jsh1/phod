@@ -947,6 +947,21 @@ file_path(PDImage *self, NSString *file)
   return [[self imagePropertyForKey:PDImage_Hidden] boolValue];
 }
 
+- (void)setHidden:(BOOL)flag
+{
+  [self setImageProperty:[NSNumber numberWithBool:flag] forKey:PDImage_Hidden];
+}
+
+- (BOOL)isDeleted
+{
+  return [[self imagePropertyForKey:PDImage_Deleted] boolValue];
+}
+
+- (void)setDeleted:(BOOL)flag
+{
+  [self setImageProperty:[NSNumber numberWithBool:flag] forKey:PDImage_Deleted];
+}
+
 - (BOOL)usesRAW
 {
   if (_rawType == nil)

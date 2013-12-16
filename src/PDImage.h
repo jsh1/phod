@@ -153,10 +153,12 @@ typedef int PDImageCompareKey;
 @property(nonatomic, readonly) NSString *name;
 @property(nonatomic, readonly) NSDate *date;
 @property(nonatomic, readonly) NSString *title;
-@property(nonatomic, readonly, getter=isHidden) BOOL hidden;
 @property(nonatomic, readonly) CGSize pixelSize;
 @property(nonatomic, readonly) unsigned int orientation;
 @property(nonatomic, readonly) CGSize orientedPixelSize;
+
+@property(nonatomic, getter=isHidden) BOOL hidden;
+@property(nonatomic, getter=isDeleted) BOOL deleted;
 
 /* Fill proxy caches asynchronously. */
 
@@ -206,6 +208,7 @@ extern NSString * const PDImage_Copyright;	// NSString
 extern NSString * const PDImage_Rating;		// NSNumber -1..5
 extern NSString * const PDImage_Flagged;	// NSNumber<bool>
 extern NSString * const PDImage_Hidden;		// NSNumber<bool>
+extern NSString * const PDImage_Deleted;	// NSNumber<bool>
 
 extern NSString * const PDImage_Altitude;	// NSNumber (metres)
 extern NSString * const PDImage_CameraMake;	// NSString

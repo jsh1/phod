@@ -139,6 +139,9 @@
                                 </connections>
                             </menuItem>
                             <menuItem title="Delete" id="202">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+CA
+</string>
                                 <connections>
                                     <action selector="delete:" target="-1" id="235"/>
                                 </connections>
@@ -404,6 +407,15 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleHiddenAction:" target="-1" id="vRq-AF-Pns"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Deleted" id="lGt-hO-5Ol">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+CA
+</string>
+                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                <connections>
+                                    <action selector="toggleDeletedAction:" target="-1" id="nzz-MU-9rw"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="YZW-iN-Duk"/>

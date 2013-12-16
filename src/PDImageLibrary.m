@@ -919,6 +919,8 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 	      [dst_paths addObject:dst_path];
 
 	      *op_ptr = [NSBlockOperation blockOperationWithBlock:^{
+		if (error != nil)
+		  return;
 		NSError *err = nil;
 		if (copy_item_atomically(fm, src_path, dst_path, &err))
 		  {
@@ -984,6 +986,8 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 	    json_path = find_unique_name(fm, json_path);
 
 	  NSOperation *json_op = [NSBlockOperation blockOperationWithBlock:^{
+	    if (error != nil)
+	      return;
 	    NSData *data = [NSJSONSerialization dataWithJSONObject:json_dict
 			    options:NSJSONWritingPrettyPrinted error:nil];
 	    NSError *err = nil;

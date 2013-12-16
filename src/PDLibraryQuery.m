@@ -32,6 +32,7 @@
 @implementation PDLibraryQuery
 
 @synthesize predicate = _predicate;
+@synthesize trashcan = _trashcan;
 
 - (void)dealloc
 {

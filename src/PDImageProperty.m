@@ -383,6 +383,7 @@ static const type_pair type_map[] =
   {"contrast", type_contrast},
   {"copyright", type_string},
   {"date", type_unix_date},
+  {"deleted", type_bool},
   {"digitized_date", type_unix_date},
   {"direction", type_direction},
   {"direction_ref", type_string},
@@ -1057,6 +1058,7 @@ NSString * const PDImage_Copyright = @"copyright";
 NSString * const PDImage_Rating = @"rating";
 NSString * const PDImage_Flagged = @"flagged";
 NSString * const PDImage_Hidden = @"hidden";
+NSString * const PDImage_Deleted = @"deleted";
 
 NSString * const PDImage_Altitude = @"altitude";
 NSString * const PDImage_Aperture = @"aperture";

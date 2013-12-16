@@ -964,11 +964,12 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   if ([_selectedImageIndexes count] == 0)
     return;
 
-  NSInteger idx;
-  for (idx = [_selectedImageIndexes firstIndex]; idx != NSNotFound;
-       idx = [_selectedImageIndexes indexGreaterThanIndex:idx])
+  /* Not using _selectedImageIndexes in case it changes while
+     iterating. */
+
+  for (PDImage *image in [self selectedImages])
     {
-      block([_filteredImageList objectAtIndex:idx]);
+      block(image);
     }
 }
 
@@ -1110,9 +1111,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (IBAction)toggleHiddenAction:(id)sender
 {
   [self foreachSelectedImage:^(PDImage *image) {
-    BOOL hidden = [image isHidden];
-    [image setImageProperty:[NSNumber numberWithBool:!hidden]
-     forKey:PDImage_Hidden];
+    [image setHidden:![image isHidden]];
   }];
 }
 
@@ -1122,6 +1121,34 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
   [self foreachSelectedImage:^(PDImage *image) {
     if ([image isHidden])
+      all_clear = NO;
+    else
+      all_set = NO;
+  }];
+
+  return all_set ? NSOnState : all_clear ? NSOffState : NSMixedState;
+}
+
+- (IBAction)delete:(id)sender
+{
+  [self foreachSelectedImage:^(PDImage *image) {
+    [image setDeleted:YES];
+  }];
+}
+
+- (IBAction)toggleDeletedAction:(id)sender
+{
+  [self foreachSelectedImage:^(PDImage *image) {
+    [image setDeleted:![image isDeleted]];
+  }];
+}
+
+- (NSInteger)deletedState
+{
+  __block BOOL all_set = YES, all_clear = YES;
+
+  [self foreachSelectedImage:^(PDImage *image) {
+    if ([image isDeleted])
       all_clear = NO;
     else
       all_set = NO;
@@ -1266,7 +1293,8 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 	      && _primarySelectionIndex >= 0);
     }
 
-  if (sel == @selector(setImageRatingAction:)
+  if (sel == @selector(delete:)
+      || sel == @selector(setImageRatingAction:)
       || sel == @selector(addImageRatingAction:)
       || sel == @selector(toggleFlaggedAction:)
       || sel == @selector(toggleHiddenAction:)

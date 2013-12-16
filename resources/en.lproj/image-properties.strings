@@ -16,6 +16,7 @@
 "rating" = "Rating";
 "flagged" = "Flagged";
 "hidden" = "Hidden";
+"deleted" = "Deleted";
 
 "altitude" = "Altitude";
 "aperture" = "Aperture";
