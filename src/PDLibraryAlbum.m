@@ -96,6 +96,8 @@
     if (uuid != nil && [_allUUIDs containsObject:uuid])
       thunk(im);
   }];
+
+  [super foreachSubimage:thunk];
 }
 
 - (BOOL)hasTitleImage

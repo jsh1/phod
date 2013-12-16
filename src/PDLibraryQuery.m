@@ -52,6 +52,8 @@
 	  thunk(im);
       }];
     }
+
+  [super foreachSubimage:thunk];
 }
 
 - (BOOL)hasTitleImage

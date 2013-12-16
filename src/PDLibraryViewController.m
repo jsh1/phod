@@ -116,6 +116,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
       if (icon_name != nil)
 	[item setIconImage:[NSImage imageNamed:icon_name]];
 
+      for (NSDictionary *sub in [dict objectForKey:@"subitems"])
+	[self addAlbumItem:sub toItem:item];
+
       [parent addSubitem:item];
       [item release];
     }
@@ -592,37 +595,44 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
    setObject:array forKey:@"PDImageLibraries"];
 }
 
-- (void)updateImageAlbums
+static NSDictionary *
+library_group_description(PDLibraryGroup *item)
 {
-  NSMutableArray *array = [NSMutableArray array];
+  NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
-  for (PDLibraryItem *item in [_albumsGroup subitems])
+  [dict setObject:[item name] forKey:@"name"];
+
+  NSArray *subitems = [item subitems];
+  if ([subitems count] != 0)
     {
-      if ([item isKindOfClass:[PDLibraryQuery class]])
-	{
-	  PDLibraryQuery *q_item = (PDLibraryQuery *)item;
-
-	  NSString *name = [q_item name];
-	  NSString *pred = [[q_item predicate] predicateFormat];
-	  if (pred == nil)
-	    pred = @"";
-
-	  [array addObject:@{@"name": name, @"predicate": pred}];
-	}
-      else if ([item isKindOfClass:[PDLibraryAlbum class]])
-	{
-	  PDLibraryAlbum *a_item = (PDLibraryAlbum *)item;
-
-	  NSString *name = [a_item name];
-	  NSArray *names = [[a_item imageUUIDs] mappedArray:^(id obj) {
-	    return [(NSUUID *)obj UUIDString];
-	  }];
-
-	  [array addObject:@{@"name": name, @"imageUUIDs": names}];
-	}
+      [dict setObject:[subitems mappedArray:^(id obj) {
+	return library_group_description(obj);}] forKey:@"subitems"];
     }
 
-  [[NSUserDefaults standardUserDefaults] setObject:array
+  if ([item isKindOfClass:[PDLibraryQuery class]])
+    {
+      NSString *pred = [[(PDLibraryQuery *)item predicate] predicateFormat];
+      if (pred != nil)
+	[dict setObject:pred forKey:@"predicate"];
+    }
+  else if ([item isKindOfClass:[PDLibraryAlbum class]])
+    {
+      NSArray *names = [[(PDLibraryAlbum *)item imageUUIDs]
+			mappedArray:^(id obj) {
+			  return [(NSUUID *)obj UUIDString];
+			}];
+
+      [dict setObject:names forKey:@"imageUUIDs"];
+    }
+
+  return dict;
+}
+
+- (void)updateImageAlbums
+{
+  [[NSUserDefaults standardUserDefaults] setObject:
+   [[_albumsGroup subitems] mappedArray:^(id obj) {
+     return library_group_description(obj);}]
    forKey:@"PDLibraryAlbums"];
 }
 
@@ -1278,11 +1288,11 @@ item_for_path(NSArray *items, NSArray *path)
       if (_draggedItems == nil)
 	return NSDragOperationNone;
 
-      if (item == _albumsGroup)
+      if ([item isDescendantOf:_albumsGroup])
 	{
 	  for (PDLibraryItem *dragged_item in _draggedItems)
 	    {
-	      if ([dragged_item parent] != _albumsGroup)
+	      if (![[dragged_item parent] isDescendantOf:_albumsGroup])
 		return NSDragOperationNone;
 	    }
 
@@ -1345,26 +1355,32 @@ item_for_path(NSArray *items, NSArray *path)
       if (_draggedItems == nil)
 	return NSDragOperationNone;
 
-      if (item == _foldersGroup || item == _albumsGroup)
+      if (item == _foldersGroup
+	  || [(PDLibraryItem *)item isDescendantOf:_albumsGroup])
 	{
 	  [_outlineView callPreservingSelectedRows:^{
 	    NSInteger i = idx;
 
+	    NSMutableSet *reload = [NSMutableSet setWithObject:item];
+
 	    for (PDLibraryItem *dragged_item in _draggedItems)
 	      {
+		PDLibraryGroup *parent = (id)[dragged_item parent];
 		NSInteger item_idx
-		  = [[item subitems] indexOfObjectIdenticalTo:dragged_item];
+		  = [[parent subitems] indexOfObjectIdenticalTo:dragged_item];
 		if (item_idx == NSNotFound)
 		  continue;
-		[item removeSubitem:dragged_item];
-		if (item_idx < i)
+		[parent removeSubitem:dragged_item];
+		[reload addObject:parent];
+		if (parent == item && item_idx < i)
 		  i--;
 	      }
 
 	    for (PDLibraryItem *dragged_item in _draggedItems)
 	      [item insertSubitem:dragged_item atIndex:i++];
 
-	    [_outlineView reloadItem:item reloadChildren:YES];
+	    for (PDLibraryItem *item in reload)
+	      [_outlineView reloadItem:item reloadChildren:YES];
 	  }];
 
 	  if (item == _foldersGroup)
