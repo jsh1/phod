@@ -273,18 +273,14 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 - (void)updateControls
 {
   BOOL can_delete = NO;
-  BOOL non_empty = YES;
 
-  if ([_selectedItems count] == 0)
-    non_empty = NO;
-  else
+  for (PDLibraryItem *item in _selectedItems)
     {
-      for (PDLibraryItem *item in _selectedItems)
+      PDLibraryItem *parent = [item parent];
+      if (parent == _foldersGroup || parent == _devicesGroup
+	  || [parent isDescendantOf:_albumsGroup])
 	{
-	  PDLibraryItem *parent = [item parent];
-
-	  if (parent == _foldersGroup || parent == _albumsGroup)
-	    can_delete = YES;
+	  can_delete = YES;
 	}
     }
 
@@ -531,7 +527,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   [_outlineView reloadDataPreservingSelectedRows];
   [_outlineView expandItem:_devicesGroup];
 
-  return item;
+  return [item autorelease];
 }
 
 - (void)removeVolumeAtPath:(NSString *)path
@@ -717,13 +713,13 @@ library_group_description(PDLibraryGroup *item)
 {
   BOOL changed = NO;
 
-  for (PDLibraryItem *item in _selectedItems)
+  for (PDLibraryItem *item in [[_selectedItems copy] autorelease])
     {
       PDLibraryItem *parent = [item parent];
 
       if (parent == _foldersGroup)
 	{
-	  NSArray *subitems = [_foldersGroup subitems];
+	  NSArray *subitems = [parent subitems];
 	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
 	  if (idx != NSNotFound)
 	    {
@@ -733,15 +729,10 @@ library_group_description(PDLibraryGroup *item)
 	      changed = YES;
 	    }
 	}
-      else if (parent == _albumsGroup)
+      else if ([item isDescendantOf:_albumsGroup])
 	{
-	  NSArray *subitems = [_albumsGroup subitems];
-	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
-	  if (idx != NSNotFound)
-	    {
-	      [_albumsGroup removeSubitem:[subitems objectAtIndex:idx]];
-	      changed = YES;
-	    }
+	  [(PDLibraryGroup *)parent removeSubitem:item];
+	  changed = YES;
 	}
       else if (parent == _devicesGroup)
 	{

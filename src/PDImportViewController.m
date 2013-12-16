@@ -113,9 +113,6 @@
 
 - (void)updateControls
 {
-  PDImageLibrary *selected_lib
-    = [[_libraryButton selectedItem] representedObject];
-
   NSArray *all_libs = [PDImageLibrary allLibraries];
   NSArray *current_libs = [[_libraryButton itemArray] mappedArray:
 			   ^id (id obj) {
@@ -123,6 +120,9 @@
 
   if (![current_libs isEqual:all_libs])
     {
+      PDImageLibrary *selected_lib
+        = [[_libraryButton selectedItem] representedObject];
+
       [_libraryButton removeAllItems];
       for (PDImageLibrary *lib in all_libs)
 	{
@@ -135,8 +135,6 @@
 		[_libraryButton selectItem:item];
 	    }
 	}
-
-      selected_lib = [[_libraryButton selectedItem] representedObject];
     }
 }
 

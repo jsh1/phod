@@ -122,6 +122,8 @@ Issues
   (Requires an expensive full-library scan?) Also add an "Empty Trash"
   command.
 
+  MOSTLY RESOLVED: done, except for the empty-trash command.
+
 14. Libraries and caching
 
   Even though startup asynchronously loads images, it takes long enough
@@ -181,3 +183,14 @@ Issues
 
   RESOLVED: PDImageName no longer uses name property, images in albums
   are given a UUID.
+
+18. Import image remaining is not implemented.
+
+19. Support storing metadata external to the image directories?
+
+  Currently we write out a .phod-suffixed file with a JSON-encoded
+  dictionary after generating any metadata that wouldn't be reproduced
+  by reloading the original file(s). This has advantages (e.g. easy for
+  user to move the metadata along with the images), but some people may
+  want it stored somewhere else..
+
