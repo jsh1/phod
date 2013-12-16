@@ -22,24 +22,53 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDImageName.h"
+#import "PDImageUUID.h"
 
 #import "PDImage.h"
 #import "PDImageLibrary.h"
 
-NSString *const PDImageNameType = @"org.unfactored.Phod.PDImageName";
+NSString *const PDImageUUIDType = @"org.unfactored.Phod.PDImageUUID";
 
-@implementation PDImageName
+@implementation PDImageUUID
 
-@synthesize libraryId = _libraryId;
-@synthesize imageId = _imageId;
+@synthesize UUID = _uuid;
 
-+ (PDImageName *)nameOfImage:(PDImage *)image
++ (PDImageUUID *)imageUUIDWithUUID:(NSUUID *)uuid
 {
-  PDImageName *name = [[PDImageName alloc] init];
-  name->_libraryId = [[image library] libraryId];
-  name->_imageId = [image imageId];
-  return [name autorelease];
+  return [[[PDImageUUID alloc] initWithUUID:uuid] autorelease];
+}
+
++ (PDImageUUID *)imageUUIDWithPropertyList:(id)obj
+{
+  return [[[PDImageUUID alloc] initWithPropertyList:obj] autorelease];
+}
+
+- (id)initWithUUID:(NSUUID *)uuid
+{
+  self = [super init];
+  if (self == nil)
+    return nil;
+
+  _uuid = [uuid copy];
+
+  return self;
+}
+
+- (id)initWithPropertyList:(id)obj
+{
+  self = [super init];
+  if (self == nil)
+    return nil;
+
+  if (![obj isKindOfClass:[NSString class]])
+    {
+      [self release];
+      return nil;
+    }
+
+  _uuid = [[NSUUID alloc] initWithUUIDString:obj];
+
+  return self;
 }
 
 - (BOOL)isEqual:(id)obj
@@ -47,64 +76,35 @@ NSString *const PDImageNameType = @"org.unfactored.Phod.PDImageName";
   if ([obj class] != [self class])
     return NO;
 
-  PDImageName *rhs = obj;
-  return _libraryId == rhs->_libraryId && _imageId == rhs->_imageId;
+  PDImageUUID *rhs = obj;
+  return [_uuid isEqual:rhs->_uuid];
 }
 
 - (NSUInteger)hash
 {
-  return _libraryId + (_imageId * 33);
-}
-
-- (BOOL)matchesImage:(PDImage *)image
-{
-  return (_libraryId == [[image library] libraryId]
-	  && _imageId == [image imageIdIfDefined]);
+  return [_uuid hash];
 }
 
 - (id)propertyList
 {
-  return @{
-    @"libraryId": @(_libraryId),
-    @"imageId": @(_imageId),
-  };
-}
-
-- (id)initWithPropertyList:(id)obj
-{
-  self = [self init];
-  if (self == nil)
-    return nil;
-
-  _libraryId = [[obj objectForKey:@"libraryId"] unsignedIntValue];
-  _imageId = [[obj objectForKey:@"imageId"] unsignedIntValue];
-
-  return self;
-}
-
-+ (PDImageName *)imageNameFromPropertyList:(id)obj
-{
-  return [[[PDImageName alloc] initWithPropertyList:obj] autorelease];
+  return [_uuid UUIDString];
 }
 
 - (id)copyWithZone:(NSZone *)zone
 {
-  PDImageName *name = [[PDImageName alloc] init];
-  name->_libraryId = _libraryId;
-  name->_imageId = _imageId;
-  return name;
+  return [self retain];
 }
 
 // NSPasteboardWriting methods
 
 - (NSArray *)writableTypesForPasteboard:(NSPasteboard *)pboard
 {
-  return @[PDImageNameType];
+  return @[PDImageUUIDType];
 }
 
 - (id)pasteboardPropertyListForType:(NSString *)type
 {
-  if ([type isEqualToString:PDImageNameType])
+  if ([type isEqualToString:PDImageUUIDType])
     return [self propertyList];
   else
     return nil;
@@ -114,13 +114,13 @@ NSString *const PDImageNameType = @"org.unfactored.Phod.PDImageName";
 
 + (NSArray *)readableTypesForPasteboard:(NSPasteboard *)pboard
 {
-  return @[PDImageNameType];
+  return @[PDImageUUIDType];
 }
 
 + (NSPasteboardReadingOptions)readingOptionsForType:(NSString *)type
     pasteboard:(NSPasteboard *)pboard
 {
-  if ([type isEqualToString:PDImageNameType])
+  if ([type isEqualToString:PDImageUUIDType])
     return NSPasteboardReadingAsPropertyList;
   else
     return 0;
@@ -128,7 +128,7 @@ NSString *const PDImageNameType = @"org.unfactored.Phod.PDImageName";
 
 - (id)initWithPasteboardPropertyList:(id)obj ofType:(NSString *)type
 {
-  if ([type isEqualToString:PDImageNameType])
+  if ([type isEqualToString:PDImageUUIDType])
     return [self initWithPropertyList:obj];
 
   [self release];

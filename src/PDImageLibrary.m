@@ -187,7 +187,6 @@ again:
   _name = [[obj objectForKey:@"name"] copy];
   _libraryId = [[obj objectForKey:@"libraryId"] unsignedIntValue];
   _lastFileId = [[obj objectForKey:@"lastFileId"] unsignedIntValue];
-  _lastImageId = [[obj objectForKey:@"lastImageId"] unsignedIntValue];
 
   if (_libraryId == 0)
     {
@@ -244,7 +243,6 @@ again:
     @"name": _name,
     @"libraryId": @(_libraryId),
     @"lastFileId": @(_lastFileId),
-    @"lastImageId": @(_lastImageId)
   };
 }
 
@@ -481,11 +479,6 @@ convert_hexdigit(int c)
   _catalogDirty = YES;
 
   return fid;
-}
-
-- (uint32_t)nextImageId
-{
-  return ++_lastImageId;
 }
 
 static NSSet *

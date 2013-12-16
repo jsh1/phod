@@ -24,25 +24,24 @@
 
 #import <Foundation/NSObject.h>
 
+extern NSString *const PDImageUUIDType;
+
 @class PDImage;
 
-extern NSString *const PDImageNameType;
-
-@interface PDImageName : NSObject
+@interface PDImageUUID : NSObject
     <NSCopying, NSPasteboardWriting, NSPasteboardReading>
 {
-  uint32_t _libraryId;
-  uint32_t _imageId;
+  NSUUID *_uuid;
 }
 
-+ (PDImageName *)nameOfImage:(PDImage *)image;
++ (PDImageUUID *)imageUUIDWithUUID:(NSUUID *)uuid;
++ (PDImageUUID *)imageUUIDWithPropertyList:(id)obj;
 
-@property(nonatomic) uint32_t libraryId;
-@property(nonatomic) uint32_t imageId;
+- (id)initWithUUID:(NSUUID *)uuid;
+- (id)initWithPropertyList:(id)obj;
 
-- (BOOL)matchesImage:(PDImage *)image;
+@property(nonatomic, copy, readonly) NSUUID *UUID;
 
 - (id)propertyList;
-+ (PDImageName *)imageNameFromPropertyList:(id)obj;
 
 @end

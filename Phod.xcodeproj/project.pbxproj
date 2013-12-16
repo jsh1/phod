@@ -61,7 +61,7 @@
 		57DADC0E1833C40F006D0BC1 /* PDImageGridView.m in Sources */ = {isa = PBXBuildFile; fileRef = 57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */; };
 		57E053B71830576A00123059 /* PDThumbnailLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 57E053B61830576A00123059 /* PDThumbnailLayer.m */; };
 		57E4366F185BD0BB0043540F /* import-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 57E4366E185BD0BB0043540F /* import-icon.png */; };
-		57F3690B185DF749005ADCE8 /* PDImageName.m in Sources */ = {isa = PBXBuildFile; fileRef = 57F3690A185DF749005ADCE8 /* PDImageName.m */; };
+		57F3690B185DF749005ADCE8 /* PDImageUUID.m in Sources */ = {isa = PBXBuildFile; fileRef = 57F3690A185DF749005ADCE8 /* PDImageUUID.m */; };
 		57F3690E185DFA23005ADCE8 /* PDLibraryAlbum.m in Sources */ = {isa = PBXBuildFile; fileRef = 57F3690D185DFA23005ADCE8 /* PDLibraryAlbum.m */; };
 /* End PBXBuildFile section */
 
@@ -157,8 +157,8 @@
 		57E053B51830576A00123059 /* PDThumbnailLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDThumbnailLayer.h; sourceTree = "<group>"; };
 		57E053B61830576A00123059 /* PDThumbnailLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDThumbnailLayer.m; sourceTree = "<group>"; };
 		57E4366E185BD0BB0043540F /* import-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "import-icon.png"; sourceTree = "<group>"; };
-		57F36909185DF749005ADCE8 /* PDImageName.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageName.h; sourceTree = "<group>"; };
-		57F3690A185DF749005ADCE8 /* PDImageName.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageName.m; sourceTree = "<group>"; };
+		57F36909185DF749005ADCE8 /* PDImageUUID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageUUID.h; sourceTree = "<group>"; };
+		57F3690A185DF749005ADCE8 /* PDImageUUID.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageUUID.m; sourceTree = "<group>"; };
 		57F3690C185DFA23005ADCE8 /* PDLibraryAlbum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryAlbum.h; sourceTree = "<group>"; };
 		57F3690D185DFA23005ADCE8 /* PDLibraryAlbum.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryAlbum.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -188,10 +188,10 @@
 				575167711852451800163CD8 /* PDImageLibrary.m */,
 				57C18104182F0ED3002B8DB2 /* PDImage.h */,
 				57C18105182F0ED3002B8DB2 /* PDImage.m */,
-				57F36909185DF749005ADCE8 /* PDImageName.h */,
-				57F3690A185DF749005ADCE8 /* PDImageName.m */,
 				57D096121846C646005B2AD4 /* PDImageProperty.h */,
 				57D096131846C646005B2AD4 /* PDImageProperty.m */,
+				57F36909185DF749005ADCE8 /* PDImageUUID.h */,
+				57F3690A185DF749005ADCE8 /* PDImageUUID.m */,
 			);
 			name = Imaging;
 			sourceTree = "<group>";
@@ -236,8 +236,8 @@
 				57C18112182FDD33002B8DB2 /* Library */,
 				57626D7A183E4D110080A34E /* Imaging */,
 				57C18113182FDD46002B8DB2 /* Controls */,
-				57B1FAF4184FCBC000FEF7DB /* PXSourceList */,
 				57C18114182FDD57002B8DB2 /* Misc */,
+				57B1FAF4184FCBC000FEF7DB /* PXSourceList */,
 			);
 			name = Source;
 			path = src;
@@ -464,7 +464,7 @@
 				57CE6A25182D863E000BF04E /* PDImageListViewController.m in Sources */,
 				57C18109182F0ED3002B8DB2 /* PDImage.m in Sources */,
 				5717B44E18424A6000149627 /* PDMetadataView.m in Sources */,
-				57F3690B185DF749005ADCE8 /* PDImageName.m in Sources */,
+				57F3690B185DF749005ADCE8 /* PDImageUUID.m in Sources */,
 				57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */,
 				57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */,
 				57075C79185D2FC30097E15A /* PDLibraryView.m in Sources */,

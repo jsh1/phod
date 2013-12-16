@@ -28,7 +28,7 @@
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
 #import "PDImageListViewController.h"
-#import "PDImageName.h"
+#import "PDImageUUID.h"
 #import "PDThumbnailLayer.h"
 #import "PDWindowController.h"
 
@@ -435,10 +435,10 @@ copy_layer_snapshot(CALayer *layer)
        idx = [_selection indexGreaterThanIndex:idx])
     {
       PDImage *image = [_images objectAtIndex:idx];
+      PDImageUUID *image_uuid = [PDImageUUID imageUUIDWithUUID:[image UUID]];
 
-      NSDraggingItem *item
-        = [[NSDraggingItem alloc] initWithPasteboardWriter:
-	   [PDImageName nameOfImage:image]];
+      NSDraggingItem *item = [[NSDraggingItem alloc]
+			      initWithPasteboardWriter:image_uuid];
 
       CALayer *layer = [self layerForImage:image];
 

@@ -27,7 +27,6 @@
 #import "PDAppDelegate.h"
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
-#import "PDImageName.h"
 #import "PDWindowController.h"
 
 #import "PDMacros.h"
@@ -40,57 +39,51 @@
   if (self == nil)
     return nil;
 
-  _imageNames = [[NSMutableArray alloc] init];
-  _map = CFDictionaryCreateMutable(NULL, 0, NULL,
-		&kCFTypeDictionaryValueCallBacks);
+  _imageUUIDs = [[NSMutableArray alloc] init];
+  _allUUIDs = [[NSMutableSet alloc] init];
 
   return self;
 }
 
 - (void)dealloc
 {
-  [_imageNames release];
-  if (_map != NULL)
-    CFRelease(_map);
+  [_imageUUIDs release];
+  [_allUUIDs release];
   [super dealloc];
 }
 
-- (NSArray *)imageNames
+- (NSArray *)imageUUIDs
 {
-  return _imageNames;
+  return _imageUUIDs;
 }
 
-- (void)setImageNames:(NSArray *)obj
+- (void)setImageUUIDs:(NSArray *)obj
 {
-  if (_imageNames != obj)
+  if (_imageUUIDs != obj)
     {
-      [_imageNames release];
-      _imageNames = [obj mutableCopy];
+      [_imageUUIDs release];
+      _imageUUIDs = [obj mutableCopy];
 
-      CFDictionaryRemoveAllValues(_map);
+      [_allUUIDs removeAllObjects];
 
-      for (PDImageName *name in _imageNames)
-	{
-	  uint32_t ident = [name imageId];
-	  CFDictionarySetValue(_map, UINT_TO_POINTER(ident), name);
-	}
+      for (NSUUID *uuid in _imageUUIDs)
+	[_allUUIDs addObject:uuid];
     }
 }
 
-- (void)addImageNamed:(PDImageName *)name
+- (void)addImageWithUUID:(NSUUID *)uuid
 {
-  uint32_t ident = [name imageId];
-  if (CFDictionaryGetValue(_map, UINT_TO_POINTER(ident)) == NULL)
+  if (![_allUUIDs containsObject:uuid])
     {
-      [_imageNames addObject:name];
-      CFDictionarySetValue(_map, POINTER_TO_UINT(ident), name);
+      [_imageUUIDs addObject:uuid];
+      [_allUUIDs addObject:uuid];
     }
 }
 
-- (void)removeImageNamed:(PDImageName *)name
+- (void)removeImageWithUUID:(NSUUID *)uuid
 {
-  [_imageNames removeObject:name];
-  CFDictionaryRemoveAllValues(_map);
+  [_allUUIDs removeObject:uuid];
+  [_imageUUIDs removeObject:uuid];
 }
 
 - (void)foreachSubimage:(void (^)(PDImage *))thunk
@@ -99,14 +92,9 @@
     = [(PDAppDelegate *)[NSApp delegate] windowController];
 
   [controller foreachImage:^(PDImage *im) {
-    uint32_t ident = [im imageIdIfDefined];
-    if (ident != 0)
-      {
-	PDImageName *name
-	  = (id)CFDictionaryGetValue(_map, UINT_TO_POINTER(ident));
-	if (name != nil && [name matchesImage:im])
-	  thunk(im);
-      }
+    NSUUID *uuid = [im UUIDIfDefined];
+    if (uuid != nil && [_allUUIDs containsObject:uuid])
+      thunk(im);
   }];
 }
 
@@ -128,7 +116,7 @@
 
 - (NSInteger)badgeValue
 {
-  return [_imageNames count];
+  return [_imageUUIDs count];
 }
 
 @end

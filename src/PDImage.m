@@ -26,7 +26,6 @@
 
 #import "PDAppDelegate.h"
 #import "PDImageLibrary.h"
-#import "PDImageName.h"
 #import "PDImageProperty.h"
 #import "PDWindowController.h"
 
@@ -399,14 +398,9 @@ file_path(PDImage *self, NSString *file)
 	      if (props != nil)
 		[_properties addEntriesFromDictionary:props];
 
-	      NSArray *ident = [dict objectForKey:@"ImageID"];
-	      if (ident != nil)
-		{
-		  uint32_t image_id = [[ident firstObject] unsignedIntValue];
-		  uint32_t lib_id = [[ident lastObject] unsignedIntValue];
-		  if (lib_id == [_library libraryId])
-		    _imageId = image_id;
-		}
+	      NSString *uuid_str = [dict objectForKey:@"UUID"];
+	      if (uuid_str != nil)
+		_uuid = [[NSUUID alloc] initWithUUIDString:uuid_str];
 
 	      _jpegFile = [[dict objectForKey:@"JPEGFile"] copy];
 	      _rawFile = [[dict objectForKey:@"RAWFile"] copy];
@@ -469,6 +463,7 @@ file_path(PDImage *self, NSString *file)
 {
   [_library release];
   [_libraryDirectory release];
+  [_uuid release];
   [_jsonFile release];
   [_jpegType release];
   [_jpegFile release];
@@ -511,14 +506,8 @@ file_path(PDImage *self, NSString *file)
 
 	NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
-	if (_imageId != 0)
-	  {
-	    /* Need to store both IDs, just in case the file is later
-	       used by another library, so it can sanity-check. */
-
-	    NSArray *ident = @[@(_imageId), @([_library libraryId])];
-	    [dict setObject:ident forKey:@"ImageID"];
-	  }
+	if (_uuid != nil)
+	  [dict setObject:[_uuid UUIDString] forKey:@"UUID"];
 
 	if (_jpegFile != nil)
 	  [dict setObject:_jpegFile forKey:@"JPEGFile"];
@@ -927,20 +916,20 @@ file_path(PDImage *self, NSString *file)
   return _date;
 }
 
-- (uint32_t)imageId
+- (NSUUID *)UUID
 {
-  if (_imageId == 0)
+  if (_uuid == nil)
     {
-      _imageId = [_library nextImageId];
+      _uuid = [[NSUUID alloc] init];
       [self writeJSONFile];
     }
 
-  return _imageId;
+  return _uuid;
 }
 
-- (uint32_t)imageIdIfDefined
+- (NSUUID *)UUIDIfDefined
 {
-  return _imageId;
+  return _uuid;
 }
 
 - (NSString *)name

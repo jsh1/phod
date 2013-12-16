@@ -24,17 +24,15 @@
 
 #import "PDLibraryGroup.h"
 
-@class PDImageName;
-
 @interface PDLibraryAlbum : PDLibraryGroup
 {
-  NSMutableArray *_imageNames;
-  CFMutableDictionaryRef _map;
+  NSMutableArray *_imageUUIDs;
+  NSMutableSet *_allUUIDs;
 }
 
-@property(nonatomic, copy) NSArray *imageNames;
+@property(nonatomic, copy) NSArray *imageUUIDs;
 
-- (void)addImageNamed:(PDImageName *)name;
-- (void)removeImageNamed:(PDImageName *)name;
+- (void)addImageWithUUID:(NSUUID *)uuid;
+- (void)removeImageWithUUID:(NSUUID *)uuid;
 
 @end

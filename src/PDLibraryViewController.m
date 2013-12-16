@@ -28,8 +28,8 @@
 #import "PDFoundationExtensions.h"
 #import "PDImage.h"
 #import "PDImageLibrary.h"
-#import "PDImageName.h"
 #import "PDImageTextCell.h"
+#import "PDImageUUID.h"
 #import "PDLibraryAlbum.h"
 #import "PDLibraryDevice.h"
 #import "PDLibraryDirectory.h"
@@ -91,14 +91,14 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     }
   else
     {
-      NSArray *names = [dict objectForKey:@"imageNames"];
+      NSArray *uuids = [dict objectForKey:@"imageUUIDs"];
 
-      if (names != nil)
+      if (uuids != nil)
 	{
 	  PDLibraryAlbum *tem = [[PDLibraryAlbum alloc] init];
 
-	  [tem setImageNames:[names mappedArray:^(id obj) {
-	    return [PDImageName imageNameFromPropertyList:obj];
+	  [tem setImageUUIDs:[uuids mappedArray:^(id obj) {
+	    return [[[NSUUID alloc] initWithUUIDString:obj] autorelease];
 	  }]];
 
 	  item = tem;
@@ -250,7 +250,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   [_outlineView expandItem:_foldersGroup];
   [_outlineView expandItem:_albumsGroup];
 
-  [_outlineView registerForDraggedTypes:@[PDLibraryItemType, PDImageNameType]];
+  [_outlineView registerForDraggedTypes:@[PDLibraryItemType, PDImageUUIDType]];
 
   [self rescanVolumes];
 
@@ -599,11 +599,11 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 	  PDLibraryAlbum *a_item = (PDLibraryAlbum *)item;
 
 	  NSString *name = [a_item name];
-	  NSArray *names = [[a_item imageNames] mappedArray:^(id obj) {
-	    return [(PDImageName *)obj propertyList];
+	  NSArray *names = [[a_item imageUUIDs] mappedArray:^(id obj) {
+	    return [(NSUUID *)obj UUIDString];
 	  }];
 
-	  [array addObject:@{@"name": name, @"imageNames": names}];
+	  [array addObject:@{@"name": name, @"imageUUIDs": names}];
 	}
     }
 
@@ -660,7 +660,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 {
   NSDictionary *dict = @{
     @"name": @"Untitled",
-    @"imageNames": @[]
+    @"imageUUIDs": @[]
   };
 
   [self addAlbumItem:dict toItem:_albumsGroup];
@@ -1242,7 +1242,7 @@ item_for_path(NSArray *items, NSArray *path)
   /* FIXME: support dropping images into libraries as well. */
 
   NSString *type = [pboard availableTypeFromArray:
-		    @[PDLibraryItemType, PDImageNameType]];
+		    @[PDLibraryItemType, PDImageUUIDType]];
 
   if ([type isEqualToString:PDLibraryItemType])
     {
@@ -1286,7 +1286,7 @@ item_for_path(NSArray *items, NSArray *path)
 	  return NSDragOperationMove;
 	}
     }
-  else if ([type isEqualToString:PDImageNameType])
+  else if ([type isEqualToString:PDImageUUIDType])
     {
       if ([(PDLibraryItem *)item parent] == _albumsGroup
 	  && [item isKindOfClass:[PDLibraryAlbum class]])
@@ -1309,7 +1309,7 @@ item_for_path(NSArray *items, NSArray *path)
   /* FIXME: support dropping images into libraries as well. */
 
   NSString *type = [pboard availableTypeFromArray:
-		    @[PDLibraryItemType, PDImageNameType]];
+		    @[PDLibraryItemType, PDImageUUIDType]];
 
   if ([type isEqualToString:PDLibraryItemType])
     {
@@ -1388,17 +1388,17 @@ item_for_path(NSArray *items, NSArray *path)
 	  return YES;
 	}
     }
-  else if ([type isEqualToString:PDImageNameType])
+  else if ([type isEqualToString:PDImageUUIDType])
     {
       if ([(PDLibraryItem *)item parent] == _albumsGroup
 	  && [item isKindOfClass:[PDLibraryAlbum class]])
 	{
-	  NSArray *names = [pboard readObjectsForClasses:
-			    @[[PDImageName class]] options:nil];
+	  NSArray *uuids = [pboard readObjectsForClasses:
+			    @[[PDImageUUID class]] options:nil];
 
-	  for (PDImageName *name in names)
+	  for (PDImageUUID *uuid in uuids)
 	    {
-	      [(PDLibraryAlbum *)item addImageNamed:name];
+	      [(PDLibraryAlbum *)item addImageWithUUID:[uuid UUID]];
 	    }
 
 	  [_outlineView reloadItem:item];
