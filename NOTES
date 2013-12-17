@@ -119,10 +119,10 @@ Issues
 
   Add a deleted property to the image, set it when the image is
   "deleted". Add a "Trash" meta-folder to show all deleted images.
-  (Requires an expensive full-library scan?) Also add an "Empty Trash"
-  command.
+  Also add an "Empty Trash" command.
 
-  RESOLVED: done.
+  MOSTLY RESOLVED: need to support dragging into and out of the trash
+  folder.
 
 14. Libraries and caching
 
@@ -194,3 +194,10 @@ Issues
   user to move the metadata along with the images), but some people may
   want it stored somewhere else..
 
+20. Support libraries on removable volumes
+
+  Separate from archiving (described above, which also needs to track
+  volume mount/unmount), we should support libraries whose root is on
+  a removable mount-point. When unmounted we should the root item
+  greyed out (preserving the outline view state from the last time it
+  was seen), and its catalog is not garbage-collected.
