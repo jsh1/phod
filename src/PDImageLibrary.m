@@ -37,7 +37,7 @@
 #define CACHE_SEP '$'
 
 NSString *const PDImageLibraryDidImportFiles = @"PDImageLibraryDidImportFiles";
-NSString *const PDImageLibraryDidCopyImageFile = @"PDImageLibraryDidCopyImageFile";
+NSString *const PDImageLibraryDidRemoveFiles = @"PDImageLibraryDidRemoveFiles";
 
 @implementation PDImageLibrary
 
@@ -53,9 +53,10 @@ add_library(PDImageLibrary *lib)
 {
   static dispatch_once_t once;
 
-  dispatch_once(&once, ^{
-    _allLibraries = [[NSMutableArray alloc] init];
-  });
+  dispatch_once(&once, ^
+    {
+      _allLibraries = [[NSMutableArray alloc] init];
+    });
 
   [_allLibraries addObject:lib];
 }
@@ -141,6 +142,8 @@ cache_root(void)
   [_name release];
   [_path release];
   [_cachePath release];
+  dispatch_sync(_catalogQueue, ^{});
+  dispatch_release(_catalogQueue);
   [_catalog0 release];
   [_catalog1 release];
   [_activeImports release];
@@ -163,6 +166,9 @@ again:
       if (_libraryId == [lib libraryId])
 	goto again;
     }
+
+  _catalogQueue = dispatch_queue_create("PDImageLibrary.catalog",
+					DISPATCH_QUEUE_SERIAL);
 
   _catalog1 = [[NSMutableDictionary alloc] init];
 
@@ -212,6 +218,9 @@ again:
 	}
     }
 
+  _catalogQueue = dispatch_queue_create("PDImageLibrary.catalog",
+					DISPATCH_QUEUE_SERIAL);
+
   NSString *catalog_path
     = [[self cachePath] stringByAppendingPathComponent:@CATALOG_FILE];
 
@@ -253,24 +262,27 @@ again:
      in that case the current state is different to what was read from
      the file system. */
 
-  if (_catalogDirty || [_catalog0 count] != 0)
-    {
-      NSString *path = [[self cachePath]
-			stringByAppendingPathComponent:@CATALOG_FILE];
+  dispatch_sync(_catalogQueue, ^
+  {
+    if (_catalogDirty || [_catalog0 count] != 0)
+      {
+	NSString *path = [[self cachePath]
+			  stringByAppendingPathComponent:@CATALOG_FILE];
 
-      NSData *data = [NSJSONSerialization
-		      dataWithJSONObject:_catalog1 options:0 error:nil];
+	NSData *data = [NSJSONSerialization
+			dataWithJSONObject:_catalog1 options:0 error:nil];
 
-      if ([data writeToFile:path atomically:YES])
-	{
-	  _catalogDirty = NO;
+	if ([data writeToFile:path atomically:YES])
+	  {
+	    _catalogDirty = NO;
 
-	  [_catalog0 release];
-	  _catalog0 = nil;
-	}
-      else
-	[[NSFileManager defaultManager] removeItemAtPath:path error:nil];
-    }
+	    [_catalog0 release];
+	    _catalog0 = nil;
+	  }
+	else
+	  [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
+      }
+  });
 }
 
 - (void)remove
@@ -291,55 +303,79 @@ again:
      new names and purge the old state after relaunching a couple of
      times. */
 
-  NSInteger old_len = [oldName length];
+  dispatch_sync(_catalogQueue, ^
+  {
+    NSInteger old_len = [oldName length];
 
-  for (int pass = 0; pass < 2; pass++)
-    {
-      NSMutableDictionary *catalog = pass == 0 ? _catalog0 : _catalog1;
+    for (int pass = 0; pass < 2; pass++)
+      {
+	NSMutableDictionary *catalog = pass == 0 ? _catalog0 : _catalog1;
 
-      /* Cons up the list of known files under the moved directory
-	 (can't modify the dictionary while iterating over its keys). */
+	/* Cons up the list of known files under the moved directory
+	   (can't modify the dictionary while iterating over its keys). */
 
-      NSMutableArray *matches = [[NSMutableArray alloc] init];
+	NSMutableArray *matches = [[NSMutableArray alloc] init];
 
-      NSString *oldDir = [oldName stringByAppendingString:@"/"];
+	NSString *oldDir = [oldName stringByAppendingString:@"/"];
 
-      for (NSString *key in catalog)
-	{
-	  if ([key hasPrefix:oldDir])
-	    [matches addObject:key];
-	}
+	for (NSString *key in catalog)
+	  {
+	    if ([key hasPrefix:oldDir])
+	      [matches addObject:key];
+	  }
 
-      if ([matches count] != 0)
-	{
-	  for (NSString *key in matches)
-	    {
-	      NSString *new_key = [newName stringByAppendingPathComponent:
-				   [key substringFromIndex:old_len + 1]];
-	      [catalog setObject:[catalog objectForKey:key] forKey:new_key];
-	      [catalog removeObjectForKey:key];
-	    }
+	if ([matches count] != 0)
+	  {
+	    for (NSString *key in matches)
+	      {
+		NSString *new_key = [newName stringByAppendingPathComponent:
+				     [key substringFromIndex:old_len + 1]];
+		[catalog setObject:[catalog objectForKey:key] forKey:new_key];
+		[catalog removeObjectForKey:key];
+	      }
 
-	  _catalogDirty = YES;
-	}
+	    _catalogDirty = YES;
+	  }
 
-      [matches release];
-    }
+	[matches release];
+      }
+  });
+}
+
+- (void)didRenameFile:(NSString *)oldName to:(NSString *)newName
+{
+  dispatch_sync(_catalogQueue, ^
+  {
+    for (int pass = 0; pass < 2; pass++)
+      {
+	NSMutableDictionary *catalog = pass == 0 ? _catalog0 : _catalog1;
+
+	id value = [catalog objectForKey:oldName];
+	if (value != nil)
+	  {
+	    [catalog setObject:value forKey:newName];
+	    [catalog removeObjectForKey:oldName];
+	  }
+      }
+  });
 }
 
 - (void)didRemoveFileWithRelativePath:(NSString *)rel_path
 {
-  for (int pass = 0; pass < 2; pass++)
-    {
-      NSMutableDictionary *catalog = pass == 0 ? _catalog0 : _catalog1;
+  dispatch_sync(_catalogQueue, ^
+  {
+    for (int pass = 0; pass < 2; pass++)
+      {
+	NSMutableDictionary *catalog = pass == 0 ? _catalog0 : _catalog1;
 
-      if (!_catalogDirty && [catalog objectForKey:rel_path] != nil)
-	_catalogDirty = YES;
+	if (!_catalogDirty && [catalog objectForKey:rel_path] != nil)
+	  _catalogDirty = YES;
 
-      [catalog removeObjectForKey:rel_path];
+	[catalog removeObjectForKey:rel_path];
 
-      /* FIXME: also remove anything in the cache for these ids? */
-    }
+	/* FIXME: also remove anything in the cache for these ids? */
+      }
+  });
 }
 
 static unsigned int
@@ -375,54 +411,58 @@ convert_hexdigit(int c)
      (Or we could choose a point after all libraries have been scanned
      to release _catalog0 then call -validateCaches.) */
 
-  @autoreleasepool
-    {
-      NSString *dir = [self cachePath];
-      NSFileManager *fm = [NSFileManager defaultManager];
+  dispatch_sync(_catalogQueue, ^
+  {
+    @autoreleasepool
+      {
+	NSString *dir = [self cachePath];
+	NSFileManager *fm = [NSFileManager defaultManager];
 
-      NSMutableIndexSet *catalog = [NSMutableIndexSet indexSet];
+	NSMutableIndexSet *catalog = [NSMutableIndexSet indexSet];
 
-      for (NSString *key in _catalog0)
-	[catalog addIndex:[[_catalog0 objectForKey:key] unsignedIntValue]];
-      for (NSString *key in _catalog1)
-	[catalog addIndex:[[_catalog1 objectForKey:key] unsignedIntValue]];
+	for (NSString *key in _catalog0)
+	  [catalog addIndex:[[_catalog0 objectForKey:key] unsignedIntValue]];
+	for (NSString *key in _catalog1)
+	  [catalog addIndex:[[_catalog1 objectForKey:key] unsignedIntValue]];
 
-      unsigned int i;
-      for (i = 0; i < (1U << CACHE_BITS); i++)
-	{
-	  NSString *path = [dir stringByAppendingPathComponent:
-			    [NSString stringWithFormat:@"%02x", i]];
-	  if (![fm fileExistsAtPath:path])
-	    continue;
+	unsigned int i;
+	for (i = 0; i < (1U << CACHE_BITS); i++)
+	  {
+	    NSString *path = [dir stringByAppendingPathComponent:
+			      [NSString stringWithFormat:@"%02x", i]];
+	    if (![fm fileExistsAtPath:path])
+	      continue;
 
-	  for (NSString *file in [fm contentsOfDirectoryAtPath:path error:nil])
-	    {
-	      const char *str = [file UTF8String];
-	      const char *end = strchr(str, CACHE_SEP);
+	    for (NSString *file
+		 in [fm contentsOfDirectoryAtPath:path error:nil])
+	      {
+		const char *str = [file UTF8String];
+		const char *end = strchr(str, CACHE_SEP);
 
-	      BOOL delete = NO;
-	      if (end != NULL)
-		{
-		  uint32_t fid = 0;
-		  for (; str != end; str++)
-		    fid = fid * 16 + convert_hexdigit(*str);
-		  fid = (fid << CACHE_BITS) | i;
-		  if (![catalog containsIndex:fid])
-		    delete = YES;
-		}
-	      else
-		delete = YES;
+		BOOL delete = NO;
+		if (end != NULL)
+		  {
+		    uint32_t fid = 0;
+		    for (; str != end; str++)
+		      fid = fid * 16 + convert_hexdigit(*str);
+		    fid = (fid << CACHE_BITS) | i;
+		    if (![catalog containsIndex:fid])
+		      delete = YES;
+		  }
+		else
+		  delete = YES;
 
-	      if (delete)
-		{
-		  NSLog(@"PDImageLibrary: orphan cache entry: %02x/%@",
-			i, file);
-		  [fm removeItemAtPath:
-		   [path stringByAppendingPathComponent:file] error:nil];
-		}
-	    }
-	}
-    }
+		if (delete)
+		  {
+		    NSLog(@"PDImageLibrary: orphan cache entry: %02x/%@",
+			  i, file);
+		    [fm removeItemAtPath:
+		     [path stringByAppendingPathComponent:file] error:nil];
+		  }
+	      }
+	  }
+      }
+  });
 }
 
 - (void)emptyCaches
@@ -465,33 +505,41 @@ convert_hexdigit(int c)
 
 - (uint32_t)fileIdOfRelativePath:(NSString *)rel_path
 {
-  NSNumber *obj = [_catalog1 objectForKey:rel_path];
+  __block uint32_t fid = 0;
 
-  if (obj == nil)
-    {
-      obj = [_catalog0 objectForKey:rel_path];
+  dispatch_sync(_catalogQueue, ^
+  {
+    NSNumber *obj = [_catalog1 objectForKey:rel_path];
 
-      /* We place the deserialized dictionary in _catalog0, and the
-	 current dictionary in _catalog1. We know that all extant files
-	 will have their ids queried at least once when the library is
-	 scanned on startup, so by moving entries from the old to new
-	 dictionaries we effectively remove stale entries from the
-	 current version. */
+    if (obj == nil)
+      {
+	obj = [_catalog0 objectForKey:rel_path];
 
-      if (obj != nil)
-	{
-	  [_catalog1 setObject:obj forKey:rel_path];
-	  [_catalog0 removeObjectForKey:rel_path];
-	}
-    }
+	/* We place the deserialized dictionary in _catalog0, and the
+	   current dictionary in _catalog1. We know that all extant
+	   files will have their ids queried at least once when the
+	   library is scanned on startup, so by moving entries from the
+	   old to new dictionaries we effectively remove stale entries
+	   from the current version. */
 
-  if (obj != nil)
-    return [obj unsignedIntValue];
+	if (obj != nil)
+	  {
+	    [_catalog1 setObject:obj forKey:rel_path];
+	    [_catalog0 removeObjectForKey:rel_path];
+	  }
+      }
 
-  uint32_t fid = ++_lastFileId;
+    if (obj != nil)
+      fid = [obj unsignedIntValue];
+    else
+      {
+	fid = ++_lastFileId;
 
-  [_catalog1 setObject:[NSNumber numberWithUnsignedInt:fid] forKey:rel_path];
-  _catalogDirty = YES;
+	[_catalog1 setObject:
+	 [NSNumber numberWithUnsignedInt:fid] forKey:rel_path];
+	_catalogDirty = YES;
+      }
+  });
 
   return fid;
 }
@@ -502,12 +550,13 @@ raw_extensions(void)
   static NSSet *set;
   static dispatch_once_t once;
 
-  dispatch_once(&once, ^{
-    set = [[NSSet alloc] initWithObjects:
-	   @"arw", @"cr2", @"crw", @"dng", @"fff", @"3fr", @"tif",
-	   @"tiff", @"raw", @"nef", @"nrw", @"sr2", @"srf", @"srw",
-	   @"erf", @"mrw", @"rw2", @"rwz", @"orf", nil];
-  });
+  dispatch_once(&once, ^
+    {
+      set = [[NSSet alloc] initWithObjects:
+	     @"arw", @"cr2", @"crw", @"dng", @"fff", @"3fr", @"tif",
+	     @"tiff", @"raw", @"nef", @"nrw", @"sr2", @"srf", @"srw",
+	     @"erf", @"mrw", @"rw2", @"rwz", @"orf", nil];
+    });
 
   return set;
 }
@@ -518,9 +567,10 @@ jpeg_extensions(void)
   static NSSet *set;
   static dispatch_once_t once;
 
-  dispatch_once(&once, ^{
-    set = [[NSSet alloc] initWithObjects:@"jpg", @"jpeg", @"jpe", nil];
-  });
+  dispatch_once(&once, ^
+    {
+      set = [[NSSet alloc] initWithObjects:@"jpg", @"jpeg", @"jpe", nil];
+    });
 
   return set;
 }
@@ -531,10 +581,11 @@ jpeg_and_raw_extensions(void)
   static NSSet *set;
   static dispatch_once_t once;
 
-  dispatch_once(&once, ^{
-    set = [[raw_extensions()
-	    setByAddingObjectsFromSet:jpeg_extensions()] copy];
-  });
+  dispatch_once(&once, ^
+    {
+      set = [[raw_extensions()
+	      setByAddingObjectsFromSet:jpeg_extensions()] copy];
+    });
 
   return set;
 }
@@ -620,12 +671,10 @@ filename_with_ext_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
 
 	      NSString *json_file = filename_with_ext(unused_files,
 						stem, @METADATA_EXTENSION);
-	      NSString *jpeg_file
-	        = filename_with_ext_in_set(unused_files, stem,
-						jpeg_extensions());
-	      NSString *raw_file
-	        = filename_with_ext_in_set(unused_files, stem,
-						raw_extensions());
+	      NSString *jpeg_file = filename_with_ext_in_set(unused_files,
+						stem, jpeg_extensions());
+	      NSString *raw_file = filename_with_ext_in_set(unused_files,
+						stem, raw_extensions());
 
 	      PDImage *image = [[PDImage alloc] initWithLibrary:self
 				directory:dir JSONFile:json_file
@@ -635,15 +684,15 @@ filename_with_ext_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
 		{
 		  block(image);
 
-		  json_file = [image JSONFile];
+		  NSString *json_file = [image JSONFile];
 		  if (json_file != nil)
 		    [unused_files removeObject:json_file];
 
-		  jpeg_file = [image JPEGFile];
+		  NSString *jpeg_file = [image JPEGFile];
 		  if (jpeg_file != nil)
 		    [unused_files removeObject:jpeg_file];
 
-		  raw_file = [image RAWFile];
+		  NSString *raw_file = [image RAWFile];
 		  if (raw_file != nil)
 		    [unused_files removeObject:raw_file];
 
@@ -662,13 +711,14 @@ static NSOperationQueue *_copyQueue;
 {
   static dispatch_once_t once;
 
-  dispatch_once(&once, ^{
-    _copyQueue = [[NSOperationQueue alloc] init];
-    [_copyQueue setName:@"PDImageLibrary.copyQueue"];
-    [_copyQueue setMaxConcurrentOperationCount:2];
-    [_copyQueue addObserver:(id)self
-     forKeyPath:@"operationCount" options:0 context:NULL];
-  });
+  dispatch_once(&once, ^
+    {
+      _copyQueue = [[NSOperationQueue alloc] init];
+      [_copyQueue setName:@"PDImageLibrary.copyQueue"];
+      [_copyQueue setMaxConcurrentOperationCount:2];
+      [_copyQueue addObserver:(id)self
+       forKeyPath:@"operationCount" options:0 context:NULL];
+    });
 
   return _copyQueue;
 }
@@ -678,14 +728,15 @@ static NSOperationQueue *_copyQueue;
 {
   if ([path isEqualToString:@"operationCount"])
     {
-      dispatch_async(dispatch_get_main_queue(), ^{
-	NSInteger count = [_copyQueue operationCount];
-	PDAppDelegate *delegate = [NSApp delegate];
-	if (count != 0)
-	  [delegate addBackgroundActivity:@"PDImageLibrary"];
-	else
-	  [delegate removeBackgroundActivity:@"PDImageLibrary"];
-      });
+      dispatch_async(dispatch_get_main_queue(), ^
+	{
+	  NSInteger count = [_copyQueue operationCount];
+	  PDAppDelegate *delegate = [NSApp delegate];
+	  if (count != 0)
+	    [delegate addBackgroundActivity:@"PDImageLibrary"];
+	  else
+	    [delegate removeBackgroundActivity:@"PDImageLibrary"];
+	});
     }
 }
 
@@ -768,6 +819,69 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
   return YES;
 }
 
+- (BOOL)copyImage:(PDImage *)image toDirectory:(NSString *)dir
+    error:(NSError **)err
+{
+  NSString *dir_path = [_path stringByAppendingPathComponent:dir];
+
+  BOOL ret = [image copyToDirectoryPath:dir_path resetUUID:YES error:err];
+
+  if (ret)
+    {
+      /* FIXME: pass UUIDs of changed image(s)? */
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImageLibraryDidImportFiles
+       object:self userInfo:@{@"libraryDirectory": dir}];
+    }
+
+  return ret;
+}
+
+- (BOOL)moveImage:(PDImage *)image toDirectory:(NSString *)dir
+    error:(NSError **)err
+{
+  PDImageLibrary *src_lib = [image library];
+  NSString *src_dir = [image libraryDirectory];
+  BOOL ret = NO;
+
+  if (src_lib == self)
+    {
+      if ([src_dir isEqualToString:dir])
+	return YES;
+
+      ret = [image moveToDirectory:dir error:err];
+
+      if (ret && [image isDeleted])
+	[image setDeleted:NO];
+    }
+  else
+    {
+      NSString *dir_path = [_path stringByAppendingPathComponent:dir];
+
+      if ([image copyToDirectoryPath:dir_path resetUUID:NO error:err])
+	{
+	  [image remove];
+	  ret = YES;
+	}
+    }
+
+  if (ret)
+    {
+      /* FIXME: pass UUIDs of changed image(s)? */
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImageLibraryDidRemoveFiles
+       object:src_lib userInfo:@{@"libraryDirectory": src_dir}];
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImageLibraryDidImportFiles
+       object:self userInfo:@{@"libraryDirectory": dir}];
+    }
+
+  return ret;
+}
+
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
     fileTypes:(NSSet *)types preferredType:(NSString *)active_type
     filenameMap:(NSString *(^)(PDImage *src, NSString *name))f
@@ -800,75 +914,80 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 
   /* Called on main thread. */
 
-  void (^post_notification)() = ^{
-    if (!pending_notification)
-      {
-	pending_notification = YES;
+  void (^post_notification)() = ^
+    {
+      if (!pending_notification)
+	{
+	  pending_notification = YES;
 
-	dispatch_time_t t
-	  = dispatch_time(DISPATCH_TIME_NOW, 1LL * NSEC_PER_SEC);
+	  dispatch_time_t t
+	    = dispatch_time(DISPATCH_TIME_NOW, 1LL * NSEC_PER_SEC);
 
-	dispatch_after(t, dispatch_get_main_queue(), ^{
-	  pending_notification = NO;
+	  dispatch_after(t, dispatch_get_main_queue(), ^
+	    {
+	      pending_notification = NO;
 
-	  [[NSNotificationCenter defaultCenter]
-	   postNotificationName:PDImageLibraryDidImportFiles
-	   object:self userInfo:notification_info];
-	});
-      }
-  };
+	      [[NSNotificationCenter defaultCenter]
+	       postNotificationName:PDImageLibraryDidImportFiles
+	       object:self userInfo:notification_info];
+	    });
+	}
+    };
 
   __block NSError *error = nil;
 
-  void (^set_error)(NSError *err) = ^(NSError *err) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [error release];
-      error = [err copy];
-    });
-  };
+  void (^set_error)(NSError *err) = ^(NSError *err)
+    {
+      dispatch_async(dispatch_get_main_queue(), ^
+	{
+	  [error release];
+	  error = [err copy];
+	});
+    };
 
   NSMutableSet *all_libraries = [NSMutableSet set];
   [all_libraries addObject:self];
   for (PDImage *src_im in images)
     [all_libraries addObject:[src_im library]];
 
-  NSMutableArray *source_files = [NSMutableArray array];
   NSMutableArray *dest_files = [NSMutableArray array];
 
   /* Final NSOperation that depends on all copy/write ops. It moves
      work synchronously back to the main thread and cleans up, presents
      any errors etc. */
 
-  NSOperation *final_op = [NSBlockOperation blockOperationWithBlock:^{
-    dispatch_sync(dispatch_get_main_queue(), ^{
-      if (error == nil)
+  NSOperation *final_op = [NSBlockOperation blockOperationWithBlock:^
+    {
+      dispatch_sync(dispatch_get_main_queue(), ^
 	{
-	  if (delete_sources)
+	  if (error == nil)
 	    {
-	      for (NSString *path in source_files)
-		[fm removeItemAtPath:path error:nil];
+	      if (delete_sources)
+		{
+		  for (PDImage *src_im in images)
+		    [src_im remove];
+		}
 	    }
-	}
-      else
-	{
-	  if (new_dir)
-	    [fm removeItemAtPath:dir_path error:nil];
 	  else
 	    {
-	      for (NSString *path in dest_files)
-		[fm removeItemAtPath:path error:nil];
+	      if (new_dir)
+		[fm removeItemAtPath:dir_path error:nil];
+	      else
+		{
+		  for (NSString *path in dest_files)
+		    [fm removeItemAtPath:path error:nil];
+		}
+
+	      post_notification();
+
+	      NSAlert *alert = [NSAlert alertWithError:error];
+	      [alert runModal];
 	    }
 
-	  post_notification();
-
-	  NSAlert *alert = [NSAlert alertWithError:error];
-	  [alert runModal];
-	}
-
-      for (PDImageLibrary *lib in all_libraries)
-	[lib reclaimImportBlocks];
-    });
-  }];
+	  for (PDImageLibrary *lib in all_libraries)
+	    [lib reclaimImportBlocks];
+	});
+    }];
 
   NSOperationQueue *queue = [PDImageLibrary copyQueue];
 
@@ -933,24 +1052,21 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 	      [dst_types addObject:type];
 	      [dst_paths addObject:dst_path];
 
-	      *op_ptr = [NSBlockOperation blockOperationWithBlock:^{
-		if (error != nil)
-		  return;
-		NSError *err = nil;
-		if (copy_item_atomically(fm, src_path, dst_path, &err))
-		  {
-		    dispatch_async(dispatch_get_main_queue(), ^{
-		      [source_files addObject:src_path];
-		      [dest_files addObject:dst_path];
-		      [[NSNotificationCenter defaultCenter]
-		       postNotificationName:PDImageLibraryDidCopyImageFile
-		       object:self userInfo:@{@"srcPath": src_path,
-			 @"dstPath": dst_path,@"libraryDirectory": dir_path}];
-		    });
-		  }
-		else if (err != nil)
-		  set_error(err);
-	      }];
+	      *op_ptr = [NSBlockOperation blockOperationWithBlock:^
+		{
+		  if (error != nil)
+		    return;
+		  NSError *err = nil;
+		  if (copy_item_atomically(fm, src_path, dst_path, &err))
+		    {
+		      dispatch_async(dispatch_get_main_queue(), ^
+			{
+			  [dest_files addObject:dst_path];
+			});
+		    }
+		  else if (err != nil)
+		    set_error(err);
+		}];
 	    }
 	}
 
@@ -961,10 +1077,11 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 	  static NSSet *ignored_keys;
 	  static dispatch_once_t once;
 
-	  dispatch_once(&once, ^{
-	    ignored_keys = [[NSSet alloc] initWithObjects:PDImage_Name,
-			    PDImage_FileTypes, PDImage_ActiveType, nil];
-	  });
+	  dispatch_once(&once, ^
+	    {
+	      ignored_keys = [[NSSet alloc] initWithObjects:PDImage_Name,
+			      PDImage_FileTypes, PDImage_ActiveType, nil];
+	    });
 
 	  NSDictionary *src_props = [src_im explicitProperties];
 	  for (NSString *key in src_props)
@@ -1000,22 +1117,24 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 	  if ([fm fileExistsAtPath:json_path])
 	    json_path = find_unique_name(fm, json_path);
 
-	  NSOperation *json_op = [NSBlockOperation blockOperationWithBlock:^{
-	    if (error != nil)
-	      return;
-	    NSData *data = [NSJSONSerialization dataWithJSONObject:json_dict
-			    options:NSJSONWritingPrettyPrinted error:nil];
-	    NSError *err = nil;
-	    if ([data writeToFile:json_path options:0 error:&err])
-	      {
-		dispatch_async(dispatch_get_main_queue(), ^{
-		  [dest_files addObject:json_path];
-		  post_notification();
-		});
-	      }
-	    else if (err != nil)
-	      set_error(err);
-	  }];
+	  NSOperation *json_op = [NSBlockOperation blockOperationWithBlock:^
+	    {
+	      if (error != nil)
+		return;
+	      NSData *data = [NSJSONSerialization dataWithJSONObject:json_dict
+			      options:NSJSONWritingPrettyPrinted error:nil];
+	      NSError *err = nil;
+	      if ([data writeToFile:json_path options:0 error:&err])
+		{
+		  dispatch_async(dispatch_get_main_queue(), ^
+		    {
+		      [dest_files addObject:json_path];
+		      post_notification();
+		    });
+		}
+	      else if (err != nil)
+		set_error(err);
+	    }];
 
 	  NSOperation *main_op = nil, *secondary_op = nil;
 

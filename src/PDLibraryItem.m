@@ -65,6 +65,22 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
   return [NSArray array];
 }
 
+- (BOOL)foreachSubitem:(void (^)(PDLibraryItem *item, BOOL *stop))thunk
+{
+  BOOL stop = NO;
+  thunk(self, &stop);
+  if (stop)
+    return NO;
+
+  for (PDLibraryItem *subitem in [self subitems])
+    {
+      if (![subitem foreachSubitem:thunk])
+	return NO;
+    }
+
+  return YES;
+}
+
 - (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk
 {
   for (PDLibraryItem *subitem in [self subitems])

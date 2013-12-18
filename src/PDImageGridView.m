@@ -550,6 +550,11 @@ copy_layer_snapshot(CALayer *layer)
 	  [self scrollPageDownAnimated:NO];
 	  [self flashScrollersIfNeeded];
 	  return;
+
+	case 0x7f:			/* backspace */
+	case NSDeleteFunctionKey:
+	  [[_controller controller] delete:self];
+	  return;
 	}
     }
 

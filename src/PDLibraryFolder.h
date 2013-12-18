@@ -22,58 +22,13 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDLibraryDevice.h"
+#import "PDLibraryDirectory.h"
 
-#import "PDAppKitExtensions.h"
-#import "PDImage.h"
-#import "PDImageLibrary.h"
-
-@implementation PDLibraryDevice
-
-+ (BOOL)flattensSubdirectories
+@interface PDLibraryFolder : PDLibraryDirectory
 {
-  return YES;
+  NSInteger _titleImageName;
 }
 
-- (id)initWithLibrary:(PDImageLibrary *)lib
-{
-  return [super initWithLibrary:lib directory:@""];
-}
-
-- (void)dealloc
-{
-  [_icon release];
-  [super dealloc];
-}
-
-- (NSString *)titleString
-{
-  return [[[[self library] path] stringByDeletingLastPathComponent]
-	  lastPathComponent];
-}
-
-- (BOOL)hasTitleImage
-{
-  return YES;
-}
-
-- (NSImage *)titleImage
-{
-  if (_icon == nil)
-    {
-      _icon = [[NSWorkspace sharedWorkspace] iconForFile:
-	       [[[self library] path] stringByDeletingLastPathComponent]];
-      if (_icon == nil)
-	_icon = PDImageWithName(PDImage_GenericRemovableDisk);
-      [_icon retain];
-    }
-
-  return _icon;
-}
-
-- (NSString *)identifier
-{
-  return nil;
-}
+@property(nonatomic) NSInteger titleImageName;
 
 @end

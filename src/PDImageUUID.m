@@ -73,11 +73,10 @@ NSString *const PDImageUUIDType = @"org.unfactored.Phod.PDImageUUID";
 
 - (BOOL)isEqual:(id)obj
 {
-  if ([obj class] != [self class])
+  if ([obj isKindOfClass:[PDImageUUID class]])
+    return [_uuid isEqual:((PDImageUUID *)obj)->_uuid];
+  else
     return NO;
-
-  PDImageUUID *rhs = obj;
-  return [_uuid isEqual:rhs->_uuid];
 }
 
 - (NSUInteger)hash

@@ -93,4 +93,20 @@
     return [self characterAtIndex:l2] == '/' && [self hasPrefix:path];
 }
 
+- (NSString *)stringByRemovingPathPrefix:(NSString *)path
+{
+  NSInteger l1 = [self length];
+  NSInteger l2 = [path length];
+
+  if (l2 == 0)
+    return self;
+  else if (l1 == l2)
+    return [self isEqualToString:path] ? @"" : self;
+  else if (l2 > l1)
+    return self;
+  else
+    return ([self characterAtIndex:l2] == '/' && [self hasPrefix:path]
+	    ? [self substringFromIndex:l2+1] : self);
+}
+
 @end

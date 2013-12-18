@@ -27,7 +27,7 @@
 @class PDImage;
 
 extern NSString *const PDImageLibraryDidImportFiles;
-extern NSString *const PDImageLibraryDidCopyImageFile;
+extern NSString *const PDImageLibraryDidRemoveFiles;
 
 @interface PDImageLibrary : NSObject
 {
@@ -36,6 +36,7 @@ extern NSString *const PDImageLibraryDidCopyImageFile;
   NSString *_cachePath;
   uint32_t _libraryId;
   uint32_t _lastFileId;
+  dispatch_queue_t _catalogQueue;
   NSMutableDictionary *_catalog0;
   NSMutableDictionary *_catalog1;
   uint32_t _catalogDirty;
@@ -68,6 +69,7 @@ extern NSString *const PDImageLibraryDidCopyImageFile;
 - (NSString *)cachePathForFileId:(uint32_t)file_id base:(NSString *)str;
 
 - (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName;
+- (void)didRenameFile:(NSString *)oldName to:(NSString *)newName;
 - (void)didRemoveFileWithRelativePath:(NSString *)rel_path;
 
 - (void)synchronize;
@@ -76,8 +78,13 @@ extern NSString *const PDImageLibraryDidCopyImageFile;
 - (void)waitForImportsToComplete;
 - (void)remove;
 
-- (void)loadImagesInSubdirectory:(NSString *)path recursively:(BOOL)flag
-    handler:(void (^)(PDImage *))block;
+- (void)loadImagesInSubdirectory:(NSString *)dir
+    recursively:(BOOL)flag handler:(void (^)(PDImage *))block;
+
+- (BOOL)copyImage:(PDImage *)image toDirectory:(NSString *)dir
+    error:(NSError **)err;
+- (BOOL)moveImage:(PDImage *)image toDirectory:(NSString *)dir
+    error:(NSError **)err;
 
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
     fileTypes:(NSSet *)types preferredType:(NSString *)type

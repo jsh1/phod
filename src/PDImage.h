@@ -152,19 +152,33 @@ typedef int PDImageCompareKey;
 
 /* Convenience accessors for misc image properties. */
 
-@property(nonatomic, readonly) NSString *name;
-@property(nonatomic, readonly) NSDate *date;
-@property(nonatomic, readonly) NSString *title;
-@property(nonatomic, readonly) CGSize pixelSize;
-@property(nonatomic, readonly) unsigned int orientation;
-@property(nonatomic, readonly) CGSize orientedPixelSize;
+@property(nonatomic, copy) NSString *name;
+@property(nonatomic, copy) NSString *title;
+@property(nonatomic, copy) NSString *caption;
+@property(nonatomic) unsigned int orientation;
 
 @property(nonatomic, getter=isHidden) BOOL hidden;
 @property(nonatomic, getter=isDeleted) BOOL deleted;
+@property(nonatomic, getter=isFlagged) BOOL flagged;
+@property(nonatomic) int rating;
+
+@property(nonatomic, readonly) NSDate *date;
+@property(nonatomic, readonly) CGSize pixelSize;
+@property(nonatomic, readonly) CGSize orientedPixelSize;
 
 /* Delete all traces of the image from the filesystem. */
 
 - (NSError *)remove;
+
+/* Move within the library, self is updated to reflect the new
+   location. */
+
+- (BOOL)moveToDirectory:(NSString *)dir error:(NSError **)err;
+
+/* Copy to anywhere. */
+
+- (BOOL)copyToDirectoryPath:(NSString *)path resetUUID:(BOOL)flag
+    error:(NSError **)err;
 
 /* Fill proxy caches asynchronously. */
 

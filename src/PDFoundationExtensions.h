@@ -36,4 +36,6 @@
 
 - (BOOL)hasPathPrefix:(NSString *)path;
 
+- (NSString *)stringByRemovingPathPrefix:(NSString *)path;
+
 @end

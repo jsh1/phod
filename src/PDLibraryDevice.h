@@ -22,21 +22,13 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDLibraryItem.h"
+#import "PDLibraryDirectory.h"
 
-@class PDImageLibrary;
-
-@interface PDLibraryDevice : PDLibraryItem
+@interface PDLibraryDevice : PDLibraryDirectory
 {
-  PDImageLibrary *_library;
-  NSMutableArray *_subimages;
   NSImage *_icon;
 }
 
 - (id)initWithLibrary:(PDImageLibrary *)lib;
-
-@property(nonatomic, readonly) PDImageLibrary *library;
-
-- (void)invalidateContents;
 
 @end

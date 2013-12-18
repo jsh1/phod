@@ -37,8 +37,12 @@
 
 @synthesize library = _library;
 @synthesize libraryDirectory = _libraryDirectory;
-@synthesize titleImageName = _titleImageName;
 @synthesize marked = _marked;
+
++ (BOOL)flattensSubdirectories
+{
+  return NO;
+}
 
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 {
@@ -48,11 +52,15 @@
 
   _library = [lib retain];
   _libraryDirectory = [dir copy];
-  _titleImageName = PDImage_GenericFolder;
   _subitemsNeedUpdate = YES;
   _subimagesNeedUpdate = YES;
 
   return self;
+}
+
+- (PDLibraryDirectory *)newItemForSubdirectory:(NSString *)dir
+{
+  return [[[self class] alloc] initWithLibrary:_library directory:dir];
 }
 
 - (void)dealloc
@@ -85,53 +93,86 @@
 
 - (void)updateSubimages
 {
-  static dispatch_queue_t queue;
+  static NSOperationQueue *queue;
   static dispatch_once_t once;
 
-  dispatch_once(&once, ^{
-    queue = dispatch_queue_create("PDLibraryDirectory",
-				  DISPATCH_QUEUE_SERIAL);
-  });
+  dispatch_once(&once, ^
+    {
+      queue = [[NSOperationQueue alloc] init];
+      [queue setName:@"PDLibraryDirectory"];
+      [queue setMaxConcurrentOperationCount:4];
+    });
 
-  NSMutableArray *subimages = [NSMutableArray array];
+  /* If this is the first time we're loading the images for this
+     directory, feed them piecemeal to the main thread for display. But
+     if we've already loaded something and are just updating, don't
+     update the UI until everything's finished, to avoid making images
+     disappear and then reappear. */
 
-  [_subimages release];
-  _subimages = [subimages retain];
+  BOOL update_immediately = _subimages == nil;
 
-  dispatch_async(queue, ^{
-    NSMutableArray *array = [[NSMutableArray alloc] init];
-    __block CFTimeInterval last_t = CACurrentMediaTime();
+  NSMutableArray *new_subimages = [NSMutableArray array];
 
-    [_library loadImagesInSubdirectory:_libraryDirectory recursively:NO
-     handler:^(PDImage *im) {
-       [array addObject:im];
+  [queue addOperation:[NSBlockOperation blockOperationWithBlock:^
+    {
+      NSMutableArray *local_subimages = [[NSMutableArray alloc] init];
+      __block CFTimeInterval last_t = CACurrentMediaTime();
 
-       CFTimeInterval t = CACurrentMediaTime();
-       if (t - last_t > .5)
-	 {
-	   last_t = t;
-	   dispatch_async(dispatch_get_main_queue(), ^{
-	     [subimages addObjectsFromArray:array];
-	     [array removeAllObjects];
-	     [[NSNotificationCenter defaultCenter]
-	      postNotificationName:PDLibraryItemSubimagesDidChange
-	      object:self];
-	   });
-	   }
-       }];
+      void (^add_image)(PDImage *image) = ^(PDImage *image)
+        {
+	  [local_subimages addObject:image];
 
-    if ([array count] != 0)
-      {
-	dispatch_async(dispatch_get_main_queue(), ^{
-	  [subimages addObjectsFromArray:array];
-	  [[NSNotificationCenter defaultCenter]
-	   postNotificationName:PDLibraryItemSubimagesDidChange
-	   object:self];
-	});
-      }
-      
-    [array release];
-  });
+	  if (update_immediately && CACurrentMediaTime() - last_t > .5)
+	    {
+	      /* Feed whatever we've read in the last .5s to the UI. */
+
+	      last_t = CACurrentMediaTime();
+	      dispatch_async(dispatch_get_main_queue(), ^
+		{
+		  [new_subimages addObjectsFromArray:local_subimages];
+		  [local_subimages removeAllObjects];
+		  [[NSNotificationCenter defaultCenter] postNotificationName:
+		   PDLibraryItemSubimagesDidChange object:self];
+		});
+	    }
+	};
+
+      [_library loadImagesInSubdirectory:_libraryDirectory
+       recursively:[[self class] flattensSubdirectories] handler:add_image];
+
+      if (update_immediately && [local_subimages count] != 0)
+	{
+	  /* Push remainder to the UI. */
+
+	  dispatch_async(dispatch_get_main_queue(), ^
+	    {
+	      [new_subimages addObjectsFromArray:local_subimages];
+	      [local_subimages removeAllObjects];
+	      [[NSNotificationCenter defaultCenter] postNotificationName:
+	       PDLibraryItemSubimagesDidChange object:self];
+	    });
+	}
+      else
+	{
+	  /* Swap our entire array back to the UI. */
+
+	  dispatch_async(dispatch_get_main_queue(), ^
+	    {
+	      [_subimages release];
+	      _subimages = [local_subimages retain];
+	      [[NSNotificationCenter defaultCenter] postNotificationName:
+	       PDLibraryItemSubimagesDidChange object:self];
+	    });
+	}
+
+      [local_subimages release];
+    }]];
+
+  if (update_immediately)
+    {
+      [_subimages release];
+      _subimages = [new_subimages retain];
+    }
 
   _subimagesNeedUpdate = NO;
 }
@@ -147,71 +188,73 @@
 {
   BOOL changed = NO;
 
-  NSFileManager *fm = [NSFileManager defaultManager];
-
-  NSString *dir_path = [self path];
-
-  /* Rebuild the subitems array nondestructively. */
-
   NSMutableArray *new_subitems = [_subitems mutableCopy];
   if (new_subitems == nil)
     new_subitems = [[NSMutableArray alloc] init];
 
-  for (PDLibraryDirectory *item in new_subitems)
-    [item setMarked:YES];
-
-  for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
+  if (![[self class] flattensSubdirectories])
     {
-      if ([file characterAtIndex:0] == '.')
-	continue;
+      /* Rebuild the subitems array nondestructively. */
 
-      BOOL is_dir = NO;
-      NSString *path = [dir_path stringByAppendingPathComponent:file];
-      if (![fm fileExistsAtPath:path isDirectory:&is_dir] || !is_dir)
-	continue;
-
-      NSString *subdir = [_libraryDirectory
-			  stringByAppendingPathComponent:file];
-
-      BOOL found = NO;
+      NSString *dir_path = [self path];
 
       for (PDLibraryDirectory *item in new_subitems)
+	[item setMarked:YES];
+
+      NSFileManager *fm = [NSFileManager defaultManager];
+
+      for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
 	{
-	  if ([[item libraryDirectory] isEqualToString:subdir])
+	  if ([file characterAtIndex:0] == '.')
+	    continue;
+
+	  BOOL is_dir = NO;
+	  NSString *path = [dir_path stringByAppendingPathComponent:file];
+	  if (![fm fileExistsAtPath:path isDirectory:&is_dir] || !is_dir)
+	    continue;
+
+	  NSString *subdir = [_libraryDirectory
+			      stringByAppendingPathComponent:file];
+
+	  BOOL found = NO;
+
+	  for (PDLibraryDirectory *item in new_subitems)
 	    {
-	      [item setMarked:NO];
-	      found = YES;
-	      break;
+	      if ([[item libraryDirectory] isEqualToString:subdir])
+		{
+		  [item setMarked:NO];
+		  found = YES;
+		  break;
+		}
+	    }
+
+	  if (!found)
+	    {
+	      PDLibraryDirectory *item = [self newItemForSubdirectory:subdir];
+
+	      if (item != nil)
+		{
+		  [item setParent:self];
+		  [new_subitems addObject:item];
+		  [item release];
+		  changed = YES;
+		}
 	    }
 	}
 
-      if (!found)
+      NSInteger count = [new_subitems count];
+      for (NSInteger i = 0; i < count;)
 	{
-	  PDLibraryDirectory *item = [[PDLibraryDirectory alloc]
-				      initWithLibrary:_library
-				      directory:subdir];
-	  if (item != nil)
+	  PDLibraryDirectory *item = [new_subitems objectAtIndex:i];
+	  if ([item isMarked])
 	    {
-	      [item setParent:self];
-	      [new_subitems addObject:item];
-	      [item release];
-	      changed = YES;
+	      [new_subitems removeObjectAtIndex:i];
+	      [item setParent:nil];
+	      count--;
 	    }
+	  else
+	    i++;
 	}
-    }
-
-  NSInteger count = [new_subitems count];
-  for (NSInteger i = 0; i < count;)
-    {
-      PDLibraryDirectory *item = [new_subitems objectAtIndex:i];
-      if ([item isMarked])
-	{
-	  [new_subitems removeObjectAtIndex:i];
-	  [item setParent:nil];
-	  count--;
-	}
-      else
-	i++;
     }
 
   _subitems = [new_subitems copy];
@@ -259,16 +302,6 @@
   return [title stringByReplacingOccurrencesOfString:@":" withString:@"/"];
 }
 
-- (BOOL)hasTitleImage
-{
-  return YES;
-}
-
-- (NSImage *)titleImage
-{
-  return PDImageWithName(_titleImageName);
-}
-
 - (BOOL)isExpandable
 {
   return [[self subitems] count] != 0;
@@ -284,19 +317,13 @@
   return YES;
 }
 
-- (NSString *)identifier
-{
-  return ([_libraryDirectory length] == 0
-	  ? [[_library path] stringByAbbreviatingWithTildeInPath]
-	  : [_libraryDirectory lastPathComponent]);
-}
-
 - (PDLibraryDirectory *)subitemContainingDirectory:(NSString *)dir
 {
   if (![dir hasPathPrefix:_libraryDirectory])
     return nil;
 
-  if ([_libraryDirectory isEqualToString:dir])
+  if ([[self class] flattensSubdirectories]
+      || [_libraryDirectory isEqualToString:dir])
     return self;
 
   for (PDLibraryDirectory *item in [self subitems])

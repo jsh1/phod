@@ -48,6 +48,10 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 
 @property(nonatomic, copy, readonly) NSArray *subitems;
 
+/* Iterates 'thunk' recursively over the receiver and all subitems. */
+
+- (BOOL)foreachSubitem:(void (^)(PDLibraryItem *item, BOOL *stop))thunk;
+
 /* Iterates over all images recursively under self. Returns YES if saw
    all images (i.e. wasn't stopped prematurely). */
 

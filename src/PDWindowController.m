@@ -1132,9 +1132,8 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
 - (IBAction)delete:(id)sender
 {
-  [self foreachSelectedImage:^(PDImage *image) {
-    [image setDeleted:YES];
-  }];
+  [(PDLibraryViewController *)[self viewControllerWithClass:
+   [PDLibraryViewController class]] delete:sender];
 }
 
 - (IBAction)toggleDeletedAction:(id)sender

@@ -22,34 +22,25 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
-#import "PDLibraryDevice.h"
+#import "PDLibraryFolder.h"
 
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
 #import "PDImageLibrary.h"
 
-@implementation PDLibraryDevice
+@implementation PDLibraryFolder
 
-+ (BOOL)flattensSubdirectories
-{
-  return YES;
-}
+@synthesize titleImageName = _titleImageName;
 
-- (id)initWithLibrary:(PDImageLibrary *)lib
+- (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
 {
-  return [super initWithLibrary:lib directory:@""];
-}
+  self = [super initWithLibrary:lib directory:dir];
+  if (self == nil)
+    return nil;
 
-- (void)dealloc
-{
-  [_icon release];
-  [super dealloc];
-}
+  _titleImageName = PDImage_GenericFolder;
 
-- (NSString *)titleString
-{
-  return [[[[self library] path] stringByDeletingLastPathComponent]
-	  lastPathComponent];
+  return self;
 }
 
 - (BOOL)hasTitleImage
@@ -59,21 +50,14 @@
 
 - (NSImage *)titleImage
 {
-  if (_icon == nil)
-    {
-      _icon = [[NSWorkspace sharedWorkspace] iconForFile:
-	       [[[self library] path] stringByDeletingLastPathComponent]];
-      if (_icon == nil)
-	_icon = PDImageWithName(PDImage_GenericRemovableDisk);
-      [_icon retain];
-    }
-
-  return _icon;
+  return PDImageWithName(_titleImageName);
 }
 
 - (NSString *)identifier
 {
-  return nil;
+  return ([_libraryDirectory length] == 0
+	  ? [[_library path] stringByAbbreviatingWithTildeInPath]
+	  : [_libraryDirectory lastPathComponent]);
 }
 
 @end

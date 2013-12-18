@@ -32,21 +32,22 @@
   NSString *_libraryDirectory;
   NSArray *_subitems;
   NSMutableArray *_subimages;
-  NSInteger _titleImageName;
   BOOL _subitemsNeedUpdate;
   BOOL _subimagesNeedUpdate;
   BOOL _marked;
 }
 
++ (BOOL)flattensSubdirectories;
+
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
+
+- (PDLibraryDirectory *)newItemForSubdirectory:(NSString *)dir;
 
 @property(nonatomic, readonly) PDImageLibrary *library;
 @property(nonatomic, copy) NSString *libraryDirectory;
 
 /* convenience that appends libraryDirectory onto [library path]. */
 @property(nonatomic, readonly) NSString *path;
-
-@property(nonatomic) NSInteger titleImageName;
 
 - (PDLibraryDirectory *)subitemContainingDirectory:(NSString *)dir;
 

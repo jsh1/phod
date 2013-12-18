@@ -14,6 +14,7 @@
 		570A572A1833D21C0052A246 /* PDImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = 570A57291833D21C0052A246 /* PDImageView.m */; };
 		5717B44D18424A6000149627 /* PDMetadataItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5717B44A18424A6000149627 /* PDMetadataItemView.m */; };
 		5717B44E18424A6000149627 /* PDMetadataView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5717B44C18424A6000149627 /* PDMetadataView.m */; };
+		572530231861FAE600DC4B21 /* PDLibraryFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = 572530221861FAE600DC4B21 /* PDLibraryFolder.m */; };
 		5727CDA3184A3EB3007BF7E8 /* PDPredicatePanelController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5727CDA2184A3EB3007BF7E8 /* PDPredicatePanelController.m */; };
 		5727CDA6184A3EC7007BF7E8 /* PDPredicatePanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5727CDA4184A3EC7007BF7E8 /* PDPredicatePanel.xib */; };
 		5744D74F1854CCDA0079F8CD /* PDLibraryDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 5744D74E1854CCDA0079F8CD /* PDLibraryDevice.m */; };
@@ -78,6 +79,8 @@
 		5717B44A18424A6000149627 /* PDMetadataItemView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDMetadataItemView.m; sourceTree = "<group>"; };
 		5717B44B18424A6000149627 /* PDMetadataView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDMetadataView.h; sourceTree = "<group>"; };
 		5717B44C18424A6000149627 /* PDMetadataView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDMetadataView.m; sourceTree = "<group>"; };
+		572530211861FAE600DC4B21 /* PDLibraryFolder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryFolder.h; sourceTree = "<group>"; };
+		572530221861FAE600DC4B21 /* PDLibraryFolder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryFolder.m; sourceTree = "<group>"; };
 		5727CDA1184A3EB3007BF7E8 /* PDPredicatePanelController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDPredicatePanelController.h; sourceTree = "<group>"; };
 		5727CDA2184A3EB3007BF7E8 /* PDPredicatePanelController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDPredicatePanelController.m; sourceTree = "<group>"; };
 		5727CDA5184A3EC7007BF7E8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDPredicatePanel.xib; sourceTree = "<group>"; };
@@ -309,6 +312,8 @@
 				5744D74E1854CCDA0079F8CD /* PDLibraryDevice.m */,
 				57C1810B182FD616002B8DB2 /* PDLibraryDirectory.h */,
 				57C1810C182FD616002B8DB2 /* PDLibraryDirectory.m */,
+				572530211861FAE600DC4B21 /* PDLibraryFolder.h */,
+				572530221861FAE600DC4B21 /* PDLibraryFolder.m */,
 				57B1FAFA184FCCFB00FEF7DB /* PDLibraryGroup.h */,
 				57B1FAFB184FCCFB00FEF7DB /* PDLibraryGroup.m */,
 				57B1FAFD184FDA4900FEF7DB /* PDLibraryQuery.h */,
@@ -461,6 +466,7 @@
 				570A572A1833D21C0052A246 /* PDImageView.m in Sources */,
 				57C6BAB418343FA60098F967 /* PDImageLayer.m in Sources */,
 				57B1FAFC184FCCFB00FEF7DB /* PDLibraryGroup.m in Sources */,
+				572530231861FAE600DC4B21 /* PDLibraryFolder.m in Sources */,
 				57CE6A25182D863E000BF04E /* PDImageListViewController.m in Sources */,
 				57C18109182F0ED3002B8DB2 /* PDImage.m in Sources */,
 				5717B44E18424A6000149627 /* PDMetadataView.m in Sources */,

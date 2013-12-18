@@ -30,7 +30,7 @@
 /* posted to window controller. */
 extern NSString *const PDLibrarySelectionDidChange;
 
-@class PDLibraryGroup, PDImage, PDImageLibrary, PDImageTextCell;
+@class PDLibraryGroup, PDImage, PDImageLibrary, PDImageTextCell, PDLibraryItem;
 
 @interface PDLibraryViewController : PDViewController
     <PXSourceListDataSource, PXSourceListDelegate>
@@ -50,10 +50,17 @@ extern NSString *const PDLibrarySelectionDidChange;
   PDLibraryGroup *_foldersGroup;
   PDLibraryGroup *_albumsGroup;
 
+  PDLibraryItem *_allPhotosItem;
+  PDLibraryItem *_last12MonthsItem;
+  PDLibraryItem *_flaggedItem;
+  PDLibraryItem *_rejectedItem;
+  PDLibraryItem *_trashItem;
+
   NSMapTable *_itemViewState;		/* PDLibraryItem -> NSDictionary */
 
   NSArray *_draggedItems;
   NSPasteboard *_draggedPasteboard;
+  NSDragOperation _dragOperation;
 
   int _ignoreNotifications;
 
@@ -74,6 +81,8 @@ extern NSString *const PDLibrarySelectionDidChange;
 - (IBAction)removeAction:(id)sender;
 - (IBAction)searchAction:(id)sender;
 - (IBAction)importAction:(id)sender;
+
+- (IBAction)delete:(id)sender;
 
 - (IBAction)controlAction:(id)sender;
 

@@ -7,24 +7,32 @@
  		<dict>
 			<key>name</key>
 			<string>All Photos</string>
+			<key>identifier</key>
+			<string>allPhotos</string>
 			<key>predicate</key>
 			<string>TRUEPREDICATE</string>
 		</dict>
  		<dict>
 			<key>name</key>
 			<string>Last 12 Months</string>
+			<key>identifier</key>
+			<string>last12Months</string>
 			<key>predicate</key>
 			<string>date > CAST(CAST(now(), 'NSNumber') - 31536000, 'NSDate')</string>
 		</dict>
  		<dict>
 			<key>name</key>
 			<string>Flagged</string>
+			<key>identifier</key>
+			<string>flagged</string>
 			<key>predicate</key>
 			<string>flagged == 1</string>
 		</dict>
  		<dict>
 			<key>name</key>
 			<string>Rejected</string>
+			<key>identifier</key>
+			<string>rejected</string>
 			<key>predicate</key>
 			<string>rating &lt; 0</string>
 			<key>icon</key>
@@ -33,6 +41,8 @@
  		<dict>
 			<key>name</key>
 			<string>Trash</string>
+			<key>identifier</key>
+			<string>trash</string>
 			<key>predicate</key>
 			<string>TRUEPREDICATE</string>
 			<key>trashcan</key>

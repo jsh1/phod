@@ -14,10 +14,19 @@ Issues
 2. Dragging library items
 
   - Dragging a top-level item should move it in the view.
-
   - Dragging a subfolder should move it in the file system.
+  - Dragging images into folders should copy/move the images.
+  - Dragging images into albums should add them to the album.
+  - Dragging images from albums can either copy/move them to another
+  album, or to a different folder.
 
-  RESOLVED: implemented.
+  Note the latter may be confusing: you can drag an image from an album
+  (collection of images from many physical locations) to a folder,
+  which moves the image out of its original folder, even though that's
+  not where it was dragged from!
+
+  MOSTLY RESOLVED: implemented. But file copies are currently done on
+  the main thread, which needs to change.
 
 3. Renaming library items by editing their name
 

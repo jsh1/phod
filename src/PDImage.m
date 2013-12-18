@@ -25,6 +25,7 @@
 #import "PDImage.h"
 
 #import "PDAppDelegate.h"
+#import "PDFoundationExtensions.h"
 #import "PDImageLibrary.h"
 #import "PDImageProperty.h"
 #import "PDWindowController.h"
@@ -132,7 +133,7 @@ write_image_to_path(CGImageRef im, NSString *path, double quality)
   if (dest != NULL)
     {
       NSDictionary *opts = [[NSDictionary alloc] initWithObjectsAndKeys:
-			    [NSNumber numberWithDouble:quality],
+			    @(quality),
 			    (id)kCGImageDestinationLossyCompressionQuality,
 			    nil];
 
@@ -507,8 +508,12 @@ file_path(PDImage *self, NSString *file)
 
 	    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
-	    if (_uuid != nil)
-	      [dict setObject:[_uuid UUIDString] forKey:@"UUID"];
+	    /* We're writing the file, it may as well have a UUID.. */
+
+	    if (_uuid == nil)
+	      _uuid = [[NSUUID alloc] init];
+
+	    [dict setObject:[_uuid UUIDString] forKey:@"UUID"];
 
 	    if (_jpegFile != nil)
 	      [dict setObject:_jpegFile forKey:@"JPEGFile"];
@@ -603,8 +608,7 @@ file_path(PDImage *self, NSString *file)
 
       if ([key isEqualToString:PDImage_Date])
 	{
-	  value = [NSNumber numberWithUnsignedLong:
-		   [[self date] timeIntervalSince1970]];
+	  value = @([[self date] timeIntervalSince1970]);
 	}
       else if ([key isEqualToString:PDImage_FileName])
 	{
@@ -616,19 +620,17 @@ file_path(PDImage *self, NSString *file)
 	}
       else if ([key isEqualToString:PDImage_FileDate])
 	{
-	  value = [NSNumber numberWithUnsignedLong:
-		   file_mtime([self imagePath])];
+	  value = @(file_mtime([self imagePath]));
 	}
       else if ([key isEqualToString:PDImage_FileSize])
 	{
-	  value = [NSNumber numberWithUnsignedLong:
-		   file_size([self imagePath])];
+	  value = @(file_size([self imagePath]));
 	}
       else if ([key isEqualToString:PDImage_Rejected])
 	{
 	  value = [self imagePropertyForKey:PDImage_Rating];
 	  if (value != nil)
-	    value = [NSNumber numberWithBool:[value intValue] < 0];
+	    value = @([value intValue] < 0);
 	}
     }
 
@@ -770,9 +772,9 @@ file_path(PDImage *self, NSString *file)
 	      CGSize size2 = [obj2 pixelSize];
 	      obj1 = obj2 = nil;
 	      if (size1.width != 0 && size1.height != 0)
-		obj1 = [NSNumber numberWithDouble:size1.width * size1.height];
+		obj1 = @(size1.width * size1.height);
 	      if (size2.width != 0 && size2.height != 0)
-		obj2 = [NSNumber numberWithDouble:size2.width * size2.height];
+		obj2 = @(size2.width * size2.height);
 	      break; }
 
 	    case PDImageCompare_Name:
@@ -940,9 +942,29 @@ file_path(PDImage *self, NSString *file)
   return [self imagePropertyForKey:PDImage_Name];
 }
 
+- (void)setName:(NSString *)str
+{
+  [self setImageProperty:str forKey:PDImage_Name];
+}
+
 - (NSString *)title
 {
   return [self imagePropertyForKey:PDImage_Title];
+}
+
+- (void)setTitle:(NSString *)str
+{
+  [self setImageProperty:str forKey:PDImage_Title];
+}
+
+- (NSString *)caption
+{
+  return [self imagePropertyForKey:PDImage_Caption];
+}
+
+- (void)setCaption:(NSString *)str
+{
+  [self setImageProperty:str forKey:PDImage_Caption];
 }
 
 - (BOOL)isHidden
@@ -952,7 +974,7 @@ file_path(PDImage *self, NSString *file)
 
 - (void)setHidden:(BOOL)flag
 {
-  [self setImageProperty:[NSNumber numberWithBool:flag] forKey:PDImage_Hidden];
+  [self setImageProperty:@(flag) forKey:PDImage_Hidden];
 }
 
 - (BOOL)isDeleted
@@ -962,7 +984,27 @@ file_path(PDImage *self, NSString *file)
 
 - (void)setDeleted:(BOOL)flag
 {
-  [self setImageProperty:[NSNumber numberWithBool:flag] forKey:PDImage_Deleted];
+  [self setImageProperty:@(flag) forKey:PDImage_Deleted];
+}
+
+- (BOOL)isFlagged
+{
+  return [[self imagePropertyForKey:PDImage_Flagged] boolValue];
+}
+
+- (void)setFlagged:(BOOL)flag
+{
+  [self setImageProperty:@(flag) forKey:PDImage_Flagged];
+}
+
+- (int)rating
+{
+  return [[self imagePropertyForKey:PDImage_Rating] intValue];
+}
+
+- (void)setRating:(int)x
+{
+  [self setImageProperty:@(x) forKey:PDImage_Rating];
 }
 
 - (BOOL)usesRAW
@@ -1001,6 +1043,11 @@ file_path(PDImage *self, NSString *file)
 - (unsigned int)orientation
 {
   return [[self imagePropertyForKey:PDImage_Orientation] unsignedIntValue];
+}
+
+- (void)setOrientation:(unsigned int)x
+{
+  [self setImageProperty:@(x) forKey:PDImage_Orientation];
 }
 
 - (CGSize)orientedPixelSize
@@ -1123,6 +1170,236 @@ file_path(PDImage *self, NSString *file)
   return nil;
 }
 
+static NSString *
+find_unique_path(NSString *path)
+{
+  if (path == nil)
+    return nil;
+
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  if (![fm fileExistsAtPath:path])
+    return path;
+
+  NSString *ext = [path pathExtension];
+  NSString *rest = [path stringByDeletingPathExtension];
+
+  for (int i = 1;; i++)
+    {
+      NSString *tem = [NSString stringWithFormat:@"%@-%d.%@", rest, i, ext];
+      if (![fm fileExistsAtPath:tem])
+	return tem;
+    }
+
+  /* not reached. */
+}
+
+/* Used when moving/copying files. */
+
+- (BOOL)writeJSONToPath:(NSString *)path JPEGPath:(NSString *)jpeg_path
+   RAWPath:(NSString *)raw_path UUID:(NSUUID *)uuid error:(NSError **)err
+{
+  NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+
+  [dict setObject:[uuid UUIDString] forKey:@"UUID"];
+
+  if (jpeg_path != nil)
+    [dict setObject:[jpeg_path lastPathComponent] forKey:@"JPEGFile"];
+  if (raw_path != nil)
+    [dict setObject:[raw_path lastPathComponent] forKey:@"RAWFile"];
+
+  [dict setObject:[NSDictionary dictionaryWithDictionary:_properties]
+   forKey:@"Properties"];
+
+  NSData *data = [NSJSONSerialization dataWithJSONObject:dict
+		  options:0 error:nil];
+
+  return [data writeToFile:path options:NSDataWritingAtomic error:err];
+}
+
+- (BOOL)moveToDirectory:(NSString *)dir error:(NSError **)err
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  /* In case JSON file is being written. */
+
+  [[PDImage writeQueue] waitUntilAllOperationsAreFinished];
+
+  NSString *old_json_path = nil, *new_json_path = nil;
+  NSString *old_jpeg_path = nil, *new_jpeg_path = nil;
+  NSString *old_raw_path = nil, *new_raw_path = nil;
+
+  if (_jsonFile != nil)
+    old_json_path = file_path(self, _jsonFile);
+  if (_jpegFile != nil)
+    old_jpeg_path = file_path(self, _jpegFile);
+  if (_rawFile != nil)
+    old_raw_path = file_path(self, _rawFile);
+
+  NSString *old_dir = [_libraryDirectory autorelease];
+  _libraryDirectory = [dir copy];
+
+  if (_jsonFile != nil)
+    new_json_path = file_path(self, _jsonFile);
+  else
+    new_json_path = file_path(self, _jpegFile ? _jpegFile : _rawFile);
+  if (_jpegFile != nil)
+    new_jpeg_path = file_path(self, _jpegFile);
+  if (_rawFile != nil)
+    new_raw_path = file_path(self, _rawFile);
+
+  new_json_path = find_unique_path(new_json_path);
+  new_jpeg_path = find_unique_path(new_jpeg_path);
+  new_raw_path = find_unique_path(new_raw_path);
+
+  NSUUID *uuid = _uuid ? _uuid : [NSUUID UUID];
+
+  /* Write new JSON file first.. */
+
+  if (![self writeJSONToPath:new_json_path JPEGPath:new_jpeg_path
+	RAWPath:new_raw_path UUID:uuid error:err])
+    {
+      [_libraryDirectory release];
+      _libraryDirectory = [old_dir retain];
+      return NO;
+    }
+
+  /* ..then move image files.. */
+
+  if (_jpegFile != nil)
+    {
+      if (![fm moveItemAtPath:old_jpeg_path toPath:new_jpeg_path error:err])
+	{
+	  [fm removeItemAtPath:new_json_path error:nil];
+
+	  [_libraryDirectory release];
+	  _libraryDirectory = [old_dir retain];
+	  return NO;
+	}
+    }
+
+  if (_rawFile != nil)
+    {
+      if (![fm moveItemAtPath:old_raw_path toPath:new_raw_path error:err])
+	{
+	  if (_jpegFile != nil)
+	    [fm moveItemAtPath:new_jpeg_path toPath:old_jpeg_path error:nil];
+	  [fm removeItemAtPath:new_json_path error:nil];
+
+	  [_libraryDirectory release];
+	  _libraryDirectory = [old_dir retain];
+	  return NO;
+	}
+    }
+
+  /* ..then remove old JSON file last. */
+
+  if (old_json_path != nil
+      && ![fm removeItemAtPath:old_json_path error:err])
+    {
+      if (_jpegFile != nil)
+	[fm moveItemAtPath:new_jpeg_path toPath:old_jpeg_path error:nil];
+      if (_rawFile != nil)
+	[fm moveItemAtPath:new_raw_path toPath:old_raw_path error:nil];
+      [fm removeItemAtPath:new_json_path error:nil];
+      return NO;
+    }
+
+  if (uuid != _uuid)
+    {
+      [_uuid release];
+      _uuid = [uuid copy];
+    }
+
+  if (new_jpeg_path != nil)
+    {
+      NSString *old_file = [old_jpeg_path stringByRemovingPathPrefix:old_dir];
+      NSString *new_file = [new_jpeg_path stringByRemovingPathPrefix:dir];
+      [_library didRenameFile:old_file to:new_file];
+    }
+
+  if (new_raw_path != nil)
+    {
+      NSString *old_file = [old_raw_path stringByRemovingPathPrefix:old_dir];
+      NSString *new_file = [new_raw_path stringByRemovingPathPrefix:dir];
+      [_library didRenameFile:old_file to:new_file];
+    }
+
+  /* (JSON file is not in library catalog.) */
+
+  return YES;
+}
+
+- (BOOL)copyToDirectoryPath:(NSString *)path resetUUID:(BOOL)flag
+   error:(NSError **)err
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  /* In case JSON file is being written. */
+
+  [[PDImage writeQueue] waitUntilAllOperationsAreFinished];
+
+  NSString *json_path = nil;
+  NSString *old_jpeg_path = nil, *new_jpeg_path = nil;
+  NSString *old_raw_path = nil, *new_raw_path = nil;
+
+  if (_jpegFile != nil)
+    old_jpeg_path = file_path(self, _jpegFile);
+  if (_rawFile != nil)
+    old_raw_path = file_path(self, _rawFile);
+
+  if (_jsonFile != nil)
+    json_path = [path stringByAppendingPathComponent:_jsonFile];
+  else
+    json_path = file_path(self, _jpegFile ? _jpegFile : _rawFile);
+
+  json_path = find_unique_path(json_path);
+
+  if (_jpegFile != nil)
+    new_jpeg_path = [path stringByAppendingPathComponent:_jpegFile];
+  if (_rawFile != nil)
+    new_raw_path = [path stringByAppendingPathComponent:_rawFile];
+
+  new_jpeg_path = find_unique_path(new_jpeg_path);
+  new_raw_path = find_unique_path(new_raw_path);
+
+  NSUUID *uuid = _uuid;
+  if (uuid == nil || flag)
+    uuid = [NSUUID UUID];
+
+  /* Write new JSON file first.. */
+
+  if (![self writeJSONToPath:json_path JPEGPath:new_jpeg_path
+	RAWPath:new_raw_path UUID:uuid error:err])
+    {
+      return NO;
+    }
+
+  /* ..then copy image files. */
+
+  if (_jpegFile != nil)
+    {
+      if (![fm copyItemAtPath:old_jpeg_path toPath:new_jpeg_path error:err])
+	{
+	  [fm removeItemAtPath:json_path error:nil];
+	  return NO;
+	}
+    }
+
+  if (_rawFile != nil)
+    {
+      if (![fm copyItemAtPath:old_raw_path toPath:new_raw_path error:err])
+	{
+	  if (_jpegFile != nil)
+	    [fm removeItemAtPath:new_jpeg_path error:nil];
+	  [fm removeItemAtPath:json_path error:nil];
+	  return NO;
+	}
+    }
+
+  return YES;
+}
+
 - (void)startPrefetching
 {
   if (_prefetchOp == nil && !_donePrefetch)
@@ -1141,51 +1418,51 @@ file_path(PDImage *self, NSString *file)
 	  return;
 	}
 
-      _prefetchOp = [NSBlockOperation blockOperationWithBlock:^{
+      _prefetchOp = [NSBlockOperation blockOperationWithBlock:^
+	{
+	  CGImageSourceRef src = create_image_source_from_path(image_path);
+	  if (src == NULL)
+	    return;
 
-	CGImageSourceRef src = create_image_source_from_path(image_path);
-	if (src == NULL)
-	  return;
+	  __block CGImageRef src_im
+	    = CGImageSourceCreateImageAtIndex(src, 0, NULL);
 
-	__block CGImageRef src_im
-	  = CGImageSourceCreateImageAtIndex(src, 0, NULL);
+	  CFRelease(src);
 
-	CFRelease(src);
+	  if (src_im == NULL)
+	    return;
 
-	if (src_im == NULL)
-	  return;
+	  CGColorSpaceRef srgb = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 
-	CGColorSpaceRef srgb = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+	  void (^cache_image)(NSInteger type, size_t size) =
+	    ^(NSInteger type, size_t size)
+	    {
+	      CGFloat sw = CGImageGetWidth(src_im);
+	      CGFloat sh = CGImageGetHeight(src_im);
 
-	void (^cache_image)(NSInteger type, size_t size) =
-	  ^(NSInteger type, size_t size)
-	  {
-	    CGFloat sw = CGImageGetWidth(src_im);
-	    CGFloat sh = CGImageGetHeight(src_im);
+	      CGFloat dw = sw > sh ? size : size * ((CGFloat)sw / (CGFloat)sh);
+	      CGFloat dh = sh > sw ? size : size * ((CGFloat)sh / (CGFloat)sw);
 
-	    CGFloat dw = sw > sh ? size : size * ((CGFloat)sw / (CGFloat)sh);
-	    CGFloat dh = sh > sw ? size : size * ((CGFloat)sh / (CGFloat)sw);
+	      CGImageRef im = copy_scaled_image(src_im,
+						CGSizeMake(dw, dh), srgb);
+	      if (im != NULL)
+		{
+		  NSString *cache_path
+		    = cache_path_for_type(lib, file_id, type);
+		  write_image_to_path(im, cache_path, CACHE_QUALITY);
+		  CGImageRelease(src_im);
+		  src_im = im;
+		}
+	    };
 
-	    CGImageRef im = copy_scaled_image(src_im, CGSizeMake(dw, dh), srgb);
+	  cache_image(PDImage_Medium, PDImage_MediumSize);
+	  cache_image(PDImage_Small, PDImage_SmallSize);
+	  cache_image(PDImage_Tiny, PDImage_TinySize);
 
-	    if (im != NULL)
-	      {
-		NSString *cache_path = cache_path_for_type(lib, file_id, type);
-		write_image_to_path(im, cache_path, CACHE_QUALITY);
-		CGImageRelease(src_im);
-		src_im = im;
-	      }
-	  };
+	  CGColorSpaceRelease(srgb);
+	  CGImageRelease(src_im);
+	}];
 
-	cache_image(PDImage_Medium, PDImage_MediumSize);
-	cache_image(PDImage_Small, PDImage_SmallSize);
-	cache_image(PDImage_Tiny, PDImage_TinySize);
-
-	CGColorSpaceRelease(srgb);
-	CGImageRelease(src_im);
-      }];
-
-      [_prefetchOp setQueuePriority:NSOperationQueuePriorityLow];
       [[PDImage narrowQueue] addOperation:_prefetchOp];
       [_prefetchOp retain];
     }
@@ -1220,11 +1497,12 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
   else
     queue = dispatch_get_main_queue();
 
-  dispatch_async(queue, ^{
-    [obj image:self setHostedImage:im];
-    CGImageRelease(im);
-    [CATransaction flush];
-  });
+  dispatch_async(queue, ^
+    {
+      [obj image:self setHostedImage:im];
+      CGImageRelease(im);
+      [CATransaction flush];
+    });
 }
 
 - (void)addImageHost:(id<PDImageHost>)obj
@@ -1271,16 +1549,17 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
   if (thumb && !cache_is_valid)
     {
-      NSOperation *thumb_op = [NSBlockOperation blockOperationWithBlock:^{
-	CGImageSourceRef src = create_image_source_from_path(image_path);
-	if (src != NULL)
-	  {
-	    CGImageRef im = create_cropped_thumbnail_image(src);
-	    CFRelease(src);
-	    if (im != NULL)
-	      setHostedImage(self, obj, im);
-	  }
-      }];
+      NSOperation *thumb_op = [NSBlockOperation blockOperationWithBlock:^
+	{
+	  CGImageSourceRef src = create_image_source_from_path(image_path);
+	  if (src != NULL)
+	    {
+	      CGImageRef im = create_cropped_thumbnail_image(src);
+	      CFRelease(src);
+	      if (im != NULL)
+		setHostedImage(self, obj, im);
+	    }
+	}];
 
       [thumb_op setQueuePriority:next_pri];
       next_pri = NSOperationQueuePriorityNormal;
@@ -1299,17 +1578,18 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
   if (cache_is_valid || thumb)
     {
-      NSOperation *cache_op = [NSBlockOperation blockOperationWithBlock:^{
-	CGImageSourceRef src = create_image_source_from_path(type_path);
-	if (src != NULL)
-	  {
-	    CGImageRef im = CGImageSourceCreateImageAtIndex(src, 0, NULL);
-	    CFRelease(src);
+      NSOperation *cache_op = [NSBlockOperation blockOperationWithBlock:^
+	{
+	  CGImageSourceRef src = create_image_source_from_path(type_path);
+	  if (src != NULL)
+	    {
+	      CGImageRef im = CGImageSourceCreateImageAtIndex(src, 0, NULL);
+	      CFRelease(src);
 
-	    if (im != NULL)
-	      setHostedImage(self, obj, im);
-	  }
-      }];
+	      if (im != NULL)
+		setHostedImage(self, obj, im);
+	    }
+	}];
 
       /* Cached operation can't run until proxy cache is fully built for
 	 this image. */
@@ -1336,36 +1616,39 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
       id space = [opts objectForKey:PDImageHost_ColorSpace];
 
-      NSOperation *full_op = [NSBlockOperation blockOperationWithBlock:^{
-	NSString *src_path = (max_size > type_size || !cache_is_valid
-			      ? image_path : type_path);
+      NSOperation *full_op = [NSBlockOperation blockOperationWithBlock:^
+	{
+	  NSString *src_path = (max_size > type_size || !cache_is_valid
+				? image_path : type_path);
 
-	CGImageSourceRef src = create_image_source_from_path(src_path);
-	if (src != NULL)
-	  {
-	    CGImageRef src_im = CGImageSourceCreateImageAtIndex(src, 0, NULL);
-	    CFRelease(src);
+	  CGImageSourceRef src = create_image_source_from_path(src_path);
+	  if (src != NULL)
+	    {
+	      CGImageRef src_im
+	        = CGImageSourceCreateImageAtIndex(src, 0, NULL);
+	      CFRelease(src);
 
-	    /* Scale the image to required size, this has several side-
-	       effects: (1) everything looks as good as possible, even
-	       when using a cheap GL filter, (2) uses as little memory
-	       as possible, (3) stops CA needing to decompress and
-	       color-match the image before displaying it.
+	      /* Scale the image to required size, this has several
+		 side-effects: (1) everything looks as good as
+		 possible, even when using a cheap GL filter, (2) uses
+		 as little memory as possible, (3) stops CA needing to
+		 decompress and color-match the image before displaying
+		 it.
 
-	       (Even though PDImageLayer tries to arrange for the
-	       decompression to happen on a background thread, and
-	       CALayer should never decompress with the CATransaction
-	       lock held, both those things appear to happen when
-	       directly using the raw CGImage from ImageIO.) */
+		 (Even though PDImageLayer tries to arrange for the
+		 decompression to happen on a background thread, and
+		 CALayer should never decompress with the CATransaction
+		 lock held, both those things appear to happen when
+		 directly using the raw CGImage from ImageIO.) */
 
-	    CGImageRef dst_im = copy_scaled_image(src_im, size,
-						  (CGColorSpaceRef)space);
-	    CGImageRelease(src_im);
+	      CGImageRef dst_im
+	        = copy_scaled_image(src_im, size, (CGColorSpaceRef)space);
+	      CGImageRelease(src_im);
 
-	    if (dst_im != NULL)
-	      setHostedImage(self, obj, dst_im);
-	  }
-      }];
+	      if (dst_im != NULL)
+		setHostedImage(self, obj, dst_im);
+	    }
+	}];
 
       [ops addObject:full_op];
     }
