@@ -50,7 +50,7 @@ enum PDImageCompareKey
 
 typedef int PDImageCompareKey;
 
-@interface PDImage : NSObject
+@interface PDImage : NSObject <NSPasteboardWriting>
 {
   PDImageLibrary *_library;
   NSString *_libraryDirectory;		/* relative to _libraryRoot */

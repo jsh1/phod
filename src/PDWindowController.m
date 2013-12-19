@@ -1130,6 +1130,21 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   return all_set ? NSOnState : all_clear ? NSOffState : NSMixedState;
 }
 
+- (IBAction)copy:(id)sender
+{
+  NSPasteboard *pboard = [NSPasteboard generalPasteboard];
+
+  [pboard clearContents];
+  if (![pboard writeObjects:[self selectedImages]])
+    NSLog(@"failed to write to pasteboard!");
+}
+
+- (IBAction)cut:(id)sender
+{
+  [self copy:sender];
+  [self delete:sender];
+}
+
 - (IBAction)delete:(id)sender
 {
   [(PDLibraryViewController *)[self viewControllerWithClass:

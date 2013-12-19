@@ -1398,10 +1398,15 @@ item_for_path(NSArray *items, NSArray *path)
 - (BOOL)sourceList:(PXSourceList *)lst writeItems:(NSArray *)items
     toPasteboard:(NSPasteboard *)pboard
 {
+  /* FIXME: replace by a call to -writeObjects:. And declare items
+     that represent physical directories as doing so. */
+
   [pboard declareTypes:@[PDLibraryItemType] owner:self];
+
   [_draggedItems release];
   _draggedItems = [items copy];
   _draggedPasteboard = [pboard retain];
+
   return YES;
 }
 

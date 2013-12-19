@@ -354,6 +354,24 @@
   return [self layerForImage:image] != nil;
 }
 
+- (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
+{
+  return YES;
+}
+
+- (BOOL)shouldDelayWindowOrderingForEvent:(NSEvent *)e
+{
+  switch ([e type])
+    {
+    case NSLeftMouseDown:
+    case NSLeftMouseDragged:
+      return YES;
+
+    default:
+      return NO;
+    }
+}
+
 - (void)mouseDown:(NSEvent *)e
 {
   switch ([e clickCount])
@@ -435,10 +453,8 @@ copy_layer_snapshot(CALayer *layer)
        idx = [_selection indexGreaterThanIndex:idx])
     {
       PDImage *image = [_images objectAtIndex:idx];
-      PDImageUUID *image_uuid = [PDImageUUID imageUUIDWithUUID:[image UUID]];
-
       NSDraggingItem *item = [[NSDraggingItem alloc]
-			      initWithPasteboardWriter:image_uuid];
+			      initWithPasteboardWriter:image];
 
       CALayer *layer = [self layerForImage:image];
 
@@ -483,6 +499,7 @@ copy_layer_snapshot(CALayer *layer)
       if (fabs(p.x - _mouseDownLocation.x) > DRAG_THRESH
 	  || fabs(p.y - _mouseDownLocation.y) > DRAG_THRESH)
 	{
+	  [NSApp preventWindowOrdering];
 	  [self beginDraggingSessionWithEvent:e];
 	}
     }

@@ -188,6 +188,9 @@ enum PDAccessoryMode
 - (IBAction)toggleHiddenAction:(id)sender;
 - (NSInteger)hiddenState;
 
+- (IBAction)copy:(id)sender;
+- (IBAction)cut:(id)sender;
+
 - (IBAction)delete:(id)sender;
 - (IBAction)toggleDeletedAction:(id)sender;
 - (NSInteger)deletedState;

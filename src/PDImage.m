@@ -28,6 +28,7 @@
 #import "PDFoundationExtensions.h"
 #import "PDImageLibrary.h"
 #import "PDImageProperty.h"
+#import "PDImageUUID.h"
 #import "PDWindowController.h"
 
 #import <QuartzCore/CATransaction.h>
@@ -483,6 +484,11 @@ file_path(PDImage *self, NSString *file)
   [_date release];
 
   [super dealloc];
+}
+
+- (NSString *)description
+{
+  return [NSString stringWithFormat:@"@<PDImage %p: %@>", self, [self name]];
 }
 
 - (void)writeJSONFile
@@ -1698,6 +1704,64 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
   [self removeImageHost:obj];
   [self addImageHost:obj];
+}
+
+// NSPasteboardWriting methods
+
+- (NSArray *)writableTypesForPasteboard:(NSPasteboard *)pboard
+{
+  NSMutableArray *types = [NSMutableArray array];
+
+  [types addObject:PDImageUUIDType];
+
+  /* NSURL provides more than one type, currently "public.file-url" and
+    "public.utf8-plain-text". */
+
+  for (NSString *type in [[NSURL fileURLWithPath:[self imagePath]]
+			  writableTypesForPasteboard:pboard])
+    {
+      [types addObject:type];
+    }
+
+  for (NSString *type in [self imagePropertyForKey:PDImage_FileTypes])
+    [types addObject:type];
+
+  return types;
+}
+
+- (NSPasteboardWritingOptions)writingOptionsForType:(NSString *)type
+    pasteboard:(NSPasteboard *)pboard
+{
+  /* Only provide image data when asked for it, it's usually large. */
+
+  if ([[self imagePropertyForKey:PDImage_FileTypes] containsObject:type])
+    return NSPasteboardWritingPromised;
+  else
+    return 0;
+}
+
+- (id)pasteboardPropertyListForType:(NSString *)type
+{
+  if ([type isEqualToString:PDImageUUIDType])
+    {
+      return [[PDImageUUID imageUUIDWithUUID:[self UUID]]
+	      pasteboardPropertyListForType:type];
+    }
+
+  if ([[self imagePropertyForKey:PDImage_FileTypes] containsObject:type])
+    {
+      if ([type isEqualToString:@"public.jpeg"])
+	return [NSData dataWithContentsOfFile:[self JPEGPath]];
+      else
+	return [NSData dataWithContentsOfFile:[self RAWPath]];
+    }
+
+  id url_data = [[NSURL fileURLWithPath:[self imagePath]]
+		 pasteboardPropertyListForType:type];
+  if (url_data != nil)
+    return url_data;
+
+  return nil;
 }
 
 @end
