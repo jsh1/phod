@@ -1469,6 +1469,7 @@ find_unique_path(NSString *path)
 	  CGImageRelease(src_im);
 	}];
 
+      [_prefetchOp setQueuePriority:NSOperationQueuePriorityLow];
       [[PDImage narrowQueue] addOperation:_prefetchOp];
       [_prefetchOp retain];
     }
