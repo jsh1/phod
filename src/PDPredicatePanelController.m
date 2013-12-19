@@ -71,9 +71,11 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
 - (void)setPredicate:(NSPredicate *)obj
 {
-  /* Make sure it's always compound, else it can't be aggreated. */
+  /* Make sure it's always compound, else it can't be edited. */
 
-  if (obj != nil && ![obj isKindOfClass:[NSCompoundPredicate class]])
+  if (obj == nil)
+    obj = [NSCompoundPredicate andPredicateWithSubpredicates:@[]];
+  else if(![obj isKindOfClass:[NSCompoundPredicate class]])
     obj = [NSCompoundPredicate andPredicateWithSubpredicates:@[obj]];
 
   if (_predicate != obj)
