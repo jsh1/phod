@@ -34,6 +34,7 @@
 @private
   NSMutableArray *_subviewControllers;
   BOOL _viewHasBeenLoaded;
+  BOOL _pendingProgressUpdate;
 }
 
 + (NSString *)viewNibName;

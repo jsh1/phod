@@ -224,10 +224,32 @@
 {
   PDAppDelegate *delegate = [NSApp delegate];
 
-  if ([delegate backgroundActivity])
-    [_progressIndicator startAnimation:self];
+  BOOL state = [delegate backgroundActivity];
+
+  if (!state)
+    {
+      [_progressIndicator stopAnimation:self];
+    }
   else
-    [_progressIndicator stopAnimation:self];
+    {
+      if (!_pendingProgressUpdate)
+	{
+	  dispatch_time_t t
+	    = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 4);
+
+	  dispatch_after(t, dispatch_get_main_queue(), ^
+	    {
+	      _pendingProgressUpdate = NO;
+
+	      if ([delegate backgroundActivity])
+		[_progressIndicator startAnimation:self];
+	      else
+		[_progressIndicator stopAnimation:self];
+	    });
+
+	  _pendingProgressUpdate = YES;
+	}
+    }
 }
 
 @end
