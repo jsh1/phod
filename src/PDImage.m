@@ -406,6 +406,9 @@ file_path(PDImage *self, NSString *file)
 
 	      _jpegFile = [[dict objectForKey:@"JPEGFile"] copy];
 	      _rawFile = [[dict objectForKey:@"RAWFile"] copy];
+
+	      _deleted = [[_properties objectForKey:PDImage_Deleted] boolValue];
+	      _hidden = [[_properties objectForKey:PDImage_Hidden] boolValue];
 	    }
 
 	  [data release];
@@ -493,7 +496,7 @@ file_path(PDImage *self, NSString *file)
 
 - (void)writeJSONFile
 {
-  if (!_deleted && !_pendingJSONWrite)
+  if (!_invalidated && !_pendingJSONWrite)
     {
       if (_jsonFile == nil)
 	{
@@ -506,7 +509,7 @@ file_path(PDImage *self, NSString *file)
         = dispatch_time(DISPATCH_TIME_NOW, 2LL * NSEC_PER_SEC);
 
       dispatch_after(then, dispatch_get_main_queue(), ^{
-	if (!_deleted)
+	if (!_invalidated)
 	  {
 	    /* Copying mutable data out of self, as op runs asynchronously.
 
@@ -646,35 +649,45 @@ file_path(PDImage *self, NSString *file)
   return value;
 }
 
-- (void)setImageProperty:(id)obj forKey:(NSString *)key
+- (void)setImageProperty:(id)value forKey:(NSString *)key
 {
-  if (obj == nil)
-    obj = [NSNull null];
+  if (value == nil)
+    value = [NSNull null];
 
   id oldValue = [_properties objectForKey:key];
 
-  if (![oldValue isEqual:obj])
+  if (![oldValue isEqual:value])
     {
-      [_properties setObject:obj forKey:key];
+      [_properties setObject:value forKey:key];
 
       [self writeJSONFile];
 
-      if (_date != nil
-	  && ([key isEqualToString:PDImage_OriginalDate]
+      if ([key isEqualToString:PDImage_Deleted])
+	{
+	  _deleted = [value boolValue];
+	}
+      else if ([key isEqualToString:PDImage_Hidden])
+	{
+	  _hidden = [value boolValue];
+	}
+      else if (([key isEqualToString:PDImage_OriginalDate]
 	      || [key isEqualToString:PDImage_DigitizedDate]))
 	{
-	  [_date release], _date = nil;
+	  [_date release];
+	  _date = nil;
 	}
-
-      if (_donePrefetch && [key isEqualToString:PDImage_ActiveType])
+      else if ([key isEqualToString:PDImage_ActiveType])
 	{
-	  [self stopPrefetching];
-	  [_prefetchOp release];
-	  _prefetchOp = nil;
-	  _donePrefetch = NO;
+	  if (_donePrefetch)
+	    {
+	      [self stopPrefetching];
+	      [_prefetchOp release];
+	      _prefetchOp = nil;
+	      _donePrefetch = NO;
 
-	  [_implicitProperties release];
-	  _implicitProperties = nil;
+	      [_implicitProperties release];
+	      _implicitProperties = nil;
+	    }
 	}
 
       [[NSNotificationCenter defaultCenter]
@@ -975,7 +988,7 @@ file_path(PDImage *self, NSString *file)
 
 - (BOOL)isHidden
 {
-  return [[self imagePropertyForKey:PDImage_Hidden] boolValue];
+  return _hidden;
 }
 
 - (void)setHidden:(BOOL)flag
@@ -985,7 +998,7 @@ file_path(PDImage *self, NSString *file)
 
 - (BOOL)isDeleted
 {
-  return [[self imagePropertyForKey:PDImage_Deleted] boolValue];
+  return _deleted;
 }
 
 - (void)setDeleted:(BOOL)flag
@@ -1171,7 +1184,7 @@ file_path(PDImage *self, NSString *file)
   [_properties setObject:@[] forKey:PDImage_FileTypes];
   [_properties removeObjectForKey:PDImage_ActiveType];
 
-  _deleted = YES;
+  _invalidated = YES;
 
   return nil;
 }

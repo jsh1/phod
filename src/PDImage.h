@@ -78,7 +78,10 @@ typedef int PDImageCompareKey;
 
   NSDate *_date;			/* cached lazily */
 
-  BOOL _deleted;
+  BOOL _deleted;			/* cached eagerly */
+  BOOL _hidden;
+
+  BOOL _invalidated;			/* set by -remove */
 }
 
 + (void)callWithImageComparator:(PDImageCompareKey)key
