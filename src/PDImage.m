@@ -1462,8 +1462,9 @@ find_unique_path(NSString *path)
 	      CGFloat dw = sw > sh ? size : size * ((CGFloat)sw / (CGFloat)sh);
 	      CGFloat dh = sh > sw ? size : size * ((CGFloat)sh / (CGFloat)sw);
 
-	      CGImageRef im = copy_scaled_image(src_im,
-						CGSizeMake(dw, dh), srgb);
+	      CGImageRef im
+	        = copy_scaled_image(src_im, CGSizeMake(dw, dh), srgb);
+
 	      if (im != NULL)
 		{
 		  NSString *cache_path
@@ -1538,7 +1539,13 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
     return;
 
   NSDictionary *opts = [obj imageHostOptions];
+
   BOOL thumb = [[opts objectForKey:PDImageHost_Thumbnail] boolValue];
+
+  /* Using 'id' so blocks retain it, actually CGColorSpaceRef. */
+
+  id space = [opts objectForKey:PDImageHost_ColorSpace];
+
   NSSize size = [[opts objectForKey:PDImageHost_Size] sizeValue];
 
   if (size.width == 0 || size.width > imageSize.width
@@ -1593,21 +1600,52 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
      have no effect. So just skip this stage if prefetch op has not
      completed yet..
 
-     (But remember that thumbnails won't try to load anything better so
-     they should use the proxy to replace the embedded thumbnail.) */
+     FIXME: but for thumbnails I'm running into a problem with updating
+     CALayer contents from multiple threads.
 
-  if (cache_is_valid || thumb)
+     What's supposed to happen is CA's prepare_commit() does the
+     expensive image conversion before taking the transaction lock,
+     allowing other threads to continue unimpeded. But it appears that
+     sometimes the conversion is happening in commit_layer(), while the
+     lock is held. This is probably because the same layer tree is
+     being modified from multiple threads, even though each layer isn't
+     and the commits are interfering (I thought we'd made the contents
+     property fully isolated in 10.9, but perhaps not..?)
+
+     So the workaround for that is to skip this stage and go straight
+     to the scaled proxy for thumbnail layers, so that the image has
+     been decompressed and color matched by the time the layer sees it.
+     But only if the prefetching has already completed -- we don't ever
+     want to scale the full-size image down to thumbnail size. This will
+     also look better than e.g. GL_LINEAR_MIPMAP_LINEAR. */
+
+  bool need_scaled_op = true;
+
+  if (thumb ? !cache_is_valid : cache_is_valid)
     {
       NSOperation *cache_op = [NSBlockOperation blockOperationWithBlock:^
 	{
 	  CGImageSourceRef src = create_image_source_from_path(type_path);
 	  if (src != NULL)
 	    {
-	      CGImageRef im = CGImageSourceCreateImageAtIndex(src, 0, NULL);
+	      CGImageRef src_im
+		= CGImageSourceCreateImageAtIndex(src, 0, NULL);
+
 	      CFRelease(src);
 
-	      if (im != NULL)
-		setHostedImage(self, obj, im);
+	      CGImageRef dst_im = src_im;
+
+	      if (thumb && src_im != NULL)
+		{
+		  dst_im
+		    = copy_scaled_image(src_im, size, (CGColorSpaceRef)space);
+		  CGImageRelease(src_im);
+		}
+	      else
+		dst_im = src_im;
+
+	      if (dst_im != NULL)
+		setHostedImage(self, obj, dst_im);
 	    }
 	}];
 
@@ -1621,6 +1659,9 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 	[cache_op addDependency:_prefetchOp];
 
       [ops addObject:cache_op];
+
+      if (thumb || max_size == type_size)
+	need_scaled_op = false;
     }
 
   /* Finally, if necessary, downsample from the proxy or the full
@@ -1630,12 +1671,8 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
      FIXME: we should be tiling large images here. */
 
-  if ([ops count] == 0 || (!thumb && max_size != type_size))
+  if (need_scaled_op)
     {
-      /* Using 'id' so the block retains it, actually CGColorSpaceRef. */
-
-      id space = [opts objectForKey:PDImageHost_ColorSpace];
-
       NSOperation *full_op = [NSBlockOperation blockOperationWithBlock:^
 	{
 	  NSString *src_path = (max_size > type_size || !cache_is_valid
@@ -1650,23 +1687,19 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
 	      /* Scale the image to required size, this has several
 		 side-effects: (1) everything looks as good as
-		 possible, even when using a cheap GL filter, (2) uses
-		 as little memory as possible, (3) stops CA needing to
-		 decompress and color-match the image before displaying
-		 it.
-
-		 (Even though PDImageLayer tries to arrange for the
-		 decompression to happen on a background thread, and
-		 CALayer should never decompress with the CATransaction
-		 lock held, both those things appear to happen when
-		 directly using the raw CGImage from ImageIO.) */
+		 possible, (2) uses as little memory as possible, (3)
+		 stops CA needing to decompress and color-match the
+		 image before displaying it. */
 
 	      CGImageRef dst_im
 	        = copy_scaled_image(src_im, size, (CGColorSpaceRef)space);
-	      CGImageRelease(src_im);
 
 	      if (dst_im != NULL)
-		setHostedImage(self, obj, dst_im);
+		CGImageRelease(src_im);
+	      else
+		dst_im = src_im;
+
+	      setHostedImage(self, obj, dst_im);
 	    }
 	}];
 
