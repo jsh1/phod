@@ -35,6 +35,7 @@
 
   BOOL _addedImageHost;
   CGSize _imageSize;
+  OSSpinLock _imageLock;
 }
 
 @property(nonatomic, retain) PDImage *image;

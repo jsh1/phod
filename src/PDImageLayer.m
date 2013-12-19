@@ -100,17 +100,21 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
       /* to make -image:setHostedImage: synchronized. */
 
-      [CATransaction lock];
+      id old_image = nil;
+
+      OSSpinLockLock(&_imageLock);
 
       if (_image != im)
 	{
-	  [_image release];
+	  old_image = _image;
 	  _image = [im retain];
 	}
 
       _imageUsesRAW = usesRAW;
 
-      [CATransaction unlock];
+      OSSpinLockUnlock(&_imageLock);
+
+      [old_image release];
 
       [[[self sublayers] firstObject] setContents:nil];
       [self setNeedsLayout];
@@ -244,7 +248,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 {
   /* Due to -imageHostQueue above, will be called on a background queue. */
 
-  [CATransaction lock];
+  OSSpinLockLock(&_imageLock);
 
   if (_image == image)
     {
@@ -252,7 +256,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
       [image_layer setContents:(id)im];
     }
 
-  [CATransaction unlock];
+  OSSpinLockUnlock(&_imageLock);
 }
 
 @end
