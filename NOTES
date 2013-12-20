@@ -236,6 +236,9 @@ Issues
 
   Could be a PXSourceList bug?
 
+  RESOLVED: we now scroll to the selection rect when told the selection
+  has changed.
+
 
 Image Adjustments
 =================

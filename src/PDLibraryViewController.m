@@ -1439,6 +1439,31 @@ item_for_path(NSArray *items, NSArray *path)
   [self updateImageList:0];
 }
 
+- (void)scrollSelectionToVisible
+{
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+  if ([sel count] == 0)
+    return;
+
+  NSRect rect = NSZeroRect;
+
+  for (NSInteger idx = [sel firstIndex];
+       idx != NSNotFound; idx = [sel indexGreaterThanIndex:idx])
+    {
+      NSRect row_rect = [_outlineView rectOfRow:idx];
+      if (rect.size.width == 0)
+	rect = row_rect;
+      else
+	rect = NSUnionRect(rect, row_rect);
+    }
+
+  if (!NSIsEmptyRect(rect))
+    {
+      rect = NSInsetRect(rect, 0, -4);
+      [_outlineView scrollRectToVisible:rect];
+    }
+}
+
 // PXSourceListDataSource methods
 
 - (NSUInteger)sourceList:(PXSourceList *)lst numberOfChildrenOfItem:(id)item
@@ -1908,6 +1933,8 @@ item_for_path(NSArray *items, NSArray *path)
 	    }
 	}
     }
+
+  [self scrollSelectionToVisible];
 }
 
 // NSPasteboardOwner methods
