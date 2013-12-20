@@ -34,6 +34,7 @@
   IBOutlet NSMenu *_sortMenu;
   IBOutlet NSTextField *_titleLabel;
   IBOutlet NSSearchField *_searchField;
+  IBOutlet NSMenu *_searchMenu;
   IBOutlet NSButton *_predicateButton;
   IBOutlet NSButton *_rotateLeftButton;
   IBOutlet NSButton *_rotateRightButton;
@@ -48,5 +49,7 @@
 - (IBAction)sortOrderAction:(id)sender;
 
 - (IBAction)controlAction:(id)sender;
+
+- (BOOL)performKeyEquivalent:(NSEvent *)e;
 
 @end

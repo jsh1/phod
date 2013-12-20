@@ -28,7 +28,6 @@
 #import "PDAppKitExtensions.h"
 #import "PDImage.h"
 #import "PDImageListViewController.h"
-#import "PDImageUUID.h"
 #import "PDThumbnailLayer.h"
 #import "PDWindowController.h"
 
@@ -508,6 +507,11 @@ copy_layer_snapshot(CALayer *layer)
 - (BOOL)acceptsFirstResponder
 {
   return YES;
+}
+
+- (BOOL)performKeyEquivalent:(NSEvent *)e
+{
+  return [_controller performKeyEquivalent:e];
 }
 
 - (void)keyDown:(NSEvent *)e

@@ -87,13 +87,24 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
     }
 }
 
-- (NSPredicate *)predicateWithFormat:(NSString *)str
+- (NSPredicate *)predicateWithFormat:(NSString *)str, ...
+{
+  va_list args;
+  va_start(args, str);
+
+  NSPredicate *ret = [self predicateWithFormat:str argv:args];
+
+  va_end(args);
+  return ret;
+}
+
+- (NSPredicate *)predicateWithFormat:(NSString *)str argv:(va_list)args
 {
   if ([str length] == 0)
     return nil;
 
   @try {
-    return [NSPredicate predicateWithFormat:str];
+    return [NSPredicate predicateWithFormat:str arguments:args];
   } @catch (id exception) {
     return nil;
   }

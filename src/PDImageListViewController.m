@@ -258,6 +258,11 @@
     }
 }
 
+- (BOOL)performKeyEquivalent:(NSEvent *)e
+{
+  return [_searchMenu performKeyEquivalent:e];
+}
+
 // NSMenuDelegate methods
 
 - (void)menuNeedsUpdate:(NSMenu *)menu

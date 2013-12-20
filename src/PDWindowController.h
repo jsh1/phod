@@ -104,7 +104,8 @@ enum PDAccessoryMode
 
 @property(nonatomic, copy) NSString *imageListTitle;
 
-- (NSPredicate *)imagePredicateWithFormat:(NSString *)str;
+- (NSPredicate *)imagePredicateWithFormat:(NSString *)str, ...;
+- (NSPredicate *)imagePredicateWithFormat:(NSString *)str argv:(va_list)args;
 
 @property(nonatomic, copy) NSPredicate *imagePredicate;
 
@@ -181,6 +182,8 @@ enum PDAccessoryMode
 
 - (IBAction)setImageRatingAction:(id)sender;
 - (IBAction)addImageRatingAction:(id)sender;
+
+- (IBAction)setRatingPredicateAction:(id)sender;
 
 - (IBAction)toggleFlaggedAction:(id)sender;
 - (NSInteger)flaggedState;

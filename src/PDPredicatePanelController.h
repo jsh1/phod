@@ -40,7 +40,8 @@ extern NSString * const PDPredicateDidChange;
 
 @property(nonatomic, retain) NSPredicate *predicate;
 
-- (NSPredicate *)predicateWithFormat:(NSString *)str;
+- (NSPredicate *)predicateWithFormat:(NSString *)str, ...;
+- (NSPredicate *)predicateWithFormat:(NSString *)str argv:(va_list)args;
 
 - (IBAction)controlAction:(id)sender;
 

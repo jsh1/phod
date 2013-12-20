@@ -525,9 +525,21 @@ wasFirstResponder(NSView *view)
     }
 }
 
-- (NSPredicate *)imagePredicateWithFormat:(NSString *)str
+- (NSPredicate *)imagePredicateWithFormat:(NSString *)str, ...
 {
-  return [[self predicatePanelController] predicateWithFormat:str];
+  va_list args;
+  va_start(args, str);
+
+  NSPredicate *ret = [[self predicatePanelController]
+		      predicateWithFormat:str argv:args];
+
+  va_end(args);
+  return ret;
+}
+
+- (NSPredicate *)imagePredicateWithFormat:(NSString *)str argv:(va_list)args
+{
+  return [[self predicatePanelController] predicateWithFormat:str argv:args];
 }
 
 - (NSPredicate *)imagePredicate
@@ -1084,6 +1096,46 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
     [image setImageProperty:
      [NSNumber numberWithInt:rating] forKey:PDImage_Rating];
   }];
+}
+
+- (IBAction)setRatingPredicateAction:(id)sender
+{
+  NSPredicate *pred = nil;
+  int arg = [sender tag];
+
+  switch (arg)
+    {
+    case 0:
+      pred = nil;
+      break;
+
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+      pred = [self imagePredicateWithFormat:@"rating >= %d", arg];
+      break;
+
+    case 6:				/* show all */
+      pred = [self imagePredicateWithFormat:@"rating >= -1"];
+      break;
+
+    case 7:				/* unrated */
+      pred = [self imagePredicateWithFormat:@"rating == 0"];
+      break;
+
+    case 8:				/* rejected */
+      pred = [self imagePredicateWithFormat:@"rating == -1"];
+      break;
+
+    case 9:				/* flagged */
+      pred = [self imagePredicateWithFormat:@"flagged == 1"];
+      break;
+    }
+
+  [self setImagePredicate:pred];
+  [self rebuildImageList:PDWindowController_StopPreservingImages];
 }
 
 - (IBAction)toggleFlaggedAction:(id)sender
