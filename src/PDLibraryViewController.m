@@ -1061,11 +1061,118 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
 
       NSInteger row = [_outlineView rowForItem:subitem];
       if (row >= 0)
-	{
-	  [_outlineView selectRowIndexes:[NSIndexSet indexSetWithIndex:row]
-	   byExtendingSelection:NO];
-	}
+	[_outlineView setSelectedRow:row];
     }
+}
+
+- (IBAction)nextLibraryItemAction:(id)sender
+{
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+
+  NSInteger row;
+  if ([sel count] == 0)
+    row = 0;
+  else
+    row = [sel lastIndex] + 1;
+
+  NSInteger count = [_outlineView numberOfRows];
+
+  while (row < count
+	 && [_outlineView isGroupItem:[_outlineView itemAtRow:row]])
+    row++;
+
+  if (row < count)
+    [_outlineView setSelectedRow:row];
+}
+
+- (IBAction)previousLibraryItemAction:(id)sender
+{
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+
+  NSInteger row;
+  if ([sel count] == 0)
+    row = [_outlineView numberOfRows] - 1;
+  else
+    row = [sel firstIndex] - 1;
+
+  while (row >= 0
+	 && [_outlineView isGroupItem:[_outlineView itemAtRow:row]])
+    row--;
+
+  if (row >= 0)
+    [_outlineView setSelectedRow:row];
+}
+
+- (IBAction)parentLibraryItemAction:(id)sender
+{
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+
+  if ([sel count] != 1)
+    {
+      NSBeep();
+      return;
+    }
+
+  NSInteger row = [_outlineView rowForItem:
+		   [[_outlineView itemAtRow:[sel firstIndex]] parent]];
+  if (row >= 0)
+    [_outlineView setSelectedRow:row];
+}
+
+- (IBAction)firstLibraryChildItemAction:(id)sender
+{
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+
+  if ([sel count] != 1)
+    {
+      NSBeep();
+      return;
+    }
+
+  PDLibraryItem *item = [_outlineView itemAtRow:[sel firstIndex]];
+  PDLibraryItem *subitem = [[item subitems] firstObject];
+
+  if (subitem == nil)
+    {
+      NSBeep();
+      return;
+    }
+
+  [_outlineView expandItem:item];
+
+  NSInteger row = [_outlineView rowForItem:subitem];
+  if (row >= 0)
+    [_outlineView setSelectedRow:row];
+}
+
+- (IBAction)expandLibraryItemAction:(id)sender
+{
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+
+  if ([sel count] != 1)
+    {
+      NSBeep();
+      return;
+    }
+
+  PDLibraryItem *item = [_outlineView itemAtRow:[sel firstIndex]];
+  if (item != nil)
+    [_outlineView expandItem:item];
+}
+
+- (IBAction)collapseLibraryItemAction:(id)sender
+{
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+
+  if ([sel count] != 1)
+    {
+      NSBeep();
+      return;
+    }
+
+  PDLibraryItem *item = [_outlineView itemAtRow:[sel firstIndex]];
+  if (item != nil)
+    [_outlineView collapseItem:item];
 }
 
 - (void)libraryDidChangeFiles:(NSNotification *)note
@@ -1627,10 +1734,7 @@ item_for_path(NSArray *items, NSArray *path)
 
 	  NSInteger row = [_outlineView rowForItem:item];
 	  if (row >= 0)
-	    {
-	      [_outlineView selectRowIndexes:
-	       [NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
-	    }
+	    [_outlineView setSelectedRow:row];
 
 	  return YES;
 	}

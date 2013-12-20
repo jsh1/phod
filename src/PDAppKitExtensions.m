@@ -137,6 +137,12 @@
   [self selectRowIndexes:sel byExtendingSelection:NO];
 }
 
+- (void)setSelectedRow:(NSInteger)row
+{
+  [self selectRowIndexes:[NSIndexSet indexSetWithIndex:row]
+   byExtendingSelection:NO];
+}
+
 - (void)callPreservingSelectedRows:(void (^)(void))thunk;
 {
   NSArray *sel = [self selectedItems];

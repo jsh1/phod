@@ -160,6 +160,13 @@ enum PDWindowControllerRebuildImageListFlags
 
 - (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 
+- (IBAction)nextLibraryItemAction:(id)sender;
+- (IBAction)previousLibraryItemAction:(id)sender;
+- (IBAction)parentLibraryItemAction:(id)sender;
+- (IBAction)firstLibraryChildItemAction:(id)sender;
+- (IBAction)expandLibraryItemAction:(id)sender;
+- (IBAction)collapseLibraryItemAction:(id)sender;
+
 - (void)foreachSelectedImage:(void (^)(PDImage *))block;
 
 @property(nonatomic) BOOL importMode;

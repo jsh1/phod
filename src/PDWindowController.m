@@ -989,6 +989,42 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   
 }
 
+- (IBAction)nextLibraryItemAction:(id)sender
+{
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
+}
+
+- (IBAction)previousLibraryItemAction:(id)sender
+{
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
+}
+
+- (IBAction)parentLibraryItemAction:(id)sender
+{
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
+}
+
+- (IBAction)firstLibraryChildItemAction:(id)sender
+{
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
+}
+
+- (IBAction)expandLibraryItemAction:(id)sender
+{
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
+}
+
+- (IBAction)collapseLibraryItemAction:(id)sender
+{
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
+}
+
 - (void)foreachSelectedImage:(void (^)(PDImage *))block
 {
   if ([_selectedImageIndexes count] == 0)
@@ -1216,8 +1252,8 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
 - (IBAction)delete:(id)sender
 {
-  [(PDLibraryViewController *)[self viewControllerWithClass:
-   [PDLibraryViewController class]] delete:sender];
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
 }
 
 - (IBAction)toggleDeletedAction:(id)sender
@@ -1278,8 +1314,8 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 {
   if (_contentMode == PDContentMode_Image)
     {
-      [(PDImageViewController *)[self viewControllerWithClass:
-	[PDImageViewController class]] zoomIn:sender];
+      [[self viewControllerWithClass:[PDImageViewController class]]
+       performSelector:_cmd withObject:sender];
     }
 }
 
@@ -1287,8 +1323,8 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 {
   if (_contentMode == PDContentMode_Image)
     {
-      [(PDImageViewController *)[self viewControllerWithClass:
-	[PDImageViewController class]] zoomOut:sender];
+      [[self viewControllerWithClass:[PDImageViewController class]]
+       performSelector:_cmd withObject:sender];
     }
 }
 
@@ -1296,8 +1332,8 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 {
   if (_contentMode == PDContentMode_Image)
     {
-      [(PDImageViewController *)[self viewControllerWithClass:
-	[PDImageViewController class]] zoomActualSize:sender];
+      [[self viewControllerWithClass:[PDImageViewController class]]
+       performSelector:_cmd withObject:sender];
     }
 }
 
@@ -1305,8 +1341,8 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 {
   if (_contentMode == PDContentMode_Image)
     {
-      [(PDImageViewController *)[self viewControllerWithClass:
-	[PDImageViewController class]] zoomToFill:sender];
+      [[self viewControllerWithClass:[PDImageViewController class]]
+       performSelector:_cmd withObject:sender];
     }
 }
 
@@ -1342,8 +1378,8 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 
 - (IBAction)newAlbumAction:(id)sender
 {
-  [(PDLibraryViewController *)[self viewControllerWithClass:
-   [PDLibraryViewController class]] newAlbumAction:sender];
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
 }
 
 - (IBAction)newSmartAlbumAction:(id)sender
@@ -1360,8 +1396,8 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 
 - (IBAction)importAction:(id)sender
 {
-  [(PDLibraryViewController *)[self viewControllerWithClass:
-   [PDLibraryViewController class]] importAction:sender];
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
 }
 
 - (IBAction)emptyTrashAction:(id)sender

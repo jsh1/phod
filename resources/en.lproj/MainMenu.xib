@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13A603" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
     </dependencies>
@@ -96,6 +96,39 @@ CA
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="74">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Next Folder" keyEquivalent="]" id="tBC-9J-1eg">
+                                <connections>
+                                    <action selector="nextLibraryItemAction:" target="-1" id="hln-Hr-8uT"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Previous Folder" keyEquivalent="[" id="T3S-2t-OM3">
+                                <connections>
+                                    <action selector="previousLibraryItemAction:" target="-1" id="nBD-Xx-wCb"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Expand Folder" keyEquivalent="" id="ipE-ww-EJL">
+                                <connections>
+                                    <action selector="expandLibraryItemAction:" target="-1" id="0qk-KA-m1D"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Collapse Folder" keyEquivalent="" id="5eD-DN-xnw">
+                                <connections>
+                                    <action selector="collapseLibraryItemAction:" target="-1" id="78i-UX-0sU"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Parent Folder" keyEquivalent="" id="cEM-11-yMm">
+                                <connections>
+                                    <action selector="parentLibraryItemAction:" target="-1" id="xhm-cT-ieM"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="First Child Folder" keyEquivalent="" id="Ckt-MW-A1A">
+                                <connections>
+                                    <action selector="firstLibraryChildItemAction:" target="-1" id="5SB-jB-HBv"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="mif-N7-AEz">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
                             <menuItem title="Page Setup..." keyEquivalent="P" id="77">

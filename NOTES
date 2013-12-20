@@ -230,6 +230,8 @@ Issues
   Left/right follows current expansion state, Up finds parent, Down
   steps into first child, opening the folder if necessary.
 
+  RESOLVED: implemented.
+
 24. Library view doesn't scroll as selection moves offscreen
 
   Could be a PXSourceList bug?
