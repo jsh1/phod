@@ -53,6 +53,12 @@ enum PDAccessoryMode
   PDAccessoryMode_Import,
 };
 
+enum PDWindowControllerRebuildImageListFlags
+{
+  PDWindowController_PreserveSelectedImages	= 1U << 0,
+  PDWindowController_StopPreservingImages	= 1U << 1,
+};
+
 @class PDViewController, PDPredicatePanelController;
 @class PDSplitView, PDImage, PDImageLibrary;
 
@@ -77,12 +83,15 @@ enum PDAccessoryMode
   int _imageSortKey;
   BOOL _imageSortReversed;
 
+  NSArray *_imageList;
   NSString *_imageListTitle;
 
-  NSArray *_imageList;
-
   NSPredicate *_imagePredicate;
+
   NSArray *_filteredImageList;
+  BOOL _filteredImageListIsPreservingImages;
+
+  BOOL _nilPredicateIncludesRejected;
 
   NSIndexSet *_selectedImageIndexes;
   NSInteger _primarySelectionIndex;
@@ -100,6 +109,9 @@ enum PDAccessoryMode
 
 - (BOOL)foreachImage:(void (^)(PDImage *, BOOL *stop))thunk;
 
+/* Setting the 'imageList' doesn't call -rebuildImageList implicitly,
+   callers must do that explicitly, to update 'filteredImageList'. */
+
 @property(nonatomic, copy) NSArray *imageList;
 
 @property(nonatomic, copy) NSString *imageListTitle;
@@ -108,6 +120,8 @@ enum PDAccessoryMode
 - (NSPredicate *)imagePredicateWithFormat:(NSString *)str argv:(va_list)args;
 
 @property(nonatomic, copy) NSPredicate *imagePredicate;
+
+@property(nonatomic) BOOL nilPredicateIncludesRejected;
 
 @property(nonatomic) int imageSortKey;
 @property(nonatomic, getter=isImageSortReversed) BOOL imageSortReversed;
@@ -118,7 +132,8 @@ enum PDAccessoryMode
    of filteredImageList, this method must be called explicitly. (But
    setting imageList does filter and sort the new array.) */
 
-- (void)rebuildImageList;
+- (void)rebuildImageList:(uint32_t)flags;
+- (void)rebuildImageListIfPreserving;
 
 @property(nonatomic, copy) NSIndexSet *selectedImageIndexes;
 @property NSInteger primarySelectionIndex;

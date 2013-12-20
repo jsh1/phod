@@ -28,9 +28,11 @@
 {
   NSPredicate *_predicate;
   BOOL _trashcan;
+  BOOL _nilPredicateIncludesRejected;
 }
 
 @property(nonatomic, copy) NSPredicate *predicate;
 @property(nonatomic, getter=isTrashcan) BOOL trashcan;
+@property(nonatomic) BOOL nilPredicateIncludesRejected;
 
 @end

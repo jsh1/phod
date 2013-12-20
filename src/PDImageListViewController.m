@@ -207,7 +207,7 @@
   if ([_controller imageSortKey] != key)
     {
       [_controller setImageSortKey:key];
-      [_controller rebuildImageList];
+      [_controller rebuildImageList:0];
       [_sortButton selectItemWithTag:key];
     }
 }
@@ -219,7 +219,7 @@
   if ([_controller isImageSortReversed] != reversed)
     {
       [_controller setImageSortReversed:reversed];
-      [_controller rebuildImageList];
+      [_controller rebuildImageList:0];
       [_sortButton selectItemWithTag:[_controller imageSortKey]];
     }
 }
@@ -247,13 +247,13 @@
 	  if (pred != nil)
 	    {
 	      [_controller setImagePredicate:pred];
-	      [_controller rebuildImageList];
+	      [_controller rebuildImageList:0];
 	    }
 	}
       else if ([_controller imagePredicate] != nil)
 	{
 	  [_controller setImagePredicate:nil];
-	  [_controller rebuildImageList];
+	  [_controller rebuildImageList:0];
 	}
     }
 }

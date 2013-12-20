@@ -79,17 +79,14 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   NSString *pred_str = [dict objectForKey:@"predicate"];
   if (pred_str != nil)
     {
-      NSPredicate *pred = [_controller imagePredicateWithFormat:pred_str];
+      PDLibraryQuery *tem = [[PDLibraryQuery alloc] init];
 
-      if (pred != nil)
-	{
-	  PDLibraryQuery *tem = [[PDLibraryQuery alloc] init];
-
-	  [tem setPredicate:pred];
-	  [tem setTrashcan:[[dict objectForKey:@"trashcan"] boolValue]];
-
-	  item = tem;
-	}
+      [tem setPredicate:[_controller imagePredicateWithFormat:pred_str]];
+      [tem setTrashcan:[[dict objectForKey:@"trashcan"] boolValue]];
+      [tem setNilPredicateIncludesRejected:
+       [[dict objectForKey:@"nilPredicateIncludesRejected"] boolValue]];
+      
+      item = tem;
     }
   else
     {
@@ -333,7 +330,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   _selectedItems = [[_outlineView selectedItems] copy];
 }
 
-- (void)updateImageList
+- (void)updateImageList:(uint32_t)flags
 {
   if ([_selectedItems count] == 0)
     {
@@ -346,6 +343,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
       NSMutableSet *image_set = [NSMutableSet set];
       NSMutableString *title = [NSMutableString string];
       BOOL showsHidden = [_controller showsHiddenImages];
+      BOOL includesRejected = NO;
       NSInteger count = 0;
       NSDictionary *viewState = nil;
 
@@ -360,6 +358,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
 	  if (viewState == nil)
 	    viewState = [_itemViewState objectForKey:item];
+
+	  if ([item nilPredicateIncludesRejected])
+	    includesRejected = YES;
 
 	  __block BOOL need_title = NO;
 
@@ -422,11 +423,14 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
       [_controller setImageSortKey:sortKey];
       [_controller setImageSortReversed:sortRev];
       [_controller setImagePredicate:pred];
+      [_controller setNilPredicateIncludesRejected:includesRejected];
       _ignoreNotifications--;
 
       [_controller setImageListTitle:title];
       [_controller setImageList:images];
     }
+
+  [_controller rebuildImageList:flags];
 }
 
 - (NSInteger)imageListSizeFromItem:(PDLibraryItem *)item
@@ -475,12 +479,12 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     }
 
   if (need_update)
-    [self updateImageList];
+    [self updateImageList:0];
 }
 
 - (void)showsHiddenImagesDidChange:(NSNotification *)note
 {
-  [self updateImageList];
+  [self updateImageList:PDWindowController_StopPreservingImages];
 
   [_outlineView reloadData];
 }
@@ -900,7 +904,7 @@ find_unique_name(NSString *root, NSString *file)
 	  [_selectedItems release];
 	  _selectedItems = [import_items copy];
 
-	  [self updateImageList];
+	  [self updateImageList:PDWindowController_StopPreservingImages];
 	  [self updateControls];
 
 	  for (PDLibraryItem *item in [_outlineView selectedItems])
@@ -973,7 +977,7 @@ find_unique_name(NSString *root, NSString *file)
 
   [_outlineView reloadData];
 
-  [self updateImageList];
+  [self updateImageList:PDWindowController_StopPreservingImages];
 
   if (update_albums)
     [self updateImageAlbums];
@@ -1028,7 +1032,7 @@ find_unique_name(NSString *root, NSString *file)
 	  [_outlineView reloadItem:item reloadChildren:YES];
 	}
 
-      [self updateImageList];
+      [self updateImageList:0];
     }
 }
 
@@ -1085,7 +1089,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
 	}
     }
 
-  [self updateImageList];
+  [self updateImageList:0];
 }
 
 - (void)imagePropertyDidChange:(NSNotification *)note
@@ -1096,11 +1100,13 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
   dispatch_once(&once, ^
     {
       keys = [[NSSet alloc] initWithObjects:
-	      PDImage_Deleted, PDImage_Hidden, nil];
+	      PDImage_Deleted, PDImage_Hidden, PDImage_Rating, nil];
     });
 
   if ([keys containsObject:[[note userInfo] objectForKey:@"key"]])
-    [self updateImageList];
+    {
+      [self updateImageList:PDWindowController_PreserveSelectedImages];
+    }
 }
 
 - (IBAction)controlAction:(id)sender
@@ -1323,7 +1329,7 @@ item_for_path(NSArray *items, NSArray *path)
       [_outlineView scrollRowToVisible:[sel firstIndex]];
     }
 
-  [self updateImageList];
+  [self updateImageList:0];
 }
 
 // PXSourceListDataSource methods
@@ -1716,7 +1722,7 @@ item_for_path(NSArray *items, NSArray *path)
 	}
 
       [_outlineView reloadData];
-      [self updateImageList];
+      [self updateImageList:0];
 
       return YES;
     }
@@ -1772,7 +1778,7 @@ item_for_path(NSArray *items, NSArray *path)
   if (allow_change)
     {
       [self updateSelectedItems];
-      [self updateImageList];
+      [self updateImageList:PDWindowController_StopPreservingImages];
       [self updateControls];
 
       if ([[_controller filteredImageList] count] > 0

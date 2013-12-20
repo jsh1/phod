@@ -47,6 +47,8 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
 
 @implementation PDWindowController
 
+@synthesize nilPredicateIncludesRejected = _nilPredicateIncludesRejected;
+
 - (NSString *)windowNibName
 {
   return @"PDWindow";
@@ -439,7 +441,7 @@ wasFirstResponder(NSView *view)
 - (void)predicateDidChange:(NSNotification *)note
 {
   [self setImagePredicate:[_predicatePanelController predicate]];
-  [self rebuildImageList];
+  [self rebuildImageList:PDWindowController_StopPreservingImages];
 }
 
 - (BOOL)foreachImage:(void (^)(PDImage *im, BOOL *stop))thunk;
@@ -464,34 +466,6 @@ wasFirstResponder(NSView *view)
     }
 }
 
-- (NSArray *)filteredImageList:(NSArray *)array
-{
-  if (_imagePredicate == nil)
-    return array;
-
-  NSMutableArray *ret = [NSMutableArray array];
-
-  for (PDImage *im in array)
-    {
-      if ([_imagePredicate evaluateWithObject:[im expressionValues]])
-	[ret addObject:im];
-    }
-
-  return ret;
-}
-
-- (NSArray *)sortedImageList:(NSArray *)array
-{
-  __block NSArray *ret = nil;
-
-  [PDImage callWithImageComparator:_imageSortKey reversed:_imageSortReversed
-   block:^(NSComparator cmp) {
-     ret = [array sortedArrayUsingComparator:cmp];
-   }];
-
-  return ret;
-}
-
 - (NSArray *)imageList
 {
   return _imageList;
@@ -504,11 +478,6 @@ wasFirstResponder(NSView *view)
       [_imageList release];
       _imageList = [array copy];
     }
-
-  /* Callers rely on this always happening, e.g. because they've changed
-     the sorting/filtering options. */
-
-  [self rebuildImageList];
 }
 
 - (NSString *)imageListTitle
@@ -598,15 +567,47 @@ wasFirstResponder(NSView *view)
   return _filteredImageList;
 }
 
-- (void)rebuildImageList
+- (void)rebuildImageList:(uint32_t)flags
 {
-  NSArray *array = [self sortedImageList:[self filteredImageList:_imageList]];
+  NSArray *selected_images = [[self selectedImages] copy];
+  PDImage *primary_image = [[self primarySelectedImage] retain];
+
+  NSMutableArray *array = [NSMutableArray array];
+
+  if (_filteredImageListIsPreservingImages
+      && !(flags & PDWindowController_StopPreservingImages))
+    flags |= PDWindowController_PreserveSelectedImages;
+
+  _filteredImageListIsPreservingImages = NO;
+
+  for (PDImage *image in _imageList)
+    {
+      /* Implicit predicate is "rating >= 0" (i.e. not-rejected). */
+
+      BOOL included = (_imagePredicate != nil
+	  ? [_imagePredicate evaluateWithObject:[image expressionValues]]
+	  : (_nilPredicateIncludesRejected ? YES : [image rating] >= 0));
+
+      if (!included && (flags & PDWindowController_PreserveSelectedImages)
+	  && [selected_images indexOfObjectIdenticalTo:image] != NSNotFound)
+	{
+	  included = YES;
+	  _filteredImageListIsPreservingImages = YES;
+	}
+      
+      if (included)
+	{
+	  [array addObject:image];
+	}
+    }
+
+  [PDImage callWithImageComparator:_imageSortKey reversed:_imageSortReversed
+   block:^(NSComparator cmp) {
+     [array sortUsingComparator:cmp];
+   }];
 
   if (![array isEqual:_filteredImageList])
     {
-      NSArray *selected_images = [[self selectedImages] copy];
-      PDImage *primary_image = [[self primarySelectedImage] retain];
-
       [_filteredImageList release];
       _filteredImageList = [array copy];
 
@@ -614,9 +615,17 @@ wasFirstResponder(NSView *view)
        postNotificationName:PDImageListDidChange object:self];
 
       [self setSelectedImages:selected_images primary:primary_image];
+    }
 
-      [selected_images release];
-      [primary_image release];
+  [selected_images release];
+  [primary_image release];
+}
+
+- (void)rebuildImageListIfPreserving
+{
+  if (_filteredImageListIsPreservingImages)
+    {
+      [self rebuildImageList:PDWindowController_StopPreservingImages];
     }
 }
 
@@ -835,6 +844,8 @@ convert_array_to_index_set(NSArray *array, NSArray *image_list)
     }
   else
     [self deselectAll:nil];
+
+  [self rebuildImageListIfPreserving];
 }
 
 static NSIndexSet *
@@ -882,6 +893,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 				    _primarySelectionIndex, idx, extend);
 
   [self setSelectedImageIndexes:sel primary:idx];
+  [self rebuildImageListIfPreserving];
 }
 
 - (void)movePrimarySelectionDown:(NSInteger)delta rows:(NSInteger)rows
@@ -916,6 +928,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 				    _primarySelectionIndex, idx, extend);
 
   [self setSelectedImageIndexes:sel primary:idx];
+  [self rebuildImageListIfPreserving];
 }
 
 - (void)selectAll:(id)sender
@@ -930,11 +943,13 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
   [self setSelectedImageIndexes:
    [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, count)] primary:idx];
+  [self rebuildImageListIfPreserving];
 }
 
 - (void)deselectAll:(id)sender
 {
   [self setSelectedImageIndexes:[NSIndexSet indexSet] primary:-1];
+  [self rebuildImageListIfPreserving];
 }
 
 - (void)selectFirstByExtendingSelection:(BOOL)extend
@@ -949,6 +964,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 				    _primarySelectionIndex, idx, extend);
 
   [self setSelectedImageIndexes:sel primary:idx];
+  [self rebuildImageListIfPreserving];
 }
 
 - (void)selectLastByExtendingSelection:(BOOL)extend
@@ -963,6 +979,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 				    _primarySelectionIndex, idx, extend);
 
   [self setSelectedImageIndexes:sel primary:idx];
+  [self rebuildImageListIfPreserving];
 }
 
 - (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir

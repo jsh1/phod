@@ -33,6 +33,7 @@
 
 @synthesize predicate = _predicate;
 @synthesize trashcan = _trashcan;
+@synthesize nilPredicateIncludesRejected = _nilPredicateIncludesRejected;
 
 - (void)dealloc
 {
@@ -42,19 +43,20 @@
 
 - (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk
 {
-  if (_predicate != nil)
+  PDWindowController *controller
+    = [(PDAppDelegate *)[NSApp delegate] windowController];
+
+  BOOL saw_all = [controller foreachImage:^(PDImage *im, BOOL *stop)
     {
-      PDWindowController *controller
-	= [(PDAppDelegate *)[NSApp delegate] windowController];
-
-      BOOL saw_all = [controller foreachImage:^(PDImage *im, BOOL *stop) {
-	if ([_predicate evaluateWithObject:[im expressionValues]])
+      if (_predicate == nil
+	  || [_predicate evaluateWithObject:[im expressionValues]])
+	{
 	  thunk(im, stop);
-      }];
+	}
+    }];
 
-      if (!saw_all)
-	return NO;
-    }
+  if (!saw_all)
+    return NO;
 
   return [super foreachSubimage:thunk];
 }

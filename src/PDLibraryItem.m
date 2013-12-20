@@ -100,6 +100,11 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
   return NO;
 }
 
+- (BOOL)nilPredicateIncludesRejected
+{
+  return NO;
+}
+
 - (BOOL)hasTitleImage
 {
   return [self titleImage] != nil;

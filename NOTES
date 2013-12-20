@@ -207,6 +207,92 @@ Issues
 
   Separate from archiving (described above, which also needs to track
   volume mount/unmount), we should support libraries whose root is on
-  a removable mount-point. When unmounted we should the root item
+  a removable mount-point. When unmounted we should show the root item
   greyed out (preserving the outline view state from the last time it
   was seen), and its catalog is not garbage-collected.
+
+21. Image adjustments / filters
+
+  See discussion below.
+
+22. Bad experience when marking a viewed image rejected
+
+  Unless rejected images are currently being shown, it disappears
+  leaving a grey screen. It also loses the selection position. We
+  should stay viewing that image until it's no longer selected, at
+  which point it disappears?
+
+  RESOLVED: implemented. A bit skanky, but seems to work correctly.
+
+23. Commands (with key equivs) to navigate library view
+
+  E.g. while content area is first responder. Use Command-Cursor keys?
+  Left/right follows current expansion state, Up finds parent, Down
+  steps into first child, opening the folder if necessary.
+
+24. Library view doesn't scroll as selection moves offscreen
+
+  Could be a PXSourceList bug?
+
+
+Image Adjustments
+=================
+
+Requires gutting the current image display "architecture", although the
+thumbnail views might survive largely unchanged.
+
+Could do a prototype using Core Image, or more likely OpenCL, but the
+substrate is not really the problem. Various thoughts:
+
+- the adjustment filters I actually care about are mostly quite simple,
+the normal list is:
+
+  - straighten & crop
+  - white balance
+  - exposure (normally RAW only)
+  - saturation and contrast
+  - black and white
+  - levels?
+  - highlights and shadows?
+  - chromatic aberration (RAW only)
+
+of those only the geometric transforms and the last two have a kernel
+extent that isn't limited to the destination pixel. Straighten, crop
+and white-balance are the only ones I really miss.
+
+- some filters (e.g. unsharp mask) should always run on the full-size
+image, whereas most can run on proxies without losing anything.
+
+- standard optimizations: concatenate all color matrices, concatenate
+all geometry matrices (mat3x3, devolve to mat2x2 + tx when possible).
+
+- standard order of operations. Geometry (minus proxy scale) is last?
+
+- these are photos, so would be good to be correct. E.g. would like to
+do all image scaling in a linear color space. This would also require
+not using CG to generate the existing proxy images.
+
+- do we need 16-bit components, or can we do something creative with
+the last 8-bits of each RGBA32 pixel? RGBM or something? But these all
+prevent you interpolating the 8888 pixels directly. (Though so does
+having non-linear color, and we ignore that..)
+
+GL has EXT_texture_shared_exponent, but it's not renderable.
+ARB_texture_rgb10_a2ui does claim to be renderable, so might be an
+option? Would need to be sure 10 bits is enough, it not be. Perhaps
+operate in linear 16-bit internally, and convert to non-linear 10-bit
+when caching?
+
+- color matching? Don't have access to the CG magic. Would probably
+have to get the ICC profiles and do the rest by hand, it's not hard,
+just tedious. Can use littlecms for some of it?
+
+- tiles? Main benefit would be when zoomed in and not displaying the
+entire image.
+
+- how do we connect the output of the last processing stage to the
+layer? GL layer is probably the most obvious way. But there may be
+others..
+
+- a large part of me wants to dump OpenGL. So perhaps do CL-CPU as
+first option, and CL-GPU later if necessary..

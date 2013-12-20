@@ -58,6 +58,7 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 - (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk;
 
 @property(nonatomic, readonly, getter=isTrashcan) BOOL trashcan;
+@property(nonatomic, readonly) BOOL nilPredicateIncludesRejected;
 
 @property(nonatomic, copy, readonly) NSString *titleString;
 
