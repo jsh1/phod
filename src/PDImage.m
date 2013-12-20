@@ -394,6 +394,7 @@ file_path(PDImage *self, NSString *file)
 	{
 	  NSDictionary *dict = [NSJSONSerialization
 				JSONObjectWithData:data options:0 error:nil];
+
 	  if (dict != nil)
 	    {
 	      NSDictionary *props = [dict objectForKey:@"Properties"];
@@ -409,6 +410,7 @@ file_path(PDImage *self, NSString *file)
 
 	      _deleted = [[_properties objectForKey:PDImage_Deleted] boolValue];
 	      _hidden = [[_properties objectForKey:PDImage_Hidden] boolValue];
+	      _rating = [[_properties objectForKey:PDImage_Rating] intValue];
 	    }
 
 	  [data release];
@@ -663,13 +665,11 @@ file_path(PDImage *self, NSString *file)
       [self writeJSONFile];
 
       if ([key isEqualToString:PDImage_Deleted])
-	{
-	  _deleted = [value boolValue];
-	}
+	_deleted = [value boolValue];
       else if ([key isEqualToString:PDImage_Hidden])
-	{
-	  _hidden = [value boolValue];
-	}
+	_hidden = [value boolValue];
+      else if ([key isEqualToString:PDImage_Rating])
+	_rating = [value intValue];
       else if (([key isEqualToString:PDImage_OriginalDate]
 	      || [key isEqualToString:PDImage_DigitizedDate]))
 	{
@@ -1018,7 +1018,7 @@ file_path(PDImage *self, NSString *file)
 
 - (int)rating
 {
-  return [[self imagePropertyForKey:PDImage_Rating] intValue];
+  return _rating;
 }
 
 - (void)setRating:(int)x
