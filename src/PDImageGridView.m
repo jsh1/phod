@@ -222,8 +222,9 @@
 	  CGSize pixelSize = [image pixelSize];
 	  CGFloat w = pixelSize.width;
 	  CGFloat h = pixelSize.height;
-	  CGFloat tw = w > h ? _size : floor(_size * (w/h));
-	  CGFloat th = w > h ? floor(_size*(h/w)) : _size;
+	  CGFloat aspect = w != 0 && h != 0 ? w/h : 1.3;
+	  CGFloat tw = w >= h ? _size : floor(_size * aspect);
+	  CGFloat th = w >= h ? floor(_size/aspect) : _size;
 
 	  if ([image orientation] > 4)
 	    {
