@@ -247,6 +247,12 @@ Issues
   display images without having any files, just the thumbnail, that
   doesn't currently fit our PDImage model so may need some hacking..
 
+  ..it looks like it should be feasible to split each of PDImageLibrary
+  and PDImage into a generic base class and two subclasses, one for
+  file-based libraries, one for PTP libraries. Most of the more
+  esoteric methods on both classes are only used internally or by the
+  other class.
+
 
 Image Adjustments
 =================
