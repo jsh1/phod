@@ -365,6 +365,13 @@ file_path(PDImage *self, NSString *file)
 	  library_file_path(self, file)];
 }
 
+static NSString *
+metadata_file(NSString *image_file)
+{
+  return [[image_file stringByDeletingPathExtension]
+	  stringByAppendingPathExtension:@METADATA_EXTENSION];
+}
+
 /* Originally I did the usual thing and deferred all I/O until it's
    actually needed to implement a method. But that tends to lead to
    non-deterministic blocking later. It's better to do all I/O up front
@@ -500,19 +507,15 @@ file_path(PDImage *self, NSString *file)
 {
   if (!_invalidated && !_pendingJSONWrite)
     {
-      if (_jsonFile == nil)
-	{
-	  _jsonFile = [[[[self imageFile] stringByDeletingPathExtension]
-			stringByAppendingPathExtension:@METADATA_EXTENSION]
-		       copy];
-	}
-
       dispatch_time_t then
         = dispatch_time(DISPATCH_TIME_NOW, 2LL * NSEC_PER_SEC);
 
       dispatch_after(then, dispatch_get_main_queue(), ^{
 	if (!_invalidated)
 	  {
+	    if (_jsonFile == nil)
+	      _jsonFile = [metadata_file([self imageFile]) copy];
+
 	    /* Copying mutable data out of self, as op runs asynchronously.
 
 	       FIXME: what else should be added to this dictionary? */
@@ -1261,7 +1264,7 @@ find_unique_path(NSString *path)
   if (_jsonFile != nil)
     new_json_path = file_path(self, _jsonFile);
   else
-    new_json_path = file_path(self, _jpegFile ? _jpegFile : _rawFile);
+    new_json_path = file_path(self, metadata_file(_jpegFile ? _jpegFile : _rawFile));
   if (_jpegFile != nil)
     new_jpeg_path = file_path(self, _jpegFile);
   if (_rawFile != nil)
@@ -1285,7 +1288,8 @@ find_unique_path(NSString *path)
 
   /* ..then move image files.. */
 
-  if (_jpegFile != nil)
+  if (_jpegFile != nil
+      && [fm fileExistsAtPath:old_jpeg_path])
     {
       if (![fm moveItemAtPath:old_jpeg_path toPath:new_jpeg_path error:err])
 	{
@@ -1297,7 +1301,8 @@ find_unique_path(NSString *path)
 	}
     }
 
-  if (_rawFile != nil)
+  if (_rawFile != nil
+      && [fm fileExistsAtPath:old_raw_path])
     {
       if (![fm moveItemAtPath:old_raw_path toPath:new_raw_path error:err])
 	{
@@ -1313,7 +1318,8 @@ find_unique_path(NSString *path)
 
   /* ..then remove old JSON file last. */
 
-  if (old_json_path != nil
+  if (_jsonFile != nil
+      && [fm fileExistsAtPath:old_json_path]
       && ![fm removeItemAtPath:old_json_path error:err])
     {
       if (_jpegFile != nil)
