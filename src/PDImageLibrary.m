@@ -36,15 +36,20 @@
 #define CACHE_BITS 6
 #define CACHE_SEP '$'
 
+#define ERROR_DOMAIN @"org.unfactored.PDImageLibrary"
+
 NSString *const PDImageLibraryDidImportFiles = @"PDImageLibraryDidImportFiles";
 NSString *const PDImageLibraryDidRemoveFiles = @"PDImageLibraryDidRemoveFiles";
 
+@interface PDImageLibrary ()
+@end
+
 @implementation PDImageLibrary
 
-@synthesize path = _path;
 @synthesize name = _name;
 @synthesize libraryId = _libraryId;
 @synthesize transient = _transient;
+@synthesize path = _path;
 
 static NSMutableArray *_allLibraries;
 
@@ -620,6 +625,27 @@ filename_with_ext_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
   return nil;
 }
 
+- (void)foreachSubdirectoryOfDirectory:(NSString *)dir
+    handler:(void (^)(NSString *dir_name))block
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  NSString *dir_path = [_path stringByAppendingPathComponent:dir];
+
+  for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
+    {
+      if ([file characterAtIndex:0] == '.')
+	continue;
+
+      BOOL is_dir = NO;
+      NSString *path = [dir_path stringByAppendingPathComponent:file];
+      if (![fm fileExistsAtPath:path isDirectory:&is_dir] || !is_dir)
+	continue;
+
+      block(file);
+    }
+}
+
 - (void)loadImagesInSubdirectory:(NSString *)dir
     recursively:(BOOL)flag handler:(void (^)(PDImage *))block
 {
@@ -767,58 +793,6 @@ static NSOperationQueue *_copyQueue;
   [_activeImports removeAllObjects];
 }
 
-static NSString *
-find_unique_name(NSFileManager *fm, NSString *path)
-{
-  NSString *ext = [path pathExtension];
-  NSString *rest = [path stringByDeletingPathExtension];
-
-  for (int i = 0;; i++)
-    {
-      NSString *tem;
-      if (i == 0)
-	tem = path;
-      else
-	tem = [NSString stringWithFormat:@"%@-%d.%@", rest, i, ext];
-      if (![fm fileExistsAtPath:tem])
-	return tem;
-    }
-
-  /* not reached. */
-}
-
-static BOOL
-copy_item_atomically(NSFileManager *fm, NSString *src_path,
-		     NSString *dst_path, NSError **err)
-{
-  /* Put a "." in front of the file name to hide it until we move it
-     into place. */
-
-  NSString *tmp_path = [[dst_path stringByDeletingLastPathComponent]
-			stringByAppendingPathComponent:
-			  [@"." stringByAppendingString:
-			   [dst_path lastPathComponent]]];
-
-  if (![fm copyItemAtPath:src_path toPath:tmp_path error:err])
-    return NO;
-
-  /* Bump the mtime of the written files, -copyItemAtPath: doesn't, and
-     we need to invalidate anything in the proxy cache that may have
-     the same name. */
-
-  time_t now = time(NULL);
-  struct utimbuf times = {.actime = now, .modtime = now};
-  utime([tmp_path fileSystemRepresentation], &times);
-
-  if (![fm moveItemAtPath:tmp_path toPath:dst_path error:err])
-    {
-      [fm removeItemAtPath:tmp_path error:nil];
-      return NO;
-    }
-
-  return YES;
-}
-
 - (BOOL)copyImage:(PDImage *)image toDirectory:(NSString *)dir
     error:(NSError **)err
 {
@@ -880,6 +854,101 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
     }
 
   return ret;
+}
+
+static NSString *
+find_unique_path(NSFileManager *fm, NSString *path)
+{
+  NSString *ext = [path pathExtension];
+  NSString *rest = [path stringByDeletingPathExtension];
+
+  for (int i = 0;; i++)
+    {
+      NSString *tem;
+      if (i == 0)
+	tem = path;
+      else
+	tem = [NSString stringWithFormat:@"%@-%d.%@", rest, i, ext];
+      if (![fm fileExistsAtPath:tem])
+	return tem;
+    }
+
+  /* not reached. */
+}
+
+static BOOL
+copy_item_atomically(NSFileManager *fm, NSString *src_path,
+		     NSString *dst_path, NSError **err)
+{
+  /* Put a "." in front of the file name to hide it until we move it
+     into place. */
+
+  NSString *tmp_path = [[dst_path stringByDeletingLastPathComponent]
+			stringByAppendingPathComponent:
+			  [@"." stringByAppendingString:
+			   [dst_path lastPathComponent]]];
+
+  if (![fm copyItemAtPath:src_path toPath:tmp_path error:err])
+    return NO;
+
+  /* Bump the mtime of the written files, -copyItemAtPath: doesn't, and
+     we need to invalidate anything in the proxy cache that may have
+     the same name. */
+
+  time_t now = time(NULL);
+  struct utimbuf times = {.actime = now, .modtime = now};
+  utime([tmp_path fileSystemRepresentation], &times);
+
+  if (![fm moveItemAtPath:tmp_path toPath:dst_path error:err])
+    {
+      [fm removeItemAtPath:tmp_path error:nil];
+      return NO;
+    }
+
+  return YES;
+}
+
+- (BOOL)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir
+    error:(NSError **)err
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  NSString *old_path = [_path stringByAppendingPathComponent:old_dir];
+  NSString *new_path = [_path stringByAppendingPathComponent:new_dir];
+
+  BOOL is_dir = NO;
+  if (![fm fileExistsAtPath:old_path isDirectory:&is_dir] || !is_dir)
+    {
+      if (err != NULL)
+	{
+	  NSString *str = [NSString stringWithFormat:
+			   @"Can't rename directory %@ to %@, the source"
+			   " directory doesn't exist.", old_dir, new_dir];
+	  *err = [NSError errorWithDomain:ERROR_DOMAIN code:1
+		  userInfo:@{NSLocalizedDescriptionKey: str}];
+	}
+      return NO;
+    }
+
+  if ([fm fileExistsAtPath:new_path])
+    {
+      if (err != NULL)
+	{
+	  NSString *str = [NSString stringWithFormat:
+			   @"Can't rename directory %@ to %@, the destination"
+			   " name is already in use.", old_dir, new_dir];
+	  *err = [NSError errorWithDomain:ERROR_DOMAIN code:1
+		  userInfo:@{NSLocalizedDescriptionKey: str}];
+	}
+      return NO;
+    }
+
+  if (![fm moveItemAtPath:old_path toPath:new_path error:err])
+    return NO;
+
+  [self didRenameDirectory:old_dir to:new_dir];
+
+  return YES; 
 }
 
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
@@ -1044,7 +1113,7 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 
 	      if ([fm fileExistsAtPath:dst_path])
 		{
-		  dst_path = find_unique_name(fm, dst_path);
+		  dst_path = find_unique_path(fm, dst_path);
 		  dst_file = [dst_path lastPathComponent];
 		}
 
@@ -1115,7 +1184,7 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 				  @METADATA_EXTENSION]];
 
 	  if ([fm fileExistsAtPath:json_path])
-	    json_path = find_unique_name(fm, json_path);
+	    json_path = find_unique_path(fm, json_path);
 
 	  NSOperation *json_op = [NSBlockOperation blockOperationWithBlock:^
 	    {

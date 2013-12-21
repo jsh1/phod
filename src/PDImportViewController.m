@@ -161,19 +161,18 @@
   [panel setTitle:@"Select destination folder"];
 
   PDImageLibrary *lib = [[_libraryButton selectedItem] representedObject];
+  if (lib == nil)
+    return;
 
-  if (lib != nil)
-    {
-      NSString *dir = [_directoryField stringValue];
-      NSString *path = [[lib path] stringByAppendingPathComponent:dir];
+  NSString *dir = [_directoryField stringValue];
+  NSString *path = [[lib path] stringByAppendingPathComponent:dir];
 
-      NSFileManager *fm = [NSFileManager defaultManager];
-      while ([path length] != 0 && ![fm fileExistsAtPath:path])
-	path = [path stringByDeletingLastPathComponent];
+  NSFileManager *fm = [NSFileManager defaultManager];
+  while ([path length] != 0 && ![fm fileExistsAtPath:path])
+    path = [path stringByDeletingLastPathComponent];
 
-      if ([path length] != 0)
-	[panel setDirectoryURL:[NSURL fileURLWithPath:path]];
-    }
+  if ([path length] != 0)
+    [panel setDirectoryURL:[NSURL fileURLWithPath:path]];
 
   [panel beginWithCompletionHandler:
    ^(NSInteger status) {

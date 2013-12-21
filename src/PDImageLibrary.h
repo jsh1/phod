@@ -58,9 +58,10 @@ extern NSString *const PDImageLibraryDidRemoveFiles;
 
 @property(nonatomic, copy) NSString *name;
 @property(nonatomic, readonly) uint32_t libraryId;
+@property(nonatomic, getter=isTransient) BOOL transient;
+
 @property(nonatomic, readonly) NSString *path;
 @property(nonatomic, readonly) NSString *cachePath;
-@property(nonatomic, getter=isTransient) BOOL transient;
 
 /* 'path' is relative to the root of the library. */
 
@@ -78,12 +79,18 @@ extern NSString *const PDImageLibraryDidRemoveFiles;
 - (void)waitForImportsToComplete;
 - (void)remove;
 
+- (void)foreachSubdirectoryOfDirectory:(NSString *)dir
+    handler:(void (^)(NSString *dir_name))block;
+
 - (void)loadImagesInSubdirectory:(NSString *)dir
     recursively:(BOOL)flag handler:(void (^)(PDImage *))block;
 
 - (BOOL)copyImage:(PDImage *)image toDirectory:(NSString *)dir
     error:(NSError **)err;
 - (BOOL)moveImage:(PDImage *)image toDirectory:(NSString *)dir
+    error:(NSError **)err;
+
+- (BOOL)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir
     error:(NSError **)err;
 
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir

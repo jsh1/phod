@@ -575,7 +575,7 @@ metadata_file(NSString *image_file)
 {
   NSString *str = [_libraryDirectory lastPathComponent];
   if ([str length] == 0)
-    str = [[_library path] lastPathComponent];
+    str = [_library name];
   return str;
 }
 

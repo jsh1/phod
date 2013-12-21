@@ -37,7 +37,7 @@
 
 - (id)initWithLibrary:(PDImageLibrary *)lib
 {
-  return [super initWithLibrary:lib directory:@""];
+  return [super initWithLibrary:lib directory:@"DCIM"];
 }
 
 - (void)dealloc
@@ -48,8 +48,7 @@
 
 - (NSString *)titleString
 {
-  return [[[[self library] path] stringByDeletingLastPathComponent]
-	  lastPathComponent];
+  return [[[self library] path] lastPathComponent];
 }
 
 - (BOOL)hasTitleImage
@@ -61,8 +60,8 @@
 {
   if (_icon == nil)
     {
-      _icon = [[NSWorkspace sharedWorkspace] iconForFile:
-	       [[[self library] path] stringByDeletingLastPathComponent]];
+      _icon = [[NSWorkspace sharedWorkspace]
+	       iconForFile:[[self library] path]];
       if (_icon == nil)
 	_icon = PDImageWithName(PDImage_GenericRemovableDisk);
       [_icon retain];
@@ -74,6 +73,13 @@
 - (NSString *)identifier
 {
   return nil;
+}
+
+- (void)unmount
+{
+  PDImageLibrary *lib = [self library];
+  [lib waitForImportsToComplete];
+  [[NSWorkspace sharedWorkspace] unmountAndEjectDeviceAtPath:[lib path]];
 }
 
 @end

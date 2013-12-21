@@ -36,7 +36,6 @@
 @implementation PDLibraryDirectory
 
 @synthesize library = _library;
-@synthesize libraryDirectory = _libraryDirectory;
 @synthesize marked = _marked;
 
 + (BOOL)flattensSubdirectories
@@ -72,6 +71,22 @@
   [_subitems release];
   [_subimages release];
   [super dealloc];
+}
+
+- (NSString *)libraryDirectory
+{
+  return _libraryDirectory;
+}
+
+- (void)setLibraryDirectory:(NSString *)dir
+{
+  if (![_libraryDirectory isEqualToString:dir])
+    {
+      [_libraryDirectory release];
+      _libraryDirectory = [dir copy];
+
+      [self invalidateContents];
+    }
 }
 
 - (BOOL)applySearchString:(NSString *)str
@@ -177,16 +192,11 @@
   _subimagesNeedUpdate = NO;
 }
 
-- (NSString *)path
-{
-  return [[_library path] stringByAppendingPathComponent:_libraryDirectory];
-}
-
 /* Returns true if contents of _subitems array was changed. */
 
 - (BOOL)updateSubitems
 {
-  BOOL changed = NO;
+  __block BOOL changed = NO;
 
   NSMutableArray *new_subitems = [_subitems mutableCopy];
   if (new_subitems == nil)
@@ -196,28 +206,16 @@
     {
       /* Rebuild the subitems array nondestructively. */
 
-      NSString *dir_path = [self path];
-
       for (PDLibraryDirectory *item in new_subitems)
 	[item setMarked:YES];
 
-      NSFileManager *fm = [NSFileManager defaultManager];
-
-      for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
-	{
-	  if ([file characterAtIndex:0] == '.')
-	    continue;
-
-	  BOOL is_dir = NO;
-	  NSString *path = [dir_path stringByAppendingPathComponent:file];
-	  if (![fm fileExistsAtPath:path isDirectory:&is_dir] || !is_dir)
-	    continue;
-
+      [_library foreachSubdirectoryOfDirectory:_libraryDirectory
+       handler:^(NSString *file)
+        {
 	  NSString *subdir = [_libraryDirectory
 			      stringByAppendingPathComponent:file];
 
 	  BOOL found = NO;
-
 	  for (PDLibraryDirectory *item in new_subitems)
 	    {
 	      if ([[item libraryDirectory] isEqualToString:subdir])
@@ -240,7 +238,7 @@
 		  changed = YES;
 		}
 	    }
-	}
+	}];
 
       NSInteger count = [new_subitems count];
       for (NSInteger i = 0; i < count;)
@@ -257,7 +255,15 @@
 	}
     }
 
-  _subitems = [new_subitems copy];
+  _subitems = [new_subitems sortedArrayUsingComparator:^
+    NSComparisonResult (id obj1, id obj2)
+    {
+      NSString *str1 = [(PDLibraryItem *)obj1 titleString];
+      NSString *str2 = [(PDLibraryItem *)obj2 titleString];
+      return [str1 compare:str2];
+    }];
+  [_subitems retain];
+
   [new_subitems release];
 
   _subitemsNeedUpdate = NO;

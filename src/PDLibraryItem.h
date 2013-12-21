@@ -78,6 +78,10 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 
 @property(nonatomic, copy, readonly) NSString *identifier;
 
+/* For removable devices, unmounts the volume. */
+
+- (void)unmount;
+
 /* Should [recursively] check if anything has changed, return YES if
    something has. */
 

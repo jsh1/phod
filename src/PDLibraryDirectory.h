@@ -46,9 +46,6 @@
 @property(nonatomic, readonly) PDImageLibrary *library;
 @property(nonatomic, copy) NSString *libraryDirectory;
 
-/* convenience that appends libraryDirectory onto [library path]. */
-@property(nonatomic, readonly) NSString *path;
-
 - (PDLibraryDirectory *)subitemContainingDirectory:(NSString *)dir;
 
 - (void)invalidateContents;

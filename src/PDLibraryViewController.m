@@ -531,7 +531,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   if (![fm fileExistsAtPath:dcim_path isDirectory:&isdir] || !isdir)
     return nil;
 
-  PDImageLibrary *lib = [PDImageLibrary libraryWithPath:dcim_path];
+  PDImageLibrary *lib = [PDImageLibrary libraryWithPath:path];
 
   if (lib != nil)
     {
@@ -547,7 +547,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     }
   else
     {
-      lib = [[[PDImageLibrary alloc] initWithPath:dcim_path] autorelease];
+      lib = [[[PDImageLibrary alloc] initWithPath:path] autorelease];
       if (lib == nil)
 	return nil;
 
@@ -569,10 +569,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
 - (void)removeVolumeAtPath:(NSString *)path
 {
-  NSString *dcim_path = [path
-			 stringByAppendingPathComponent:@"DCIM"];
-
-  PDImageLibrary *lib = [PDImageLibrary libraryWithPath:dcim_path];
+  PDImageLibrary *lib = [PDImageLibrary libraryWithPath:path];
   if (lib == nil)
     return;
 
@@ -772,10 +769,7 @@ library_group_description(PDLibraryGroup *item)
 	}
       else if (parent == _devicesGroup)
 	{
-	  NSString *path = [[[(PDLibraryDevice *)item library] path]
-			    stringByDeletingLastPathComponent];
-	  [[(PDLibraryDevice *)item library] waitForImportsToComplete];
-	  [[NSWorkspace sharedWorkspace] unmountAndEjectDeviceAtPath:path];
+	  [item unmount];
 	}
     }
 
@@ -788,22 +782,6 @@ library_group_description(PDLibraryGroup *item)
     }
 
   [self sourceListSelectionDidChange:nil];
-}
-
-static NSString *
-find_unique_name(NSString *root, NSString *file)
-{
-  NSFileManager *fm = [NSFileManager defaultManager];
-
-  for (int i = 0;; i++)
-    {
-      NSString *tem
-        = i == 0 ? file : [NSString stringWithFormat:@"%@-%d", file, i];
-      if (![fm fileExistsAtPath:[root stringByAppendingPathComponent:tem]])
-	return tem;
-    }
-
-  /* not reached. */
 }
 
 - (void)renameItem:(PDLibraryItem *)item name:(NSString *)str
@@ -819,25 +797,23 @@ find_unique_name(NSString *root, NSString *file)
     }
   else if ([item isKindOfClass:[PDLibraryFolder class]])
     {
+      PDLibraryFolder *f_item = (PDLibraryFolder *)item;
+
       /* Non-top-level directory -- rename the directory. */
 
-      PDImageLibrary *lib = [(PDLibraryFolder *)item library];
-
-      NSString *root = [lib path];
-      NSString *old_dir = [(PDLibraryFolder *)item libraryDirectory];
+      NSString *old_dir = [f_item libraryDirectory];
       NSString *new_dir = [[old_dir stringByDeletingLastPathComponent]
 			   stringByAppendingPathComponent:str];
 
-      new_dir = find_unique_name(root, new_dir);
-
-      NSFileManager *fm = [NSFileManager defaultManager];
-
-      if ([fm moveItemAtPath:[root stringByAppendingPathComponent:old_dir]
-	   toPath:[root stringByAppendingPathComponent:new_dir] error:nil])
+      NSError *err = nil;
+      if ([[f_item library] renameDirectory:old_dir to:new_dir error:&err])
 	{
-	  [(PDLibraryFolder *)item setLibraryDirectory:new_dir];
-
-	  [lib didRenameDirectory:old_dir to:new_dir];
+	  [f_item setLibraryDirectory:new_dir];
+	}
+      else if (err != nil)
+	{
+	  NSAlert *alert = [NSAlert alertWithError:err];
+	  [alert runModal];
 	}
     }
   else if (parent == _albumsGroup)
@@ -1617,11 +1593,9 @@ item_for_path(NSArray *items, NSArray *path)
 	  
 	  for (PDLibraryFolder *dragged_item in _draggedItems)
 	    {
-	      if (![dragged_item isKindOfClass:[PDLibraryFolder class]])
-		op = NSDragOperationNone;
-	      else if ([dragged_item library] != lib)
-		op = NSDragOperationNone;
-	      else if ([item isDescendantOf:dragged_item])
+	      if (![dragged_item isKindOfClass:[PDLibraryFolder class]]
+		  || [dragged_item library] != lib
+		  || [item isDescendantOf:dragged_item])
 		op = NSDragOperationNone;
 	    }
 	}
@@ -1750,29 +1724,28 @@ item_for_path(NSArray *items, NSArray *path)
 
 	  NSString *item_dir = [(PDLibraryFolder *)item libraryDirectory];
 
-	  NSFileManager *fm = [NSFileManager defaultManager];
-
 	  /* -validateDrop: verified dragged items are PDLibraryFolder. */
 
 	  for (PDLibraryFolder *dragged_item in _draggedItems)
 	    {
-	      NSString *src_dir = [dragged_item libraryDirectory];
-	      NSString *dst_dir = [item_dir stringByAppendingPathComponent:
-				   [src_dir lastPathComponent]];
+	      assert([dragged_item library] == lib);
 
-	      NSString *src_path = [[lib path]
-				    stringByAppendingPathComponent:src_dir];
-	      NSString *dst_path = [[lib path]
-				    stringByAppendingPathComponent:dst_dir];
+	      NSString *old_dir = [dragged_item libraryDirectory];
+	      NSString *new_dir = [item_dir stringByAppendingPathComponent:
+				   [old_dir lastPathComponent]];
 
-	      if ([fm moveItemAtPath:src_path toPath:dst_path error:nil])
-		[lib didRenameDirectory:src_dir to:dst_dir];
+	      NSError *err = nil;
+	      if (![lib renameDirectory:old_dir to:new_dir error:&err])
+		{
+		  NSAlert *alert = [NSAlert alertWithError:err];
+		  [alert runModal];
+		  break;
+		}
 
 	      [(PDLibraryFolder *)[dragged_item parent] invalidateContents];
 	    }
 
 	  [(PDLibraryFolder *)item invalidateContents];
-
 	  [_outlineView reloadItem:_foldersGroup reloadChildren:YES];
 
 	  NSInteger row = [_outlineView rowForItem:item];
