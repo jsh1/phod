@@ -281,3 +281,4 @@ extern NSString * const PDImage_Rejected;	// NSNumber<bool>
 extern NSString * const PDImageHost_Size;	// NSValue<Size>
 extern NSString * const PDImageHost_Thumbnail;	// NSNumber<bool>
 extern NSString * const PDImageHost_ColorSpace;	// only a hint
+extern NSString * const PDImageHost_NoPreview;	// NSNumber<bool>

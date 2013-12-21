@@ -24,6 +24,7 @@
 
 #import "PDImageLayer.h"
 
+#import "PDAppDelegate.h"
 #import "PDImage.h"
 
 #import <QuartzCore/QuartzCore.h>
@@ -223,6 +224,16 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
   if (_colorSpace != NULL)
     [dict setObject:(id)_colorSpace forKey:PDImageHost_ColorSpace];
+
+  if (!_thumbnail)
+    {
+      CALayer *image_layer = [[self sublayers] firstObject];
+      if ([image_layer contents] != nil)
+	{
+	  [dict setObject:[NSNumber numberWithBool:YES]
+	   forKey:PDImageHost_NoPreview];
+	}
+    }
 
   return dict;
 }

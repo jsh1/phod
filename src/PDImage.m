@@ -65,6 +65,7 @@ NSString *const PDImagePropertyDidChange = @"PDImagePropertyDidChange";
 NSString * const PDImageHost_Size = @"Size";
 NSString * const PDImageHost_Thumbnail = @"Thumbnail";
 NSString * const PDImageHost_ColorSpace = @"ColorSpace";
+NSString * const PDImageHost_NoPreview = @"NoPreview";
 
 static size_t
 file_mtime(NSString *path)
@@ -1552,6 +1553,8 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
   id space = [opts objectForKey:PDImageHost_ColorSpace];
 
+  BOOL no_preview = [[opts objectForKey:PDImageHost_NoPreview] boolValue];
+
   NSSize size = [[opts objectForKey:PDImageHost_Size] sizeValue];
 
   if (size.width == 0 || size.width > imageSize.width
@@ -1627,7 +1630,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
   bool need_scaled_op = true;
 
-  if (thumb ? !cache_is_valid : cache_is_valid)
+  if (thumb ? !cache_is_valid : (cache_is_valid && !no_preview))
     {
       NSOperation *cache_op = [NSBlockOperation blockOperationWithBlock:^
 	{
