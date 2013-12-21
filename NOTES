@@ -239,6 +239,14 @@ Issues
   RESOLVED: we now scroll to the selection rect when told the selection
   has changed.
 
+25. PTP import
+
+  E.g. direct import from iOS devices.
+
+  Should be able to use ImageCaptureCore framework? Will need a way to
+  display images without having any files, just the thumbnail, that
+  doesn't currently fit our PDImage model so may need some hacking..
+
 
 Image Adjustments
 =================

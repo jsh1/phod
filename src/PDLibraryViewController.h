@@ -77,6 +77,7 @@ extern NSString *const PDLibrarySelectionDidChange;
 - (IBAction)firstLibraryChildItemAction:(id)sender;
 - (IBAction)expandLibraryItemAction:(id)sender;
 - (IBAction)collapseLibraryItemAction:(id)sender;
+- (IBAction)expandCollapseLibraryItemAction:(id)sender;
 
 - (void)rescanVolumes;
 

@@ -166,6 +166,7 @@ enum PDWindowControllerRebuildImageListFlags
 - (IBAction)firstLibraryChildItemAction:(id)sender;
 - (IBAction)expandLibraryItemAction:(id)sender;
 - (IBAction)collapseLibraryItemAction:(id)sender;
+- (IBAction)expandCollapseLibraryItemAction:(id)sender;
 
 - (void)foreachSelectedImage:(void (^)(PDImage *))block;
 

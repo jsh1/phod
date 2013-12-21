@@ -1175,6 +1175,24 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
     [_outlineView collapseItem:item];
 }
 
+- (IBAction)expandCollapseLibraryItemAction:(id)sender
+{
+  NSIndexSet *sel = [_outlineView selectedRowIndexes];
+
+  if ([sel count] != 1)
+    {
+      NSBeep();
+      return;
+    }
+
+  PDLibraryItem *item = [_outlineView itemAtRow:[sel firstIndex]];
+
+  if ([_outlineView isItemExpanded:item])
+    [_outlineView collapseItem:item];
+  else
+    [_outlineView expandItem:item];
+}
+
 - (void)libraryDidChangeFiles:(NSNotification *)note
 {
   PDImageLibrary *lib = [note object];

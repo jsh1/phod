@@ -1025,6 +1025,12 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
    performSelector:_cmd withObject:sender];
 }
 
+- (IBAction)expandCollapseLibraryItemAction:(id)sender
+{
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
+}
+
 - (void)foreachSelectedImage:(void (^)(PDImage *))block
 {
   if ([_selectedImageIndexes count] == 0)

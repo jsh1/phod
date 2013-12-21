@@ -98,24 +98,14 @@ CA
                             <menuItem isSeparatorItem="YES" id="74">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Next Folder" keyEquivalent="]" id="tBC-9J-1eg">
+                            <menuItem title="Next Folder" keyEquivalent="" id="tBC-9J-1eg">
                                 <connections>
                                     <action selector="nextLibraryItemAction:" target="-1" id="hln-Hr-8uT"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Previous Folder" keyEquivalent="[" id="T3S-2t-OM3">
+                            <menuItem title="Previous Folder" keyEquivalent="" id="T3S-2t-OM3">
                                 <connections>
                                     <action selector="previousLibraryItemAction:" target="-1" id="nBD-Xx-wCb"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Expand Folder" keyEquivalent="" id="ipE-ww-EJL">
-                                <connections>
-                                    <action selector="expandLibraryItemAction:" target="-1" id="0qk-KA-m1D"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Collapse Folder" keyEquivalent="" id="5eD-DN-xnw">
-                                <connections>
-                                    <action selector="collapseLibraryItemAction:" target="-1" id="78i-UX-0sU"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Parent Folder" keyEquivalent="" id="cEM-11-yMm">
@@ -126,6 +116,14 @@ CA
                             <menuItem title="First Child Folder" keyEquivalent="" id="Ckt-MW-A1A">
                                 <connections>
                                     <action selector="firstLibraryChildItemAction:" target="-1" id="5SB-jB-HBv"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Open or Close Folder" id="ipE-ww-EJL">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                                <connections>
+                                    <action selector="expandCollapseLibraryItemAction:" target="-1" id="RMV-wV-auA"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="mif-N7-AEz">
