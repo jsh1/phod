@@ -1277,59 +1277,65 @@ find_unique_path(NSString *path)
 
   NSUUID *uuid = _uuid ? _uuid : [NSUUID UUID];
 
+  BOOL success = YES;
+  BOOL wrote_json = NO;
+  BOOL moved_jpeg = NO;
+  BOOL moved_raw = NO;
+
   /* Write new JSON file first.. */
 
-  if (![self writeJSONToPath:new_json_path JPEGPath:new_jpeg_path
-	RAWPath:new_raw_path UUID:uuid error:err])
+  if ([self writeJSONToPath:new_json_path JPEGPath:new_jpeg_path
+       RAWPath:new_raw_path UUID:uuid error:err])
+    wrote_json = YES;
+  else
+    success = NO;
+
+  /* ..then move image files.. */
+
+  if (success && _jpegFile != nil
+      && [fm fileExistsAtPath:old_jpeg_path])
     {
+      if ([fm moveItemAtPath:old_jpeg_path toPath:new_jpeg_path error:err])
+	moved_jpeg = YES;
+      else
+	success = NO;
+    }
+
+  if (success && _rawFile != nil
+      && [fm fileExistsAtPath:old_raw_path])
+    {
+      if ([fm moveItemAtPath:old_raw_path toPath:new_raw_path error:err])
+	moved_raw = YES;
+      else
+	success = NO;
+    }
+
+  /* ..then remove old JSON file. */
+
+  if (success && _jsonFile != nil
+      && [fm fileExistsAtPath:old_json_path])
+    {
+      if (![fm removeItemAtPath:old_json_path error:err])
+	success = NO;
+    }
+
+  /* Attempt to recover if an error occurred. */
+
+  if (!success)
+    {
+      if (moved_jpeg)
+	[fm moveItemAtPath:new_jpeg_path toPath:old_jpeg_path error:nil];
+      if (moved_raw)
+	[fm moveItemAtPath:new_raw_path toPath:old_raw_path error:nil];
+      if (wrote_json)
+	[fm removeItemAtPath:new_json_path error:nil];
+
       [_libraryDirectory release];
       _libraryDirectory = [old_dir retain];
       return NO;
     }
 
-  /* ..then move image files.. */
-
-  if (_jpegFile != nil
-      && [fm fileExistsAtPath:old_jpeg_path])
-    {
-      if (![fm moveItemAtPath:old_jpeg_path toPath:new_jpeg_path error:err])
-	{
-	  [fm removeItemAtPath:new_json_path error:nil];
-
-	  [_libraryDirectory release];
-	  _libraryDirectory = [old_dir retain];
-	  return NO;
-	}
-    }
-
-  if (_rawFile != nil
-      && [fm fileExistsAtPath:old_raw_path])
-    {
-      if (![fm moveItemAtPath:old_raw_path toPath:new_raw_path error:err])
-	{
-	  if (_jpegFile != nil)
-	    [fm moveItemAtPath:new_jpeg_path toPath:old_jpeg_path error:nil];
-	  [fm removeItemAtPath:new_json_path error:nil];
-
-	  [_libraryDirectory release];
-	  _libraryDirectory = [old_dir retain];
-	  return NO;
-	}
-    }
-
-  /* ..then remove old JSON file last. */
-
-  if (_jsonFile != nil
-      && [fm fileExistsAtPath:old_json_path]
-      && ![fm removeItemAtPath:old_json_path error:err])
-    {
-      if (_jpegFile != nil)
-	[fm moveItemAtPath:new_jpeg_path toPath:old_jpeg_path error:nil];
-      if (_rawFile != nil)
-	[fm moveItemAtPath:new_raw_path toPath:old_raw_path error:nil];
-      [fm removeItemAtPath:new_json_path error:nil];
-      return NO;
-    }
+  /* Success: update image instance and its library. */
 
   if (uuid != _uuid)
     {
