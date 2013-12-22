@@ -953,7 +953,7 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
     fileTypes:(NSSet *)types preferredType:(NSString *)active_type
     filenameMap:(NSString *(^)(PDImage *src, NSString *name))f
-    properties:(NSDictionary *)dict deleteSourceFiles:(BOOL)delete_sources
+    properties:(NSDictionary *)dict deleteSourceImages:(BOOL)delete_sources
 {
   if ([images count] == 0)
     return;

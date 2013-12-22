@@ -95,6 +95,6 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
     fileTypes:(NSSet *)types preferredType:(NSString *)type
     filenameMap:(NSString *(^)(PDImage *src, NSString *name))f
-    properties:(NSDictionary *)dict deleteSourceFiles:(BOOL)delete_sources;
+    properties:(NSDictionary *)dict deleteSourceImages:(BOOL)flag;
 
 @end

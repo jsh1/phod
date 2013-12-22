@@ -255,7 +255,7 @@
 
   [lib importImages:[_controller selectedImages] toDirectory:dir
    fileTypes:types preferredType:active_type filenameMap:NULL
-   properties:metadata deleteSourceFiles:delete_sources];
+   properties:metadata deleteSourceImages:delete_sources];
 
   [_controller selectLibrary:lib directory:dir];
 }
