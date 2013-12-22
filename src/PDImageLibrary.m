@@ -38,8 +38,7 @@
 
 #define ERROR_DOMAIN @"org.unfactored.PDImageLibrary"
 
-NSString *const PDImageLibraryDidImportFiles = @"PDImageLibraryDidImportFiles";
-NSString *const PDImageLibraryDidRemoveFiles = @"PDImageLibraryDidRemoveFiles";
+NSString *const PDImageLibraryDirectoryDidChange = @"PDImageLibraryDirectoryDidChangeDidChange";
 
 @interface PDImageLibrary ()
 @end
@@ -805,7 +804,7 @@ static NSOperationQueue *_copyQueue;
       /* FIXME: pass UUIDs of changed image(s)? */
 
       [[NSNotificationCenter defaultCenter]
-       postNotificationName:PDImageLibraryDidImportFiles
+       postNotificationName:PDImageLibraryDirectoryDidChange
        object:self userInfo:@{@"libraryDirectory": dir}];
     }
 
@@ -845,11 +844,11 @@ static NSOperationQueue *_copyQueue;
       /* FIXME: pass UUIDs of changed image(s)? */
 
       [[NSNotificationCenter defaultCenter]
-       postNotificationName:PDImageLibraryDidRemoveFiles
+       postNotificationName:PDImageLibraryDirectoryDidChange
        object:src_lib userInfo:@{@"libraryDirectory": src_dir}];
 
       [[NSNotificationCenter defaultCenter]
-       postNotificationName:PDImageLibraryDidImportFiles
+       postNotificationName:PDImageLibraryDirectoryDidChange
        object:self userInfo:@{@"libraryDirectory": dir}];
     }
 
@@ -997,7 +996,7 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 	      pending_notification = NO;
 
 	      [[NSNotificationCenter defaultCenter]
-	       postNotificationName:PDImageLibraryDidImportFiles
+	       postNotificationName:PDImageLibraryDirectoryDidChange
 	       object:self userInfo:notification_info];
 	    });
 	}
@@ -1250,8 +1249,9 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 
   if (new_dir)
     {
-      [[NSNotificationCenter defaultCenter] postNotificationName:
-       PDImageLibraryDidImportFiles object:self userInfo:notification_info];
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImageLibraryDirectoryDidChange
+       object:self userInfo:notification_info];
     }
 }
 

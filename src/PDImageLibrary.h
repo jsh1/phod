@@ -26,8 +26,7 @@
 
 @class PDImage;
 
-extern NSString *const PDImageLibraryDidImportFiles;
-extern NSString *const PDImageLibraryDidRemoveFiles;
+extern NSString *const PDImageLibraryDirectoryDidChange;
 
 @interface PDImageLibrary : NSObject
 {

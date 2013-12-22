@@ -250,11 +250,8 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
    name:PDTrashWasEmptied object:_controller];
 
   [[NSNotificationCenter defaultCenter] addObserver:self
-   selector:@selector(libraryDidChangeFiles:)
-   name:PDImageLibraryDidImportFiles object:nil];
-  [[NSNotificationCenter defaultCenter] addObserver:self
-   selector:@selector(libraryDidChangeFiles:)
-   name:PDImageLibraryDidRemoveFiles object:nil];
+   selector:@selector(libraryDirectoryDidChange:)
+   name:PDImageLibraryDirectoryDidChange object:nil];
 
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(imagePropertyDidChange:)
@@ -1169,7 +1166,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
     [_outlineView expandItem:item];
 }
 
-- (void)libraryDidChangeFiles:(NSNotification *)note
+- (void)libraryDirectoryDidChange:(NSNotification *)note
 {
   PDImageLibrary *lib = [note object];
   NSDictionary *info = [note userInfo];
