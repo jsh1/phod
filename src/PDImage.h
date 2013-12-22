@@ -54,7 +54,6 @@ typedef int PDImageCompareKey;
 {
   PDImageLibrary *_library;
   NSString *_libraryDirectory;		/* relative to _libraryRoot */
-  NSUUID *_uuid;			/* nil if undefined */
 
   NSString *_jsonFile;			/* may be nil */
 
@@ -78,7 +77,8 @@ typedef int PDImageCompareKey;
 
   NSDate *_date;			/* cached lazily */
 
-  int _rating;				/* cached eagerly */
+  NSUUID *_uuid;			/* cached eagerly */
+  int _rating;
   BOOL _deleted;
   BOOL _hidden;
 
@@ -101,8 +101,7 @@ typedef int PDImageCompareKey;
 
 /* Allocates a new persistent identifier when first called. */
 
-@property(nonatomic, readonly) NSUUID *UUID;
-
+- (NSUUID *)UUID;
 - (NSUUID *)UUIDIfDefined;
 
 /* File names relative to 'libraryDirectory'. */
@@ -217,6 +216,7 @@ typedef int PDImageCompareKey;
 /* Image properties. */
 
 extern NSString * const PDImage_Name;		// NSString
+extern NSString * const PDImage_UUID;		// NSString
 extern NSString * const PDImage_ActiveType;	// NSString
 extern NSString * const PDImage_FileTypes;	// NSArray<NSString>
 extern NSString * const PDImage_PixelWidth;	// NSNumber

@@ -409,7 +409,7 @@ metadata_file(NSString *image_file)
 	      if (props != nil)
 		[_properties addEntriesFromDictionary:props];
 
-	      NSString *uuid_str = [dict objectForKey:@"UUID"];
+	      NSString *uuid_str = [_properties objectForKey:PDImage_UUID];
 	      if (uuid_str != nil)
 		_uuid = [[NSUUID alloc] initWithUUIDString:uuid_str];
 
@@ -526,9 +526,10 @@ metadata_file(NSString *image_file)
 	    /* We're writing the file, it may as well have a UUID.. */
 
 	    if (_uuid == nil)
-	      _uuid = [[NSUUID alloc] init];
-
-	    [dict setObject:[_uuid UUIDString] forKey:@"UUID"];
+	      {
+		_uuid = [[NSUUID alloc] init];
+		[_properties setObject:[_uuid UUIDString] forKey:PDImage_UUID];
+	      }
 
 	    if (_jpegFile != nil)
 	      [dict setObject:_jpegFile forKey:@"JPEGFile"];
@@ -692,6 +693,13 @@ metadata_file(NSString *image_file)
 	      [_implicitProperties release];
 	      _implicitProperties = nil;
 	    }
+	}
+      else if ([key isEqualToString:PDImage_UUID])
+	{
+	  [_uuid release];
+	  _uuid = nil;
+	  if (value != nil)
+	    _uuid = [[NSUUID alloc] initWithUUIDString:value];
 	}
 
       [[NSNotificationCenter defaultCenter]
@@ -949,6 +957,7 @@ metadata_file(NSString *image_file)
   if (_uuid == nil)
     {
       _uuid = [[NSUUID alloc] init];
+      [_properties setObject:[_uuid UUIDString] forKey:PDImage_UUID];
       [self writeJSONFile];
     }
 
@@ -1224,15 +1233,17 @@ find_unique_path(NSString *path)
 {
   NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
-  [dict setObject:[uuid UUIDString] forKey:@"UUID"];
-
   if (jpeg_path != nil)
     [dict setObject:[jpeg_path lastPathComponent] forKey:@"JPEGFile"];
   if (raw_path != nil)
     [dict setObject:[raw_path lastPathComponent] forKey:@"RAWFile"];
 
-  [dict setObject:[NSDictionary dictionaryWithDictionary:_properties]
-   forKey:@"Properties"];
+  NSMutableDictionary *props
+    = [NSMutableDictionary dictionaryWithDictionary:_properties];
+
+  [props setObject:[uuid UUIDString] forKey:PDImage_UUID];
+
+  [dict setObject:props forKey:@"Properties"];
 
   NSData *data = [NSJSONSerialization dataWithJSONObject:dict
 		  options:0 error:nil];
@@ -1341,6 +1352,7 @@ find_unique_path(NSString *path)
     {
       [_uuid release];
       _uuid = [uuid copy];
+      [_properties setObject:[_uuid UUIDString] forKey:PDImage_UUID];
     }
 
   if (new_jpeg_path != nil)

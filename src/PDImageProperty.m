@@ -424,6 +424,7 @@ static const type_pair type_map[] =
   {"sensitivity_type", type_sensitivity_type},
   {"sharpness", type_sharpness},
   {"title", type_string},
+  {"UUID", type_string},
   {"white_balance", type_white_balance},
 };
 
@@ -1043,6 +1044,7 @@ PDImagePredicateEditorRowTemplates(void)
 /* Property string definitions. */
 
 NSString * const PDImage_Name = @"name";
+NSString * const PDImage_UUID = @"UUID";
 NSString * const PDImage_ActiveType = @"active_type";
 NSString * const PDImage_FileTypes = @"file_types";
 NSString * const PDImage_PixelWidth = @"pixel_width";
