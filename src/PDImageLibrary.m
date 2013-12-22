@@ -41,6 +41,7 @@
 NSString *const PDImageLibraryDirectoryDidChange = @"PDImageLibraryDirectoryDidChangeDidChange";
 
 @interface PDImageLibrary ()
+- (id)initWithDictionary:(NSDictionary *)dict;
 @end
 
 @implementation PDImageLibrary
@@ -51,19 +52,6 @@ NSString *const PDImageLibraryDirectoryDidChange = @"PDImageLibraryDirectoryDidC
 @synthesize path = _path;
 
 static NSMutableArray *_allLibraries;
-
-static void
-add_library(PDImageLibrary *lib)
-{
-  static dispatch_once_t once;
-
-  dispatch_once(&once, ^
-    {
-      _allLibraries = [[NSMutableArray alloc] init];
-    });
-
-  [_allLibraries addObject:lib];
-}
 
 static NSString *
 cache_root(void)
@@ -111,7 +99,7 @@ cache_root(void)
     return _allLibraries;
 }
 
-+ (PDImageLibrary *)libraryWithPath:(NSString *)path
++ (PDImageLibrary *)findLibraryWithPath:(NSString *)path
 {
   if (_allLibraries == nil)
     return nil;
@@ -141,62 +129,67 @@ cache_root(void)
   return nil;
 }
 
-- (void)dealloc
++ (PDImageLibrary *)libraryWithPath:(NSString *)path
 {
-  [_name release];
-  [_path release];
-  [_cachePath release];
-  dispatch_sync(_catalogQueue, ^{});
-  dispatch_release(_catalogQueue);
-  [_catalog0 release];
-  [_catalog1 release];
-  [_activeImports release];
-  [super dealloc];
+  return [self libraryWithPath:path onlyIfExists:NO];
 }
 
-- (id)initWithPath:(NSString *)path
++ (PDImageLibrary *)libraryWithPath:(NSString *)path onlyIfExists:(BOOL)flag
 {
-  self = [super init];
-  if (self == nil)
-    return nil;
+  path = [path stringByStandardizingPath];
 
-  _path = [[path stringByStandardizingPath] copy];
-  _name = [[path lastPathComponent] copy];
-
-again:
-  _libraryId = arc4random();
-  for (PDImageLibrary *lib in _allLibraries)
+  if (_allLibraries != nil)
     {
-      if (_libraryId == [lib libraryId])
-	goto again;
+      for (PDImageLibrary *lib in _allLibraries)
+	{
+	  if ([[lib path] isEqualToString:path])
+	    return lib;
+	}
     }
 
-  _catalogQueue = dispatch_queue_create("PDImageLibrary.catalog",
-					DISPATCH_QUEUE_SERIAL);
-
-  _catalog1 = [[NSMutableDictionary alloc] init];
-
-  add_library(self);
-
-  return self;
+  if (flag)
+    return nil;
+  else
+    return [[[self alloc] initWithDictionary:@{@"path": path}] autorelease];
 }
 
-- (id)initWithPropertyList:(id)obj
++ (PDImageLibrary *)libraryWithPropertyList:(id)obj
 {
-  self = [super init];
-  if (self == nil)
-    return nil;
-
   if (![obj isKindOfClass:[NSDictionary class]])
+    return nil;
+
+  NSString *path = [[obj objectForKey:@"path"] stringByExpandingTildeInPath];
+  if (path == nil)
+    return nil;
+
+  path = [path stringByStandardizingPath];
+
+  if (_allLibraries != nil)
     {
-      [self release];
-      return nil;
+      for (PDImageLibrary *lib in _allLibraries)
+	{
+	  if ([[lib path] isEqualToString:path])
+	    return lib;
+	}
     }
 
-  _path = [[[obj objectForKey:@"path"] stringByExpandingTildeInPath] copy];
-  _name = [[obj objectForKey:@"name"] copy];
-  _libraryId = [[obj objectForKey:@"libraryId"] unsignedIntValue];
-  _lastFileId = [[obj objectForKey:@"lastFileId"] unsignedIntValue];
+  return [[[self alloc] initWithDictionary:obj] autorelease];
+}
+
+- (id)initWithDictionary:(NSDictionary *)dict
+{
+  self = [super init];
+  if (self == nil)
+    return nil;
+
+  _path = [[[[dict objectForKey:@"path"] stringByExpandingTildeInPath]
+	    stringByStandardizingPath] copy];
+
+  _name = [[dict objectForKey:@"name"] copy];
+  if (_name == nil)
+    _name = [[_path lastPathComponent] copy];
+
+  _libraryId = [[dict objectForKey:@"libraryId"] unsignedIntValue];
 
   if (_libraryId == 0)
     {
@@ -222,6 +215,8 @@ again:
 	}
     }
 
+  _lastFileId = [[dict objectForKey:@"lastFileId"] unsignedIntValue];
+
   _catalogQueue = dispatch_queue_create("PDImageLibrary.catalog",
 					DISPATCH_QUEUE_SERIAL);
 
@@ -244,7 +239,10 @@ again:
 
   [self validateCaches];
 
-  add_library(self);
+  if (_allLibraries == nil)
+    _allLibraries = [[NSMutableArray alloc] init];
+
+  [_allLibraries addObject:self];
 
   return self;
 }
@@ -257,6 +255,19 @@ again:
     @"libraryId": @(_libraryId),
     @"lastFileId": @(_lastFileId),
   };
+}
+
+- (void)dealloc
+{
+  [_name release];
+  [_path release];
+  [_cachePath release];
+  dispatch_sync(_catalogQueue, ^{});
+  dispatch_release(_catalogQueue);
+  [_catalog0 release];
+  [_catalog1 release];
+  [_activeImports release];
+  [super dealloc];
 }
 
 - (void)synchronize

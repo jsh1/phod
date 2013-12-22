@@ -47,12 +47,15 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 
 + (NSArray *)allLibraries;
 
-+ (PDImageLibrary *)libraryWithPath:(NSString *)path;
 + (PDImageLibrary *)libraryWithId:(uint32_t)lid;
 
-- (id)initWithPath:(NSString *)path;
+/* Creates a new library if no existing library is found. */
 
-- (id)initWithPropertyList:(id)obj;
++ (PDImageLibrary *)libraryWithPath:(NSString *)path;
++ (PDImageLibrary *)libraryWithPath:(NSString *)path onlyIfExists:(BOOL)flag;
+
++ (PDImageLibrary *)libraryWithPropertyList:(id)obj;
+
 - (id)propertyList;
 
 @property(nonatomic, copy) NSString *name;

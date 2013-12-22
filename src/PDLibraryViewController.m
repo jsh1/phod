@@ -60,16 +60,23 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   return @"PDLibraryView";
 }
 
-- (void)addImageLibraryItem:(PDImageLibrary *)lib
+- (BOOL)addImageLibraryItem:(PDImageLibrary *)lib
 {
+  for (PDLibraryFolder *item in [_foldersGroup subitems])
+    {
+      if ([item library] == lib)
+	return NO;
+    }
+
   PDLibraryFolder *item
     = [[PDLibraryFolder alloc] initWithLibrary:lib directory:@""];
 
   [item setTitleImageName:PDImage_GenericHardDisk];
 
   [_foldersGroup addSubitem:item];
-
   [item release];
+
+  return YES;
 }
 
 - (void)addAlbumItem:(NSDictionary *)dict toItem:(PDLibraryGroup *)parent
@@ -216,12 +223,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   for (id obj in [[NSUserDefaults standardUserDefaults]
 		  arrayForKey:@"PDImageLibraries"])
     {
-      PDImageLibrary *lib = [[PDImageLibrary alloc] initWithPropertyList:obj];
+      PDImageLibrary *lib = [PDImageLibrary libraryWithPropertyList:obj];
       if (lib != nil)
-	{
-	  [self addImageLibraryItem:lib];
-	  [lib release];
-	}
+	[self addImageLibraryItem:lib];
     }
 
   for (NSDictionary *dict in [[NSUserDefaults standardUserDefaults]
@@ -529,27 +533,20 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     return nil;
 
   PDImageLibrary *lib = [PDImageLibrary libraryWithPath:path];
+  if (lib == nil)
+    return nil;
 
-  if (lib != nil)
+  for (PDLibraryDevice *item in [_devicesGroup subitems])
     {
-      for (PDLibraryDevice *item in [_devicesGroup subitems])
+      if ([item library] == lib)
 	{
-	  if ([item library] == lib)
-	    {
-	      if ([item needsUpdate])
-		[_outlineView reloadItem:item];
-	      return item;
-	    }
+	  if ([item needsUpdate])
+	    [_outlineView reloadItem:item];
+	  return item;
 	}
     }
-  else
-    {
-      lib = [[[PDImageLibrary alloc] initWithPath:path] autorelease];
-      if (lib == nil)
-	return nil;
 
-      [lib setTransient:YES];
-    }
+  [lib setTransient:YES];
 
   PDLibraryDevice *item = [[PDLibraryDevice alloc] initWithLibrary:lib];
   if (item == nil)
@@ -566,7 +563,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
 - (void)removeVolumeAtPath:(NSString *)path
 {
-  PDImageLibrary *lib = [PDImageLibrary libraryWithPath:path];
+  PDImageLibrary *lib = [PDImageLibrary libraryWithPath:path onlyIfExists:YES];
   if (lib == nil)
     return;
 
@@ -685,16 +682,11 @@ library_group_description(PDLibraryGroup *item)
 		continue;
 
 	      NSString *path = [url path];
-
-	      if ([PDImageLibrary libraryWithPath:path] != nil)
-		continue;
-
-	      PDImageLibrary *lib = [[PDImageLibrary alloc] initWithPath:path];
+	      PDImageLibrary *lib = [PDImageLibrary libraryWithPath:path];
 	      if (lib == nil)
 		continue;
 
 	      [self addImageLibraryItem:lib];
-	      [lib release];
 	      changed = YES;
 	    }
 
