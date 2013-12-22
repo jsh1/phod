@@ -253,6 +253,14 @@ Issues
   esoteric methods on both classes are only used internally or by the
   other class.
 
+26. Removing a library may not entirely delete its cache
+
+  E.g. if its images are still prefetching they will write themselves
+  to disk recreating the cache directory that was just deleted.
+
+  Not a massive problem, they'll be cleaned up the next time the app is
+  launched.
+
 
 Image Adjustments
 =================

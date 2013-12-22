@@ -24,7 +24,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class PDImage;
+@class PDFileCatalog, PDImage;
 
 extern NSString *const PDImageLibraryDirectoryDidChange;
 
@@ -34,11 +34,7 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
   NSString *_path;
   NSString *_cachePath;
   uint32_t _libraryId;
-  uint32_t _lastFileId;
-  dispatch_queue_t _catalogQueue;
-  NSMutableDictionary *_catalog0;
-  NSMutableDictionary *_catalog1;
-  uint32_t _catalogDirty;
+  PDFileCatalog *_catalog;
   BOOL _transient;
   NSMutableArray *_activeImports;
 }
@@ -76,7 +72,6 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 - (void)didRemoveFileWithRelativePath:(NSString *)rel_path;
 
 - (void)synchronize;
-- (void)validateCaches;
 - (void)emptyCaches;
 - (void)waitForImportsToComplete;
 - (void)remove;

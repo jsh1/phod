@@ -17,6 +17,7 @@
 		572530231861FAE600DC4B21 /* PDLibraryFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = 572530221861FAE600DC4B21 /* PDLibraryFolder.m */; };
 		5727CDA3184A3EB3007BF7E8 /* PDPredicatePanelController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5727CDA2184A3EB3007BF7E8 /* PDPredicatePanelController.m */; };
 		5727CDA6184A3EC7007BF7E8 /* PDPredicatePanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5727CDA4184A3EC7007BF7E8 /* PDPredicatePanel.xib */; };
+		57403B93186740C000008A1A /* PDFileCatalog.m in Sources */ = {isa = PBXBuildFile; fileRef = 57403B92186740C000008A1A /* PDFileCatalog.m */; };
 		5744D74F1854CCDA0079F8CD /* PDLibraryDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 5744D74E1854CCDA0079F8CD /* PDLibraryDevice.m */; };
 		574B786E185917BC0095FC87 /* PDFoundationExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 574B786D185917BB0095FC87 /* PDFoundationExtensions.m */; };
 		575167721852451800163CD8 /* PDImageLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = 575167711852451800163CD8 /* PDImageLibrary.m */; };
@@ -84,6 +85,8 @@
 		5727CDA1184A3EB3007BF7E8 /* PDPredicatePanelController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDPredicatePanelController.h; sourceTree = "<group>"; };
 		5727CDA2184A3EB3007BF7E8 /* PDPredicatePanelController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDPredicatePanelController.m; sourceTree = "<group>"; };
 		5727CDA5184A3EC7007BF7E8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDPredicatePanel.xib; sourceTree = "<group>"; };
+		57403B91186740C000008A1A /* PDFileCatalog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFileCatalog.h; sourceTree = "<group>"; };
+		57403B92186740C000008A1A /* PDFileCatalog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDFileCatalog.m; sourceTree = "<group>"; };
 		5744D74D1854CCDA0079F8CD /* PDLibraryDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDLibraryDevice.h; sourceTree = "<group>"; };
 		5744D74E1854CCDA0079F8CD /* PDLibraryDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDLibraryDevice.m; sourceTree = "<group>"; };
 		574B786C185917BB0095FC87 /* PDFoundationExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFoundationExtensions.h; sourceTree = "<group>"; };
@@ -187,6 +190,8 @@
 		57626D7A183E4D110080A34E /* Imaging */ = {
 			isa = PBXGroup;
 			children = (
+				57403B91186740C000008A1A /* PDFileCatalog.h */,
+				57403B92186740C000008A1A /* PDFileCatalog.m */,
 				575167701852451800163CD8 /* PDImageLibrary.h */,
 				575167711852451800163CD8 /* PDImageLibrary.m */,
 				57C18104182F0ED3002B8DB2 /* PDImage.h */,
@@ -481,6 +486,7 @@
 				57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */,
 				57D096141846C646005B2AD4 /* PDImageProperty.m in Sources */,
 				57CE6A2A182D863E000BF04E /* PDViewController.m in Sources */,
+				57403B93186740C000008A1A /* PDFileCatalog.m in Sources */,
 				57CE6A28182D863E000BF04E /* PDLibraryViewController.m in Sources */,
 				57C1810D182FD616002B8DB2 /* PDLibraryDirectory.m in Sources */,
 				57CE6A24182D863E000BF04E /* PDAdjustmentsViewController.m in Sources */,

@@ -25,13 +25,13 @@
 #import "PDImageLibrary.h"
 
 #import "PDAppDelegate.h"
+#import "PDFileCatalog.h"
 #import "PDImage.h"
 
 #import <stdlib.h>
 #import <utime.h>
 
 #define CATALOG_FILE "catalog.json"
-#define CATALOG_VER_KEY "///version"
 #define METADATA_EXTENSION "phod"
 #define CACHE_BITS 6
 #define CACHE_SEP '$'
@@ -42,6 +42,7 @@ NSString *const PDImageLibraryDirectoryDidChange = @"PDImageLibraryDirectoryDidC
 
 @interface PDImageLibrary ()
 - (id)initWithDictionary:(NSDictionary *)dict;
+- (void)validateCaches;
 @end
 
 @implementation PDImageLibrary
@@ -62,6 +63,12 @@ cache_root(void)
   return [[[paths lastObject] stringByAppendingPathComponent:
 	   [[NSBundle mainBundle] bundleIdentifier]]
 	  stringByAppendingPathComponent:@"library"];
+}
+
+static NSString *
+catalog_path(PDImageLibrary *self)
+{
+  return [[self cachePath] stringByAppendingPathComponent:@CATALOG_FILE];
 }
 
 + (void)removeInvalidLibraries
@@ -215,27 +222,7 @@ cache_root(void)
 	}
     }
 
-  _lastFileId = [[dict objectForKey:@"lastFileId"] unsignedIntValue];
-
-  _catalogQueue = dispatch_queue_create("PDImageLibrary.catalog",
-					DISPATCH_QUEUE_SERIAL);
-
-  NSString *catalog_path
-    = [[self cachePath] stringByAppendingPathComponent:@CATALOG_FILE];
-
-  NSData *data = [[NSData alloc] initWithContentsOfFile:catalog_path];
-  if (data != nil)
-    {
-      id obj = [NSJSONSerialization
-		JSONObjectWithData:data options:0 error:nil];
-
-      if ([obj isKindOfClass:[NSDictionary class]])
-	_catalog0 = [obj mutableCopy];
-
-      [data release];
-    }
-
-  _catalog1 = [[NSMutableDictionary alloc] init];
+  _catalog = [[PDFileCatalog alloc] initWithContentsOfFile:catalog_path(self)];
 
   [self validateCaches];
 
@@ -253,7 +240,6 @@ cache_root(void)
     @"path": [_path stringByAbbreviatingWithTildeInPath],
     @"name": _name,
     @"libraryId": @(_libraryId),
-    @"lastFileId": @(_lastFileId),
   };
 }
 
@@ -262,49 +248,24 @@ cache_root(void)
   [_name release];
   [_path release];
   [_cachePath release];
-  dispatch_sync(_catalogQueue, ^{});
-  dispatch_release(_catalogQueue);
-  [_catalog0 release];
-  [_catalog1 release];
+  [_catalog release];
   [_activeImports release];
   [super dealloc];
 }
 
 - (void)synchronize
 {
-  /* _catalogDirty is only set when files are renamed or new ids are
-     added to _catalog1. So we also check if _catalog0 is non-empty,
-     in that case the current state is different to what was read from
-     the file system. */
-
-  dispatch_sync(_catalogQueue, ^
-  {
-    if (_catalogDirty || [_catalog0 count] != 0)
-      {
-	NSString *path = [[self cachePath]
-			  stringByAppendingPathComponent:@CATALOG_FILE];
-
-	NSData *data = [NSJSONSerialization
-			dataWithJSONObject:_catalog1 options:0 error:nil];
-
-	if ([data writeToFile:path atomically:YES])
-	  {
-	    _catalogDirty = NO;
-
-	    [_catalog0 release];
-	    _catalog0 = nil;
-	  }
-	else
-	  [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
-      }
-  });
+  [_catalog synchronizeWithContentsOfFile:catalog_path(self)];
 }
 
 - (void)remove
 {
+  [self waitForImportsToComplete];
+
   [self emptyCaches];
 
-  [self waitForImportsToComplete];
+  [_catalog release];
+  _catalog = nil;
 
   NSInteger idx = [_allLibraries indexOfObjectIdenticalTo:self];
   if (idx != NSNotFound)
@@ -313,84 +274,17 @@ cache_root(void)
 
 - (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName
 {
-  /* Calling this method is preferred but optional. If directories are
-     renamed without doing so we'd just recreate the caches under the
-     new names and purge the old state after relaunching a couple of
-     times. */
-
-  dispatch_sync(_catalogQueue, ^
-  {
-    NSInteger old_len = [oldName length];
-
-    for (int pass = 0; pass < 2; pass++)
-      {
-	NSMutableDictionary *catalog = pass == 0 ? _catalog0 : _catalog1;
-
-	/* Cons up the list of known files under the moved directory
-	   (can't modify the dictionary while iterating over its keys). */
-
-	NSMutableArray *matches = [[NSMutableArray alloc] init];
-
-	NSString *oldDir = [oldName stringByAppendingString:@"/"];
-
-	for (NSString *key in catalog)
-	  {
-	    if ([key hasPrefix:oldDir])
-	      [matches addObject:key];
-	  }
-
-	if ([matches count] != 0)
-	  {
-	    for (NSString *key in matches)
-	      {
-		NSString *new_key = [newName stringByAppendingPathComponent:
-				     [key substringFromIndex:old_len + 1]];
-		[catalog setObject:[catalog objectForKey:key] forKey:new_key];
-		[catalog removeObjectForKey:key];
-	      }
-
-	    _catalogDirty = YES;
-	  }
-
-	[matches release];
-      }
-  });
+  [_catalog renameDirectory:oldName to:newName];
 }
 
 - (void)didRenameFile:(NSString *)oldName to:(NSString *)newName
 {
-  dispatch_sync(_catalogQueue, ^
-  {
-    for (int pass = 0; pass < 2; pass++)
-      {
-	NSMutableDictionary *catalog = pass == 0 ? _catalog0 : _catalog1;
-
-	id value = [catalog objectForKey:oldName];
-	if (value != nil)
-	  {
-	    [catalog setObject:value forKey:newName];
-	    [catalog removeObjectForKey:oldName];
-	  }
-      }
-  });
+  [_catalog renameFile:oldName to:newName];
 }
 
 - (void)didRemoveFileWithRelativePath:(NSString *)rel_path
 {
-  dispatch_sync(_catalogQueue, ^
-  {
-    for (int pass = 0; pass < 2; pass++)
-      {
-	NSMutableDictionary *catalog = pass == 0 ? _catalog0 : _catalog1;
-
-	if (!_catalogDirty && [catalog objectForKey:rel_path] != nil)
-	  _catalogDirty = YES;
-
-	[catalog removeObjectForKey:rel_path];
-
-	/* FIXME: also remove anything in the cache for these ids? */
-      }
-  });
+  [_catalog removeFileWithPath:rel_path];
 }
 
 static unsigned int
@@ -426,58 +320,48 @@ convert_hexdigit(int c)
      (Or we could choose a point after all libraries have been scanned
      to release _catalog0 then call -validateCaches.) */
 
-  dispatch_sync(_catalogQueue, ^
-  {
-    @autoreleasepool
-      {
-	NSString *dir = [self cachePath];
-	NSFileManager *fm = [NSFileManager defaultManager];
+  @autoreleasepool
+    {
+      NSString *dir = [self cachePath];
+      NSFileManager *fm = [NSFileManager defaultManager];
 
-	NSMutableIndexSet *catalog = [NSMutableIndexSet indexSet];
+      NSIndexSet *catalogIds = [_catalog allFileIds];
 
-	for (NSString *key in _catalog0)
-	  [catalog addIndex:[[_catalog0 objectForKey:key] unsignedIntValue]];
-	for (NSString *key in _catalog1)
-	  [catalog addIndex:[[_catalog1 objectForKey:key] unsignedIntValue]];
+      unsigned int i;
+      for (i = 0; i < (1U << CACHE_BITS); i++)
+	{
+	  NSString *path = [dir stringByAppendingPathComponent:
+			    [NSString stringWithFormat:@"%02x", i]];
+	  if (![fm fileExistsAtPath:path])
+	    continue;
 
-	unsigned int i;
-	for (i = 0; i < (1U << CACHE_BITS); i++)
-	  {
-	    NSString *path = [dir stringByAppendingPathComponent:
-			      [NSString stringWithFormat:@"%02x", i]];
-	    if (![fm fileExistsAtPath:path])
-	      continue;
+	  for (NSString *file in [fm contentsOfDirectoryAtPath:path error:nil])
+	    {
+	      const char *str = [file UTF8String];
+	      const char *end = strchr(str, CACHE_SEP);
 
-	    for (NSString *file
-		 in [fm contentsOfDirectoryAtPath:path error:nil])
-	      {
-		const char *str = [file UTF8String];
-		const char *end = strchr(str, CACHE_SEP);
+	      BOOL delete = NO;
+	      if (end != NULL)
+		{
+		  uint32_t fid = 0;
+		  for (; str != end; str++)
+		    fid = fid * 16 + convert_hexdigit(*str);
+		  fid = (fid << CACHE_BITS) | i;
+		  if (![catalogIds containsIndex:fid])
+		    delete = YES;
+		}
+	      else
+		delete = YES;
 
-		BOOL delete = NO;
-		if (end != NULL)
-		  {
-		    uint32_t fid = 0;
-		    for (; str != end; str++)
-		      fid = fid * 16 + convert_hexdigit(*str);
-		    fid = (fid << CACHE_BITS) | i;
-		    if (![catalog containsIndex:fid])
-		      delete = YES;
-		  }
-		else
-		  delete = YES;
-
-		if (delete)
-		  {
-		    NSLog(@"PDImageLibrary: orphan cache entry: %02x/%@",
-			  i, file);
-		    [fm removeItemAtPath:
-		     [path stringByAppendingPathComponent:file] error:nil];
-		  }
-	      }
-	  }
-      }
-  });
+	      if (delete)
+		{
+		  NSLog(@"PDImageLibrary: cache orphan: %02x/%@", i, file);
+		  [fm removeItemAtPath:
+		   [path stringByAppendingPathComponent:file] error:nil];
+		}
+	    }
+	}
+    }
 }
 
 - (void)emptyCaches
@@ -485,8 +369,12 @@ convert_hexdigit(int c)
   if (_cachePath != nil)
     {
       [[NSFileManager defaultManager] removeItemAtPath:_cachePath error:nil];
+
       [_cachePath release];
       _cachePath = nil;
+
+      [_catalog release];
+      _catalog = [[PDFileCatalog alloc] init];
     }
 }
 
@@ -520,43 +408,7 @@ convert_hexdigit(int c)
 
 - (uint32_t)fileIdOfRelativePath:(NSString *)rel_path
 {
-  __block uint32_t fid = 0;
-
-  dispatch_sync(_catalogQueue, ^
-  {
-    NSNumber *obj = [_catalog1 objectForKey:rel_path];
-
-    if (obj == nil)
-      {
-	obj = [_catalog0 objectForKey:rel_path];
-
-	/* We place the deserialized dictionary in _catalog0, and the
-	   current dictionary in _catalog1. We know that all extant
-	   files will have their ids queried at least once when the
-	   library is scanned on startup, so by moving entries from the
-	   old to new dictionaries we effectively remove stale entries
-	   from the current version. */
-
-	if (obj != nil)
-	  {
-	    [_catalog1 setObject:obj forKey:rel_path];
-	    [_catalog0 removeObjectForKey:rel_path];
-	  }
-      }
-
-    if (obj != nil)
-      fid = [obj unsignedIntValue];
-    else
-      {
-	fid = ++_lastFileId;
-
-	[_catalog1 setObject:
-	 [NSNumber numberWithUnsignedInt:fid] forKey:rel_path];
-	_catalogDirty = YES;
-      }
-  });
-
-  return fid;
+  return [_catalog fileIdForPath:rel_path];
 }
 
 static NSSet *
