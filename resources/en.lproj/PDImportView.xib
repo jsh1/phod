@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13A603" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
     </dependencies>
@@ -10,7 +10,6 @@
                 <outlet property="_cancelButton" destination="pfR-Mq-FXz" id="wDs-Jf-423"/>
                 <outlet property="_deleteAfterButton" destination="YZg-6j-QMw" id="lEA-LO-utn"/>
                 <outlet property="_descriptionLabel" destination="CAT-Xj-SDl" id="SdG-4Q-Oe0"/>
-                <outlet property="_directoryButton" destination="pqb-dp-c2C" id="PGA-kK-ywZ"/>
                 <outlet property="_directoryField" destination="fRc-tI-Xvz" id="BiN-3W-hFS"/>
                 <outlet property="_importButton" destination="zcA-pu-Hwi" id="LH3-K5-vTY"/>
                 <outlet property="_keywordsField" destination="lkD-oU-FGW" id="Kw8-si-Liy"/>
@@ -58,7 +57,7 @@ Gw
                     </connections>
                 </button>
                 <popUpButton verticalHuggingPriority="750" id="VTz-qT-Lxt">
-                    <rect key="frame" x="96" y="559" width="166" height="22"/>
+                    <rect key="frame" x="95.999999350681875" y="559" width="166" height="22"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="dxk-YT-rCk">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -112,7 +111,7 @@ Gw
                     </textFieldCell>
                 </textField>
                 <popUpButton verticalHuggingPriority="750" id="kzP-wu-UgX">
-                    <rect key="frame" x="96" y="445" width="166" height="22"/>
+                    <rect key="frame" x="96" y="445" width="165.99999935068189" height="22"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <popUpButtonCell key="cell" type="push" title="None" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="jCA-Yr-VQA" id="BmZ-Ny-ndT">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -208,7 +207,7 @@ Gw
                     </textFieldCell>
                 </textField>
                 <textField verticalHuggingPriority="750" id="fRc-tI-Xvz">
-                    <rect key="frame" x="100" y="535" width="136" height="19"/>
+                    <rect key="frame" x="100" y="535" width="160" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="u39-Kn-S1w">
                         <font key="font" metaFont="smallSystem"/>
@@ -256,7 +255,7 @@ Gw
                     </textFieldCell>
                 </textField>
                 <textField verticalHuggingPriority="750" id="tYa-Zi-cBr">
-                    <rect key="frame" x="101" y="508" width="160" height="19"/>
+                    <rect key="frame" x="101" y="508" width="159" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="6O3-qA-7ph">
                         <font key="font" metaFont="smallSystem"/>
@@ -267,17 +266,6 @@ Gw
                         <action selector="controlAction:" target="-2" id="vGt-j0-hre"/>
                     </connections>
                 </textField>
-                <button verticalHuggingPriority="750" id="pqb-dp-c2C">
-                    <rect key="frame" x="239" y="533" width="21" height="23"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSFollowLinkFreestandingTemplate" imagePosition="overlaps" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="g4U-8T-IzO">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="smallSystem"/>
-                    </buttonCell>
-                    <connections>
-                        <action selector="controlAction:" target="-2" id="AhT-N1-69k"/>
-                    </connections>
-                </button>
                 <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" id="CAT-Xj-SDl">
                     <rect key="frame" x="18" y="36" width="245" height="42"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
@@ -307,7 +295,4 @@ Gw
             </subviews>
         </customView>
     </objects>
-    <resources>
-        <image name="NSFollowLinkFreestandingTemplate" width="10" height="10"/>
-    </resources>
 </document>

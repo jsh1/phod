@@ -30,7 +30,6 @@
 {
   IBOutlet NSPopUpButton *_libraryButton;
   IBOutlet NSTextField *_directoryField;
-  IBOutlet NSButton *_directoryButton;
   IBOutlet NSTextField *_nameField;
 
   IBOutlet NSButton *_renameButton;

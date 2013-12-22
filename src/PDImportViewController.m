@@ -150,55 +150,6 @@
     }
 }
 
-- (void)chooseDestinationFolder
-{
-  NSOpenPanel *panel = [NSOpenPanel openPanel];
-
-  [panel setCanChooseDirectories:YES];
-  [panel setCanChooseFiles:NO];
-  [panel setAllowsMultipleSelection:NO];
-  [panel setPrompt:@"Destination Folder"];
-  [panel setTitle:@"Select destination folder"];
-
-  PDImageLibrary *lib = [[_libraryButton selectedItem] representedObject];
-  if (lib == nil)
-    return;
-
-  NSString *dir = [_directoryField stringValue];
-  NSString *path = [[lib path] stringByAppendingPathComponent:dir];
-
-  NSFileManager *fm = [NSFileManager defaultManager];
-  while ([path length] != 0 && ![fm fileExistsAtPath:path])
-    path = [path stringByDeletingLastPathComponent];
-
-  if ([path length] != 0)
-    [panel setDirectoryURL:[NSURL fileURLWithPath:path]];
-
-  [panel beginWithCompletionHandler:
-   ^(NSInteger status) {
-     if (status == NSFileHandlingPanelOKButton)
-       {
-	 NSString *path = [[panel URL] path];
-	 NSString *lib_path = [lib path];
-
-	 if ([path hasPrefix:lib_path])
-	   {
-	     NSInteger len = [lib_path length];
-	     if ([path length] == len)
-	       [_directoryField setStringValue:@""];
-	     else if ([path characterAtIndex:len] == '/')
-	       [_directoryField setStringValue:[path substringFromIndex:len+1]];
-	     else
-	       NSBeep();
-	   }
-	 else
-	   NSBeep();
-
-	 [self updateDescription];
-       }
-   }];
-}
-
 - (void)doImport
 {
   PDImageLibrary *lib = [[_libraryButton selectedItem] representedObject];
@@ -279,10 +230,6 @@
     {
       [_controller setImportMode:NO];
       return;
-    }
-  else if (sender == _directoryButton)
-    {
-      [self chooseDestinationFolder];
     }
 
   [self updateDescription];
