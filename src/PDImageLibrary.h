@@ -67,6 +67,10 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 
 - (NSString *)cachePathForFileId:(uint32_t)file_id base:(NSString *)str;
 
+/* 'path' is relative to the root of the library. */
+
+- (NSData *)contentsOfFile:(NSString *)path;
+
 - (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName;
 - (void)didRenameFile:(NSString *)oldName to:(NSString *)newName;
 - (void)didRemoveFileWithRelativePath:(NSString *)rel_path;

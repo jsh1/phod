@@ -24,6 +24,9 @@
 
 #import <Foundation/Foundation.h>
 
+extern CFStringRef PDTypeRAWImage;	/* public.camera-raw-image */
+extern CFStringRef PDTypePhodMetadata;	/* org.unfactored.phod-metadata */
+
 extern NSString *const PDImagePropertyDidChange;
 
 @protocol PDImageHost;
@@ -59,11 +62,11 @@ typedef int PDImageCompareKey;
 
   BOOL _pendingJSONWrite;
 
-  NSString *_jpegType;
+  CFStringRef _jpegType;
   NSString *_jpegFile;			/* non-nil iff _jpegType non-nil */
   uint32_t _jpegId;
 
-  NSString *_rawType;
+  CFStringRef _rawType;
   NSString *_rawFile;			/* non-nil iff _rawType non-nil */
   uint32_t _rawId;
 
@@ -92,8 +95,10 @@ typedef int PDImageCompareKey;
 + (PDImageCompareKey)imageCompareKeyFromString:(NSString *)str;
 
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
-    JSONFile:(NSString *)json_file JPEGFile:(NSString *)jpeg_file
-    RAWFile:(NSString *)raw_file;
+    JSONFile:(NSString *)json_file;
+
+- (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
+    properties:(NSDictionary *)dict;
 
 @property(nonatomic, readonly) PDImageLibrary *library;
 

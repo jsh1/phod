@@ -37,9 +37,6 @@
 
 #define METADATA_EXTENSION "phod"
 
-#define JPEG_UTI "public.jpeg"
-#define RAW_UTI "public.camera-raw-image"
-
 /* JPEG compression quality of 50% seems to be the lowest setting that
    doesn't introduce banding in smooth gradients. */
 
@@ -62,6 +59,9 @@ enum
 @interface PDImage ()
 - (void)loadImageProperties;
 @end
+
+CFStringRef PDTypeRAWImage = CFSTR("public.camera-raw-image");
+CFStringRef PDTypePhodMetadata = CFSTR("org.unfactored.phod-metadata");
 
 NSString *const PDImagePropertyDidChange = @"PDImagePropertyDidChange";
 
@@ -131,7 +131,7 @@ write_image_to_path(CGImageRef im, NSString *path, double quality)
   NSURL *url = [[NSURL alloc] initFileURLWithPath:path];
 
   CGImageDestinationRef dest = CGImageDestinationCreateWithURL((CFURLRef)url,
-						CFSTR(JPEG_UTI), 1, NULL);
+							kUTTypeJPEG, 1, NULL);
 
   [url release];
 
@@ -346,88 +346,32 @@ metadata_file(NSString *image_file)
    assuming that whatever's loading the image library will do so
    ahead-of-time / asynchronously. */
 
-- (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
-    JSONFile:(NSString *)json_file JPEGFile:(NSString *)jpeg_file
-    RAWFile:(NSString *)raw_file
-{
-  self = [super init];
-  if (self == nil)
-    return nil;
+- (id)_finishInit
+{                        
+  NSString *uuid_str = [_properties objectForKey:PDImage_UUID];
+  if (uuid_str != nil)
+    _uuid = [[NSUUID alloc] initWithUUIDString:uuid_str];
 
-  _properties = [[NSMutableDictionary alloc] init];
-
-  _library = [lib retain];
-  _libraryDirectory = [dir copy];
-  _jsonFile = [json_file copy];
-
-  if (_jsonFile != nil)
+  NSDictionary *file_types = [_properties objectForKey:PDImage_FileTypes];
+  for (NSString *type in file_types)
     {
-      NSString *json_path = file_path(self, _jsonFile);
-      NSData *data = [[NSData alloc] initWithContentsOfFile:json_path];
-
-      if (data != nil)
+      if (UTTypeConformsTo((CFStringRef)type, kUTTypeJPEG))
 	{
-	  NSDictionary *dict = [NSJSONSerialization
-				JSONObjectWithData:data options:0 error:nil];
-
-	  if (dict != nil)
-	    {
-	      NSDictionary *props = [dict objectForKey:@"Properties"];
-	      if (props != nil)
-		[_properties addEntriesFromDictionary:props];
-
-	      NSString *uuid_str = [_properties objectForKey:PDImage_UUID];
-	      if (uuid_str != nil)
-		_uuid = [[NSUUID alloc] initWithUUIDString:uuid_str];
-
-	      NSDictionary *file_types
-	        = [_properties objectForKey:PDImage_FileTypes];
-
-	      for (NSString *type in file_types)
-		{
-		  if (UTTypeConformsTo((CFStringRef)type, CFSTR(JPEG_UTI)))
-		    {
-		      _jpegType = type;
-		      _jpegFile = [file_types objectForKey:type];
-		    }
-		  else if (UTTypeConformsTo((CFStringRef)type, CFSTR(RAW_UTI)))
-		    {
-		      _rawType = type;
-		      _rawFile = [file_types objectForKey:type];
-		    }
-		}
-
-	      _deleted = [[_properties objectForKey:PDImage_Deleted] boolValue];
-	      _hidden = [[_properties objectForKey:PDImage_Hidden] boolValue];
-	      _rating = [[_properties objectForKey:PDImage_Rating] intValue];
-	    }
-
-	  [data release];
+	  _jpegType = CFRetain(type);
+	  _jpegFile = [file_types objectForKey:type];
+	}
+      else if (UTTypeConformsTo((CFStringRef)type, PDTypeRAWImage))
+	{
+	  _rawType = CFRetain(type);
+	  _rawFile = [file_types objectForKey:type];
 	}
     }
 
-  if (_jpegFile == nil)
-    {
-      _jpegFile = [jpeg_file copy];
-      if (_jpegFile != nil)
-	_jpegType = [@JPEG_UTI copy];
-    }
+  _deleted = [[_properties objectForKey:PDImage_Deleted] boolValue];
+  _hidden = [[_properties objectForKey:PDImage_Hidden] boolValue];
+  _rating = [[_properties objectForKey:PDImage_Rating] intValue];
 
-  if (_rawFile == nil)
-    {
-      _rawFile = [raw_file copy];
-      if (_rawFile != nil)
-	{
-	  NSString *ext = [_rawFile pathExtension];
-	  _rawType = (id)UTTypeCreatePreferredIdentifierForTag(
-			kUTTagClassFilenameExtension, (CFStringRef)ext,
-			CFSTR(RAW_UTI));
-	  if (_rawType == nil)
-	    [_rawFile release], _rawFile = nil;
-	}
-    }
-
-  if (_jpegType == nil && _rawType == nil)
+  if (_jpegType == NULL && _rawType == NULL)
     {
       [self release];
       return nil;
@@ -435,7 +379,7 @@ metadata_file(NSString *image_file)
 
   if ([_properties objectForKey:PDImage_ActiveType] == nil)
     {
-      [_properties setObject:_jpegType ? _jpegType : _rawType
+      [_properties setObject:_jpegType ? (id)_jpegType : (id)_rawType
        forKey:PDImage_ActiveType];
     }
 
@@ -443,10 +387,10 @@ metadata_file(NSString *image_file)
     {
       id keys[2], objects[2];
       size_t count = 0;
-      if (_jpegType != nil)
-	keys[count] = _jpegType, objects[count++] = _jpegFile;
-      if (_rawType != nil)
-	keys[count] = _rawType, objects[count++] = _rawFile;
+      if (_jpegType != NULL)
+	keys[count] = (id)_jpegType, objects[count++] = _jpegFile;
+      if (_rawType != NULL)
+	keys[count] = (id)_rawType, objects[count++] = _rawFile;
 
       [_properties setObject:
        [NSDictionary dictionaryWithObjects:objects forKeys:keys count:count]
@@ -467,15 +411,69 @@ metadata_file(NSString *image_file)
   return self;
 }
 
+- (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
+    JSONFile:(NSString *)json_file
+{
+  self = [super init];
+  if (self == nil)
+    return nil;
+
+  _library = [lib retain];
+  _libraryDirectory = [dir copy];
+
+  _jsonFile = [json_file copy];
+
+  _properties = [[NSMutableDictionary alloc] init];
+
+  NSString *json_path = file_path(self, _jsonFile);
+  NSData *data = [[NSData alloc] initWithContentsOfFile:json_path];
+
+  if (data != nil)
+    {
+      NSDictionary *dict = [NSJSONSerialization
+			    JSONObjectWithData:data options:0 error:nil];
+      if (dict != nil)
+	{
+	  NSDictionary *props = [dict objectForKey:@"Properties"];
+	  if (props != nil)
+	    [_properties addEntriesFromDictionary:props];
+	}
+
+      [data release];
+    }
+
+  return [self _finishInit];
+}
+
+- (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
+    properties:(NSDictionary *)dict
+{
+  self = [super init];
+  if (self == nil)
+    return nil;
+
+  _library = [lib retain];
+  _libraryDirectory = [dir copy];
+
+  _properties = [[NSMutableDictionary alloc] init];
+
+  if (dict != nil)
+    [_properties addEntriesFromDictionary:dict];
+
+  return [self _finishInit];
+}
+
 - (void)dealloc
 {
   [_library release];
   [_libraryDirectory release];
   [_uuid release];
   [_jsonFile release];
-  [_jpegType release];
+  if (_jpegType != NULL)
+    CFRelease(_jpegType);
   [_jpegFile release];
-  [_rawType release];
+  if (_rawType != NULL)
+    CFRelease(_rawType);
   [_rawFile release];
 
   [_properties release];
@@ -1029,27 +1027,27 @@ metadata_file(NSString *image_file)
 
 - (BOOL)usesRAW
 {
-  if (_rawType == nil)
+  if (_rawType == NULL)
     return NO;
 
   return [[self imagePropertyForKey:PDImage_ActiveType]
-	  isEqualToString:_rawType];
+	  isEqualToString:(NSString *)_rawType];
 }
 
 - (void)setUsesRAW:(BOOL)flag
 {
-  if (flag && _rawType != nil)
-    [self setImageProperty:_rawType forKey:PDImage_ActiveType];
-  else if (!flag && _jpegType != nil)
-    [self setImageProperty:_jpegType forKey:PDImage_ActiveType];
+  if (flag && _rawType != NULL)
+    [self setImageProperty:(id)_rawType forKey:PDImage_ActiveType];
+  else if (!flag && _jpegType != NULL)
+    [self setImageProperty:(id)_jpegType forKey:PDImage_ActiveType];
 }
 
 - (BOOL)supportsUsesRAW:(BOOL)flag
 {
   if (flag)
-    return _rawType != nil;
+    return _rawType != NULL;
   else
-    return _jpegType != nil;
+    return _jpegType != NULL;
 }
 
 - (CGSize)pixelSize
@@ -1151,8 +1149,8 @@ metadata_file(NSString *image_file)
       [_library didRemoveFileWithRelativePath:
        library_file_path(self, _jpegFile)];
 
-      [_jpegType release];
-      _jpegType = nil;
+      CFRelease(_jpegType);
+      _jpegType = NULL;
       [_jpegFile release];
       _jpegFile = nil;
       _jpegId = 0;
@@ -1166,8 +1164,8 @@ metadata_file(NSString *image_file)
       [_library didRemoveFileWithRelativePath:
        library_file_path(self, _rawFile)];
 
-      [_rawType release];
-      _rawType = nil;
+      CFRelease(_rawType);
+      _rawType = NULL;
       [_rawFile release];
       _rawFile = nil;
       _rawId = 0;
@@ -1805,12 +1803,15 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 	      pasteboardPropertyListForType:type];
     }
 
-  if ([[self imagePropertyForKey:PDImage_FileTypes] objectForKey:type] != nil)
+  NSDictionary *file_types = [self imagePropertyForKey:PDImage_FileTypes];
+  for (NSString *key in file_types)
     {
-      if ([type isEqualToString:@JPEG_UTI])
-	return [NSData dataWithContentsOfFile:[self JPEGPath]];
-      else
-	return [NSData dataWithContentsOfFile:[self RAWPath]];
+      if (UTTypeConformsTo((CFStringRef)key, (CFStringRef)type))
+	{
+	  NSString *file = [file_types objectForKey:key];
+	  return [_library contentsOfFile:
+		  [_libraryDirectory stringByAppendingPathComponent:file]];
+	}
     }
 
   id url_data = [[NSURL fileURLWithPath:[self imagePath]]

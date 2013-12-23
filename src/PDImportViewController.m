@@ -169,14 +169,14 @@
   switch ([_importButton indexOfSelectedItem])
     {
     case 0:
-      [types addObject:@"public.jpeg"];
-      [types addObject:@"public.camera-raw-image"];
+      [types addObject:(id)kUTTypeJPEG];
+      [types addObject:(id)PDTypeRAWImage];
       break;
     case 1:
-      [types addObject:@"public.jpeg"];
+      [types addObject:(id)kUTTypeJPEG];
       break;
     case 2:
-      [types addObject:@"public.camera-raw-image"];
+      [types addObject:(id)PDTypeRAWImage];
       break;
     }
 
@@ -184,10 +184,10 @@
   switch ([_activeTypeButton indexOfSelectedItem])
     {
     case 0:
-      active_type = @"public.jpeg";
+      active_type = (id)kUTTypeJPEG;
       break;
     case 1:
-      active_type = @"public.camera-raw-image";
+      active_type = (id)PDTypeRAWImage;
       break;
     }
 

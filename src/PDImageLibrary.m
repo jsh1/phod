@@ -32,9 +32,10 @@
 #import <utime.h>
 
 #define CATALOG_FILE "catalog.json"
-#define METADATA_EXTENSION "phod"
 #define CACHE_BITS 6
 #define CACHE_SEP '$'
+
+#define METADATA_EXTENSION "phod"
 
 #define ERROR_DOMAIN @"org.unfactored.PDImageLibrary"
 
@@ -411,80 +412,11 @@ convert_hexdigit(int c)
   return [_catalog fileIdForPath:rel_path];
 }
 
-static NSSet *
-raw_extensions(void)
+- (NSData *)contentsOfFile:(NSString *)rel_path
 {
-  static NSSet *set;
-  static dispatch_once_t once;
+  NSString *path = [_path stringByAppendingPathComponent:rel_path];
 
-  dispatch_once(&once, ^
-    {
-      set = [[NSSet alloc] initWithObjects:
-	     @"arw", @"cr2", @"crw", @"dng", @"fff", @"3fr", @"tif",
-	     @"tiff", @"raw", @"nef", @"nrw", @"sr2", @"srf", @"srw",
-	     @"erf", @"mrw", @"rw2", @"rwz", @"orf", nil];
-    });
-
-  return set;
-}
-
-static NSSet *
-jpeg_extensions(void)
-{
-  static NSSet *set;
-  static dispatch_once_t once;
-
-  dispatch_once(&once, ^
-    {
-      set = [[NSSet alloc] initWithObjects:@"jpg", @"jpeg", @"jpe", nil];
-    });
-
-  return set;
-}
-
-static NSSet *
-jpeg_and_raw_extensions(void)
-{
-  static NSSet *set;
-  static dispatch_once_t once;
-
-  dispatch_once(&once, ^
-    {
-      set = [[raw_extensions()
-	      setByAddingObjectsFromSet:jpeg_extensions()] copy];
-    });
-
-  return set;
-}
-
-/* 'ext' must be lowercase. */
-
-static NSString *
-filename_with_ext(NSSet *filenames, NSString *stem, NSString *ext)
-{
-  NSString *lower = [stem stringByAppendingPathExtension:ext];
-  if ([filenames containsObject:lower])
-    return lower;
-
-  NSString *upper = [stem stringByAppendingPathExtension:
-		     [ext uppercaseString]];
-  if ([filenames containsObject:upper])
-    return upper;
-
-  return nil;
-}
-
-static NSString *
-filename_with_ext_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
-{
-  for (NSString *ext in exts)
-    {
-      NSString *ret = filename_with_ext(filenames, stem, ext);
-      if (ret != nil)
-	return ret;
-    }
-
-  return nil;
+  return [NSData dataWithContentsOfFile:path];
 }
 
 - (void)foreachSubdirectoryOfDirectory:(NSString *)dir
@@ -511,86 +443,97 @@ filename_with_ext_in_set(NSSet *filenames, NSString *stem, NSSet *exts)
 - (void)loadImagesInSubdirectory:(NSString *)dir
     recursively:(BOOL)flag handler:(void (^)(PDImage *))block
 {
-  NSFileManager *fm = [NSFileManager defaultManager];
-
-  NSString *dir_path = [_path stringByAppendingPathComponent:dir];
-
-  NSArray *files = [fm contentsOfDirectoryAtPath:dir_path error:nil];
-  NSMutableSet *unused_files = [[NSMutableSet alloc] initWithArray:files];
-
-  /* Two passes so we can read .phod files first. These may reference
-     JPEG / RAW files, and if so we don't want to add those images
-     separately. */
-
-  for (int pass = 0; pass < 2; pass++)
+  @autoreleasepool
     {
-      for (NSString *file in files)
+      NSFileManager *fm = [NSFileManager defaultManager];
+
+      NSString *dir_path = [_path stringByAppendingPathComponent:dir];
+
+      /* Build table of file-name-minus-extension -> [extensions...] */
+
+      NSMutableDictionary *groups = [NSMutableDictionary dictionary];
+
+      for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
 	{
-	  @autoreleasepool
+	  if ([file characterAtIndex:0] == '.')
+	    continue;
+
+	  NSString *path = [dir_path stringByAppendingPathComponent:file];
+	  BOOL is_dir = NO;
+	  if (![fm fileExistsAtPath:path isDirectory:&is_dir])
+	    continue;
+	  if (is_dir)
 	    {
-	      if ([file characterAtIndex:0] == '.')
-		continue;
-	      if (![unused_files containsObject:file])
+	      if (flag)
+		{
+		  [self loadImagesInSubdirectory:
+		   [dir stringByAppendingPathComponent:file]
+		   recursively:YES handler:block];
+		}
+	      continue;
+	    }
+
+	  NSString *stem = [file stringByDeletingPathExtension];
+	  NSString *ext = [file pathExtension];
+
+	  NSMutableArray *exts = [groups objectForKey:stem];
+	  if (exts != nil)
+	    [exts addObject:ext];
+	  else
+	    {
+	      exts = [NSMutableArray arrayWithObject:ext];
+	      [groups setObject:exts forKey:stem];
+	    }
+	}
+
+      /* Scan each group of files to build one image if possible. */
+
+      for (NSString *stem in groups)
+	{
+	  PDImage *image = nil;
+	  NSMutableDictionary *image_types = nil;
+
+	  for (NSString *ext in [groups objectForKey:stem])
+	    {
+	      CFStringRef type = UTTypeCreatePreferredIdentifierForTag(
+						kUTTagClassFilenameExtension,
+						(CFStringRef)ext, NULL);
+	      if (type == NULL)
 		continue;
 
-	      NSString *path = [dir_path stringByAppendingPathComponent:file];
-	      BOOL is_dir = NO;
-	      if (![fm fileExistsAtPath:path isDirectory:&is_dir])
-		continue;
-	      if (is_dir)
+	      if (UTTypeConformsTo(type, PDTypePhodMetadata))
 		{
-		  if (flag && pass == 0)
-		    {
-		      [self loadImagesInSubdirectory:
-		       [dir stringByAppendingPathComponent:file]
-		       recursively:YES handler:block];
-		    }
-		  continue;
+		  NSString *file = [stem stringByAppendingPathExtension:ext];
+		  image = [[PDImage alloc] initWithLibrary:self directory:dir
+			   JSONFile:file];
+		}
+	      else if (UTTypeConformsTo(type, kUTTypeImage))
+		{
+		  if (image_types == nil)
+		    image_types = [NSMutableDictionary dictionary];
+		  NSString *file = [stem stringByAppendingPathExtension:ext];
+		  [image_types setObject:file forKey:(id)type];
 		}
 
-	      NSString *ext = [[file pathExtension] lowercaseString];
-
-	      if (pass == 0 && ![ext isEqualToString:@METADATA_EXTENSION])
-		continue;
-	      if (pass == 1 && ![jpeg_and_raw_extensions() containsObject:ext])
-		continue;
-
-	      NSString *stem = [file stringByDeletingPathExtension];
-
-	      NSString *json_file = filename_with_ext(unused_files,
-						stem, @METADATA_EXTENSION);
-	      NSString *jpeg_file = filename_with_ext_in_set(unused_files,
-						stem, jpeg_extensions());
-	      NSString *raw_file = filename_with_ext_in_set(unused_files,
-						stem, raw_extensions());
-
-	      PDImage *image = [[PDImage alloc] initWithLibrary:self
-				directory:dir JSONFile:json_file
-				JPEGFile:jpeg_file RAWFile:raw_file];
+	      CFRelease(type);
 
 	      if (image != nil)
-		{
-		  block(image);
+		break;
+	    }
 
-		  NSString *json_file = [image JSONFile];
-		  if (json_file != nil)
-		    [unused_files removeObject:json_file];
+	  if (image == nil && [image_types count] != 0)
+	    {
+	      image = [[PDImage alloc] initWithLibrary:self directory:dir
+		       properties:@{PDImage_FileTypes: image_types}];
+	    }
 
-		  NSString *jpeg_file = [image JPEGFile];
-		  if (jpeg_file != nil)
-		    [unused_files removeObject:jpeg_file];
-
-		  NSString *raw_file = [image RAWFile];
-		  if (raw_file != nil)
-		    [unused_files removeObject:raw_file];
-
-		  [image release];
-		}
+	  if (image != nil)
+	    {
+	      block(image);
+	      [image release];
 	    }
 	}
     }
-
-  [unused_files release];
 }
 
 static NSOperationQueue *_copyQueue;
@@ -930,37 +873,30 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
       if (name == nil)
 	continue;
 
-      NSArray *src_types = [src_im imagePropertyForKey:PDImage_FileTypes];
-      NSMutableArray *dst_types = [NSMutableArray array];
+      NSDictionary *src_types = [src_im imagePropertyForKey:PDImage_FileTypes];
+
+      NSMutableDictionary *dst_types = [NSMutableDictionary dictionary];
       NSMutableArray *dst_paths = [NSMutableArray array];
 
-      NSString *JPEG_file = nil;
-      NSString *RAW_file = nil;
+      NSOperation *main_op = nil;
+      NSMutableArray *all_ops = [NSMutableArray array];
 
-      NSOperation *JPEG_op = nil;
-      NSOperation *RAW_op = nil;
-
-      for (NSString *type in src_types)
+      for (NSString *src_type in src_types)
 	{
 	  NSString *src_path = nil;
-	  NSString **dst_file_ptr = NULL;
-	  NSOperation **op_ptr = NULL;
 
-	  if (JPEG_file == nil
-	      && [type isEqualToString:@"public.jpeg"]
-	      && [types containsObject:type])
+	  for (NSString *req_type in types)
 	    {
-	      src_path = [src_im JPEGPath];
-	      dst_file_ptr = &JPEG_file;
-	      op_ptr = &JPEG_op;
-	    }
-	  else if (RAW_file == nil
-		   && ![type isEqualToString:@"public.jpeg"]
-		   && [types containsObject:@"public.camera-raw-image"])
-	    {
-	      src_path = [src_im RAWPath];
-	      dst_file_ptr = &RAW_file;
-	      op_ptr = &RAW_op;
+	      if (UTTypeConformsTo((CFStringRef)src_type,
+				   (CFStringRef)req_type))
+		{
+		  NSString *src_dir = [src_im libraryDirectory];
+		  NSString *src_file = [src_types objectForKey:src_type];
+		  src_path = [[[[src_im library] path]
+			       stringByAppendingPathComponent:src_dir]
+			      stringByAppendingPathComponent:src_file];
+		  break;
+		}
 	    }
 
 	  if (src_path != nil)
@@ -979,11 +915,10 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 		  dst_file = [dst_path lastPathComponent];
 		}
 
-	      *dst_file_ptr = dst_file;
-	      [dst_types addObject:type];
+	      [dst_types setObject:dst_file forKey:src_type];
 	      [dst_paths addObject:dst_path];
 
-	      *op_ptr = [NSBlockOperation blockOperationWithBlock:^
+	      NSOperation *op = [NSBlockOperation blockOperationWithBlock:^
 		{
 		  if (error != nil)
 		    return;
@@ -998,6 +933,15 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 		  else if (err != nil)
 		    set_error(err);
 		}];
+
+	      [all_ops addObject:op];
+
+	      if (main_op == nil
+		  || UTTypeConformsTo((CFStringRef)src_type,
+				      (CFStringRef)active_type))
+		{
+		  main_op = op;
+		}
 	    }
 	}
 
@@ -1024,22 +968,25 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 	  if (dict != nil)
 	    [dst_props addEntriesFromDictionary:dict];
 
+	  [dst_props setObject:name forKey:PDImage_Name];
+
 	  [dst_props setObject:dst_types forKey:PDImage_FileTypes];
 
 	  NSString *dst_active = active_type;
-	  if (![dst_types containsObject:dst_active])
-	    dst_active = [dst_types firstObject];
+	  if ([dst_types objectForKey:dst_active] == nil)
+	    {
+	      for (NSString *key in dst_types)
+		{
+		  dst_active = key;
+		  break;
+		}
+	    }
 
 	  [dst_props setObject:dst_active forKey:PDImage_ActiveType];
 
 	  NSMutableDictionary *json_dict = [NSMutableDictionary dictionary];
 
 	  [json_dict setObject:dst_props forKey:@"Properties"];
-
-	  if (JPEG_file != nil)
-	    [json_dict setObject:JPEG_file forKey:@"JPEGFile"];
-	  if (RAW_file != nil)
-	    [json_dict setObject:RAW_file forKey:@"RAWFile"];
 
 	  NSString *json_path = [dir_path stringByAppendingPathComponent:
 				 [name stringByAppendingPathExtension:
@@ -1053,7 +1000,7 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 	      if (error != nil)
 		return;
 	      NSData *data = [NSJSONSerialization dataWithJSONObject:json_dict
-			      options:NSJSONWritingPrettyPrinted error:nil];
+			      options:0 error:nil];
 	      NSError *err = nil;
 	      if ([data writeToFile:json_path options:0 error:&err])
 		{
@@ -1067,30 +1014,18 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 		set_error(err);
 	    }];
 
-	  NSOperation *main_op = nil, *secondary_op = nil;
-
-	  if ([active_type isEqualToString:@"public.jpeg"])
-	    main_op = JPEG_op, secondary_op = RAW_op;
-	  else
-	    main_op = RAW_op, secondary_op = JPEG_op;
-	
-	  if (main_op != nil)
+	  for (NSOperation *op in all_ops)
 	    {
-	      [queue addOperation:main_op];
-	      [final_op addDependency:main_op];
-	    }
-
-	  if (secondary_op != nil)
-	    {
-	      [secondary_op setQueuePriority:NSOperationQueuePriorityLow];
-	      [queue addOperation:secondary_op];
-	      [final_op addDependency:secondary_op];
+	      if (op != main_op)
+		[op setQueuePriority:NSOperationQueuePriorityLow];
+	      [queue addOperation:op];
+	      [final_op addDependency:op];
 	    }
 
 	  [json_op setQueuePriority:NSOperationQueuePriorityHigh];
-	  [json_op addDependency:main_op];
+	  if (main_op != nil)
+	    [json_op addDependency:main_op];
 	  [queue addOperation:json_op];
-
 	  [final_op addDependency:json_op];
 	}
     }
