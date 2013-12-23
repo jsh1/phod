@@ -63,12 +63,25 @@
   return self;
 }
 
+- (void)invalidate
+{
+  if (_queue != NULL)
+    {
+      dispatch_sync(_queue, ^{});
+      dispatch_release(_queue);
+      _queue = NULL;
+    }
+
+  [_dict[0] release];
+  _dict[0] = nil;
+
+  [_dict[1] release];
+  _dict[1] = nil;
+}
+
 - (void)dealloc
 {
-  dispatch_sync(_queue, ^{});
-  dispatch_release(_queue);
-  [_dict[0] release];
-  [_dict[1] release];
+  [self invalidate];
   [super dealloc];
 }
 
@@ -77,10 +90,7 @@
   /* _dirty is only set when files are renamed or new ids are added to
      _dict[1]. So we also check if _dict[0] is non-empty, in that case
      the current state is different to what was read from the file
-     system.
-
-     Note: this could be async, except we don't wait for it to finish
-     before terminating the app!? */
+     system. */
 
   dispatch_sync(_queue, ^
     {

@@ -248,8 +248,7 @@ catalog_path(PDImageLibrary *self)
 {
   [self waitForImportsToComplete];
 
-  [_catalog release];
-  _catalog = nil;
+  [_catalog invalidate];
 
   NSInteger idx = [_allLibraries indexOfObjectIdenticalTo:self];
   if (idx != NSNotFound)
@@ -263,6 +262,7 @@ catalog_path(PDImageLibrary *self)
   [_name release];
   [_path release];
   [_cachePath release];
+  [_catalog release];
   [_catalog release];
   [_activeImports release];
 

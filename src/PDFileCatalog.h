@@ -35,6 +35,8 @@
 - (id)init;
 - (id)initWithContentsOfFile:(NSString *)path;
 
+- (void)invalidate;
+
 /* Writes the current contents of the catalog to 'path'. If the
    receiver was initialized from the contents of a file, 'path' should
    be the same file (i.e. no data will be written if the receiver

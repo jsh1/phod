@@ -184,10 +184,10 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
 - (void)invalidate
 {
+  for (PDLibraryFolder *item in [_foldersGroup subitems])
+    [[item library] invalidate];
   for (PDLibraryDevice *item in [_devicesGroup subitems])
-    {
-      [[item library] invalidate];
-    }
+    [[item library] invalidate];
 }
 
 - (void)dealloc
