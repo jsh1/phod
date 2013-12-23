@@ -369,12 +369,28 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
 - (id)_finishInit
 {
+  /* This function must ensure that FileTypes and ActiveType properties
+     are initialized, to avoid infinite recursion in -imageFileId, etc. */
+
   NSDictionary *file_types = [_properties objectForKey:PDImage_FileTypes];
+  NSString *active_type = [_properties objectForKey:PDImage_ActiveType];
 
   if ([file_types count] == 0)
     {
       [self release];
       return nil;
+    }
+
+  if (active_type == nil || [file_types objectForKey:active_type] == nil)
+    {
+      active_type = file_type_conforming_to(file_types, kUTTypeImage);
+      if (active_type != nil)
+	[_properties setObject:active_type forKey:PDImage_ActiveType];
+      else
+	{
+	  [self release];
+	  return nil;
+	}
     }
 
   NSString *uuid_str = [_properties objectForKey:PDImage_UUID];
@@ -384,13 +400,6 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
   _deleted = [[_properties objectForKey:PDImage_Deleted] boolValue];
   _hidden = [[_properties objectForKey:PDImage_Hidden] boolValue];
   _rating = [[_properties objectForKey:PDImage_Rating] intValue];
-
-  if ([_properties objectForKey:PDImage_ActiveType] == nil)
-    {
-      NSString *type = file_type_conforming_to(file_types, kUTTypeImage);
-      if (type != nil)
-	[_properties setObject:type forKey:PDImage_ActiveType];
-    }
 
   if ([[_properties objectForKey:PDImage_Name] length] == 0)
     {
