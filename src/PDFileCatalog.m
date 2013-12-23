@@ -77,7 +77,10 @@
   /* _dirty is only set when files are renamed or new ids are added to
      _dict[1]. So we also check if _dict[0] is non-empty, in that case
      the current state is different to what was read from the file
-     system. */
+     system.
+
+     Note: this could be async, except we don't wait for it to finish
+     before terminating the app!? */
 
   dispatch_sync(_queue, ^
     {
@@ -109,7 +112,7 @@
      new names and purge the old state after relaunching a couple of
      times. */
 
-  dispatch_sync(_queue, ^
+  dispatch_async(_queue, ^
     {
       NSInteger old_len = [oldName length];
 
@@ -151,7 +154,7 @@
 
 - (void)renameFile:(NSString *)oldName to:(NSString *)newName
 {
-  dispatch_sync(_queue, ^
+  dispatch_async(_queue, ^
     {
       for (int pass = 0; pass < 2; pass++)
 	{
@@ -169,7 +172,7 @@
 
 - (void)removeFileWithPath:(NSString *)path
 {
-  dispatch_sync(_queue, ^
+  dispatch_async(_queue, ^
     {
       for (int pass = 0; pass < 2; pass++)
 	{
