@@ -59,16 +59,7 @@ typedef int PDImageCompareKey;
   NSString *_libraryDirectory;		/* relative to _libraryRoot */
 
   NSString *_jsonFile;			/* may be nil */
-
   BOOL _pendingJSONWrite;
-
-  CFStringRef _jpegType;
-  NSString *_jpegFile;			/* non-nil iff _jpegType non-nil */
-  uint32_t _jpegId;
-
-  CFStringRef _rawType;
-  NSString *_rawFile;			/* non-nil iff _rawType non-nil */
-  uint32_t _rawId;
 
   NSMutableDictionary *_properties;
   NSDictionary *_implicitProperties;	/* from the image file(s) */
