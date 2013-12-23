@@ -255,9 +255,6 @@ cache_path_for_type(PDImageLibrary *lib, uint32_t file_id, NSInteger type)
 
 @synthesize library = _library;
 @synthesize libraryDirectory = _libraryDirectory;
-@synthesize JSONFile = _jsonFile;
-@synthesize JPEGFile = _jpegFile;
-@synthesize RAWFile = _rawFile;
 
 static NSOperationQueue *_wideQueue;
 static NSOperationQueue *_narrowQueue;
@@ -358,12 +355,12 @@ metadata_file(NSString *image_file)
       if (UTTypeConformsTo((CFStringRef)type, kUTTypeJPEG))
 	{
 	  _jpegType = CFRetain(type);
-	  _jpegFile = [file_types objectForKey:type];
+	  _jpegFile = [[file_types objectForKey:type] copy];
 	}
       else if (UTTypeConformsTo((CFStringRef)type, PDTypeRAWImage))
 	{
 	  _rawType = CFRetain(type);
-	  _rawFile = [file_types objectForKey:type];
+	  _rawFile = [[file_types objectForKey:type] copy];
 	}
     }
 
@@ -425,21 +422,21 @@ metadata_file(NSString *image_file)
 
   _properties = [[NSMutableDictionary alloc] init];
 
-  NSString *json_path = file_path(self, _jsonFile);
-  NSData *data = [[NSData alloc] initWithContentsOfFile:json_path];
-
-  if (data != nil)
+  @autoreleasepool
     {
-      NSDictionary *dict = [NSJSONSerialization
-			    JSONObjectWithData:data options:0 error:nil];
-      if (dict != nil)
+      NSData *data = [_library contentsOfFile:
+		      library_file_path(self, _jsonFile)];
+      if (data != nil)
 	{
-	  NSDictionary *props = [dict objectForKey:@"Properties"];
-	  if (props != nil)
-	    [_properties addEntriesFromDictionary:props];
+	  NSDictionary *dict = [NSJSONSerialization
+				JSONObjectWithData:data options:0 error:nil];
+	  if (dict != nil)
+	    {
+	      NSDictionary *props = [dict objectForKey:@"Properties"];
+	      if (props != nil)
+		[_properties addEntriesFromDictionary:props];
+	    }
 	}
-
-      [data release];
     }
 
   return [self _finishInit];
@@ -467,7 +464,9 @@ metadata_file(NSString *image_file)
 {
   [_library release];
   [_libraryDirectory release];
+
   [_uuid release];
+
   [_jsonFile release];
   if (_jpegType != NULL)
     CFRelease(_jpegType);
@@ -525,12 +524,12 @@ metadata_file(NSString *image_file)
 	    [dict setObject:[NSDictionary dictionaryWithDictionary:_properties]
 	     forKey:@"Properties"];
 
-	    NSString *path = file_path(self, _jsonFile);
+	    NSString *rel_path = library_file_path(self, _jsonFile);
 
 	    NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
 	      NSData *data = [NSJSONSerialization dataWithJSONObject:dict
 			      options:0 error:nil];
-	      [data writeToFile:path atomically:YES];
+	      [_library writeData:data toFile:rel_path];
 	    }];
 
 	    [[PDImage writeQueue] addOperation:op];
@@ -541,30 +540,6 @@ metadata_file(NSString *image_file)
 
       _pendingJSONWrite = YES;
     }
-}
-
-- (NSString *)JPEGPath
-{
-  if (_jpegFile != nil)
-    return file_path(self, _jpegFile);
-  else
-    return nil;
-}
-
-- (NSString *)RAWPath
-{
-  if (_rawFile != nil)
-    return file_path(self, _rawFile);
-  else
-    return nil;
-}
-
-- (NSString *)lastLibraryPathComponent
-{
-  NSString *str = [_libraryDirectory lastPathComponent];
-  if ([str length] == 0)
-    str = [_library name];
-  return str;
 }
 
 - (NSString *)imageFile
@@ -700,8 +675,8 @@ metadata_file(NSString *image_file)
   static dispatch_once_t once;
 
   dispatch_once(&once, ^{
-    editable_keys = [[NSSet alloc] initWithObjects:PDImage_Name,
-		     PDImage_Title, PDImage_Caption, PDImage_Keywords,
+    editable_keys = [[NSSet alloc] initWithObjects:PDImage_Title,
+		     PDImage_Caption, PDImage_Keywords,
 		     PDImage_Copyright, nil];
   });
 
@@ -1134,46 +1109,40 @@ metadata_file(NSString *image_file)
 
 - (NSError *)remove
 {
-  NSFileManager *fm = [NSFileManager defaultManager];
   NSError *err = nil;
 
   /* In case JSON file is being written. */
 
   [[PDImage writeQueue] waitUntilAllOperationsAreFinished];
 
-  if (_jpegFile != nil)
+  NSDictionary *file_types = [self imagePropertyForKey:PDImage_FileTypes];
+  for (NSString *type in file_types)
     {
-      if (![fm removeItemAtPath:[self JPEGPath] error:&err])
+      NSString *file = [file_types objectForKey:type];
+      NSString *rel_path = library_file_path(self, file);
+
+      if (![_library removeItemAtPath:rel_path error:&err])
 	return err;
-
-      [_library didRemoveFileWithRelativePath:
-       library_file_path(self, _jpegFile)];
-
-      CFRelease(_jpegType);
-      _jpegType = NULL;
-      [_jpegFile release];
-      _jpegFile = nil;
-      _jpegId = 0;
     }
 
-  if (_rawFile != nil)
-    {
-      if (![fm removeItemAtPath:[self RAWPath] error:&err])
-	return err;
+  if (_jpegType != NULL)
+    CFRelease(_jpegType);
+  _jpegType = NULL;
+  [_jpegFile release];
+  _jpegFile = nil;
+  _jpegId = 0;
 
-      [_library didRemoveFileWithRelativePath:
-       library_file_path(self, _rawFile)];
-
-      CFRelease(_rawType);
-      _rawType = NULL;
-      [_rawFile release];
-      _rawFile = nil;
-      _rawId = 0;
-    }
+  if (_rawType != NULL)
+    CFRelease(_rawType);
+  _rawType = NULL;
+  [_rawFile release];
+  _rawFile = nil;
+  _rawId = 0;
 
   if (_jsonFile != nil)
     {
-      if (![fm removeItemAtPath:file_path(self, _jsonFile) error:&err])
+      NSString *rel_path = library_file_path(self, _jsonFile);
+      if (![_library removeItemAtPath:rel_path error:&err])
 	return err;
 
       [_jsonFile release];

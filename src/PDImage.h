@@ -104,37 +104,7 @@ typedef int PDImageCompareKey;
 
 @property(nonatomic, readonly) NSString *libraryDirectory;
 
-/* Allocates a new persistent identifier when first called. */
-
-- (NSUUID *)UUID;
-- (NSUUID *)UUIDIfDefined;
-
-/* File names relative to 'libraryDirectory'. */
-
-@property(nonatomic, readonly) NSString *JSONFile;
-@property(nonatomic, readonly) NSString *JPEGFile;
-@property(nonatomic, readonly) NSString *RAWFile;
-
-/* Absolute paths. */
-
-@property(nonatomic, readonly) NSString *JPEGPath;
-@property(nonatomic, readonly) NSString *RAWPath;
-
-/* Convenience for titles. */
-
-@property(nonatomic, readonly) NSString *lastLibraryPathComponent;
-
-/* Convience for ActiveType and FileTypes properties. */
-
-@property(nonatomic) BOOL usesRAW;
-
-- (BOOL)supportsUsesRAW:(BOOL)flag;
-
-/* These automatically switch between JPEG and RAW files. */
-
-@property(nonatomic, readonly) NSString *imageFile;
-@property(nonatomic, readonly) NSString *imagePath;
-@property(nonatomic, readonly) uint32_t imageFileId;
+/* Most-primitive property access. */
 
 - (id)imagePropertyForKey:(NSString *)key;
 - (void)setImageProperty:(id)obj forKey:(NSString *)key;
@@ -158,6 +128,23 @@ typedef int PDImageCompareKey;
 
 - (NSDictionary *)explicitProperties;
 
+/* Caching wrappers around the PDImage_UUID property. -UUID allocates a
+   new persistent identifier when first called, -UUIDIfDefined doesn't
+   ever allocate an identifier. */
+
+- (NSUUID *)UUID;
+- (NSUUID *)UUIDIfDefined;
+
+/* Convience for ActiveType and FileTypes properties. */
+
+@property(nonatomic) BOOL usesRAW;
+
+- (BOOL)supportsUsesRAW:(BOOL)flag;
+
+/* This automatically maps to the currently active file type. */
+
+@property(nonatomic, readonly) NSString *imageFile;
+
 /* Convenience accessors for misc image properties. */
 
 @property(nonatomic, copy) NSString *name;
@@ -174,7 +161,7 @@ typedef int PDImageCompareKey;
 @property(nonatomic, readonly) CGSize pixelSize;
 @property(nonatomic, readonly) CGSize orientedPixelSize;
 
-/* Delete all traces of the image from the filesystem. */
+/* Delete all traces of the image from the library (and filesystem). */
 
 - (NSError *)remove;
 
@@ -193,6 +180,8 @@ typedef int PDImageCompareKey;
 - (void)startPrefetching;
 - (void)stopPrefetching;
 - (BOOL)isPrefetching;
+
+/* Image display methods. */
 
 - (void)addImageHost:(id<PDImageHost>)obj;
 - (void)removeImageHost:(id<PDImageHost>)obj;

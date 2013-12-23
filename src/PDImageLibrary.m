@@ -244,26 +244,9 @@ catalog_path(PDImageLibrary *self)
   };
 }
 
-- (void)dealloc
-{
-  [_name release];
-  [_path release];
-  [_cachePath release];
-  [_catalog release];
-  [_activeImports release];
-  [super dealloc];
-}
-
-- (void)synchronize
-{
-  [_catalog synchronizeWithContentsOfFile:catalog_path(self)];
-}
-
-- (void)remove
+- (void)invalidate
 {
   [self waitForImportsToComplete];
-
-  [self emptyCaches];
 
   [_catalog release];
   _catalog = nil;
@@ -271,6 +254,24 @@ catalog_path(PDImageLibrary *self)
   NSInteger idx = [_allLibraries indexOfObjectIdenticalTo:self];
   if (idx != NSNotFound)
     [_allLibraries removeObjectAtIndex:idx];
+}
+
+- (void)dealloc
+{
+  [self invalidate];
+
+  [_name release];
+  [_path release];
+  [_cachePath release];
+  [_catalog release];
+  [_activeImports release];
+
+  [super dealloc];
+}
+
+- (void)synchronize
+{
+  [_catalog synchronizeWithContentsOfFile:catalog_path(self)];
 }
 
 - (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName
@@ -419,21 +420,52 @@ convert_hexdigit(int c)
   return [NSData dataWithContentsOfFile:path];
 }
 
+- (BOOL)writeData:(NSData *)data toFile:(NSString *)rel_path
+{
+  NSString *path = [_path stringByAppendingPathComponent:rel_path];
+
+  return [data writeToFile:path atomically:YES];
+}
+
+- (NSArray *)contentsOfDirectory:(NSString *)rel_path
+{
+  NSString *path = [_path stringByAppendingPathComponent:rel_path];
+
+  return [[NSFileManager defaultManager]
+	  contentsOfDirectoryAtPath:path error:nil];
+}
+
+- (BOOL)fileExistsAtPath:(NSString *)rel_path isDirectory:(BOOL *)dirp
+{
+  NSString *path = [_path stringByAppendingPathComponent:rel_path];
+
+  return [[NSFileManager defaultManager]
+	  fileExistsAtPath:path isDirectory:dirp];
+}
+
+- (BOOL)removeItemAtPath:(NSString *)rel_path error:(NSError **)err
+{
+  NSString *path = [_path stringByAppendingPathComponent:rel_path];
+
+  BOOL ret = [[NSFileManager defaultManager] removeItemAtPath:path error:err];
+
+  if (ret)
+    [self didRemoveFileWithRelativePath:rel_path];
+
+  return ret;
+}
+
 - (void)foreachSubdirectoryOfDirectory:(NSString *)dir
     handler:(void (^)(NSString *dir_name))block
 {
-  NSFileManager *fm = [NSFileManager defaultManager];
-
-  NSString *dir_path = [_path stringByAppendingPathComponent:dir];
-
-  for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
+  for (NSString *file in [self contentsOfDirectory:dir])
     {
       if ([file characterAtIndex:0] == '.')
 	continue;
 
       BOOL is_dir = NO;
-      NSString *path = [dir_path stringByAppendingPathComponent:file];
-      if (![fm fileExistsAtPath:path isDirectory:&is_dir] || !is_dir)
+      NSString *dir_file = [dir stringByAppendingPathComponent:file];
+      if (![self fileExistsAtPath:dir_file isDirectory:&is_dir] || !is_dir)
 	continue;
 
       block(file);
@@ -445,30 +477,25 @@ convert_hexdigit(int c)
 {
   @autoreleasepool
     {
-      NSFileManager *fm = [NSFileManager defaultManager];
-
-      NSString *dir_path = [_path stringByAppendingPathComponent:dir];
-
       /* Build table of file-name-minus-extension -> [extensions...] */
 
       NSMutableDictionary *groups = [NSMutableDictionary dictionary];
 
-      for (NSString *file in [fm contentsOfDirectoryAtPath:dir_path error:nil])
+      for (NSString *file in [self contentsOfDirectory:dir])
 	{
 	  if ([file characterAtIndex:0] == '.')
 	    continue;
 
-	  NSString *path = [dir_path stringByAppendingPathComponent:file];
+	  NSString *dir_file = [dir stringByAppendingPathComponent:file];
 	  BOOL is_dir = NO;
-	  if (![fm fileExistsAtPath:path isDirectory:&is_dir])
+	  if (![self fileExistsAtPath:dir_file isDirectory:&is_dir])
 	    continue;
 	  if (is_dir)
 	    {
 	      if (flag)
 		{
-		  [self loadImagesInSubdirectory:
-		   [dir stringByAppendingPathComponent:file]
-		   recursively:YES handler:block];
+		  [self loadImagesInSubdirectory:dir_file recursively:YES
+		   handler:block];
 		}
 	      continue;
 	    }
@@ -661,6 +688,49 @@ static NSOperationQueue *_copyQueue;
   return ret;
 }
 
+- (BOOL)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir
+    error:(NSError **)err
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+
+  NSString *old_path = [_path stringByAppendingPathComponent:old_dir];
+  NSString *new_path = [_path stringByAppendingPathComponent:new_dir];
+
+  BOOL is_dir = NO;
+  if (![fm fileExistsAtPath:old_path isDirectory:&is_dir] || !is_dir)
+    {
+      if (err != NULL)
+	{
+	  NSString *str = [NSString stringWithFormat:
+			   @"Can't rename directory %@ to %@, the source"
+			   " directory doesn't exist.", old_dir, new_dir];
+	  *err = [NSError errorWithDomain:ERROR_DOMAIN code:1
+		  userInfo:@{NSLocalizedDescriptionKey: str}];
+	}
+      return NO;
+    }
+
+  if ([fm fileExistsAtPath:new_path])
+    {
+      if (err != NULL)
+	{
+	  NSString *str = [NSString stringWithFormat:
+			   @"Can't rename directory %@ to %@, the destination"
+			   " name is already in use.", old_dir, new_dir];
+	  *err = [NSError errorWithDomain:ERROR_DOMAIN code:1
+		  userInfo:@{NSLocalizedDescriptionKey: str}];
+	}
+      return NO;
+    }
+
+  if (![fm moveItemAtPath:old_path toPath:new_path error:err])
+    return NO;
+
+  [self didRenameDirectory:old_dir to:new_dir];
+
+  return YES; 
+}
+
 static NSString *
 find_unique_path(NSFileManager *fm, NSString *path)
 {
@@ -711,49 +781,6 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
     }
 
   return YES;
-}
-
-- (BOOL)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir
-    error:(NSError **)err
-{
-  NSFileManager *fm = [NSFileManager defaultManager];
-
-  NSString *old_path = [_path stringByAppendingPathComponent:old_dir];
-  NSString *new_path = [_path stringByAppendingPathComponent:new_dir];
-
-  BOOL is_dir = NO;
-  if (![fm fileExistsAtPath:old_path isDirectory:&is_dir] || !is_dir)
-    {
-      if (err != NULL)
-	{
-	  NSString *str = [NSString stringWithFormat:
-			   @"Can't rename directory %@ to %@, the source"
-			   " directory doesn't exist.", old_dir, new_dir];
-	  *err = [NSError errorWithDomain:ERROR_DOMAIN code:1
-		  userInfo:@{NSLocalizedDescriptionKey: str}];
-	}
-      return NO;
-    }
-
-  if ([fm fileExistsAtPath:new_path])
-    {
-      if (err != NULL)
-	{
-	  NSString *str = [NSString stringWithFormat:
-			   @"Can't rename directory %@ to %@, the destination"
-			   " name is already in use.", old_dir, new_dir];
-	  *err = [NSError errorWithDomain:ERROR_DOMAIN code:1
-		  userInfo:@{NSLocalizedDescriptionKey: str}];
-	}
-      return NO;
-    }
-
-  if (![fm moveItemAtPath:old_path toPath:new_path error:err])
-    return NO;
-
-  [self didRenameDirectory:old_dir to:new_dir];
-
-  return YES; 
 }
 
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir

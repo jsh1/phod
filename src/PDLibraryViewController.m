@@ -186,7 +186,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 {
   for (PDLibraryDevice *item in [_devicesGroup subitems])
     {
-      [[item library] remove];
+      [[item library] invalidate];
     }
 }
 
@@ -514,7 +514,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     {
       for (PDLibraryDevice *item in items)
 	{
-	  [[item library] remove];
+	  PDImageLibrary *lib = [item library];
+	  [lib emptyCaches];
+	  [lib invalidate];
 	  [_devicesGroup removeSubitem:item];
 	}
     }
@@ -573,7 +575,8 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     {
       if ([item library] == lib)
 	{
-	  [lib remove];
+	  [lib emptyCaches];
+	  [lib invalidate];
 	  [_devicesGroup removeSubitem:item];
 	  changed = YES;
 	  break;
@@ -746,7 +749,8 @@ library_group_description(PDLibraryGroup *item)
 	  if (idx != NSNotFound)
 	    {
 	      PDImageLibrary *lib = [(PDLibraryFolder *)item library];
-	      [lib remove];
+	      [lib emptyCaches];
+	      [lib invalidate];
 	      [_foldersGroup removeSubitem:[subitems objectAtIndex:idx]];
 	      changed = YES;
 	    }
