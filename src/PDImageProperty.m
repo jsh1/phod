@@ -362,6 +362,7 @@ typedef enum
   type_sharpness,
   type_string,
   type_string_array,
+  type_string_dict,
   type_unix_date,
   type_white_balance,
 } property_type;
@@ -394,7 +395,7 @@ static const type_pair type_map[] =
   {"f_number", type_fstop},
   {"file_date", type_unix_date},
   {"file_size", type_bytes},
-  {"file_types", type_string_array},
+  {"file_types", type_string_dict},
   {"flagged", type_bool},
   {"flash", type_flash_mode},
   {"flash_compensation", type_flash_compensation},
@@ -686,6 +687,10 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
     case type_string:
       return value;
 
+    case type_string_dict:
+      value = [(NSDictionary *)value allKeys];
+      /* fall through. */
+
     case type_string_array:
       return [(NSArray *)value componentsJoinedByString:@" "];
 
@@ -754,6 +759,10 @@ PDImageExpressionValues(PDImage *im)
 
     case type_string:
       return value != nil ? value : @"";
+
+    case type_string_dict:
+      value = [(NSDictionary *)value allKeys];
+      /* fall through. */
 
     case type_string_array:
       return value != nil ? value : [NSArray array];

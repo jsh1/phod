@@ -218,7 +218,7 @@ typedef int PDImageCompareKey;
 extern NSString * const PDImage_Name;		// NSString
 extern NSString * const PDImage_UUID;		// NSString
 extern NSString * const PDImage_ActiveType;	// NSString
-extern NSString * const PDImage_FileTypes;	// NSArray<NSString>
+extern NSString * const PDImage_FileTypes;	// NSDictionary (image-type -> image-file)
 extern NSString * const PDImage_PixelWidth;	// NSNumber
 extern NSString * const PDImage_PixelHeight;	// NSNumber
 extern NSString * const PDImage_Orientation;	// NSNumber

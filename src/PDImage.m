@@ -37,6 +37,9 @@
 
 #define METADATA_EXTENSION "phod"
 
+#define JPEG_UTI "public.jpeg"
+#define RAW_UTI "public.camera-raw-image"
+
 /* JPEG compression quality of 50% seems to be the lowest setting that
    doesn't introduce banding in smooth gradients. */
 
@@ -128,7 +131,7 @@ write_image_to_path(CGImageRef im, NSString *path, double quality)
   NSURL *url = [[NSURL alloc] initFileURLWithPath:path];
 
   CGImageDestinationRef dest = CGImageDestinationCreateWithURL((CFURLRef)url,
-						CFSTR("public.jpeg"), 1, NULL);
+						CFSTR(JPEG_UTI), 1, NULL);
 
   [url release];
 
@@ -246,42 +249,6 @@ cache_path_for_type(PDImageLibrary *lib, uint32_t file_id, NSInteger type)
     name = @"m.jpg";
 
   return [lib cachePathForFileId:file_id base:name];
-}
-
-static NSString *
-type_identifier_for_extension(NSString *ext)
-{
-  static NSDictionary *dict;
-  static dispatch_once_t once;
-
-  dispatch_once(&once, ^{
-    NSMutableDictionary *tem = [[NSMutableDictionary alloc] init];
-    CFArrayRef types = CGImageSourceCopyTypeIdentifiers();
-
-    for (NSString *type in (id)types)
-      {
-	/* FIXME: remove this private API usage. Static table? */
-
-	extern CFArrayRef CGImageSourceCopyTypeExtensions(CFStringRef);
-
-	CFArrayRef exts = CGImageSourceCopyTypeExtensions((CFStringRef)type);
-
-	if (exts != NULL)
-	  {
-	    for (NSString *ext in (id)exts)
-	      [tem setObject:type forKey:ext];
-
-	    CFRelease(exts);
-	  }
-      }
-
-    CFRelease(types);
-
-    dict = [tem copy];
-    [tem release];
-  });
-
-  return [dict objectForKey:[ext lowercaseString]];
 }
 
 @implementation PDImage
@@ -413,8 +380,22 @@ metadata_file(NSString *image_file)
 	      if (uuid_str != nil)
 		_uuid = [[NSUUID alloc] initWithUUIDString:uuid_str];
 
-	      _jpegFile = [[dict objectForKey:@"JPEGFile"] copy];
-	      _rawFile = [[dict objectForKey:@"RAWFile"] copy];
+	      NSDictionary *file_types
+	        = [_properties objectForKey:PDImage_FileTypes];
+
+	      for (NSString *type in file_types)
+		{
+		  if (UTTypeConformsTo((CFStringRef)type, CFSTR(JPEG_UTI)))
+		    {
+		      _jpegType = type;
+		      _jpegFile = [file_types objectForKey:type];
+		    }
+		  else if (UTTypeConformsTo((CFStringRef)type, CFSTR(RAW_UTI)))
+		    {
+		      _rawType = type;
+		      _rawFile = [file_types objectForKey:type];
+		    }
+		}
 
 	      _deleted = [[_properties objectForKey:PDImage_Deleted] boolValue];
 	      _hidden = [[_properties objectForKey:PDImage_Hidden] boolValue];
@@ -426,14 +407,25 @@ metadata_file(NSString *image_file)
     }
 
   if (_jpegFile == nil)
-    _jpegFile = [jpeg_file copy];
-  if (_rawFile == nil)
-    _rawFile = [raw_file copy];
+    {
+      _jpegFile = [jpeg_file copy];
+      if (_jpegFile != nil)
+	_jpegType = [@JPEG_UTI copy];
+    }
 
-  if (_jpegFile != nil)
-    _jpegType = [@"public.jpeg" copy];
-  if (_rawFile != nil)
-    _rawType = [type_identifier_for_extension([_rawFile pathExtension]) copy];
+  if (_rawFile == nil)
+    {
+      _rawFile = [raw_file copy];
+      if (_rawFile != nil)
+	{
+	  NSString *ext = [_rawFile pathExtension];
+	  _rawType = (id)UTTypeCreatePreferredIdentifierForTag(
+			kUTTagClassFilenameExtension, (CFStringRef)ext,
+			CFSTR(RAW_UTI));
+	  if (_rawType == nil)
+	    [_rawFile release], _rawFile = nil;
+	}
+    }
 
   if (_jpegType == nil && _rawType == nil)
     {
@@ -449,14 +441,15 @@ metadata_file(NSString *image_file)
 
   if ([_properties objectForKey:PDImage_FileTypes] == nil)
     {
-      id objects[2];
+      id keys[2], objects[2];
       size_t count = 0;
       if (_jpegType != nil)
-	objects[count++] = _jpegType;
+	keys[count] = _jpegType, objects[count++] = _jpegFile;
       if (_rawType != nil)
-	objects[count++] = _rawType;
+	keys[count] = _rawType, objects[count++] = _rawFile;
 
-      [_properties setObject:[NSArray arrayWithObjects:objects count:count]
+      [_properties setObject:
+       [NSDictionary dictionaryWithObjects:objects forKeys:keys count:count]
        forKey:PDImage_FileTypes];
     }
 
@@ -530,11 +523,6 @@ metadata_file(NSString *image_file)
 		_uuid = [[NSUUID alloc] init];
 		[_properties setObject:[_uuid UUIDString] forKey:PDImage_UUID];
 	      }
-
-	    if (_jpegFile != nil)
-	      [dict setObject:_jpegFile forKey:@"JPEGFile"];
-	    if (_rawFile != nil)
-	      [dict setObject:_rawFile forKey:@"RAWFile"];
 
 	    [dict setObject:[NSDictionary dictionaryWithDictionary:_properties]
 	     forKey:@"Properties"];
@@ -1194,7 +1182,7 @@ metadata_file(NSString *image_file)
       _jsonFile = nil;
     }
 
-  [_properties setObject:@[] forKey:PDImage_FileTypes];
+  [_properties setObject:@{} forKey:PDImage_FileTypes];
   [_properties removeObjectForKey:PDImage_ActiveType];
 
   _invalidated = YES;
@@ -1232,11 +1220,6 @@ find_unique_path(NSString *path)
    RAWPath:(NSString *)raw_path UUID:(NSUUID *)uuid error:(NSError **)err
 {
   NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-
-  if (jpeg_path != nil)
-    [dict setObject:[jpeg_path lastPathComponent] forKey:@"JPEGFile"];
-  if (raw_path != nil)
-    [dict setObject:[raw_path lastPathComponent] forKey:@"RAWFile"];
 
   NSMutableDictionary *props
     = [NSMutableDictionary dictionaryWithDictionary:_properties];
@@ -1808,7 +1791,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 {
   /* Only provide image data when asked for it, it's usually large. */
 
-  if ([[self imagePropertyForKey:PDImage_FileTypes] containsObject:type])
+  if ([[self imagePropertyForKey:PDImage_FileTypes] objectForKey:type] != nil)
     return NSPasteboardWritingPromised;
   else
     return 0;
@@ -1822,9 +1805,9 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 	      pasteboardPropertyListForType:type];
     }
 
-  if ([[self imagePropertyForKey:PDImage_FileTypes] containsObject:type])
+  if ([[self imagePropertyForKey:PDImage_FileTypes] objectForKey:type] != nil)
     {
-      if ([type isEqualToString:@"public.jpeg"])
+      if ([type isEqualToString:@JPEG_UTI])
 	return [NSData dataWithContentsOfFile:[self JPEGPath]];
       else
 	return [NSData dataWithContentsOfFile:[self RAWPath]];
