@@ -1110,7 +1110,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
       if (![_library removeItemAtPath:rel_path error:&err])
 	return err;
 
-      [_library didRemoveFileWithRelativePath:rel_path];
+      [_library didRemoveFileWithPath:rel_path];
     }
 
   if (_jsonFile != nil)

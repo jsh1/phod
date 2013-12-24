@@ -24,14 +24,14 @@
 
 #import <Foundation/Foundation.h>
 
-@class PDFileCatalog, PDImage, NSImage;
+@class PDFileCatalog, PDFileManager, PDImage, NSImage;
 
 extern NSString *const PDImageLibraryDirectoryDidChange;
 
 @interface PDImageLibrary : NSObject
 {
   NSString *_name;
-  NSString *_path;
+  PDFileManager *_manager;
   NSString *_cachePath;
   uint32_t _libraryId;
   PDFileCatalog *_catalog;
@@ -95,7 +95,30 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 
 - (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName;
 - (void)didRenameFile:(NSString *)oldName to:(NSString *)newName;
-- (void)didRemoveFileWithRelativePath:(NSString *)rel_path;
+- (void)didRemoveFileWithPath:(NSString *)rel_path;
+
+@end
+
+/** High-level image operations. These will present any errors direct
+    to the UI, and make any updates required (the -didFoo methods). */
+
+@interface PDImageLibrary (ImageOperations)
+
+- (void)loadImagesInSubdirectory:(NSString *)dir
+    recursively:(BOOL)flag handler:(void (^)(PDImage *))block;
+
+- (void)copyImages:(NSArray *)images toDirectory:(NSString *)dir;
+- (void)moveImages:(NSArray *)images toDirectory:(NSString *)dir;
+- (void)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir;
+
+- (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
+    fileTypes:(NSSet *)types preferredType:(NSString *)type
+    filenameMap:(NSString *(^)(PDImage *src, NSString *name))f
+    properties:(NSDictionary *)dict deleteSourceImages:(BOOL)flag;
+
+@end
+
+@interface PDImageLibrary (FileOperations)
 
 /** Low-level file access. All paths are relative to the root of the
     library. **/
@@ -122,24 +145,5 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 
 - (void)foreachSubdirectoryOfDirectory:(NSString *)dir
     handler:(void (^)(NSString *dir_name))block;
-
-@end
-
-/** High-level image operations. These will present any errors direct
-    to the UI, and make any updates required (the -didFoo methods). */
-
-@interface PDImageLibrary (ImageOperations)
-
-- (void)loadImagesInSubdirectory:(NSString *)dir
-    recursively:(BOOL)flag handler:(void (^)(PDImage *))block;
-
-- (void)copyImages:(NSArray *)images toDirectory:(NSString *)dir;
-- (void)moveImages:(NSArray *)images toDirectory:(NSString *)dir;
-- (void)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir;
-
-- (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
-    fileTypes:(NSSet *)types preferredType:(NSString *)type
-    filenameMap:(NSString *(^)(PDImage *src, NSString *name))f
-    properties:(NSDictionary *)dict deleteSourceImages:(BOOL)flag;
 
 @end

@@ -26,6 +26,7 @@
 
 #import "PDAppDelegate.h"
 #import "PDFileCatalog.h"
+#import "PDFileManager.h"
 #import "PDImage.h"
 
 #import <AppKit/AppKit.h>
@@ -158,8 +159,14 @@ catalog_path(PDImageLibrary *self)
 
   if (flag)
     return nil;
-  else
-    return [[[self alloc] initWithDictionary:@{@"path": path}] autorelease];
+
+  PDFileManager *manager = [PDFileManager fileManagerWithPath:path];
+  if (manager == nil)
+    return nil;
+
+  NSDictionary *dict = @{@"fileManager": manager};
+
+  return [[[self alloc] initWithDictionary:dict] autorelease];
 }
 
 + (PDImageLibrary *)libraryWithPropertyListRepresentation:(id)obj
@@ -167,16 +174,16 @@ catalog_path(PDImageLibrary *self)
   if (![obj isKindOfClass:[NSDictionary class]])
     return nil;
 
-  NSString *path = [[obj objectForKey:@"path"] stringByExpandingTildeInPath];
-  if (path == nil)
-    return nil;
-
-  if (_allLibraries != nil)
+  id manager = [obj objectForKey:@"fileManager"];
+  if (manager != nil)
     {
-      for (PDImageLibrary *lib in _allLibraries)
+      if (_allLibraries != nil)
 	{
-	  if ([lib pathEqualToPath:path])
-	    return lib;
+	  for (PDImageLibrary *lib in _allLibraries)
+	    {
+	      if ([lib->_manager isEqualToPropertyListRepresentation:manager])
+		return lib;
+	    }
 	}
     }
 
@@ -189,12 +196,23 @@ catalog_path(PDImageLibrary *self)
   if (self == nil)
     return nil;
 
-  _path = [[[[dict objectForKey:@"path"] stringByExpandingTildeInPath]
-	    stringByStandardizingPath] copy];
+  id manager = [dict objectForKey:@"fileManager"];
+  if (![manager isKindOfClass:[PDFileManager class]])
+    {
+      manager = [PDFileManager
+		 fileManagerWithPropertyListRepresentation:manager];
+      if (![manager isKindOfClass:[PDFileManager class]])
+	{
+	  [self release];
+	  return nil;
+	}
+    }
+
+  _manager = [manager retain];
 
   _name = [[dict objectForKey:@"name"] copy];
   if (_name == nil)
-    _name = [[_path lastPathComponent] copy];
+    _name = [[_manager name] copy];
 
   _libraryId = [[dict objectForKey:@"libraryId"] unsignedIntValue];
 
@@ -236,8 +254,12 @@ catalog_path(PDImageLibrary *self)
 
 - (id)propertyListRepresentation
 {
+  id manager = [_manager propertyListRepresentation];
+  if (manager == nil)
+    return nil;
+
   return @{
-    @"path": [_path stringByAbbreviatingWithTildeInPath],
+    @"fileManager": manager,
     @"name": _name,
     @"libraryId": @(_libraryId),
   };
@@ -245,7 +267,7 @@ catalog_path(PDImageLibrary *self)
 
 - (BOOL)pathEqualToPath:(NSString *)path
 {
-  return [_path isEqualToString:[path stringByStandardizingPath]];
+  return [_manager isEqualToPath:path];
 }
 
 - (void)invalidate
@@ -255,6 +277,17 @@ catalog_path(PDImageLibrary *self)
   [_catalog invalidate];
   [_catalog release];
   _catalog = nil;
+
+  [_ioQueue removeObserver:self forKeyPath:@"operationCount"];
+  [_ioQueue waitUntilAllOperationsAreFinished];
+  [_ioQueue release];
+  _ioQueue = nil;
+
+  [_manager invalidate];
+  [_manager release];
+  _manager = nil;
+
+  [(PDAppDelegate *)[NSApp delegate] removeBackgroundActivity:self];
 
   NSInteger idx = [_allLibraries indexOfObjectIdenticalTo:self];
   if (idx != NSNotFound)
@@ -266,31 +299,18 @@ catalog_path(PDImageLibrary *self)
   [self invalidate];
 
   [_name release];
-  [_path release];
+  [_manager release];
   [_cachePath release];
   [_catalog release];
-
-  [_ioQueue removeObserver:self forKeyPath:@"operationCount"];
-  [_ioQueue waitUntilAllOperationsAreFinished];
   [_ioQueue release];
-
   [_activeImports release];
-
-  [(PDAppDelegate *)[NSApp delegate] removeBackgroundActivity:self];
 
   [super dealloc];
 }
 
 - (NSImage *)iconImage
 {
-  return [[NSWorkspace sharedWorkspace] iconForFile:_path];
-}
-
-- (void)unmount
-{
-  [self waitForImportsToComplete];
-
-  [[NSWorkspace sharedWorkspace] unmountAndEjectDeviceAtPath:_path];
+  return [_manager iconImage];
 }
 
 - (NSString *)cachePath
@@ -321,9 +341,9 @@ catalog_path(PDImageLibrary *self)
   return [[self cachePath] stringByAppendingPathComponent:base];
 }
 
-- (uint32_t)uniqueIdOfFile:(NSString *)rel_path
+- (uint32_t)uniqueIdOfFile:(NSString *)path
 {
-  return [_catalog fileIdForPath:rel_path];
+  return [_catalog fileIdForPath:path];
 }
 
 - (void)synchronize
@@ -422,6 +442,18 @@ convert_hexdigit(int c)
     }
 }
 
+- (void)unmount
+{
+  [self waitForImportsToComplete];
+
+  [_manager unmount];
+}
+
+- (NSURL *)fileURLWithPath:(NSString *)path
+{
+  return [_manager fileURLWithPath:path];
+}
+
 - (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName
 {
   [_catalog renameDirectory:oldName to:newName];
@@ -432,137 +464,9 @@ convert_hexdigit(int c)
   [_catalog renameFile:oldName to:newName];
 }
 
-- (void)didRemoveFileWithRelativePath:(NSString *)rel_path
+- (void)didRemoveFileWithPath:(NSString *)path
 {
-  [_catalog removeFileWithPath:rel_path];
-}
-
-- (NSURL *)fileURLWithPath:(NSString *)rel_path
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-  return [NSURL fileURLWithPath:path];
-}
-
-- (NSData *)contentsOfFileAtPath:(NSString *)rel_path
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-
-  return [NSData dataWithContentsOfFile:path];
-}
-
-- (CGImageSourceRef)copyImageSourceAtPath:(NSString *)rel_path
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-  NSURL *url = [NSURL fileURLWithPath:path];
-
-  return CGImageSourceCreateWithURL((CFURLRef)url, NULL);
-}
-
-- (BOOL)writeData:(NSData *)data toFile:(NSString *)rel_path
-    options:(NSDataWritingOptions)options error:(NSError **)err
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-
-  return [data writeToFile:path options:options error:err];
-}
-
-- (NSArray *)contentsOfDirectoryAtPath:(NSString *)rel_path
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-
-  return [[NSFileManager defaultManager]
-	  contentsOfDirectoryAtPath:path error:nil];
-}
-
-- (BOOL)createDirectoryAtPath:(NSString *)rel_path
-    withIntermediateDirectories:(BOOL)flag attributes:(NSDictionary *)dict
-    error:(NSError **)err
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-
-  return [[NSFileManager defaultManager] createDirectoryAtPath:path
-	  withIntermediateDirectories:flag attributes:dict error:err];
-}
-
-- (BOOL)fileExistsAtPath:(NSString *)rel_path
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-
-  return [[NSFileManager defaultManager] fileExistsAtPath:path];
-}
-
-- (BOOL)fileExistsAtPath:(NSString *)rel_path isDirectory:(BOOL *)dirp
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-
-  return [[NSFileManager defaultManager]
-	  fileExistsAtPath:path isDirectory:dirp];
-}
-
-- (time_t)mtimeOfFileAtPath:(NSString *)rel_path
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-  struct stat st;
-
-  if (stat([path fileSystemRepresentation], &st) == 0)
-    return st.st_mtime;
-  else
-    return 0;
-}
-
-- (size_t)sizeOfFileAtPath:(NSString *)rel_path
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-  struct stat st;
-
-  if (stat([path fileSystemRepresentation], &st) == 0)
-    return st.st_size;
-  else
-    return 0;
-}
-
-- (BOOL)copyItemAtPath:(NSString *)src_rel toPath:(NSString *)dst_rel
-    error:(NSError **)err
-{
-  NSString *src_path = [_path stringByAppendingPathComponent:src_rel];
-  NSString *dst_path = [_path stringByAppendingPathComponent:dst_rel];
-
-  return [[NSFileManager defaultManager]
-	  copyItemAtPath:src_path toPath:dst_path error:err];
-}
-
-- (BOOL)moveItemAtPath:(NSString *)src_rel toPath:(NSString *)dst_rel
-    error:(NSError **)err
-{
-  NSString *src_path = [_path stringByAppendingPathComponent:src_rel];
-  NSString *dst_path = [_path stringByAppendingPathComponent:dst_rel];
-
-  return [[NSFileManager defaultManager]
-	  moveItemAtPath:src_path toPath:dst_path error:err];
-}
-
-- (BOOL)removeItemAtPath:(NSString *)rel_path error:(NSError **)err
-{
-  NSString *path = [_path stringByAppendingPathComponent:rel_path];
-
-  return [[NSFileManager defaultManager] removeItemAtPath:path error:err];
-}
-
-- (void)foreachSubdirectoryOfDirectory:(NSString *)dir
-    handler:(void (^)(NSString *dir_name))block
-{
-  for (NSString *file in [self contentsOfDirectoryAtPath:dir])
-    {
-      if ([file characterAtIndex:0] == '.')
-	continue;
-
-      BOOL is_dir = NO;
-      NSString *dir_file = [dir stringByAppendingPathComponent:file];
-      if (![self fileExistsAtPath:dir_file isDirectory:&is_dir] || !is_dir)
-	continue;
-
-      block(file);
-    }
+  [_catalog removeFileWithPath:path];
 }
 
 - (NSOperationQueue *)IOQueue
@@ -672,32 +576,31 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
   if ([self fileExistsAtPath:tmp_path])
     tmp_path = find_unique_path(self, tmp_path);
 
+  NSURL *tmp_url = [self fileURLWithPath:tmp_path];
   NSURL *src_url = [src_lib fileURLWithPath:src_path];
 
-  if (src_url != nil)
+  if (tmp_url != nil && src_url != nil)
     {
-      /* Source file system is accessible. Copy directly from source
+      /* Direct file system access is possible. Copy directly from source
 	 to dest. */
 
-      NSFileManager *fm = [NSFileManager defaultManager];
+      if (![[NSFileManager defaultManager]
+	    copyItemAtURL:src_url toURL:tmp_url error:err])
+	{
+	  return NO;
+	}
 
-      NSString *tmp_abs
-        = [self->_path stringByAppendingPathComponent:tmp_path];
-
-      if (![fm copyItemAtPath:[src_url path] toPath:tmp_abs error:err])
-	return NO;
-
-      /* Bump the mtime of the written files, -copyItemAtPath: doesn't,
+      /* Bump the mtime of the written file, -copyItemAtURL: doesn't,
 	 and we need to invalidate anything in the proxy cache that may
 	 have the same name. */
 
       time_t now = time(NULL);
       struct utimbuf times = {.actime = now, .modtime = now};
-      utime([tmp_abs fileSystemRepresentation], &times);
+      utime([[tmp_url path] fileSystemRepresentation], &times);
     }
   else
     {
-      /* Can't copy between libraries. Read to data and write. */
+      /* Can't copy between libraries. Read to data object and write. */
 
       @autoreleasepool
 	{
@@ -934,7 +837,7 @@ error:
 
   BOOL new_dir = NO;
 
-  /* FIXME: check that dir_path is under _path? */
+  /* FIXME: check that dir_path is under our root-directory? */
 
   BOOL is_dir = NO;
   if (![self fileExistsAtPath:dir isDirectory:&is_dir])
@@ -1213,6 +1116,94 @@ error:
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDImageLibraryDirectoryDidChange
        object:self userInfo:notification_info];
+    }
+}
+
+@end
+
+
+@implementation PDImageLibrary (FileOperations)
+
+- (BOOL)fileExistsAtPath:(NSString *)path
+{
+  return [_manager fileExistsAtPath:path];
+}
+
+- (BOOL)fileExistsAtPath:(NSString *)path isDirectory:(BOOL *)dirp
+{
+  return [_manager fileExistsAtPath:path isDirectory:dirp];
+}
+
+- (time_t)mtimeOfFileAtPath:(NSString *)path
+{
+  return [_manager mtimeOfFileAtPath:path];
+}
+
+- (size_t)sizeOfFileAtPath:(NSString *)path
+{
+  return [_manager sizeOfFileAtPath:path];
+}
+
+- (NSData *)contentsOfFileAtPath:(NSString *)path
+{
+  return [_manager contentsOfFileAtPath:path];
+}
+
+- (NSArray *)contentsOfDirectoryAtPath:(NSString *)path
+{
+  return [_manager contentsOfDirectoryAtPath:path];
+}
+
+- (CGImageSourceRef)copyImageSourceAtPath:(NSString *)path
+{
+  return [_manager copyImageSourceAtPath:path];
+}
+
+- (BOOL)writeData:(NSData *)data toFile:(NSString *)path
+    options:(NSDataWritingOptions)options error:(NSError **)err
+{
+  return [_manager writeData:data toFile:path options:options error:err];
+}
+
+- (BOOL)createDirectoryAtPath:(NSString *)path
+    withIntermediateDirectories:(BOOL)flag attributes:(NSDictionary *)dict
+    error:(NSError **)err
+{
+  return [_manager createDirectoryAtPath:path
+	  withIntermediateDirectories:flag attributes:dict error:err];
+}
+
+- (BOOL)copyItemAtPath:(NSString *)src toPath:(NSString *)dst
+    error:(NSError **)err
+{
+  return [_manager copyItemAtPath:src toPath:dst error:err];
+}
+
+- (BOOL)moveItemAtPath:(NSString *)src toPath:(NSString *)dst
+    error:(NSError **)err
+{
+  return [_manager moveItemAtPath:src toPath:dst error:err];
+}
+
+- (BOOL)removeItemAtPath:(NSString *)path error:(NSError **)err
+{
+  return [_manager removeItemAtPath:path error:err];
+}
+
+- (void)foreachSubdirectoryOfDirectory:(NSString *)dir
+    handler:(void (^)(NSString *dir_name))block
+{
+  for (NSString *file in [self contentsOfDirectoryAtPath:dir])
+    {
+      if ([file characterAtIndex:0] == '.')
+	continue;
+
+      BOOL is_dir = NO;
+      NSString *dir_file = [dir stringByAppendingPathComponent:file];
+      if (![self fileExistsAtPath:dir_file isDirectory:&is_dir] || !is_dir)
+	continue;
+
+      block(file);
     }
 }
 
