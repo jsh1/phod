@@ -285,9 +285,9 @@ static NSOperationQueue *_narrowQueue;
 			   + [_narrowQueue operationCount]);
 	PDAppDelegate *delegate = [NSApp delegate];
 	if (count != 0)
-	  [delegate addBackgroundActivity:@"PDImage"];
+	  [delegate addBackgroundActivity:self];
 	else
-	  [delegate removeBackgroundActivity:@"PDImage"];
+	  [delegate removeBackgroundActivity:self];
       });
     }
 }
@@ -503,7 +503,8 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 	    NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
 	      NSData *data = [NSJSONSerialization dataWithJSONObject:dict
 			      options:0 error:nil];
-	      [_library writeData:data toFile:rel_path error:nil];
+	      [_library writeData:data toFile:rel_path
+	       options:NSDataWritingAtomic error:nil];
 	    }];
 
 	    [[PDImage writeQueue] addOperation:op];
@@ -1070,7 +1071,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
   if (_implicitProperties == nil)
     {
-      CGImageSourceRef src = [_library copyImageSourceWithFile:image_rel_path];
+      CGImageSourceRef src = [_library copyImageSourceAtPath:image_rel_path];
 
       if (src != NULL)
 	{
@@ -1169,7 +1170,8 @@ find_unique_path(PDImageLibrary *lib, NSString *path)
   NSData *data = [NSJSONSerialization dataWithJSONObject:dict
 		  options:0 error:nil];
 
-  return [_library writeData:data toFile:path error:err];
+  return [_library writeData:data toFile:path
+	  options:NSDataWritingAtomic error:err];
 }
 
 - (BOOL)moveToDirectory:(NSString *)dir error:(NSError **)err
@@ -1395,7 +1397,7 @@ find_unique_path(PDImageLibrary *lib, NSString *path)
 
       _prefetchOp = [NSBlockOperation blockOperationWithBlock:^
 	{
-	  CGImageSourceRef src = [lib copyImageSourceWithFile:image_rel_path];
+	  CGImageSourceRef src = [lib copyImageSourceAtPath:image_rel_path];
 	  if (src == NULL)
 	    return;
 
@@ -1537,7 +1539,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
     {
       NSOperation *thumb_op = [NSBlockOperation blockOperationWithBlock:^
 	{
-	  CGImageSourceRef src = [lib copyImageSourceWithFile:image_rel_path];
+	  CGImageSourceRef src = [lib copyImageSourceAtPath:image_rel_path];
 	  if (src != NULL)
 	    {
 	      CGImageRef im = create_cropped_thumbnail_image(src);
@@ -1636,7 +1638,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 	{
 	  CGImageSourceRef src;
 	  if (max_size > type_size || !cache_is_valid)
-	    src = [lib copyImageSourceWithFile:image_rel_path];
+	    src = [lib copyImageSourceAtPath:image_rel_path];
 	  else
 	    src = create_image_source_from_path(type_path);
 	  if (src != NULL)

@@ -182,12 +182,21 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   return self;
 }
 
+static void
+invalidate_library(PDImageLibrary *lib)
+{
+  if ([lib isTransient])
+    [lib emptyCaches];
+
+  [lib invalidate];
+}
+
 - (void)invalidate
 {
   for (PDLibraryFolder *item in [_foldersGroup subitems])
-    [[item library] invalidate];
+    invalidate_library([item library]);
   for (PDLibraryDevice *item in [_devicesGroup subitems])
-    [[item library] invalidate];
+    invalidate_library([item library]);
 }
 
 - (void)dealloc
@@ -223,7 +232,9 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
   for (id obj in [[NSUserDefaults standardUserDefaults]
 		  arrayForKey:@"PDImageLibraries"])
     {
-      PDImageLibrary *lib = [PDImageLibrary libraryWithPropertyList:obj];
+      PDImageLibrary *lib
+        = [PDImageLibrary libraryWithPropertyListRepresentation:obj];
+
       if (lib != nil)
 	[self addImageLibraryItem:lib];
     }
@@ -514,9 +525,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     {
       for (PDLibraryDevice *item in items)
 	{
-	  PDImageLibrary *lib = [item library];
-	  [lib emptyCaches];
-	  [lib invalidate];
+	  invalidate_library([item library]);
 	  [_devicesGroup removeSubitem:item];
 	}
     }
@@ -575,8 +584,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
     {
       if ([item library] == lib)
 	{
-	  [lib emptyCaches];
-	  [lib invalidate];
+	  invalidate_library(lib);
 	  [_devicesGroup removeSubitem:item];
 	  changed = YES;
 	  break;
@@ -613,7 +621,7 @@ NSString *const PDLibraryItemType = @"org.unfactored.PDLibraryItem";
 
   for (PDLibraryFolder *item in [_foldersGroup subitems])
     {
-      id obj = [[item library] propertyList];
+      id obj = [[item library] propertyListRepresentation];
       if (obj != nil)
 	[array addObject:obj];
     }
@@ -748,9 +756,7 @@ library_group_description(PDLibraryGroup *item)
 	  NSInteger idx = [subitems indexOfObjectIdenticalTo:item];
 	  if (idx != NSNotFound)
 	    {
-	      PDImageLibrary *lib = [(PDLibraryFolder *)item library];
-	      [lib emptyCaches];
-	      [lib invalidate];
+	      invalidate_library([(PDLibraryFolder *)item library]);
 	      [_foldersGroup removeSubitem:[subitems objectAtIndex:idx]];
 	      changed = YES;
 	    }

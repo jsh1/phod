@@ -76,9 +76,7 @@
 
 - (void)unmount
 {
-  PDImageLibrary *lib = [self library];
-  [lib waitForImportsToComplete];
-  [lib unmount];
+  [[self library] unmount];
 }
 
 @end

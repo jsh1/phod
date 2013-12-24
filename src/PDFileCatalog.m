@@ -87,6 +87,9 @@
 
 - (void)synchronizeWithContentsOfFile:(NSString *)path
 {
+  if (_queue == NULL)
+    return;
+
   /* _dirty is only set when files are renamed or new ids are added to
      _dict[1]. So we also check if _dict[0] is non-empty, in that case
      the current state is different to what was read from the file
@@ -117,6 +120,9 @@
 
 - (void)renameDirectory:(NSString *)oldName to:(NSString *)newName
 {
+  if (_queue == NULL)
+    return;
+
   /* Calling this method is preferred but optional. If directories are
      renamed without doing so we'd just recreate the caches under the
      new names and purge the old state after relaunching a couple of
@@ -164,6 +170,9 @@
 
 - (void)renameFile:(NSString *)oldName to:(NSString *)newName
 {
+  if (_queue == NULL)
+    return;
+
   dispatch_async(_queue, ^
     {
       for (int pass = 0; pass < 2; pass++)
@@ -182,6 +191,9 @@
 
 - (void)removeFileWithPath:(NSString *)path
 {
+  if (_queue == NULL)
+    return;
+
   dispatch_async(_queue, ^
     {
       for (int pass = 0; pass < 2; pass++)
@@ -200,6 +212,9 @@
 
 - (uint32_t)fileIdForPath:(NSString *)path
 {
+  if (_queue == NULL)
+    return 0;
+
   __block uint32_t fid = 0;
 
   dispatch_sync(_queue, ^
@@ -241,6 +256,9 @@
 
 - (NSIndexSet *)allFileIds
 {
+  if (_queue == NULL)
+    return nil;
+
   __block NSIndexSet *ret = nil;
 
   dispatch_sync(_queue, ^

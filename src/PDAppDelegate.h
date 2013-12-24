@@ -45,8 +45,8 @@ extern NSString *const PDBackgroundActivityDidChange;
 
 @property(nonatomic, readonly) BOOL backgroundActivity;
 
-- (void)addBackgroundActivity:(NSString *)name;
-- (void)removeBackgroundActivity:(NSString *)name;
+- (void)addBackgroundActivity:(id)obj;
+- (void)removeBackgroundActivity:(id)obj;
 
 - (void)popUpImageContextMenuWithEvent:(NSEvent *)e forView:(NSView *)view;
 

@@ -36,6 +36,7 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
   uint32_t _libraryId;
   PDFileCatalog *_catalog;
   BOOL _transient;
+  NSOperationQueue *_ioQueue;
   NSMutableArray *_activeImports;
 }
 
@@ -50,9 +51,9 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 + (PDImageLibrary *)libraryWithPath:(NSString *)path;
 + (PDImageLibrary *)libraryWithPath:(NSString *)path onlyIfExists:(BOOL)flag;
 
-+ (PDImageLibrary *)libraryWithPropertyList:(id)obj;
++ (PDImageLibrary *)libraryWithPropertyListRepresentation:(id)obj;
 
-- (id)propertyList;
+- (id)propertyListRepresentation;
 
 - (void)invalidate;
 
@@ -63,71 +64,31 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 
 @property(nonatomic, getter=isTransient) BOOL transient;
 
-@property(nonatomic, readonly) NSString *cachePath;
+/* The path is interpreted relative to the root of the library. */
 
-/* 'rel_path' is relative to the root of the library. */
+- (uint32_t)uniqueIdOfFile:(NSString *)path;
 
-- (uint32_t)uniqueIdOfFile:(NSString *)rel_path;
+/* Return the path of the cache file for object with 'file_id'. The
+   filename will end with 'str'. */
 
 - (NSString *)cachePathForFileId:(uint32_t)file_id base:(NSString *)str;
 
-/* Synchronize catalog to disk. */
+/* Write catalog to disk (if it has changed). */
 
 - (void)synchronize;
 
-/* Blow away all cached data. */
+/* Delete all cached data. */
 
 - (void)emptyCaches;
-
-/* Wait for any async image imports to complete. */
-
-- (void)waitForImportsToComplete;
 
 /* Unmount if possible. */
 
 - (void)unmount;
 
-/* Low-level file operations, all paths are relative to the root of the
-   library. */
-
-- (NSData *)contentsOfFileAtPath:(NSString *)path;
-- (CGImageSourceRef)copyImageSourceWithFile:(NSString *)path;
-- (BOOL)writeData:(NSData *)data toFile:(NSString *)path
-    error:(NSError **)err;
-- (NSArray *)contentsOfDirectory:(NSString *)path;
-- (BOOL)fileExistsAtPath:(NSString *)path;
-- (BOOL)fileExistsAtPath:(NSString *)path isDirectory:(BOOL *)dirp;
-- (time_t)mtimeOfFileAtPath:(NSString *)path;
-- (size_t)sizeOfFileAtPath:(NSString *)path;
-
-/* More low-level operations. Note these don't automatically invoke the
-   -didFoo methods. */
-
-- (BOOL)copyItemAtPath:(NSString *)srcPath toPath:(NSString *)dstPath
-    error:(NSError **)error;
-- (BOOL)moveItemAtPath:(NSString *)srcPath toPath:(NSString *)dstPath
-    error:(NSError **)error;
-- (BOOL)removeItemAtPath:(NSString *)path error:(NSError **)err;
-
 /* Constructs an absolute URL referencing the named library file. This
    operation may fail, e.g. for non-file libraries. */
 
 - (NSURL *)fileURLWithPath:(NSString *)path;
-
-/* High-level file primitives. */
-
-- (void)foreachSubdirectoryOfDirectory:(NSString *)dir
-    handler:(void (^)(NSString *dir_name))block;
-- (void)loadImagesInSubdirectory:(NSString *)dir
-    recursively:(BOOL)flag handler:(void (^)(PDImage *))block;
-
-/* Even higher-level operations. These will present any errors direct
-   to the UI, and trigger any other updates required (i.e. the ones
-   below). */
-
-- (void)copyImages:(NSArray *)images toDirectory:(NSString *)dir;
-- (void)moveImages:(NSArray *)images toDirectory:(NSString *)dir;
-- (void)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir;
 
 /* Notifications to the library that files under its path have been
    moved externally. */
@@ -135,6 +96,46 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 - (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName;
 - (void)didRenameFile:(NSString *)oldName to:(NSString *)newName;
 - (void)didRemoveFileWithRelativePath:(NSString *)rel_path;
+
+/** Low-level file access. All paths are relative to the root of the
+    library. **/
+
+- (BOOL)fileExistsAtPath:(NSString *)path;
+- (BOOL)fileExistsAtPath:(NSString *)path isDirectory:(BOOL *)dirp;
+- (time_t)mtimeOfFileAtPath:(NSString *)path;
+- (size_t)sizeOfFileAtPath:(NSString *)path;
+
+- (NSData *)contentsOfFileAtPath:(NSString *)path;
+- (NSArray *)contentsOfDirectoryAtPath:(NSString *)path;
+- (CGImageSourceRef)copyImageSourceAtPath:(NSString *)path;
+
+- (BOOL)writeData:(NSData *)data toFile:(NSString *)path
+    options:(NSDataWritingOptions)options error:(NSError **)err;
+- (BOOL)createDirectoryAtPath:(NSString *)path
+    withIntermediateDirectories:(BOOL)flag attributes:(NSDictionary *)dict
+    error:(NSError **)err;
+- (BOOL)copyItemAtPath:(NSString *)srcPath toPath:(NSString *)dstPath
+    error:(NSError **)error;
+- (BOOL)moveItemAtPath:(NSString *)srcPath toPath:(NSString *)dstPath
+    error:(NSError **)error;
+- (BOOL)removeItemAtPath:(NSString *)path error:(NSError **)err;
+
+- (void)foreachSubdirectoryOfDirectory:(NSString *)dir
+    handler:(void (^)(NSString *dir_name))block;
+
+@end
+
+/** High-level image operations. These will present any errors direct
+    to the UI, and make any updates required (the -didFoo methods). */
+
+@interface PDImageLibrary (ImageOperations)
+
+- (void)loadImagesInSubdirectory:(NSString *)dir
+    recursively:(BOOL)flag handler:(void (^)(PDImage *))block;
+
+- (void)copyImages:(NSArray *)images toDirectory:(NSString *)dir;
+- (void)moveImages:(NSArray *)images toDirectory:(NSString *)dir;
+- (void)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir;
 
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
     fileTypes:(NSSet *)types preferredType:(NSString *)type
