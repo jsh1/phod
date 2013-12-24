@@ -28,7 +28,10 @@
 #import "PDFileCatalog.h"
 #import "PDImage.h"
 
+#import <AppKit/AppKit.h>
+
 #import <stdlib.h>
+#import <sys/stat.h>
 #import <utime.h>
 
 #define CATALOG_FILE "catalog.json"
@@ -42,6 +45,7 @@
 NSString *const PDImageLibraryDirectoryDidChange = @"PDImageLibraryDirectoryDidChangeDidChange";
 
 @interface PDImageLibrary ()
+@property(nonatomic, readonly) NSString *path;
 - (id)initWithDictionary:(NSDictionary *)dict;
 - (void)validateCaches;
 @end
@@ -269,9 +273,19 @@ catalog_path(PDImageLibrary *self)
   [super dealloc];
 }
 
+- (NSImage *)iconImage
+{
+  return [[NSWorkspace sharedWorkspace] iconForFile:_path];
+}
+
 - (void)synchronize
 {
   [_catalog synchronizeWithContentsOfFile:catalog_path(self)];
+}
+
+- (void)unmount
+{
+  [[NSWorkspace sharedWorkspace] unmountAndEjectDeviceAtPath:_path];
 }
 
 - (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName
@@ -408,23 +422,32 @@ convert_hexdigit(int c)
   return [[self cachePath] stringByAppendingPathComponent:base];
 }
 
-- (uint32_t)fileIdOfRelativePath:(NSString *)rel_path
+- (uint32_t)uniqueIdOfFile:(NSString *)rel_path
 {
   return [_catalog fileIdForPath:rel_path];
 }
 
-- (NSData *)contentsOfFile:(NSString *)rel_path
+- (NSData *)contentsOfFileAtPath:(NSString *)rel_path
 {
   NSString *path = [_path stringByAppendingPathComponent:rel_path];
 
   return [NSData dataWithContentsOfFile:path];
 }
 
+- (CGImageSourceRef)copyImageSourceWithFile:(NSString *)rel_path
+{
+  NSString *path = [_path stringByAppendingPathComponent:rel_path];
+  NSURL *url = [NSURL fileURLWithPath:path];
+
+  return CGImageSourceCreateWithURL((CFURLRef)url, NULL);
+}
+
 - (BOOL)writeData:(NSData *)data toFile:(NSString *)rel_path
+    error:(NSError **)err
 {
   NSString *path = [_path stringByAppendingPathComponent:rel_path];
 
-  return [data writeToFile:path atomically:YES];
+  return [data writeToFile:path options:NSDataWritingAtomic error:err];
 }
 
 - (NSArray *)contentsOfDirectory:(NSString *)rel_path
@@ -435,6 +458,13 @@ convert_hexdigit(int c)
 	  contentsOfDirectoryAtPath:path error:nil];
 }
 
+- (BOOL)fileExistsAtPath:(NSString *)rel_path
+{
+  NSString *path = [_path stringByAppendingPathComponent:rel_path];
+
+  return [[NSFileManager defaultManager] fileExistsAtPath:path];
+}
+
 - (BOOL)fileExistsAtPath:(NSString *)rel_path isDirectory:(BOOL *)dirp
 {
   NSString *path = [_path stringByAppendingPathComponent:rel_path];
@@ -443,16 +473,59 @@ convert_hexdigit(int c)
 	  fileExistsAtPath:path isDirectory:dirp];
 }
 
+- (time_t)mtimeOfFileAtPath:(NSString *)rel_path
+{
+  NSString *path = [_path stringByAppendingPathComponent:rel_path];
+  struct stat st;
+
+  if (stat([path fileSystemRepresentation], &st) == 0)
+    return st.st_mtime;
+  else
+    return 0;
+}
+
+- (size_t)sizeOfFileAtPath:(NSString *)rel_path
+{
+  NSString *path = [_path stringByAppendingPathComponent:rel_path];
+  struct stat st;
+
+  if (stat([path fileSystemRepresentation], &st) == 0)
+    return st.st_size;
+  else
+    return 0;
+}
+
+- (BOOL)copyItemAtPath:(NSString *)src_rel toPath:(NSString *)dst_rel
+    error:(NSError **)err
+{
+  NSString *src_path = [_path stringByAppendingPathComponent:src_rel];
+  NSString *dst_path = [_path stringByAppendingPathComponent:dst_rel];
+
+  return [[NSFileManager defaultManager]
+	  copyItemAtPath:src_path toPath:dst_path error:err];
+}
+
+- (BOOL)moveItemAtPath:(NSString *)src_rel toPath:(NSString *)dst_rel
+    error:(NSError **)err
+{
+  NSString *src_path = [_path stringByAppendingPathComponent:src_rel];
+  NSString *dst_path = [_path stringByAppendingPathComponent:dst_rel];
+
+  return [[NSFileManager defaultManager]
+	  moveItemAtPath:src_path toPath:dst_path error:err];
+}
+
 - (BOOL)removeItemAtPath:(NSString *)rel_path error:(NSError **)err
 {
   NSString *path = [_path stringByAppendingPathComponent:rel_path];
 
-  BOOL ret = [[NSFileManager defaultManager] removeItemAtPath:path error:err];
+  return [[NSFileManager defaultManager] removeItemAtPath:path error:err];
+}
 
-  if (ret)
-    [self didRemoveFileWithRelativePath:rel_path];
-
-  return ret;
+- (NSURL *)fileURLWithPath:(NSString *)rel_path
+{
+  NSString *path = [_path stringByAppendingPathComponent:rel_path];
+  return [NSURL fileURLWithPath:path];
 }
 
 - (void)foreachSubdirectoryOfDirectory:(NSString *)dir
@@ -625,15 +698,15 @@ static NSOperationQueue *_copyQueue;
   [_activeImports removeAllObjects];
 }
 
-- (BOOL)copyImage:(PDImage *)image toDirectory:(NSString *)dir
-    error:(NSError **)err
+- (void)copyImages:(NSArray *)images toDirectory:(NSString *)dir
 {
-  NSString *dir_path = [_path stringByAppendingPathComponent:dir];
+  NSError *err = nil;
 
-  BOOL ret = [image copyToDirectoryPath:dir_path resetUUID:YES error:err];
-
-  if (ret)
+  for (PDImage *image in images)
     {
+      if (![image copyToDirectory:dir resetUUID:YES error:&err])
+	break;
+
       /* FIXME: pass UUIDs of changed image(s)? */
 
       [[NSNotificationCenter defaultCenter]
@@ -641,94 +714,102 @@ static NSOperationQueue *_copyQueue;
        object:self userInfo:@{@"libraryDirectory": dir}];
     }
 
-  return ret;
+  if (err != nil)
+    {
+      NSAlert *alert = [NSAlert alertWithError:err];
+      [alert runModal];
+    }
 }
 
-- (BOOL)moveImage:(PDImage *)image toDirectory:(NSString *)dir
-    error:(NSError **)err
+- (void)moveImages:(NSArray *)images toDirectory:(NSString *)dir
 {
-  PDImageLibrary *src_lib = [image library];
-  NSString *src_dir = [image libraryDirectory];
-  BOOL ret = NO;
+  NSError *err = nil;
 
-  if (src_lib == self)
+  for (PDImage *image in images)
     {
-      if ([src_dir isEqualToString:dir])
-	return YES;
+      PDImageLibrary *src_lib = [image library];
 
-      ret = [image moveToDirectory:dir error:err];
-
-      if (ret && [image isDeleted])
-	[image setDeleted:NO];
-    }
-  else
-    {
-      NSString *dir_path = [_path stringByAppendingPathComponent:dir];
-
-      if ([image copyToDirectoryPath:dir_path resetUUID:NO error:err])
+      if (src_lib == self)
 	{
-	  [image remove];
-	  ret = YES;
+	  NSString *src_dir = [image libraryDirectory];
+
+	  if ([src_dir isEqualToString:dir])
+	    continue;
+
+	  if (![image moveToDirectory:dir error:&err])
+	    break;
+
+	  if ([image isDeleted])
+	    [image setDeleted:NO];
+
+	  /* FIXME: pass UUIDs of changed image(s)? */
+
+	  [[NSNotificationCenter defaultCenter]
+	   postNotificationName:PDImageLibraryDirectoryDidChange
+	   object:src_lib userInfo:@{@"libraryDirectory": src_dir}];
+
+	  [[NSNotificationCenter defaultCenter]
+	   postNotificationName:PDImageLibraryDirectoryDidChange
+	   object:self userInfo:@{@"libraryDirectory": dir}];
+	}
+      else
+	{
+	  NSDictionary *file_types
+	    = [image imagePropertyForKey:PDImage_FileTypes];
+	  NSString *active_type
+	    = [image imagePropertyForKey:PDImage_ActiveType];
+	  NSSet *all_types = [NSSet setWithArray:[file_types allKeys]];
+
+	  [self importImages:@[image] toDirectory:dir fileTypes:all_types
+	   preferredType:active_type filenameMap:NULL properties:nil
+	   deleteSourceImages:YES];
 	}
     }
 
-  if (ret)
+  if (err != nil)
     {
-      /* FIXME: pass UUIDs of changed image(s)? */
-
-      [[NSNotificationCenter defaultCenter]
-       postNotificationName:PDImageLibraryDirectoryDidChange
-       object:src_lib userInfo:@{@"libraryDirectory": src_dir}];
-
-      [[NSNotificationCenter defaultCenter]
-       postNotificationName:PDImageLibraryDirectoryDidChange
-       object:self userInfo:@{@"libraryDirectory": dir}];
+      NSAlert *alert = [NSAlert alertWithError:err];
+      [alert runModal];
     }
-
-  return ret;
 }
 
-- (BOOL)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir
-    error:(NSError **)err
+- (void)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir
 {
-  NSFileManager *fm = [NSFileManager defaultManager];
-
-  NSString *old_path = [_path stringByAppendingPathComponent:old_dir];
-  NSString *new_path = [_path stringByAppendingPathComponent:new_dir];
+  NSError *err = nil;
 
   BOOL is_dir = NO;
-  if (![fm fileExistsAtPath:old_path isDirectory:&is_dir] || !is_dir)
+  if (![self fileExistsAtPath:old_dir isDirectory:&is_dir] || !is_dir)
     {
-      if (err != NULL)
-	{
-	  NSString *str = [NSString stringWithFormat:
-			   @"Can't rename directory %@ to %@, the source"
-			   " directory doesn't exist.", old_dir, new_dir];
-	  *err = [NSError errorWithDomain:ERROR_DOMAIN code:1
-		  userInfo:@{NSLocalizedDescriptionKey: str}];
-	}
-      return NO;
+      NSString *str = [NSString stringWithFormat:
+		       @"Can't rename directory %@ to %@, the source"
+		       " directory doesn't exist.", old_dir, new_dir];
+      err = [NSError errorWithDomain:ERROR_DOMAIN code:1
+	     userInfo:@{NSLocalizedDescriptionKey: str}];
+      goto error;
     }
 
-  if ([fm fileExistsAtPath:new_path])
+  if ([self fileExistsAtPath:new_dir])
     {
-      if (err != NULL)
-	{
-	  NSString *str = [NSString stringWithFormat:
-			   @"Can't rename directory %@ to %@, the destination"
-			   " name is already in use.", old_dir, new_dir];
-	  *err = [NSError errorWithDomain:ERROR_DOMAIN code:1
-		  userInfo:@{NSLocalizedDescriptionKey: str}];
-	}
-      return NO;
+      NSString *str = [NSString stringWithFormat:
+		       @"Can't rename directory %@ to %@, the destination"
+		       " name is already in use.", old_dir, new_dir];
+      err = [NSError errorWithDomain:ERROR_DOMAIN code:1
+	     userInfo:@{NSLocalizedDescriptionKey: str}];
+      goto error;
     }
 
-  if (![fm moveItemAtPath:old_path toPath:new_path error:err])
-    return NO;
+  if ([self moveItemAtPath:old_dir toPath:new_dir error:&err])
+    {
+      [self didRenameDirectory:old_dir to:new_dir];
+      return;
+    }
 
-  [self didRenameDirectory:old_dir to:new_dir];
-
-  return YES; 
+error:
+  if (err != nil)
+    {
+      NSAlert *alert = [NSAlert alertWithError:err];
+      [alert runModal];
+    }
 }
 
 static NSString *
@@ -883,6 +964,7 @@ copy_item_atomically(NSFileManager *fm, NSString *src_path,
 
 	      NSAlert *alert = [NSAlert alertWithError:error];
 	      [alert runModal];
+	      [error release];
 	    }
 
 	  for (PDImageLibrary *lib in all_libraries)

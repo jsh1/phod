@@ -24,7 +24,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class PDFileCatalog, PDImage;
+@class PDFileCatalog, PDImage, NSImage;
 
 extern NSString *const PDImageLibraryDirectoryDidChange;
 
@@ -56,16 +56,18 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 
 - (void)invalidate;
 
-@property(nonatomic, copy) NSString *name;
 @property(nonatomic, readonly) uint32_t libraryId;
+
+@property(nonatomic, copy) NSString *name;
+@property(nonatomic, readonly) NSImage *iconImage;
+
 @property(nonatomic, getter=isTransient) BOOL transient;
 
-@property(nonatomic, readonly) NSString *path;
 @property(nonatomic, readonly) NSString *cachePath;
 
 /* 'rel_path' is relative to the root of the library. */
 
-- (uint32_t)fileIdOfRelativePath:(NSString *)rel_path;
+- (uint32_t)uniqueIdOfFile:(NSString *)rel_path;
 
 - (NSString *)cachePathForFileId:(uint32_t)file_id base:(NSString *)str;
 
@@ -81,21 +83,51 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 
 - (void)waitForImportsToComplete;
 
+/* Unmount if possible. */
+
+- (void)unmount;
+
 /* Low-level file operations, all paths are relative to the root of the
    library. */
 
-- (NSData *)contentsOfFile:(NSString *)rel_path;
-- (BOOL)writeData:(NSData *)data toFile:(NSString *)rel_path;
-- (NSArray *)contentsOfDirectory:(NSString *)rel_path;
-- (BOOL)fileExistsAtPath:(NSString *)rel_path isDirectory:(BOOL *)dirp;
-- (BOOL)removeItemAtPath:(NSString *)rel_path error:(NSError **)err;
+- (NSData *)contentsOfFileAtPath:(NSString *)path;
+- (CGImageSourceRef)copyImageSourceWithFile:(NSString *)path;
+- (BOOL)writeData:(NSData *)data toFile:(NSString *)path
+    error:(NSError **)err;
+- (NSArray *)contentsOfDirectory:(NSString *)path;
+- (BOOL)fileExistsAtPath:(NSString *)path;
+- (BOOL)fileExistsAtPath:(NSString *)path isDirectory:(BOOL *)dirp;
+- (time_t)mtimeOfFileAtPath:(NSString *)path;
+- (size_t)sizeOfFileAtPath:(NSString *)path;
 
-/* Higher-level file primitives. */
+/* More low-level operations. Note these don't automatically invoke the
+   -didFoo methods. */
+
+- (BOOL)copyItemAtPath:(NSString *)srcPath toPath:(NSString *)dstPath
+    error:(NSError **)error;
+- (BOOL)moveItemAtPath:(NSString *)srcPath toPath:(NSString *)dstPath
+    error:(NSError **)error;
+- (BOOL)removeItemAtPath:(NSString *)path error:(NSError **)err;
+
+/* Constructs an absolute URL referencing the named library file. This
+   operation may fail, e.g. for non-file libraries. */
+
+- (NSURL *)fileURLWithPath:(NSString *)path;
+
+/* High-level file primitives. */
 
 - (void)foreachSubdirectoryOfDirectory:(NSString *)dir
     handler:(void (^)(NSString *dir_name))block;
 - (void)loadImagesInSubdirectory:(NSString *)dir
     recursively:(BOOL)flag handler:(void (^)(PDImage *))block;
+
+/* Even higher-level operations. These will present any errors direct
+   to the UI, and trigger any other updates required (i.e. the ones
+   below). */
+
+- (void)copyImages:(NSArray *)images toDirectory:(NSString *)dir;
+- (void)moveImages:(NSArray *)images toDirectory:(NSString *)dir;
+- (void)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir;
 
 /* Notifications to the library that files under its path have been
    moved externally. */
@@ -103,13 +135,6 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 - (void)didRenameDirectory:(NSString *)oldName to:(NSString *)newName;
 - (void)didRenameFile:(NSString *)oldName to:(NSString *)newName;
 - (void)didRemoveFileWithRelativePath:(NSString *)rel_path;
-
-- (BOOL)copyImage:(PDImage *)image toDirectory:(NSString *)dir
-    error:(NSError **)err;
-- (BOOL)moveImage:(PDImage *)image toDirectory:(NSString *)dir
-    error:(NSError **)err;
-- (BOOL)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir
-    error:(NSError **)err;
 
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
     fileTypes:(NSSet *)types preferredType:(NSString *)type

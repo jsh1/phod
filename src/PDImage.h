@@ -161,9 +161,9 @@ typedef int PDImageCompareKey;
 
 - (BOOL)moveToDirectory:(NSString *)dir error:(NSError **)err;
 
-/* Copy to anywhere. */
+/* Copy within the current library, self is not updated. */
 
-- (BOOL)copyToDirectoryPath:(NSString *)path resetUUID:(BOOL)flag
+- (BOOL)copyToDirectory:(NSString *)path resetUUID:(BOOL)flag
     error:(NSError **)err;
 
 /* Fill proxy caches asynchronously. */

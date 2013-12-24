@@ -798,16 +798,7 @@ library_group_description(PDLibraryGroup *item)
       NSString *new_dir = [[old_dir stringByDeletingLastPathComponent]
 			   stringByAppendingPathComponent:str];
 
-      NSError *err = nil;
-      if ([[f_item library] renameDirectory:old_dir to:new_dir error:&err])
-	{
-	  [f_item setLibraryDirectory:new_dir];
-	}
-      else if (err != nil)
-	{
-	  NSAlert *alert = [NSAlert alertWithError:err];
-	  [alert runModal];
-	}
+      [[f_item library] renameDirectory:old_dir to:new_dir];
     }
   else if (parent == _albumsGroup)
     {
@@ -1727,14 +1718,7 @@ item_for_path(NSArray *items, NSArray *path)
 	      NSString *new_dir = [item_dir stringByAppendingPathComponent:
 				   [old_dir lastPathComponent]];
 
-	      NSError *err = nil;
-	      if (![lib renameDirectory:old_dir to:new_dir error:&err])
-		{
-		  NSAlert *alert = [NSAlert alertWithError:err];
-		  [alert runModal];
-		  break;
-		}
-
+	      [lib renameDirectory:old_dir to:new_dir];
 	      [(PDLibraryFolder *)[dragged_item parent] invalidateContents];
 	    }
 
@@ -1811,7 +1795,8 @@ item_for_path(NSArray *items, NSArray *path)
 
 	  /* FIXME: need to move these copies to an async queue. */
 
-	  __block NSError *err = nil;
+	  NSMutableArray *move_images = [NSMutableArray array];
+	  NSMutableArray *copy_images = [NSMutableArray array];
 
 	  [self foreachImage:^(PDImage *image, BOOL *stop)
 	    {
@@ -1819,19 +1804,16 @@ item_for_path(NSArray *items, NSArray *path)
 	      if (uuid != nil && [uuid_set containsObject:uuid])
 		{
 		  if (_dragOperation == NSDragOperationMove)
-		    [dest_lib moveImage:image toDirectory:dest_dir error:&err];
+		    [move_images addObject:image];
 		  else
-		    [dest_lib copyImage:image toDirectory:dest_dir error:&err];
-		  if (err != nil)
-		    *stop = YES;
+		    [copy_images addObject:image];
 		}
 	    }];
 
-	  if (err != nil)
-	    {
-	      NSAlert *alert = [NSAlert alertWithError:err];
-	      [alert runModal];
-	    }
+	  if ([move_images count] != 0)
+	    [dest_lib moveImages:move_images toDirectory:dest_dir];
+	  if ([copy_images count] != 0)
+	    [dest_lib copyImages:move_images toDirectory:dest_dir];
 	}
 
       [_outlineView reloadData];

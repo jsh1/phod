@@ -48,7 +48,7 @@
 
 - (NSString *)titleString
 {
-  return [[[self library] path] lastPathComponent];
+  return [[self library] name];
 }
 
 - (BOOL)hasTitleImage
@@ -60,8 +60,7 @@
 {
   if (_icon == nil)
     {
-      _icon = [[NSWorkspace sharedWorkspace]
-	       iconForFile:[[self library] path]];
+      _icon = [[self library] iconImage];
       if (_icon == nil)
 	_icon = PDImageWithName(PDImage_GenericRemovableDisk);
       [_icon retain];
@@ -79,7 +78,7 @@
 {
   PDImageLibrary *lib = [self library];
   [lib waitForImportsToComplete];
-  [[NSWorkspace sharedWorkspace] unmountAndEjectDeviceAtPath:[lib path]];
+  [lib unmount];
 }
 
 @end
