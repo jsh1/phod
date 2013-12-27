@@ -713,6 +713,43 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
     }
 }
 
++ (void)removeImages:(NSArray *)images
+{
+  NSError *err = nil;
+  NSMapTable *table = [NSMapTable strongToStrongObjectsMapTable];
+
+  for (PDImage *image in images)
+    {
+      if (![image removeFiles:&err])
+	break;
+
+      PDImageLibrary *lib = [image library];
+      NSMutableSet *set = [table objectForKey:lib];
+      if (set == nil)
+	{
+	  set = [NSMutableSet set];
+	  [table setObject:set forKey:lib];
+	}
+      [set addObject:[image libraryDirectory]];
+    }
+
+  for (PDImageLibrary *lib in table)
+    {
+      for (NSString *dir in [table objectForKey:lib])
+	{
+	  [[NSNotificationCenter defaultCenter]
+	   postNotificationName:PDImageLibraryDirectoryDidChange
+	   object:lib userInfo:@{@"libraryDirectory": dir}];
+	}
+    }
+
+  if (err != nil)
+    {
+      NSAlert *alert = [NSAlert alertWithError:err];
+      [alert runModal];
+    }
+}
+
 - (void)copyImages:(NSArray *)images toDirectory:(NSString *)dir
 {
   NSError *err = nil;
@@ -721,13 +758,13 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
     {
       if (![image copyToDirectory:dir resetUUID:YES error:&err])
 	break;
-
-      /* FIXME: pass UUIDs of changed image(s)? */
-
-      [[NSNotificationCenter defaultCenter]
-       postNotificationName:PDImageLibraryDirectoryDidChange
-       object:self userInfo:@{@"libraryDirectory": dir}];
     }
+
+  /* FIXME: pass UUIDs of changed image(s)? */
+
+  [[NSNotificationCenter defaultCenter]
+   postNotificationName:PDImageLibraryDirectoryDidChange
+   object:self userInfo:@{@"libraryDirectory": dir}];
 
   if (err != nil)
     {
@@ -757,15 +794,9 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 	  if ([image isDeleted])
 	    [image setDeleted:NO];
 
-	  /* FIXME: pass UUIDs of changed image(s)? */
-
 	  [[NSNotificationCenter defaultCenter]
 	   postNotificationName:PDImageLibraryDirectoryDidChange
 	   object:src_lib userInfo:@{@"libraryDirectory": src_dir}];
-
-	  [[NSNotificationCenter defaultCenter]
-	   postNotificationName:PDImageLibraryDirectoryDidChange
-	   object:self userInfo:@{@"libraryDirectory": dir}];
 	}
       else
 	{
@@ -780,6 +811,10 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 	   deleteSourceImages:YES];
 	}
     }
+
+  [[NSNotificationCenter defaultCenter]
+   postNotificationName:PDImageLibraryDirectoryDidChange
+   object:self userInfo:@{@"libraryDirectory": dir}];
 
   if (err != nil)
     {
@@ -816,6 +851,21 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
   if ([self moveItemAtPath:old_dir toPath:new_dir error:&err])
     {
       [self didRenameDirectory:old_dir to:new_dir];
+
+      NSString *old_parent = [old_dir stringByDeletingLastPathComponent];
+      NSString *new_parent = [old_dir stringByDeletingLastPathComponent];
+
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImageLibraryDirectoryDidChange
+       object:self userInfo:@{@"libraryDirectory": old_parent}];
+
+      if (![old_parent isEqualToString:new_parent])
+	{
+	  [[NSNotificationCenter defaultCenter]
+	   postNotificationName:PDImageLibraryDirectoryDidChange
+	   object:self userInfo:@{@"libraryDirectory": new_parent}];
+	}
+
       return;
     }
 
@@ -905,10 +955,7 @@ error:
 	  if (error == nil)
 	    {
 	      if (delete_sources)
-		{
-		  for (PDImage *src_im in images)
-		    [src_im remove];
-		}
+		[PDImageLibrary removeImages:images];
 	    }
 	  else
 	    {

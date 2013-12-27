@@ -76,7 +76,7 @@ typedef int PDImageCompareKey;
   BOOL _deleted;
   BOOL _hidden;
 
-  BOOL _invalidated;			/* set by -remove */
+  BOOL _removed;
 }
 
 + (void)callWithImageComparator:(PDImageCompareKey)key
@@ -152,9 +152,13 @@ typedef int PDImageCompareKey;
 @property(nonatomic, readonly) CGSize pixelSize;
 @property(nonatomic, readonly) CGSize orientedPixelSize;
 
-/* Delete all traces of the image from the library (and filesystem). */
+/* Delete all files owned by the receiver. */
 
-- (NSError *)remove;
+- (BOOL)removeFiles:(NSError **)err;
+
+/* True iff the images files have been removed by -removeFiles: */
+
+@property(nonatomic, readonly, getter=isRemoved) BOOL removed;
 
 /* Move within the library, self is updated to reflect the new
    location. */

@@ -107,6 +107,8 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 - (void)loadImagesInSubdirectory:(NSString *)dir
     recursively:(BOOL)flag handler:(void (^)(PDImage *))block;
 
++ (void)removeImages:(NSArray *)images;
+
 - (void)copyImages:(NSArray *)images toDirectory:(NSString *)dir;
 - (void)moveImages:(NSArray *)images toDirectory:(NSString *)dir;
 - (void)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir;

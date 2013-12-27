@@ -230,6 +230,7 @@ cache_path_for_type(PDImageLibrary *lib, uint32_t file_id, NSInteger type)
 
 @synthesize library = _library;
 @synthesize libraryDirectory = _libraryDirectory;
+@synthesize removed = _removed;
 
 static NSOperationQueue *_wideQueue;
 static NSOperationQueue *_narrowQueue;
@@ -470,13 +471,13 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
 - (void)writeJSONFile
 {
-  if (!_invalidated && !_pendingJSONWrite)
+  if (!_removed && !_pendingJSONWrite)
     {
       dispatch_time_t then
         = dispatch_time(DISPATCH_TIME_NOW, 2LL * NSEC_PER_SEC);
 
       dispatch_after(then, dispatch_get_main_queue(), ^{
-	if (!_invalidated)
+	if (!_removed)
 	  {
 	    if (_jsonFile == nil)
 	      _jsonFile = [metadata_file([self imageFile]) copy];
@@ -1093,10 +1094,8 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
     }
 }
 
-- (NSError *)remove
+- (BOOL)removeFiles:(NSError **)err
 {
-  NSError *err = nil;
-
   /* In case JSON file is being written. */
 
   [[PDImage writeQueue] waitUntilAllOperationsAreFinished];
@@ -1107,8 +1106,8 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
       NSString *file = [file_types objectForKey:type];
       NSString *rel_path = library_file_path(self, file);
 
-      if (![_library removeItemAtPath:rel_path error:&err])
-	return err;
+      if (![_library removeItemAtPath:rel_path error:err])
+	return NO;
 
       [_library didRemoveFileWithPath:rel_path];
     }
@@ -1116,8 +1115,8 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
   if (_jsonFile != nil)
     {
       NSString *rel_path = library_file_path(self, _jsonFile);
-      if (![_library removeItemAtPath:rel_path error:&err])
-	return err;
+      if (![_library removeItemAtPath:rel_path error:err])
+	return NO;
 
       [_jsonFile release];
       _jsonFile = nil;
@@ -1126,9 +1125,9 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
   [_properties setObject:@{} forKey:PDImage_FileTypes];
   [_properties removeObjectForKey:PDImage_ActiveType];
 
-  _invalidated = YES;
+  _removed = YES;
 
-  return nil;
+  return YES;
 }
 
 static NSString *

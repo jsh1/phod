@@ -261,6 +261,11 @@ Issues
   Not a massive problem, they'll be cleaned up the next time the app is
   launched.
 
+27. Import controller's default title date is wrong
+
+  Instead of today's date, use the date of the earliest photo to be
+  imported.
+
 
 Image Adjustments
 =================

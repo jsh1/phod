@@ -27,6 +27,7 @@
 #import "PDAdjustmentsViewController.h"
 #import "PDAppDelegate.h"
 #import "PDColor.h"
+#import "PDFoundationExtensions.h"
 #import "PDImage.h"
 #import "PDImageLibrary.h"
 #import "PDImageViewController.h"
@@ -1408,37 +1409,25 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 
 - (IBAction)emptyTrashAction:(id)sender
 {
-  __block NSError *error = nil;
+  NSMutableArray *images = [NSMutableArray array];
 
-  NSMutableArray *removed = [NSMutableArray array];
-
-  [self foreachImage:^(PDImage *image, BOOL *stop) {
-    if ([image isDeleted])
-      {
-	NSError *err = [image remove];
-	if (err == nil)
-	  {
-	    [removed addObject:image];
-	  }
-	else if (error == nil)
-	  {
-	    error = err;
-	    *stop = YES;
-	  }
-      }
-  }];
-
-  if ([removed count] != 0)
+  [self foreachImage:^
+    (PDImage *image, BOOL *stop)
     {
+      if ([image isDeleted])
+	[images addObject:image];
+    }];
+
+  if ([images count] != 0)
+    {
+      [PDImageLibrary removeImages:images];
+
+      NSArray *removed = [images filteredArray:^BOOL (id obj) {
+	return [(PDImage *)obj isRemoved];}];
+
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDTrashWasEmptied object:self
        userInfo:@{@"imagesRemoved": removed}];
-    }
-
-  if (error != nil)
-    {
-      NSAlert *alert = [NSAlert alertWithError:error];
-      [alert runModal];
     }
 }
 
