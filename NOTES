@@ -266,6 +266,18 @@ Issues
   Instead of today's date, use the date of the earliest photo to be
   imported.
 
+28. Delete after import deletes files but doesn't update UI
+
+29. Add command to create new folder in library
+
+  RESOLVED: implemented.
+
+30. No way to delete library folders
+
+  Easy if they're empty. What if they still contain images?
+
+31. Update libraries when the app is brought back frontmost
+
 
 Image Adjustments
 =================

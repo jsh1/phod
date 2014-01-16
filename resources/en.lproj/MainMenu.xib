@@ -77,9 +77,19 @@ CA
                 <menuItem title="File" id="83">
                     <menu key="submenu" title="File" id="81">
                         <items>
-                            <menuItem title="New Album" keyEquivalent="l" id="Ymr-UK-syq">
+                            <menuItem title="Add Library" keyEquivalent="o" id="Ymr-UK-syq">
                                 <connections>
-                                    <action selector="newAlbumAction:" target="-1" id="fIe-rh-A84"/>
+                                    <action selector="addLibraryAction:" target="-1" id="H5j-vF-ipZ"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="New Folder" keyEquivalent="n" id="8WZ-aO-Jx3">
+                                <connections>
+                                    <action selector="newFolderAction:" target="-1" id="EDG-hE-ke9"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="New Album" keyEquivalent="l" id="7zo-F0-Sgg">
+                                <connections>
+                                    <action selector="newAlbumAction:" target="-1" id="KjN-sU-RxN"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="New Smart Album" keyEquivalent="L" id="tZT-ul-TgE">

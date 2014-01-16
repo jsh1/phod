@@ -551,6 +551,8 @@ find_unique_path(PDImageLibrary *self, NSString *path)
       NSString *tem;
       if (i == 0)
 	tem = path;
+      else if ([ext length] == 0)
+	tem = [NSString stringWithFormat:@"%@-%d", rest, i];
       else
 	tem = [NSString stringWithFormat:@"%@-%d.%@", rest, i, ext];
       if (![self fileExistsAtPath:tem])
@@ -867,6 +869,41 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 	}
 
       return;
+    }
+
+error:
+  if (err != nil)
+    {
+      NSAlert *alert = [NSAlert alertWithError:err];
+      [alert runModal];
+    }
+}
+
+- (void)createDirectory:(NSString *)dir
+{
+  NSError *err = nil;
+
+  NSString *parent_dir = [dir stringByDeletingLastPathComponent];
+  BOOL is_dir = NO;
+  if (![self fileExistsAtPath:parent_dir isDirectory:&is_dir] || !is_dir)
+    {
+      NSString *str = [NSString stringWithFormat:
+		       @"Can't create directory %@, parent directory"
+		       " doesn't exist.", dir];
+      err = [NSError errorWithDomain:ERROR_DOMAIN code:1
+	     userInfo:@{NSLocalizedDescriptionKey: str}];
+      goto error;
+    }
+
+  if ([self fileExistsAtPath:dir])
+    dir = find_unique_path(self, dir);
+
+  if ([self createDirectoryAtPath:dir withIntermediateDirectories:NO
+       attributes:nil error:&err])
+    {
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:PDImageLibraryDirectoryDidChange
+       object:self userInfo:@{@"libraryDirectory": parent_dir}];
     }
 
 error:

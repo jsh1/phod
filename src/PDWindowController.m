@@ -1383,6 +1383,18 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
   [self rotateUsingMap:rotate_right_map];
 }
 
+- (IBAction)addLibraryAction:(id)sender
+{
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
+}
+
+- (IBAction)newFolderAction:(id)sender
+{
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
+}
+
 - (IBAction)newAlbumAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]

@@ -710,6 +710,27 @@ library_group_description(PDLibraryGroup *item)
     }];
 }
 
+- (IBAction)newFolderAction:(id)sender
+{
+  if ([_selectedItems count] != 1)
+    {
+      NSBeep();
+      return;
+    }
+
+  PDLibraryFolder *item = [_selectedItems firstObject];
+  if (![item isKindOfClass:[PDLibraryFolder class]])
+    {
+      NSBeep();
+      return;
+    }
+
+  NSString *dir = [[item libraryDirectory]
+		   stringByAppendingPathComponent:@"Untitled"];
+
+  [[item library] createDirectory:dir];
+}
+
 - (IBAction)newAlbumAction:(id)sender
 {
   NSDictionary *dict = @{

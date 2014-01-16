@@ -233,6 +233,8 @@ enum PDWindowControllerRebuildImageListFlags
 - (IBAction)rotateLeft:(id)sender;
 - (IBAction)rotateRight:(id)sender;
 
+- (IBAction)addLibraryAction:(id)sender;
+- (IBAction)newFolderAction:(id)sender;
 - (IBAction)newAlbumAction:(id)sender;
 - (IBAction)newSmartAlbumAction:(id)sender;
 - (IBAction)importAction:(id)sender;

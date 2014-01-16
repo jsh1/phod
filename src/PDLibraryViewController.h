@@ -82,6 +82,7 @@ extern NSString *const PDLibrarySelectionDidChange;
 - (void)rescanVolumes;
 
 - (IBAction)addLibraryAction:(id)sender;
+- (IBAction)newFolderAction:(id)sender;
 - (IBAction)newAlbumAction:(id)sender;
 
 - (void)addSmartAlbum:(NSString *)name predicate:(NSPredicate *)pred;

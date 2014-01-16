@@ -112,6 +112,7 @@ extern NSString *const PDImageLibraryDirectoryDidChange;
 - (void)copyImages:(NSArray *)images toDirectory:(NSString *)dir;
 - (void)moveImages:(NSArray *)images toDirectory:(NSString *)dir;
 - (void)renameDirectory:(NSString *)old_dir to:(NSString *)new_dir;
+- (void)createDirectory:(NSString *)dir;
 
 - (void)importImages:(NSArray *)images toDirectory:(NSString *)dir
     fileTypes:(NSSet *)types preferredType:(NSString *)type
