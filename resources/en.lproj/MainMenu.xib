@@ -108,6 +108,14 @@ CA
                             <menuItem isSeparatorItem="YES" id="74">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
+                            <menuItem title="Reload Libraries" keyEquivalent="r" id="vMd-Xa-bvs">
+                                <connections>
+                                    <action selector="reloadLibraries:" target="-1" id="b1p-vC-G10"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="aej-Wn-X5p">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
                             <menuItem title="Next Folder" keyEquivalent="" id="tBC-9J-1eg">
                                 <connections>
                                     <action selector="nextLibraryItemAction:" target="-1" id="hln-Hr-8uT"/>

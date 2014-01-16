@@ -1451,6 +1451,12 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
   }];
 }
 
+- (IBAction)reloadLibraries:(id)sender
+{
+  [[self viewControllerWithClass:[PDLibraryViewController class]]
+   performSelector:_cmd withObject:sender];
+}
+
 - (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem
 {
   SEL sel = [anItem action];

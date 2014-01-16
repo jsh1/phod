@@ -160,9 +160,8 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
   return NO;
 }
 
-- (BOOL)needsUpdate
+- (void)setNeedsUpdate
 {
-  return NO;
 }
 
 @end

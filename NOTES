@@ -278,6 +278,11 @@ Issues
 
 31. Update libraries when the app is brought back frontmost
 
+  PARTIALLY RESOLVED: added a command to manually rescan all library
+  directories. Doing this implicitly can be slow and expensive, though
+  it could be moved onto an async queue? (and for some reason currently
+  causes a flicker in the image-list view)
+
 
 Image Adjustments
 =================

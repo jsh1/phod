@@ -87,6 +87,8 @@ extern NSString *const PDLibrarySelectionDidChange;
 
 - (void)addSmartAlbum:(NSString *)name predicate:(NSPredicate *)pred;
 
+- (IBAction)reloadLibraries:(id)sender;
+
 - (IBAction)removeAction:(id)sender;
 - (IBAction)searchAction:(id)sender;
 - (IBAction)importAction:(id)sender;

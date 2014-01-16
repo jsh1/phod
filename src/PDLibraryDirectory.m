@@ -85,7 +85,7 @@
       [_libraryDirectory release];
       _libraryDirectory = [dir copy];
 
-      [self invalidateContents];
+      [self setNeedsUpdate];
     }
 }
 
@@ -192,12 +192,8 @@
   _subimagesNeedUpdate = NO;
 }
 
-/* Returns true if contents of _subitems array was changed. */
-
-- (BOOL)updateSubitems
+- (void)updateSubitems
 {
-  __block BOOL changed = NO;
-
   NSMutableArray *new_subitems = [_subitems mutableCopy];
   if (new_subitems == nil)
     new_subitems = [[NSMutableArray alloc] init];
@@ -235,7 +231,6 @@
 		  [item setParent:self];
 		  [new_subitems addObject:item];
 		  [item release];
-		  changed = YES;
 		}
 	    }
 	}];
@@ -267,8 +262,6 @@
   [new_subitems release];
 
   _subitemsNeedUpdate = NO;
-
-  return changed;
 }
 
 - (NSArray *)subitems
@@ -345,24 +338,10 @@
   return self;
 }
 
-- (void)invalidateContents
+- (void)setNeedsUpdate
 {
   _subitemsNeedUpdate = YES;
   _subimagesNeedUpdate = YES;
-}
-
-- (BOOL)needsUpdate
-{
-  BOOL ret = [super needsUpdate];
-
-  if ([self updateSubitems])
-    ret = YES;
-
-  /* FIXME: should also rescan subimages somehow, but don't need to
-     return YES from here if they have changed (as they don't affect
-     the source list structure). */
-
-  return ret;
 }
 
 @end

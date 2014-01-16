@@ -135,4 +135,10 @@
   return _identifier != nil ? _identifier : _name;
 }
 
+- (void)setNeedsUpdate
+{
+  for (PDLibraryItem *subitem in _subitems)
+    [subitem setNeedsUpdate];
+}
+
 @end

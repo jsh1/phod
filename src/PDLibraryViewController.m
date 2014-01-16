@@ -551,8 +551,8 @@ invalidate_library(PDImageLibrary *lib)
     {
       if ([item library] == lib)
 	{
-	  if ([item needsUpdate])
-	    [_outlineView reloadItem:item];
+	  [item setNeedsUpdate];
+	  [_outlineView reloadItem:item];
 	  return item;
 	}
     }
@@ -761,6 +761,23 @@ library_group_description(PDLibraryGroup *item)
   [self updateImageAlbums];
 
   [_outlineView reloadItem:_albumsGroup reloadChildren:YES];
+}
+
+static void
+reload_item(PDLibraryItem *item)
+{
+  for (PDLibraryItem *subitem in [item subitems])
+    reload_item(subitem);
+
+  [item setNeedsUpdate];
+}
+
+- (IBAction)reloadLibraries:(id)sender
+{
+  for (PDLibraryItem *item in _items)
+    reload_item(item);
+
+  [_outlineView reloadData];
 }
 
 - (IBAction)removeAction:(id)sender
@@ -990,7 +1007,7 @@ library_group_description(PDLibraryGroup *item)
 
 	      if (subitem != nil)
 		{
-		  [subitem invalidateContents];
+		  [subitem setNeedsUpdate];
 		  [items addObject:subitem];
 		}
 	    }
@@ -1000,7 +1017,7 @@ library_group_description(PDLibraryGroup *item)
 	{
 	  if ([item library] == lib)
 	    {
-	      [item invalidateContents];
+	      [item setNeedsUpdate];
 	      [items addObject:item];
 	    }
 	}
@@ -1195,7 +1212,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
 
 	  if (subitem != nil)
 	    {
-	      [subitem invalidateContents];
+	      [subitem setNeedsUpdate];
 	      [_outlineView reloadItem:subitem reloadChildren:YES];
 	    }
 	}
@@ -1746,10 +1763,10 @@ item_for_path(NSArray *items, NSArray *path)
 				   [old_dir lastPathComponent]];
 
 	      [lib renameDirectory:old_dir to:new_dir];
-	      [(PDLibraryFolder *)[dragged_item parent] invalidateContents];
+	      [(PDLibraryFolder *)[dragged_item parent] setNeedsUpdate];
 	    }
 
-	  [(PDLibraryFolder *)item invalidateContents];
+	  [(PDLibraryFolder *)item setNeedsUpdate];
 	  [_outlineView reloadItem:_foldersGroup reloadChildren:YES];
 
 	  NSInteger row = [_outlineView rowForItem:item];

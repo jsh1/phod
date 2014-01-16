@@ -241,6 +241,8 @@ enum PDWindowControllerRebuildImageListFlags
 
 - (IBAction)emptyTrashAction:(id)sender;
 
+- (IBAction)reloadLibraries:(id)sender;
+
 @property(nonatomic, readonly, getter=isTrashEmpty) BOOL trashEmpty;
 
 @end

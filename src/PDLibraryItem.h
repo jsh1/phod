@@ -82,10 +82,9 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 
 - (void)unmount;
 
-/* Should [recursively] check if anything has changed, return YES if
-   something has. */
+/* Mark any cached state as needing reloading. */
 
-- (BOOL)needsUpdate;
+- (void)setNeedsUpdate;
 
 - (BOOL)isDescendantOf:(PDLibraryItem *)item;
 

@@ -48,6 +48,4 @@
 
 - (PDLibraryDirectory *)subitemContainingDirectory:(NSString *)dir;
 
-- (void)invalidateContents;
-
 @end
