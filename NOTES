@@ -222,7 +222,12 @@ Issues
   should stay viewing that image until it's no longer selected, at
   which point it disappears?
 
-  RESOLVED: implemented. A bit skanky, but seems to work correctly.
+  PARTIALLY RESOLVED: implemented. A bit skanky, but seems to work
+  correctly.
+
+  Except there's the same problem when viewing the rejected folder and
+  clearing an image's rejected status -- it disappears immediately.
+  Also, the hidden state also has the same wrong behavior.
 
 23. Commands (with key equivs) to navigate library view
 

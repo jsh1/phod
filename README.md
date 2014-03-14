@@ -20,4 +20,4 @@ a 3-year-old macbook air. Currently focusing on JPEG.)
 
 ### Screenshot
 
-![Screenshot](http://unfactored.org/images/phod-screen-2013-12-17.png)
+![Screenshot](http://www.unfactored.org/images/phod-screen-2013-12-17.png)
