@@ -25,9 +25,6 @@
 #import "PDLibraryDirectory.h"
 
 @interface PDLibraryFolder : PDLibraryDirectory
-{
-  NSInteger _titleImageName;
-}
 
 @property(nonatomic) NSInteger titleImageName;
 

@@ -25,6 +25,12 @@
 #import "PDLibraryGroup.h"
 
 @implementation PDLibraryGroup
+{
+  NSString *_name;
+  NSString *_identifier;
+  NSImage *_iconImage;
+  NSMutableArray *_subitems;
+}
 
 @synthesize name = _name;
 @synthesize iconImage = _iconImage;

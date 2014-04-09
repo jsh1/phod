@@ -29,16 +29,6 @@
 extern NSString *const PDImageLibraryDirectoryDidChange;
 
 @interface PDImageLibrary : NSObject
-{
-  NSString *_name;
-  PDFileManager *_manager;
-  NSString *_cachePath;
-  uint32_t _libraryId;
-  PDFileCatalog *_catalog;
-  BOOL _transient;
-  NSOperationQueue *_ioQueue;
-  NSMutableArray *_activeImports;
-}
 
 + (void)removeInvalidLibraries;
 

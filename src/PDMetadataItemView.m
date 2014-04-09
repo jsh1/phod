@@ -36,6 +36,14 @@
 #define CONTROL_HEIGHT 20
 
 @implementation PDMetadataItemView
+{
+  PDMetadataView *_metadataView;
+
+  NSTextField *_labelField;
+  NSTextField *_valueField;
+
+  NSString *_imageProperty;
+}
 
 @synthesize metadataView = _metadataView;
 

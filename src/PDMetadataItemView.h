@@ -27,14 +27,6 @@
 @class PDMetadataView;
 
 @interface PDMetadataItemView : NSView <NSTextFieldDelegate>
-{
-  PDMetadataView *_metadataView;
-
-  NSTextField *_labelField;
-  NSTextField *_valueField;
-
-  NSString *_imageProperty;
-}
 
 @property(nonatomic, assign) PDMetadataView *metadataView;
 

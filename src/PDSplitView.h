@@ -25,11 +25,6 @@
 #import <AppKit/AppKit.h>
 
 @interface PDSplitView : NSSplitView
-{
-@private
-  NSInteger _indexOfResizableSubview;
-  NSView *_collapsingSubview;
-}
 
 @property(nonatomic) NSInteger indexOfResizableSubview;
 

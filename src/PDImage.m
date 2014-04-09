@@ -227,6 +227,30 @@ cache_path_for_type(PDImageLibrary *lib, uint32_t file_id, NSInteger type)
 }
 
 @implementation PDImage
+{
+  PDImageLibrary *_library;
+  NSString *_libraryDirectory;		/* relative to _libraryRoot */
+
+  NSString *_jsonFile;			/* may be nil */
+  BOOL _pendingJSONWrite;
+
+  NSMutableDictionary *_properties;
+  NSDictionary *_implicitProperties;	/* from the image file(s) */
+
+  NSMapTable *_imageHosts;
+
+  BOOL _donePrefetch;
+  NSOperation *_prefetchOp;
+
+  NSDate *_date;			/* cached lazily */
+
+  NSUUID *_uuid;			/* cached eagerly */
+  int _rating;
+  BOOL _deleted;
+  BOOL _hidden;
+
+  BOOL _removed;
+}
 
 @synthesize library = _library;
 @synthesize libraryDirectory = _libraryDirectory;

@@ -25,12 +25,6 @@
 #import <Foundation/Foundation.h>
 
 @interface PDFileCatalog : NSObject
-{
-  dispatch_queue_t _queue;
-  NSMutableDictionary *_dict[2];
-  uint32_t _lastFileId;
-  BOOL _dirty;
-}
 
 - (id)init;
 - (id)initWithContentsOfFile:(NSString *)path;

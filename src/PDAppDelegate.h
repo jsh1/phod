@@ -29,15 +29,6 @@ extern NSString *const PDBackgroundActivityDidChange;
 @class PDWindowController;
 
 @interface PDAppDelegate : NSObject <NSApplicationDelegate, NSMenuDelegate>
-{
-  IBOutlet PDWindowController *_windowController;
-  IBOutlet NSMenu *_photosMenu;
-  IBOutlet NSMenu *_imageContextMenu;
-  IBOutlet NSMenu *_viewMenu;
-  IBOutlet NSMenu *_windowMenu;
-
-  NSMutableSet *_backgroundActivity;
-}
 
 @property(nonatomic, readonly) PDWindowController *windowController;
 

@@ -25,11 +25,6 @@
 #import "PDFileManager.h"
 
 @interface PDLocalFileManager : PDFileManager
-{
-  NSString *_path;
-  NSFileManager *_manager;
-  id<PDFileManagerDelegate> _delegate;
-}
 
 - (id)initWithPath:(NSString *)path;
 - (id)initWithPropertyListRepresentation:(id)obj;

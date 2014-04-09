@@ -31,6 +31,14 @@
 NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
 @implementation PDPredicatePanelController
+{
+  IBOutlet NSPredicateEditor *_predicateEditor;
+  IBOutlet NSButton *_addSmartFolderButton;
+  IBOutlet NSButton *_cancelButton;
+  IBOutlet NSButton *_okButton;
+
+  NSPredicate *_predicate;
+}
 
 - (NSString *)windowNibName
 {

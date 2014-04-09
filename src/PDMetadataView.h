@@ -27,9 +27,6 @@
 @class PDInfoViewController;
 
 @interface PDMetadataView : NSView
-{
-  IBOutlet PDInfoViewController *_controller;
-}
 
 @property(nonatomic, copy) NSArray *imageProperties;
 

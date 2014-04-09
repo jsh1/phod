@@ -30,9 +30,6 @@ extern NSString *const PDImageUUIDType;
 
 @interface PDImageUUID : NSObject
     <NSCopying, NSPasteboardWriting, NSPasteboardReading>
-{
-  NSUUID *_uuid;
-}
 
 + (PDImageUUID *)imageUUIDWithUUID:(NSUUID *)uuid;
 + (PDImageUUID *)imageUUIDWithPropertyList:(id)obj;

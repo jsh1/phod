@@ -28,6 +28,9 @@
 #define SPACING 2
 
 @implementation PDImageTextCell
+{
+  NSImage *_image;
+}
 
 @synthesize image = _image;
 

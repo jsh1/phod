@@ -30,6 +30,13 @@
 #import "PDWindowController.h"
 
 @implementation PDImageViewController
+{
+  IBOutlet NSTextField *_titleLabel;
+  IBOutlet PDImageView *_imageView;
+  IBOutlet NSButton *_rotateLeftButton;
+  IBOutlet NSButton *_rotateRightButton;
+  IBOutlet NSSlider *_scaleSlider;
+}
 
 + (NSString *)viewNibName
 {

@@ -25,10 +25,6 @@
 #import "PDLibraryGroup.h"
 
 @interface PDLibraryAlbum : PDLibraryGroup
-{
-  NSMutableArray *_imageUUIDs;
-  NSMutableSet *_allUUIDs;
-}
 
 @property(nonatomic, copy) NSArray *imageUUIDs;
 

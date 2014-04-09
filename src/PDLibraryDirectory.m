@@ -34,6 +34,15 @@
 @end
 
 @implementation PDLibraryDirectory
+{
+  PDImageLibrary *_library;
+  NSString *_libraryDirectory;
+  NSArray *_subitems;
+  NSMutableArray *_subimages;
+  BOOL _subitemsNeedUpdate;
+  BOOL _subimagesNeedUpdate;
+  BOOL _marked;
+}
 
 @synthesize library = _library;
 @synthesize marked = _marked;

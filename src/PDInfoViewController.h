@@ -27,15 +27,6 @@
 @class PDMetadataView;
 
 @interface PDInfoViewController : PDViewController
-{
-  IBOutlet PDMetadataView *_metadataView;
-  IBOutlet NSPopUpButton *_popupButton;
-  IBOutlet NSMenu *_popupMenu;
-
-  NSDictionary *_metadataGroups;
-  NSArray *_metadataGroupOrder;
-  NSString *_activeGroup;
-}
 
 @property(nonatomic, copy) NSString *activeGroup;
 

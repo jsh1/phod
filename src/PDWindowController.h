@@ -63,41 +63,6 @@ enum PDWindowControllerRebuildImageListFlags
 @class PDSplitView, PDImage, PDImageLibrary;
 
 @interface PDWindowController : NSWindowController <NSSplitViewDelegate>
-{
-  IBOutlet PDSplitView *_splitView;
-  IBOutlet NSSegmentedControl *_sidebarControl;
-  IBOutlet NSView *_sidebarView;
-  IBOutlet NSView *_contentView;
-  IBOutlet NSView *_accessoryView;
-
-  PDPredicatePanelController *_predicatePanelController;
-
-  NSMutableArray *_viewControllers;
-
-  NSInteger _sidebarMode;
-  NSInteger _contentMode;
-  NSInteger _accessoryMode;
-
-  BOOL _showsHiddenImages;
-
-  int _imageSortKey;
-  BOOL _imageSortReversed;
-
-  NSArray *_imageList;
-  NSString *_imageListTitle;
-
-  NSPredicate *_imagePredicate;
-
-  NSArray *_filteredImageList;
-  BOOL _filteredImageListIsPreservingImages;
-
-  BOOL _nilPredicateIncludesRejected;
-
-  NSIndexSet *_selectedImageIndexes;
-  NSInteger _primarySelectionIndex;
-
-  BOOL _importMode;
-}
 
 - (void)invalidate;
 

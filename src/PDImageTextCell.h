@@ -25,9 +25,6 @@
 #import <AppKit/AppKit.h>
 
 @interface PDImageTextCell : NSTextFieldCell
-{
-  NSImage *_image;
-}
 
 @property(nonatomic, retain) NSImage *image;
 

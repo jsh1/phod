@@ -27,16 +27,6 @@
 #import "PDImage.h"
 
 @interface PDImageLayer : CALayer <PDImageHost>
-{
-  PDImage *_image;
-  BOOL _imageUsesRAW;
-  BOOL _thumbnail;
-  CGColorSpaceRef _colorSpace;
-
-  BOOL _addedImageHost;
-  CGSize _imageSize;
-  OSSpinLock _imageLock;
-}
 
 @property(nonatomic, retain) PDImage *image;
 

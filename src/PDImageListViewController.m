@@ -32,6 +32,19 @@
 #import "PDWindowController.h"
 
 @implementation PDImageListViewController
+{
+  IBOutlet NSScrollView *_scrollView;
+  IBOutlet PDImageGridView *_gridView;
+  IBOutlet NSPopUpButton *_sortButton;
+  IBOutlet NSMenu *_sortMenu;
+  IBOutlet NSTextField *_titleLabel;
+  IBOutlet NSSearchField *_searchField;
+  IBOutlet NSMenu *_searchMenu;
+  IBOutlet NSButton *_predicateButton;
+  IBOutlet NSButton *_rotateLeftButton;
+  IBOutlet NSButton *_rotateRightButton;
+  IBOutlet NSSlider *_scaleSlider;
+}
 
 + (NSString *)viewNibName
 {

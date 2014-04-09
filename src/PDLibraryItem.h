@@ -29,10 +29,6 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 @class PDImage;
 
 @interface PDLibraryItem : NSObject
-{
-  PDLibraryItem *_parent;
-  BOOL _hidden;
-}
 
 @property(nonatomic, assign) PDLibraryItem *parent;
 

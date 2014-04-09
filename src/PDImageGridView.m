@@ -41,6 +41,22 @@
 #define DRAG_THRESH 3
 
 @implementation PDImageGridView
+{
+  IBOutlet PDImageListViewController *_controller;
+
+  NSArray *_images;
+  NSInteger _primarySelection;
+  NSIndexSet *_selection;
+  CGFloat _scale;
+  BOOL _displaysMetadata;
+
+  CGFloat _size;
+  NSInteger _columns;
+  NSInteger _rows;
+
+  NSPoint _mouseDownLocation;
+  BOOL _mouseDownOverImage;
+}
 
 - (id)initWithFrame:(NSRect)frame
 {

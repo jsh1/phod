@@ -25,12 +25,6 @@
 #import "PDLibraryItem.h"
 
 @interface PDLibraryGroup : PDLibraryItem
-{
-  NSString *_name;
-  NSString *_identifier;
-  NSImage *_iconImage;
-  NSMutableArray *_subitems;
-}
 
 @property(nonatomic, copy) NSString *name;
 @property(nonatomic, copy) NSString *identifier;

@@ -33,6 +33,9 @@
 #define Y_INSET 8
 
 @implementation PDMetadataView
+{
+  IBOutlet PDInfoViewController *_controller;
+}
 
 - (PDWindowController *)controller
 {

@@ -32,6 +32,10 @@
 #import "PDMacros.h"
 
 @implementation PDLibraryAlbum
+{
+  NSMutableArray *_imageUUIDs;
+  NSMutableSet *_allUUIDs;
+}
 
 - (id)init
 {

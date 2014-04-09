@@ -59,6 +59,12 @@ CA_HIDDEN
 @end
 
 @implementation PDThumbnailLayer
+{
+  PDImage *_image;
+  BOOL _selected;
+  BOOL _primary;
+  BOOL _displaysMetadata;
+}
 
 + (id)defaultValueForKey:(NSString *)key
 {

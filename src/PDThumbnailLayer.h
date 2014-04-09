@@ -27,12 +27,6 @@
 #import "PDImage.h"
 
 @interface PDThumbnailLayer : CALayer
-{
-  PDImage *_image;
-  BOOL _selected;
-  BOOL _primary;
-  BOOL _displaysMetadata;
-}
 
 @property(nonatomic, retain) PDImage *image;
 

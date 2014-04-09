@@ -31,6 +31,11 @@
 #define ERROR_DOMAIN @"org.unfactored.PDFileManager"
 
 @implementation PDLocalFileManager
+{
+  NSString *_path;
+  NSFileManager *_manager;
+  id<PDFileManagerDelegate> _delegate;
+}
 
 @synthesize delegate = _delegate;
 

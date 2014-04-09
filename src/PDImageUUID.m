@@ -30,6 +30,9 @@
 NSString *const PDImageUUIDType = @"org.unfactored.Phod.PDImageUUID";
 
 @implementation PDImageUUID
+{
+  NSUUID *_uuid;
+}
 
 @synthesize UUID = _uuid;
 

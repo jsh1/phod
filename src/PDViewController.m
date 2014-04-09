@@ -28,6 +28,11 @@
 #import "PDWindowController.h"
 
 @implementation PDViewController
+{
+  NSMutableArray *_subviewControllers;
+  BOOL _viewHasBeenLoaded;
+  BOOL _pendingProgressUpdate;
+}
 
 @synthesize controller = _controller;
 @synthesize viewHasBeenLoaded = _viewHasBeenLoaded;

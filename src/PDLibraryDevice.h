@@ -25,9 +25,6 @@
 #import "PDLibraryDirectory.h"
 
 @interface PDLibraryDevice : PDLibraryDirectory
-{
-  NSImage *_icon;
-}
 
 - (id)initWithLibrary:(PDImageLibrary *)lib;
 

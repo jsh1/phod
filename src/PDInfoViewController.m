@@ -29,6 +29,15 @@
 #import "PDWindowController.h"
 
 @implementation PDInfoViewController
+{
+  IBOutlet PDMetadataView *_metadataView;
+  IBOutlet NSPopUpButton *_popupButton;
+  IBOutlet NSMenu *_popupMenu;
+
+  NSDictionary *_metadataGroups;
+  NSArray *_metadataGroupOrder;
+  NSString *_activeGroup;
+}
 
 + (NSString *)viewNibName
 {

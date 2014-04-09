@@ -27,22 +27,6 @@
 @class PDImageListViewController, PDImage;
 
 @interface PDImageGridView : NSView <NSDraggingSource>
-{
-  IBOutlet PDImageListViewController *_controller;
-
-  NSArray *_images;
-  NSInteger _primarySelection;
-  NSIndexSet *_selection;
-  CGFloat _scale;
-  BOOL _displaysMetadata;
-
-  CGFloat _size;
-  NSInteger _columns;
-  NSInteger _rows;
-
-  NSPoint _mouseDownLocation;
-  BOOL _mouseDownOverImage;
-}
 
 @property(nonatomic, copy) NSArray *images;
 @property(nonatomic) NSInteger primarySelection;

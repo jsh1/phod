@@ -30,6 +30,11 @@
 #import "PDWindowController.h"
 
 @implementation PDLibraryQuery
+{
+  NSPredicate *_predicate;
+  BOOL _trashcan;
+  BOOL _nilPredicateIncludesRejected;
+}
 
 @synthesize predicate = _predicate;
 @synthesize trashcan = _trashcan;

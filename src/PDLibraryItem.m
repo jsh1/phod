@@ -27,6 +27,10 @@
 NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidChange";
 
 @implementation PDLibraryItem
+{
+  PDLibraryItem *_parent;
+  BOOL _hidden;
+}
 
 @synthesize parent = _parent;
 @synthesize hidden = _hidden;

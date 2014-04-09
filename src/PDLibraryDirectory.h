@@ -27,15 +27,6 @@
 @class PDImageLibrary;
 
 @interface PDLibraryDirectory : PDLibraryItem
-{
-  PDImageLibrary *_library;
-  NSString *_libraryDirectory;
-  NSArray *_subitems;
-  NSMutableArray *_subimages;
-  BOOL _subitemsNeedUpdate;
-  BOOL _subimagesNeedUpdate;
-  BOOL _marked;
-}
 
 + (BOOL)flattensSubdirectories;
 

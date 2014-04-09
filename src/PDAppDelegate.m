@@ -29,6 +29,15 @@
 NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange";
 
 @implementation PDAppDelegate
+{
+  IBOutlet PDWindowController *_windowController;
+  IBOutlet NSMenu *_photosMenu;
+  IBOutlet NSMenu *_imageContextMenu;
+  IBOutlet NSMenu *_viewMenu;
+  IBOutlet NSMenu *_windowMenu;
+
+  NSMutableSet *_backgroundActivity;
+}
 
 @synthesize windowController = _windowController;
 

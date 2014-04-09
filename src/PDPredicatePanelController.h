@@ -27,14 +27,6 @@
 extern NSString * const PDPredicateDidChange;
 
 @interface PDPredicatePanelController : NSWindowController
-{
-  IBOutlet NSPredicateEditor *_predicateEditor;
-  IBOutlet NSButton *_addSmartFolderButton;
-  IBOutlet NSButton *_cancelButton;
-  IBOutlet NSButton *_okButton;
-
-  NSPredicate *_predicate;
-}
 
 - (id)init;
 

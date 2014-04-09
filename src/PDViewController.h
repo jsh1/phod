@@ -30,11 +30,6 @@
 {
   PDWindowController *_controller;
   IBOutlet NSProgressIndicator *_progressIndicator;
-
-@private
-  NSMutableArray *_subviewControllers;
-  BOOL _viewHasBeenLoaded;
-  BOOL _pendingProgressUpdate;
 }
 
 + (NSString *)viewNibName;

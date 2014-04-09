@@ -29,6 +29,9 @@
 #import "PDImageLibrary.h"
 
 @implementation PDLibraryDevice
+{
+  NSImage *_icon;
+}
 
 + (BOOL)flattensSubdirectories
 {

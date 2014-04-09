@@ -34,38 +34,6 @@ extern NSString *const PDLibrarySelectionDidChange;
 
 @interface PDLibraryViewController : PDViewController
     <PXSourceListDataSource, PXSourceListDelegate>
-{
-  IBOutlet PXSourceList *_outlineView;
-  IBOutlet PDImageTextCell *_normalCell;
-  IBOutlet PDImageTextCell *_importCell;
-  IBOutlet NSSearchField *_searchField;
-  IBOutlet NSButton *_addButton;
-  IBOutlet NSButton *_removeButton;
-  IBOutlet NSButton *_importButton;
-  IBOutlet NSButton *_actionButton;
-
-  NSMutableArray *_items;
-  PDLibraryGroup *_libraryGroup;
-  PDLibraryGroup *_devicesGroup;
-  PDLibraryGroup *_foldersGroup;
-  PDLibraryGroup *_albumsGroup;
-
-  PDLibraryItem *_allPhotosItem;
-  PDLibraryItem *_last12MonthsItem;
-  PDLibraryItem *_flaggedItem;
-  PDLibraryItem *_rejectedItem;
-  PDLibraryItem *_trashItem;
-
-  NSMapTable *_itemViewState;		/* PDLibraryItem -> NSDictionary */
-
-  NSArray *_draggedItems;
-  NSPasteboard *_draggedPasteboard;
-  NSDragOperation _dragOperation;
-
-  int _ignoreNotifications;
-
-  NSArray *_selectedItems;
-}
 
 - (BOOL)foreachImage:(void (^)(PDImage *im, BOOL *stop))thunk;
 

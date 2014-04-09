@@ -25,6 +25,10 @@
 #import "PDSplitView.h"
 
 @implementation PDSplitView
+{
+  NSInteger _indexOfResizableSubview;
+  NSView *_collapsingSubview;
+}
 
 @synthesize indexOfResizableSubview = _indexOfResizableSubview;
 

@@ -29,6 +29,9 @@
 #import "PDImageLibrary.h"
 
 @implementation PDLibraryFolder
+{
+  NSInteger _titleImageName;
+}
 
 @synthesize titleImageName = _titleImageName;
 
@@ -55,9 +58,9 @@
 
 - (NSString *)identifier
 {
-  return ([_libraryDirectory length] == 0
-	  ? [NSString stringWithFormat:@"%08x", [_library libraryId]]
-	  : [_libraryDirectory lastPathComponent]);
+  return ([self.libraryDirectory length] == 0
+	  ? [NSString stringWithFormat:@"%08x", [self.library libraryId]]
+	  : [self.libraryDirectory lastPathComponent]);
 }
 
 @end

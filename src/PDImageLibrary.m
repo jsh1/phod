@@ -55,6 +55,16 @@ NSString *const PDImageLibraryDirectoryDidChange = @"PDImageLibraryDirectoryDidC
 @end
 
 @implementation PDImageLibrary
+{
+  NSString *_name;
+  PDFileManager *_manager;
+  NSString *_cachePath;
+  uint32_t _libraryId;
+  PDFileCatalog *_catalog;
+  BOOL _transient;
+  NSOperationQueue *_ioQueue;
+  NSMutableArray *_activeImports;
+}
 
 @synthesize name = _name;
 @synthesize libraryId = _libraryId;

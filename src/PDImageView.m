@@ -39,6 +39,17 @@
 #define DRAG_MASK (NSLeftMouseDraggedMask | NSLeftMouseUpMask)
 
 @implementation PDImageView
+{
+  IBOutlet PDImageViewController *_controller;
+
+  PDImage *_image;
+  CGFloat _imageScale;
+  CGPoint _imageOrigin;
+  BOOL _displaysMetadata;
+
+  CALayer *_clipLayer;
+  PDImageLayer *_imageLayer;
+}
 
 - (void)dealloc
 {

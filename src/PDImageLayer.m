@@ -33,6 +33,16 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 @end
 
 @implementation PDImageLayer
+{
+  PDImage *_image;
+  BOOL _imageUsesRAW;
+  BOOL _thumbnail;
+  CGColorSpaceRef _colorSpace;
+
+  BOOL _addedImageHost;
+  CGSize _imageSize;
+  OSSpinLock _imageLock;
+}
 
 @synthesize thumbnail = _thumbnail;
 

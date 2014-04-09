@@ -27,8 +27,4 @@
 @class PDLibraryViewController;
 
 @interface PDLibraryView : PXSourceList
-{
-  IBOutlet PDLibraryViewController *_controller;
-}
-
 @end

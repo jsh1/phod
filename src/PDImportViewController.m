@@ -35,6 +35,27 @@
 @end
 
 @implementation PDImportViewController
+{
+  IBOutlet NSPopUpButton *_libraryButton;
+  IBOutlet NSTextField *_directoryField;
+  IBOutlet NSTextField *_nameField;
+
+  IBOutlet NSButton *_renameButton;
+  IBOutlet NSTextField *_renameField;
+  IBOutlet NSTextField *_renameFieldLabel;
+
+  IBOutlet NSPopUpButton *_importButton;
+  IBOutlet NSPopUpButton *_activeTypeButton;
+
+  IBOutlet NSTextField *_keywordsField;
+
+  IBOutlet NSButton *_deleteAfterButton;
+
+  IBOutlet NSTextField *_descriptionLabel;
+
+  IBOutlet NSButton *_okButton;
+  IBOutlet NSButton *_cancelButton;
+}
 
 + (NSString *)viewNibName
 {

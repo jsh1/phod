@@ -27,13 +27,6 @@
 @class PDImageView;
 
 @interface PDImageViewController : PDViewController
-{
-  IBOutlet NSTextField *_titleLabel;
-  IBOutlet PDImageView *_imageView;
-  IBOutlet NSButton *_rotateLeftButton;
-  IBOutlet NSButton *_rotateRightButton;
-  IBOutlet NSSlider *_scaleSlider;
-}
   
 @property(nonatomic) BOOL displaysMetadata;
 
