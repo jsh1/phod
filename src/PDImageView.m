@@ -29,12 +29,14 @@
 #import "PDColor.h"
 #import "PDImage.h"
 #import "PDImageLayer.h"
+#import "PDImageRatingLayer.h"
 #import "PDImageViewController.h"
 #import "PDWindowController.h"
 
 #import <QuartzCore/QuartzCore.h>
 
 #define IMAGE_MARGIN 10
+#define MIN_RATING_HEIGHT 24
 
 #define DRAG_MASK (NSLeftMouseDraggedMask | NSLeftMouseUpMask)
 
@@ -49,6 +51,7 @@
 
   CALayer *_clipLayer;
   PDImageLayer *_imageLayer;
+  PDImageRatingLayer *_ratingLayer;
 }
 
 - (void)dealloc
@@ -298,6 +301,42 @@
     {
       [_imageLayer setImage:nil];
       [_clipLayer setHidden:YES];
+    }
+
+  if (_image != nil && _displaysMetadata)
+    {
+      if (_ratingLayer == nil)
+	{
+	  _ratingLayer = [PDImageRatingLayer layer];
+	  [_ratingLayer setDelegate:_controller];
+	  [_clipLayer addSublayer:_ratingLayer];
+	}
+
+      [_ratingLayer setRating:
+       [[_image imagePropertyForKey:PDImage_Rating] intValue]];
+      [_ratingLayer setFlagged:
+       [[_image imagePropertyForKey:PDImage_Flagged] boolValue]];
+      [_ratingLayer setHiddenState:
+       [[_image imagePropertyForKey:PDImage_Hidden] boolValue]];
+      [_ratingLayer setContentsScale:[[self window] backingScaleFactor]];
+
+      CGRect bounds = CGRectIntersection([_clipLayer bounds],
+					 [_imageLayer frame]);
+
+      [_ratingLayer setPosition:
+       CGPointMake(CGRectGetMinX(bounds), CGRectGetMaxY(bounds))];
+
+      CGSize rating_size = [_ratingLayer preferredFrameSize];
+      rating_size.width = fmin(rating_size.width, bounds.size.width);
+      rating_size.height = fmax(rating_size.height, MIN_RATING_HEIGHT);
+
+      [_ratingLayer setBounds:
+       CGRectMake(0, 0, rating_size.width, rating_size.height)];
+    }
+  else
+    {
+      [_ratingLayer removeFromSuperlayer];
+      _ratingLayer = nil;
     }
 
   [self setPreparedContentRect:[self visibleRect]];

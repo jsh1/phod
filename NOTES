@@ -49,6 +49,8 @@ Issues
 
   - Ratings etc..
 
+  RESOLVED: implemented (to match thumbnails).
+
 6. Command to select RAW vs JPEG source file
 
   PARTIALLY RESOLVED: added the command, everything updates and caches

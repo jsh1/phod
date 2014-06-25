@@ -27,6 +27,7 @@
 #import "PDColor.h"
 #import "PDImage.h"
 #import "PDImageLayer.h"
+#import "PDImageRatingLayer.h"
 
 #import <QuartzCore/QuartzCore.h>
 
@@ -40,18 +41,7 @@
 #define PRIMARY_SELECTION_RADIUS 4
 
 CA_HIDDEN
-@interface PDThumbnailTextLayer : CATextLayer
-@end
-
-CA_HIDDEN
-@interface PDThumbnailTitleLayer : PDThumbnailTextLayer
-@end
-
-CA_HIDDEN
-@interface PDThumbnailRatingLayer : PDThumbnailTextLayer
-@property(nonatomic) int rating;
-@property(nonatomic, getter=isFlagged) BOOL flagged;
-@property(nonatomic, getter=hiddenState) BOOL hiddenState;
+@interface PDThumbnailTitleLayer : CATextLayer
 @end
 
 CA_HIDDEN
@@ -188,7 +178,7 @@ CA_HIDDEN
 
   PDImageLayer *image_layer = nil;
   PDThumbnailTitleLayer *title_layer = nil;
-  PDThumbnailRatingLayer *rating_layer = nil;
+  PDImageRatingLayer *rating_layer = nil;
   PDThumbnailSelectionLayer *selection_layer = nil;
 
   for (CALayer *sublayer in [self sublayers])
@@ -197,8 +187,8 @@ CA_HIDDEN
 	image_layer = (PDImageLayer *)sublayer;
       else if ([sublayer isKindOfClass:[PDThumbnailTitleLayer class]])
 	title_layer = (PDThumbnailTitleLayer *)sublayer;
-      else if ([sublayer isKindOfClass:[PDThumbnailRatingLayer class]])
-	rating_layer = (PDThumbnailRatingLayer *)sublayer;
+      else if ([sublayer isKindOfClass:[PDImageRatingLayer class]])
+	rating_layer = (PDImageRatingLayer *)sublayer;
       else if ([sublayer isKindOfClass:[PDThumbnailSelectionLayer class]])
 	selection_layer = (PDThumbnailSelectionLayer *)sublayer;
     }
@@ -245,7 +235,7 @@ CA_HIDDEN
 
       if ((rating != 0 || flagged || hidden) && rating_layer == nil)
 	{
-	  rating_layer = [PDThumbnailRatingLayer layer];
+	  rating_layer = [PDImageRatingLayer layer];
 	  [rating_layer setDelegate:[self delegate]];
 	  [self addSublayer:rating_layer];
 	}
@@ -300,7 +290,7 @@ CA_HIDDEN
 
 @end
 
-@implementation PDThumbnailTextLayer
+@implementation PDThumbnailTitleLayer
 
 + (id)defaultValueForKey:(NSString *)key
 {
@@ -310,92 +300,10 @@ CA_HIDDEN
     return [NSNumber numberWithDouble:[NSFont smallSystemFontSize]];
   else if ([key isEqualToString:@"truncationMode"])
     return @"start";
-  else
-    return [super defaultValueForKey:key];
-}
-
-@end
-
-@implementation PDThumbnailTitleLayer
-
-+ (id)defaultValueForKey:(NSString *)key
-{
-  if ([key isEqualToString:@"anchorPoint"])
+  else if ([key isEqualToString:@"anchorPoint"])
     return [NSValue valueWithPoint:NSZeroPoint];
   else
     return [super defaultValueForKey:key];
-}
-
-@end
-
-@implementation PDThumbnailRatingLayer
-
-@dynamic rating, flagged, hiddenState;
-
-+ (id)defaultValueForKey:(NSString *)key
-{
-  if ([key isEqualToString:@"anchorPoint"])
-    return [NSValue valueWithPoint:NSMakePoint(0, 1)];
-  else if ([key isEqualToString:@"fontSize"])
-    return [NSNumber numberWithDouble:[NSFont systemFontSize]];
-  else if ([key isEqualToString:@"backgroundColor"])
-    return (id)[[NSColor colorWithDeviceWhite:0 alpha:.3] CGColor];
-  else
-    return [super defaultValueForKey:key];
-}
-
-- (void)didChangeValueForKey:(NSString *)key
-{
-  [super didChangeValueForKey:key];
-
-  if ([key isEqualToString:@"rating"]
-      || [key isEqualToString:@"flagged"]
-      || [key isEqualToString:@"hiddenState"])
-    {
-      [self setNeedsLayout];
-    }
-}
-
-- (void)layoutSublayers
-{
-  int rating = [self rating];
-  BOOL flagged = [self isFlagged];
-  BOOL hiddenState = [self hiddenState];
-
-  unichar buf[8];
-  size_t len = 0;
-
-  if (rating > 0)
-    {
-      rating = rating <= 5 ? rating : 5;
-
-      int i;
-      for (i = 0; i < rating; i++)
-	buf[len++] = 0x2605;		/* BLACK STAR */
-    }
-  else if (rating < 0)
-    {
-      buf[len++] = 0x2716;		/* HEAVY MULTIPLICATION X */
-    }
-
-  if (flagged)
-    {
-      if (len != 0)
-	buf[len++] = ' ';
-      buf[len++] = 0x2691;		/* BLACK FLAG */
-    }
-
-  if (hiddenState)
-    {
-      if (len != 0)
-	buf[len++] = ' ';
-      buf[len++] = 0x272a;		/* CIRCLED WHITE STAR */
-    }
-
-  if (len != 0)
-    [self setString:[NSString stringWithCharacters:buf length:len]];
-  else
-    [self setString:nil];
 }
 
 @end

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		57062771195A75D50089B449 /* PDImageRatingLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 57062770195A75D50089B449 /* PDImageRatingLayer.m */; };
 		5706FE811857AF0F00E57ECA /* PDImportViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5706FE801857AF0F00E57ECA /* PDImportViewController.m */; };
 		5706FE841857AF1B00E57ECA /* PDImportView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5706FE821857AF1B00E57ECA /* PDImportView.xib */; };
 		570701D818400506008D39D4 /* app-icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 570701D718400506008D39D4 /* app-icon.icns */; };
@@ -70,6 +71,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5706276F195A75D50089B449 /* PDImageRatingLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImageRatingLayer.h; sourceTree = "<group>"; };
+		57062770195A75D50089B449 /* PDImageRatingLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImageRatingLayer.m; sourceTree = "<group>"; };
 		5706FE7F1857AF0F00E57ECA /* PDImportViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDImportViewController.h; sourceTree = "<group>"; };
 		5706FE801857AF0F00E57ECA /* PDImportViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDImportViewController.m; sourceTree = "<group>"; };
 		5706FE831857AF1B00E57ECA /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = PDImportView.xib; sourceTree = "<group>"; };
@@ -348,6 +351,8 @@
 				57C6BAB318343FA60098F967 /* PDImageLayer.m */,
 				57DADC0C1833C40F006D0BC1 /* PDImageGridView.h */,
 				57DADC0D1833C40F006D0BC1 /* PDImageGridView.m */,
+				5706276F195A75D50089B449 /* PDImageRatingLayer.h */,
+				57062770195A75D50089B449 /* PDImageRatingLayer.m */,
 				57E053B51830576A00123059 /* PDThumbnailLayer.h */,
 				57E053B61830576A00123059 /* PDThumbnailLayer.m */,
 				5717B44B18424A6000149627 /* PDMetadataView.h */,
@@ -489,6 +494,7 @@
 				575B96841869D9820009625F /* PDLocalFileManager.m in Sources */,
 				57C18110182FDCF9002B8DB2 /* PDColor.m in Sources */,
 				57CE6A29182D863E000BF04E /* PDSplitView.m in Sources */,
+				57062771195A75D50089B449 /* PDImageRatingLayer.m in Sources */,
 				57075C79185D2FC30097E15A /* PDLibraryView.m in Sources */,
 				5727CDA3184A3EB3007BF7E8 /* PDPredicatePanelController.m in Sources */,
 				574B786E185917BC0095FC87 /* PDFoundationExtensions.m in Sources */,
