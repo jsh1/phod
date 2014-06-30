@@ -901,6 +901,8 @@ reload_item(PDLibraryItem *item)
     [_foldersGroup resetSearchState];
 
   [_outlineView reloadDataPreservingSelectedRows];
+
+  [self updateImageList:0];
 }
 
 - (IBAction)importAction:(id)sender
