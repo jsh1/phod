@@ -139,8 +139,12 @@
   [super loadView];
 
   _viewHasBeenLoaded = YES;
-
-  if ([self view] != nil)
+  
+  // NSViewController calls -viewDidLoad on 10.10 and later, so avoid
+  // calling it twice.
+  
+  if ([self view] != nil
+      && ![NSViewController instancesRespondToSelector:@selector(viewDidLoad)])
     [self viewDidLoad];
 }
 
@@ -227,7 +231,7 @@
 
 - (void)_backgroundActivityDidChange:(NSNotification *)note
 {
-  PDAppDelegate *delegate = [NSApp delegate];
+  PDAppDelegate *delegate = (id)[NSApp delegate];
 
   BOOL state = [delegate backgroundActivity];
 

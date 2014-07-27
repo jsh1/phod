@@ -36,7 +36,7 @@
 		578F0FD4182D91FD001A5152 /* PDInfoView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCA182D91FD001A5152 /* PDInfoView.xib */; };
 		578F0FD5182D91FD001A5152 /* PDLibraryView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCC182D91FD001A5152 /* PDLibraryView.xib */; };
 		578F0FD6182D91FD001A5152 /* PDWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCE182D91FD001A5152 /* PDWindow.xib */; };
-		57B1FAF9184FCBDB00FEF7DB /* PXSourceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAF6184FCBDB00FEF7DB /* PXSourceList.m */; };
+		57B1FAF9184FCBDB00FEF7DB /* PXSourceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAF6184FCBDB00FEF7DB /* PXSourceList.m */; settings = {COMPILER_FLAGS = "-Wno-deprecated"; }; };
 		57B1FAFC184FCCFB00FEF7DB /* PDLibraryGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAFB184FCCFB00FEF7DB /* PDLibraryGroup.m */; };
 		57B1FAFF184FDA4900FEF7DB /* PDLibraryQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAFE184FDA4900FEF7DB /* PDLibraryQuery.m */; };
 		57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */; };

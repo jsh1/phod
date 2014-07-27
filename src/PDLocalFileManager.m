@@ -106,7 +106,7 @@
 {
   /* This will return file://path or something, which seems ok. */
 
-  return [[NSURL fileURLWithPath:_path] string];
+  return [[NSURL fileURLWithPath:_path] absoluteString];
 }
 
 - (NSImage *)iconImage

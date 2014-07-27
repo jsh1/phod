@@ -308,7 +308,7 @@ static NSOperationQueue *_narrowQueue;
       dispatch_async(dispatch_get_main_queue(), ^{
 	NSInteger count = ([_wideQueue operationCount]
 			   + [_narrowQueue operationCount]);
-	PDAppDelegate *delegate = [NSApp delegate];
+	PDAppDelegate *delegate = (id)[NSApp delegate];
 	if (count != 0)
 	  [delegate addBackgroundActivity:self];
 	else

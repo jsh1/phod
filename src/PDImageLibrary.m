@@ -501,7 +501,7 @@ convert_hexdigit(int c)
       dispatch_async(dispatch_get_main_queue(), ^
 	{
 	  NSInteger count = [_ioQueue operationCount];
-	  PDAppDelegate *delegate = [NSApp delegate];
+	  PDAppDelegate *delegate = (id)[NSApp delegate];
 	  if (count != 0)
 	    [delegate addBackgroundActivity:self];
 	  else
