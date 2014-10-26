@@ -39,10 +39,6 @@
 
 - (void)invalidate;
 
-@property(nonatomic, readonly) BOOL viewHasBeenLoaded;
-
-- (void)viewDidLoad;
-
 - (void)viewWillAppear;
 - (void)viewDidAppear;
 

@@ -30,12 +30,10 @@
 @implementation PDViewController
 {
   NSMutableArray *_subviewControllers;
-  BOOL _viewHasBeenLoaded;
   BOOL _pendingProgressUpdate;
 }
 
 @synthesize controller = _controller;
-@synthesize viewHasBeenLoaded = _viewHasBeenLoaded;
 
 + (NSString *)viewNibName
 {
@@ -126,26 +124,14 @@
 
 - (void)viewDidLoad
 {
+  [super viewDidLoad];
+
   if (_progressIndicator != nil)
     {
       [[NSNotificationCenter defaultCenter]
        addObserver:self selector:@selector(_backgroundActivityDidChange:)
        name:PDBackgroundActivityDidChange object:[NSApp delegate]];
     }
-}
-
-- (void)loadView
-{
-  [super loadView];
-
-  _viewHasBeenLoaded = YES;
-  
-  // NSViewController calls -viewDidLoad on 10.10 and later, so avoid
-  // calling it twice.
-  
-  if ([self view] != nil
-      && ![NSViewController instancesRespondToSelector:@selector(viewDidLoad)])
-    [self viewDidLoad];
 }
 
 - (void)viewWillAppear

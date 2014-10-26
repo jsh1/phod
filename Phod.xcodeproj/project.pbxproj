@@ -630,7 +630,7 @@
 				);
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.10;
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = Debug;
@@ -648,7 +648,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.10;
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = Release;
@@ -660,6 +660,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/Phod-Prefix.pch";
 				INFOPLIST_FILE = "resources/Phod-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -672,6 +673,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "src/Phod-Prefix.pch";
 				INFOPLIST_FILE = "resources/Phod-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
