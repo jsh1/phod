@@ -249,8 +249,9 @@
 {
   CGFloat scale = [_imageView imageScale];
   CGFloat fitScale = [_imageView scaleToFitScale];
+  CGFloat actualScale = [_imageView scaleToActualScale];
 
-  scale = fabs(scale - fitScale) > .001 ? fitScale : 1;
+  scale = fabs(scale - fitScale) > .001 ? fitScale : actualScale;
 
   [_imageView setImageScale:scale preserveOrigin:YES];
 }

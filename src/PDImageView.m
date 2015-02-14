@@ -153,6 +153,12 @@
   return scale < 1 ? scale : 1;
 }
 
+- (CGFloat)scaleToActualScale
+{
+  CGFloat scale = [[self window] backingScaleFactor];
+  return scale > 1 ? 1 / scale : 1;
+}
+
 - (void)setImageScale:(CGFloat)scale preserveOrigin:(BOOL)flag
 {
   if (!flag)

@@ -35,6 +35,7 @@
 
 - (CGFloat)scaleToFitScale;
 - (CGFloat)scaleToFillScale;
+- (CGFloat)scaleToActualScale;
 
 - (void)setImageScale:(CGFloat)scale preserveOrigin:(BOOL)flag;
 
