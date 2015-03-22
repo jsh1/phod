@@ -70,7 +70,7 @@
       struct tm tm = {0};
       localtime_r(&date, &tm);
       char buf[2048];
-      strftime(buf, sizeof(buf), [format UTF8String], &tm);
+      strftime(buf, sizeof(buf), format.UTF8String, &tm);
       _nameField.stringValue = [NSString stringWithUTF8String:buf];
     }
 }

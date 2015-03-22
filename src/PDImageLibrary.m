@@ -792,10 +792,8 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 	}
       else
 	{
-	  NSDictionary *file_types
-	    = [image imagePropertyForKey:PDImage_FileTypes];
-	  NSString *active_type
-	    = [image imagePropertyForKey:PDImage_ActiveType];
+	  NSDictionary *file_types = image[PDImage_FileTypes];
+	  NSString *active_type = image[PDImage_ActiveType];
 	  NSSet *all_types = [NSSet setWithArray:[file_types allKeys]];
 
 	  [self importImages:@[image] toDirectory:dir fileTypes:all_types
@@ -1014,7 +1012,7 @@ error:
       if (name == nil)
 	continue;
 
-      NSDictionary *src_types = [src_im imagePropertyForKey:PDImage_FileTypes];
+      NSDictionary *src_types = src_im[PDImage_FileTypes];
 
       NSMutableDictionary *dst_types = [NSMutableDictionary dictionary];
       NSMutableArray *dst_paths = [NSMutableArray array];

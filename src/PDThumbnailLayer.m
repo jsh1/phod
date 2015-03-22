@@ -266,7 +266,7 @@ CA_HIDDEN
   if ([key isEqualToString:@"font"])
     return [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]];
   else if ([key isEqualToString:@"fontSize"])
-    return [NSNumber numberWithDouble:[NSFont smallSystemFontSize]];
+    return @([NSFont smallSystemFontSize]);
   else if ([key isEqualToString:@"truncationMode"])
     return @"start";
   else if ([key isEqualToString:@"anchorPoint"])

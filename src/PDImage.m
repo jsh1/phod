@@ -234,6 +234,9 @@ cache_path_for_type(PDImageLibrary *lib, uint32_t file_id, NSInteger type)
   BOOL _donePrefetch;
   NSOperation *_prefetchOp;
 
+  int _rating;
+  BOOL _deleted;
+  BOOL _hidden;
   BOOL _removed;
 }
 
@@ -242,9 +245,6 @@ cache_path_for_type(PDImageLibrary *lib, uint32_t file_id, NSInteger type)
 @synthesize removed = _removed;
 @synthesize date = _date;
 @synthesize UUID = _uuid;
-@synthesize rating = _rating;
-@synthesize deleted = _deleted;
-@synthesize hidden = _hidden;
 
 static NSOperationQueue *_wideQueue;
 static NSOperationQueue *_narrowQueue;
@@ -510,8 +510,8 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
 - (NSString *)imageFile
 {
-  NSDictionary *file_types = [self imagePropertyForKey:PDImage_FileTypes];
-  NSString *active_type = [self imagePropertyForKey:PDImage_ActiveType];
+  NSDictionary *file_types = self[PDImage_FileTypes];
+  NSString *active_type = self[PDImage_ActiveType];
 
   return file_conforming_to(file_types, (__bridge CFStringRef)active_type);
 }
@@ -564,7 +564,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 	}
       else if ([key isEqualToString:PDImage_Rejected])
 	{
-	  value = [self imagePropertyForKey:PDImage_Rating];
+	  value = self[PDImage_Rating];
 	  if (value != nil)
 	    value = @([value intValue] < 0);
 	}
@@ -623,6 +623,16 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
     }
 }
 
+- (id)objectForKeyedSubscript:(id <NSCopying>)key
+{
+  return [self imagePropertyForKey:(NSString *)key];
+}
+
+- (void)setObject:(id)obj forKeyedSubscript:(id <NSCopying>)key
+{
+  [self setImageProperty:obj forKey:(NSString *)key];
+}
+
 + (BOOL)imagePropertyIsEditableInUI:(NSString *)key
 {
   static NSSet *editable_keys;
@@ -644,7 +654,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
 - (NSString *)localizedImagePropertyForKey:(NSString *)key
 {
-  id value = [self imagePropertyForKey:key];
+  id value = self[key];
   if (value == nil)
     return nil;
 
@@ -657,7 +667,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
   if (value == nil)
     return;
 
-  [self setImageProperty:value forKey:key];
+  self[key] = value;
 }
 
 - (id)expressionValues
@@ -757,8 +767,8 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 	      key = PDImage_ISOSpeed;
 	      /* fall through */
 	    do_key:
-	      obj1 = [obj1 imagePropertyForKey:key];
-	      obj2 = [obj2 imagePropertyForKey:key];
+	      obj1 = obj1[key];
+	      obj2 = obj2[key];
 	      break;
 	    }
 
@@ -858,9 +868,9 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 {
   if (_date == nil)
     {
-      id value = [self imagePropertyForKey:PDImage_OriginalDate];
+      id value = self[PDImage_OriginalDate];
       if (value == nil)
-	value = [self imagePropertyForKey:PDImage_DigitizedDate];
+	value = self[PDImage_DigitizedDate];
       time_t t = (value != nil
 		  ? [value unsignedLongValue]
 		  : [_library mtimeOfFileAtPath:self.imageLibraryPath]);
@@ -889,32 +899,32 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
 - (NSString *)name
 {
-  return [self imagePropertyForKey:PDImage_Name];
+  return self[PDImage_Name];
 }
 
 - (void)setName:(NSString *)str
 {
-  [self setImageProperty:str forKey:PDImage_Name];
+  self[PDImage_Name] = str;
 }
 
 - (NSString *)title
 {
-  return [self imagePropertyForKey:PDImage_Title];
+  return self[PDImage_Title];
 }
 
 - (void)setTitle:(NSString *)str
 {
-  [self setImageProperty:str forKey:PDImage_Title];
+  self[PDImage_Title] = str;
 }
 
 - (NSString *)caption
 {
-  return [self imagePropertyForKey:PDImage_Caption];
+  return self[PDImage_Caption];
 }
 
 - (void)setCaption:(NSString *)str
 {
-  [self setImageProperty:str forKey:PDImage_Caption];
+  self[PDImage_Caption] = str;
 }
 
 - (BOOL)isHidden
@@ -924,7 +934,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
 - (void)setHidden:(BOOL)flag
 {
-  [self setImageProperty:@(flag) forKey:PDImage_Hidden];
+  self[PDImage_Hidden] = @(flag);
 }
 
 - (BOOL)isDeleted
@@ -934,17 +944,17 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
 - (void)setDeleted:(BOOL)flag
 {
-  [self setImageProperty:@(flag) forKey:PDImage_Deleted];
+  self[PDImage_Deleted] = @(flag);
 }
 
 - (BOOL)isFlagged
 {
-  return [[self imagePropertyForKey:PDImage_Flagged] boolValue];
+  return [self[PDImage_Flagged] boolValue];
 }
 
 - (void)setFlagged:(BOOL)flag
 {
-  [self setImageProperty:@(flag) forKey:PDImage_Flagged];
+  self[PDImage_Flagged] = @(flag);
 }
 
 - (int)rating
@@ -954,19 +964,19 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
 - (void)setRating:(int)x
 {
-  [self setImageProperty:@(x) forKey:PDImage_Rating];
+  self[PDImage_Rating] = @(x);
 }
 
 - (BOOL)usesRAW
 {
-  NSString *active_type = [self imagePropertyForKey:PDImage_ActiveType];
+  NSString *active_type = self[PDImage_ActiveType];
   
   return UTTypeConformsTo((__bridge CFStringRef)active_type, PDTypeRAWImage);
 }
 
 - (void)setUsesRAW:(BOOL)flag
 {
-  NSDictionary *file_types = [self imagePropertyForKey:PDImage_FileTypes];
+  NSDictionary *file_types = self[PDImage_FileTypes];
 
   for (NSString *type in file_types)
     {
@@ -974,7 +984,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 				       PDTypeRAWImage);
       if ((bool)flag == raw_type)
 	{
-	  [self setImageProperty:type forKey:PDImage_ActiveType];
+	  self[PDImage_ActiveType] = type;
 	  break;
 	}
     }
@@ -982,7 +992,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
 - (BOOL)supportsUsesRAW:(BOOL)flag
 {
-  NSDictionary *file_types = [self imagePropertyForKey:PDImage_FileTypes];
+  NSDictionary *file_types = self[PDImage_FileTypes];
 
   for (NSString *type in file_types)
     {
@@ -997,20 +1007,20 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
 - (CGSize)pixelSize
 {
-  CGFloat pw = [[self imagePropertyForKey:PDImage_PixelWidth] doubleValue];
-  CGFloat ph = [[self imagePropertyForKey:PDImage_PixelHeight] doubleValue];
+  CGFloat pw = [self[PDImage_PixelWidth] doubleValue];
+  CGFloat ph = [self[PDImage_PixelHeight] doubleValue];
 
   return CGSizeMake(pw, ph);
 }
 
 - (unsigned int)orientation
 {
-  return [[self imagePropertyForKey:PDImage_Orientation] unsignedIntValue];
+  return [self[PDImage_Orientation] unsignedIntValue];
 }
 
 - (void)setOrientation:(unsigned int)x
 {
-  [self setImageProperty:@(x) forKey:PDImage_Orientation];
+  self[PDImage_Orientation] = @(x);
 }
 
 - (CGSize)orientedPixelSize
@@ -1079,7 +1089,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 
   [[PDImage writeQueue] waitUntilAllOperationsAreFinished];
 
-  NSDictionary *file_types = [self imagePropertyForKey:PDImage_FileTypes];
+  NSDictionary *file_types = self[PDImage_FileTypes];
   for (NSString *type in file_types)
     {
       NSString *file = file_types[type];
@@ -1159,7 +1169,7 @@ find_unique_path(PDImageLibrary *lib, NSString *path)
 
   NSString *old_json_path = nil, *new_json_path = nil;
 
-  NSDictionary *file_types = [self imagePropertyForKey:PDImage_FileTypes];
+  NSDictionary *file_types = self[PDImage_FileTypes];
 
   NSMutableDictionary *old_paths = [NSMutableDictionary dictionary];
   NSMutableDictionary *new_paths = [NSMutableDictionary dictionary];
@@ -1279,7 +1289,7 @@ find_unique_path(PDImageLibrary *lib, NSString *path)
 
   NSString *json_path = nil;
 
-  NSDictionary *file_types = [self imagePropertyForKey:PDImage_FileTypes];
+  NSDictionary *file_types = self[PDImage_FileTypes];
 
   NSMutableDictionary *old_paths = [NSMutableDictionary dictionary];
   NSMutableDictionary *new_paths = [NSMutableDictionary dictionary];
@@ -1705,7 +1715,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 	[types addObject:type];
     }
 
-  for (NSString *type in [self imagePropertyForKey:PDImage_FileTypes])
+  for (NSString *type in self[PDImage_FileTypes])
     [types addObject:type];
 
   return types;
@@ -1716,7 +1726,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 {
   /* Only provide image data when asked for it, it's usually large. */
 
-  if ([self imagePropertyForKey:PDImage_FileTypes][type] != nil)
+  if (self[PDImage_FileTypes][type] != nil)
     return NSPasteboardWritingPromised;
   else
     return 0;
@@ -1730,7 +1740,7 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 	      pasteboardPropertyListForType:type];
     }
 
-  NSDictionary *file_types = [self imagePropertyForKey:PDImage_FileTypes];
+  NSDictionary *file_types = self[PDImage_FileTypes];
   for (NSString *key in file_types)
     {
       if (UTTypeConformsTo((__bridge CFStringRef)key,

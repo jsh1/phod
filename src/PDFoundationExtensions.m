@@ -45,7 +45,7 @@
 {
   NSInteger count = self.count;
   if (count == 0)
-    return [NSArray array];
+    return @[];
 
   id *objects = STACK_ALLOC(id, count);
 
@@ -64,7 +64,7 @@
 {
   NSInteger count = self.count;
   if (count == 0)
-    return [NSArray array];
+    return @[];
   
   id *objects = STACK_ALLOC(id, count);
 
@@ -77,7 +77,7 @@
 
   NSArray *ret;
   if (idx == 0)
-    ret = [NSArray array];
+    ret = @[];
   else
     ret = [NSArray arrayWithObjects:objects count:idx];
 

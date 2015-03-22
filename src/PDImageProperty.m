@@ -206,7 +206,7 @@ process_gps_dictionary(CFDictionaryRef gps_dict, NSMutableDictionary *dict)
       ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSLatitudeRef);
       if (ptr != NULL && CFEqual(ptr, CFSTR("S")))
 	value = -value;
-      id obj = [NSNumber numberWithDouble:value];
+      id obj = @(value);
       dict[PDImage_Latitude] = obj;
     }
       
@@ -217,7 +217,7 @@ process_gps_dictionary(CFDictionaryRef gps_dict, NSMutableDictionary *dict)
       ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSLongitudeRef);
       if (ptr != NULL && CFEqual(ptr, CFSTR("W")))
 	value = -value;
-      id obj = [NSNumber numberWithDouble:value];
+      id obj = @(value);
       dict[PDImage_Longitude] = obj;
     }
 
@@ -587,7 +587,7 @@ PDImageLocalizedNameOfProperty(NSString *key)
 NSString *
 PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
 {
-  property_type type = lookup_property_type([key UTF8String]);
+  property_type type = lookup_property_type(key.UTF8String);
 
   switch (type)
     {
@@ -634,8 +634,8 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
       return [NSString stringWithFormat:@"%gmm", [value doubleValue]];
 
     case type_direction:
-      str = ![[im imagePropertyForKey:PDImage_DirectionRef]
-	      isEqual:@"T"] ? "Magnetic North" : "True North";
+      str = ![im[PDImage_DirectionRef] isEqual:@"T"]
+        ? "Magnetic North" : "True North";
       return [NSString stringWithFormat:@"%g%@ %s",
 	      [value doubleValue], degrees_string(), str];
 
@@ -708,7 +708,7 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
 id
 PDImageUnlocalizedPropertyValue(NSString *key, NSString *str, PDImage *im)
 {
-  property_type type = lookup_property_type([key UTF8String]);
+  property_type type = lookup_property_type(key.UTF8String);
 
   switch (type)
     {
@@ -720,7 +720,7 @@ PDImageUnlocalizedPropertyValue(NSString *key, NSString *str, PDImage *im)
 	      [NSCharacterSet whitespaceAndNewlineCharacterSet]];
 
     case type_bool:
-      return [NSNumber numberWithBool:[str boolValue]];
+      return @([str boolValue]);
 
     default:
       break;
@@ -739,16 +739,16 @@ PDImageExpressionValues(PDImage *im)
 
 @implementation PDImageExpressionObject
 
-- (id)valueForKey:(id)key
+- (id)valueForKey:(NSString *)key
 {
-  id value = [_image imagePropertyForKey:key];
+  id value = _image[key];
 
-  property_type type = lookup_property_type([key UTF8String]);
+  property_type type = lookup_property_type(key.UTF8String);
 
   switch (type)
     {
     case type_bool:
-      return [NSNumber numberWithBool:[value intValue] != 0];
+      return @([value intValue] != 0);
 
     case type_unix_date:
       return [NSDate dateWithTimeIntervalSince1970:[value unsignedLongValue]];
@@ -761,7 +761,7 @@ PDImageExpressionValues(PDImage *im)
       /* fall through. */
 
     case type_string_array:
-      return value != nil ? value : [NSArray array];
+      return value != nil ? value : @[];
 
     case type_contrast:
     case type_exposure_mode:
@@ -794,7 +794,7 @@ PDImageExpressionValues(PDImage *im)
     case type_saturation:
     case type_sharpness:
       /* Numeric values remain numeric, nil = zero. */
-      return value != nil ? value : [NSNumber numberWithInt:0];
+      return value != nil ? value : @0;
 
     case type_unknown:
       break;
@@ -816,7 +816,7 @@ PDImageParseEXIFDateString_(NSString *str)
   int year, month, day;
   int hours, minutes, seconds;
 
-  if (sscanf([str UTF8String], "%d:%d:%d %d:%d:%d",
+  if (sscanf(str.UTF8String, "%d:%d:%d %d:%d:%d",
 	     &year, &month, &day, &hours, &minutes, &seconds) == 6)
     {
       struct tm tm = {0};
@@ -921,10 +921,8 @@ predicate_bool_template(void)
       [bool_keys addObject:[NSExpression expressionForKeyPath:key]];
     }
 
-  NSArray *bool_values = @[[NSExpression expressionForConstantValue:
-			    [NSNumber numberWithBool:NO]],
-			   [NSExpression expressionForConstantValue:
-			    [NSNumber numberWithBool:YES]]];
+  NSArray *bool_values = @[[NSExpression expressionForConstantValue:@NO],
+			   [NSExpression expressionForConstantValue:@YES]];
 
   NSArray *bool_ops = @[@(NSEqualToPredicateOperatorType),
 			   @(NSNotEqualToPredicateOperatorType)];

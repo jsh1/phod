@@ -34,6 +34,7 @@
 #import "PDImageListViewController.h"
 #import "PDImportViewController.h"
 #import "PDInfoViewController.h"
+#import "PDMacros.h"
 #import "PDSplitView.h"
 #import "PDLibraryViewController.h"
 #import "PDPredicatePanelController.h"
@@ -1078,10 +1079,10 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
 - (IBAction)setImageRatingAction:(NSControl *)sender
 {
-  NSNumber *rating = @(sender.tag);
+  int rating = sender.tag;
 
   [self foreachSelectedImage:^(PDImage *image) {
-    [image setImageProperty:rating forKey:PDImage_Rating];
+    image.rating = rating;
   }];
 }
 
@@ -1090,10 +1091,8 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   int delta = [sender tag];
 
   [self foreachSelectedImage:^(PDImage *image) {
-    int rating = [[image imagePropertyForKey:PDImage_Rating] intValue] + delta;
-    rating = MIN(rating, 5); rating = MAX(rating, -1);
-    [image setImageProperty:
-     [NSNumber numberWithInt:rating] forKey:PDImage_Rating];
+    int rating = image.rating + delta;
+    image.rating = CLAMP(rating, -1, 5);
   }];
 }
 
@@ -1140,9 +1139,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (IBAction)toggleFlaggedAction:(id)sender
 {
   [self foreachSelectedImage:^(PDImage *image) {
-    BOOL flagged = [[image imagePropertyForKey:PDImage_Flagged] boolValue];
-    [image setImageProperty:[NSNumber numberWithBool:!flagged]
-     forKey:PDImage_Flagged];
+    image.flagged = !image.flagged;
   }];
 }
 
@@ -1151,7 +1148,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   __block BOOL all_set = YES, all_clear = YES;
 
   [self foreachSelectedImage:^(PDImage *image) {
-    if ([[image imagePropertyForKey:PDImage_Flagged] boolValue])
+    if (image.flagged)
       all_clear = NO;
     else
       all_set = NO;
@@ -1299,7 +1296,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
     if (orientation >= 1 && orientation <= 8)
       {
 	orientation = map[orientation-1];
-	[image setImageProperty:@(orientation) forKey:PDImage_Orientation];
+	image.orientation = orientation;
       }
   }];
 }

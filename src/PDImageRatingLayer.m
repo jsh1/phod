@@ -35,7 +35,7 @@
   if ([key isEqualToString:@"font"])
     return [NSFont boldSystemFontOfSize:[NSFont systemFontSize]];
   else if ([key isEqualToString:@"fontSize"])
-    return [NSNumber numberWithDouble:[NSFont systemFontSize]];
+    return @([NSFont systemFontSize]);
   else if ([key isEqualToString:@"truncationMode"])
     return @"start";
   else if ([key isEqualToString:@"anchorPoint"])

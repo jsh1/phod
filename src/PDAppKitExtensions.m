@@ -103,7 +103,7 @@
   NSIndexSet *sel = self.selectedRowIndexes;
 
   if (sel.count == 0)
-    return [NSArray array];
+    return @[];
 
   NSMutableArray *array = [NSMutableArray array];
 

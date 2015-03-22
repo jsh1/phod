@@ -282,12 +282,9 @@
 	  [_clipLayer addSublayer:_ratingLayer];
 	}
 
-      _ratingLayer.rating =
-       [[_image imagePropertyForKey:PDImage_Rating] intValue];
-      _ratingLayer.flagged = 
-       [[_image imagePropertyForKey:PDImage_Flagged] boolValue];
-      _ratingLayer.hiddenState =
-       [[_image imagePropertyForKey:PDImage_Hidden] boolValue];
+      _ratingLayer.rating = _image.rating;
+      _ratingLayer.flagged =  _image.flagged;
+      _ratingLayer.hiddenState = _image.hidden;
       _ratingLayer.contentsScale = self.window.backingScaleFactor;
 
       CGRect bounds = CGRectIntersection(_clipLayer.bounds, _imageLayer.frame);

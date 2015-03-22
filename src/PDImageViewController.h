@@ -28,7 +28,7 @@
 
 @interface PDImageViewController : PDViewController
   
-@property(nonatomic) BOOL displaysMetadata;
+@property(nonatomic, assign) BOOL displaysMetadata;
 
 @property(nonatomic, weak) IBOutlet NSTextField *titleLabel;
 @property(nonatomic, weak) IBOutlet PDImageView *imageView;

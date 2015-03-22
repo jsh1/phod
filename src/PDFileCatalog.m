@@ -237,8 +237,7 @@
 	{
 	  fid = ++_lastFileId;
 
-	  [_dict[1] setObject:
-	   [NSNumber numberWithUnsignedInt:fid] forKey:path];
+	  [_dict[1] setObject:@(fid) forKey:path];
 	  _dirty = YES;
 	}
     });
