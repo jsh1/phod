@@ -99,9 +99,12 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 	  _addedImageHost = NO;
 	}
 
-      /* to make -image:setHostedImage: synchronized. */
+      /* To make -image:setHostedImage: synchronized. `old_image` is so
+         that we release the old image outside the spin-lock. The
+         __block qualifier isn't needed (I think) but without it the
+         clang static analyser complains that old_image is never read. */
 
-      id old_image = nil;
+      __block __strong id old_image = nil;
 
       OSSpinLockLock(&_imageLock);
 
@@ -114,6 +117,8 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
       _imageUsesRAW = usesRAW;
 
       OSSpinLockUnlock(&_imageLock);
+
+      old_image = nil;
 
       ((CALayer *)[self.sublayers firstObject]).contents = nil;
       [self setNeedsLayout];

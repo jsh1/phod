@@ -1584,8 +1584,6 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 		    (__bridge CGColorSpaceRef)space);
 		  CGImageRelease(src_im);
 		}
-	      else
-		dst_im = src_im;
 
 	      if (dst_im != NULL)
 		setHostedImage(self, obj, dst_im);
