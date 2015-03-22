@@ -32,7 +32,7 @@
 
 @synthesize indexOfResizableSubview = _indexOfResizableSubview;
 
-- (id)initWithFrame:(NSRect)frame
+- (id)initWithFrame:(CGRect)frame
 {
   self = [super initWithFrame:frame];
   if (self == nil)
@@ -56,21 +56,21 @@
 
 - (NSDictionary *)savedViewState
 {
-  NSArray *subviews = [self subviews];
-  NSRect bounds = [self bounds];
-  BOOL vertical = [self isVertical];
+  NSArray *subviews = self.subviews;
+  CGRect bounds = self.bounds;
+  BOOL vertical = self.vertical;
   CGFloat size = vertical ? bounds.size.width : bounds.size.height;
 
   NSMutableArray *data = [NSMutableArray array];
 
   for (NSView *subview in subviews)
     {
-      NSRect frame = [subview frame];
+      CGRect frame = subview.frame;
       CGFloat x = vertical ? frame.origin.x : frame.origin.y;
       CGFloat w = vertical ? frame.size.width : frame.size.height;
-      [data addObject:[NSNumber numberWithDouble:x / size]];
-      [data addObject:[NSNumber numberWithDouble:w / size]];
-      [data addObject:[NSNumber numberWithBool:[subview isHidden]]];
+      [data addObject:@(x / size)];
+      [data addObject:@(w / size)];
+      [data addObject:@(subview.hidden)];
     }
 
    return @{@"values": data};
@@ -78,26 +78,26 @@
 
 - (void)applySavedViewState:(NSDictionary *)dict
 {
-  NSArray *data = [dict objectForKey:@"values"];
+  NSArray *data = dict[@"values"];
 
-  NSArray *subviews = [self subviews];
+  NSArray *subviews = self.subviews;
   NSInteger count = [subviews count];
 
   if ([data count] != count * 3)
     return;
 
-  NSRect bounds = [self bounds];
-  BOOL vertical = [self isVertical];
+  CGRect bounds = self.bounds;
+  BOOL vertical = self.vertical;
   CGFloat size = vertical ? bounds.size.width : bounds.size.height;
 
   for (NSInteger i = 0; i < count; i++)
     {
-      CGFloat x = [[data objectAtIndex:i*3+0] doubleValue] * size;
-      CGFloat w = [[data objectAtIndex:i*3+1] doubleValue] * size;
-      BOOL flag = [[data objectAtIndex:i*3+2] boolValue];
+      CGFloat x = [data[i*3+0] doubleValue] * size;
+      CGFloat w = [data[i*3+1] doubleValue] * size;
+      BOOL flag = [data[i*3+2] boolValue];
 
-      NSView *subview = [subviews objectAtIndex:i];
-      NSRect frame = bounds;
+      NSView *subview = subviews[i];
+      CGRect frame = bounds;
 
       if (vertical)
 	{
@@ -110,8 +110,8 @@
 	  frame.size.height = w;
 	}
 
-      [subview setHidden:flag];
-      [subview setFrame:frame];
+      subview.hidden = flag;
+      subview.frame = frame;
     }
 
   [self adjustSubviews];
@@ -119,9 +119,9 @@
 
 - (void)setSubview:(NSView *)subview collapsed:(BOOL)flag
 {
-  if (flag != [subview isHidden])
+  if (flag != subview.hidden)
     {
-      [subview setHidden:flag];
+      subview.hidden = flag;
 
       _collapsingSubview = subview;
       [self adjustSubviews];
@@ -129,9 +129,9 @@
     }
 }
 
-- (void)resizeSubviewsWithOldSize:(NSSize)sz
+- (void)resizeSubviewsWithOldSize:(CGSize)sz
 {
-  NSArray *subviews = [self subviews];
+  NSArray *subviews = self.subviews;
 
   if (_indexOfResizableSubview < 0
       || _indexOfResizableSubview >= [subviews count])
@@ -140,19 +140,19 @@
       return;
     }
 
-  NSRect bounds = [self bounds];
+  CGRect bounds = self.bounds;
   NSInteger count = [subviews count];
-  BOOL vertical = [self isVertical];
-  CGFloat thick = [self dividerThickness];
+  BOOL vertical = self.vertical;
+  CGFloat thick = self.dividerThickness;
   CGFloat p = vertical ? bounds.origin.x : bounds.origin.y;
 
   for (NSInteger idx = 0; idx < count; idx++)
     {
-      NSView *view = [subviews objectAtIndex:idx];
-      if ([view isHidden])
+      NSView *view = subviews[idx];
+      if (view.hidden)
 	continue;
 
-      NSRect frame = [view frame];
+      CGRect frame = [view frame];
 
       if (vertical)
 	frame.origin.y = bounds.origin.y, frame.size.height=bounds.size.height;
@@ -172,7 +172,7 @@
 	    frame.size.height += bounds.size.height - sz.height;
 	}
 
-      [view setFrame:frame];
+      view.frame = frame;
 
       if (vertical)
 	p += frame.size.width + thick;
@@ -191,7 +191,7 @@
       // If more than two subviews, only move those adjacent to the
       // [un]collapsing view.
 
-      NSArray *subviews = [self subviews];
+      NSArray *subviews = self.subviews;
       NSInteger idx1 = [subviews indexOfObjectIdenticalTo:_collapsingSubview];
       NSInteger idx2 = [subviews indexOfObjectIdenticalTo:subview];
 
@@ -204,7 +204,7 @@
 
 - (CGFloat)minimumSizeOfSubview:(NSView *)subview
 {
-  id delegate = [self delegate];
+  id delegate = self.delegate;
 
   if ([delegate respondsToSelector:@selector(splitView:minimumSizeOfSubview:)])
     return [delegate splitView:self minimumSizeOfSubview:subview];

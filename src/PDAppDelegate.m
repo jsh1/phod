@@ -30,25 +30,14 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 
 @implementation PDAppDelegate
 {
-  IBOutlet PDWindowController *_windowController;
-  IBOutlet NSMenu *_photosMenu;
-  IBOutlet NSMenu *_imageContextMenu;
-  IBOutlet NSMenu *_viewMenu;
-  IBOutlet NSMenu *_windowMenu;
-
+  NSMenu *_imageContextMenu;
   NSMutableSet *_backgroundActivity;
 }
 
 @synthesize windowController = _windowController;
-
-- (void)dealloc
-{
-  [_windowController release];
-  [_backgroundActivity release];
-  [_imageContextMenu release];
-
-  [super dealloc];
-}
+@synthesize photosMenu = _photosMenu;
+@synthesize viewMenu = _viewMenu;
+@synthesize windowMenu = _windowMenu;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
@@ -74,7 +63,7 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 
 - (IBAction)showWindow:(id)sender
 {
-  [[self windowController] showWindow:sender];
+  [_windowController showWindow:sender];
 }
 
 - (BOOL)backgroundActivity
@@ -132,48 +121,48 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 {
   if (menu == _photosMenu || menu == _imageContextMenu)
     {
-      for (NSMenuItem *item in [menu itemArray])
+      for (NSMenuItem *item in menu.itemArray)
 	{
-	  SEL sel = [item action];
+	  SEL sel = item.action;
 	  if (sel == @selector(toggleFlaggedAction:))
-	    [item setState:[_windowController flaggedState]];
+	    item.state = _windowController.flaggedState;
 	  else if (sel == @selector(toggleHiddenAction:))
-	    [item setState:[_windowController hiddenState]];
+	    item.state = _windowController.hiddenState;
 	  else if (sel == @selector(toggleDeletedAction:))
-	    [item setState:[_windowController deletedState]];
+	    item.state = _windowController.deletedState;
 	  else if (sel == @selector(toggleRawAction:))
-	    [item setState:[_windowController rawState]];
+	    item.state = _windowController.rawState;
 	}
     }
   else if (menu == _viewMenu)
     {
-      NSInteger sidebarMode = [_windowController sidebarMode];
-      NSInteger contentMode = [_windowController contentMode];
+      NSInteger sidebarMode = _windowController.sidebarMode;
+      NSInteger contentMode = _windowController.contentMode;
 
-      for (NSMenuItem *item in [menu itemArray])
+      for (NSMenuItem *item in menu.itemArray)
 	{
-	  SEL sel = [item action];
+	  SEL sel = item.action;
 	  if (sel == @selector(setSidebarModeAction:))
-	    [item setState:sidebarMode == [item tag]];
+	    item.state = sidebarMode == item.tag;
 	  else if (sel == @selector(setContentModeAction:))
-	    [item setState:contentMode == [item tag]];
+	    item.state = contentMode == item.tag;
 	  else if (sel == @selector(toggleListMetadata:))
-	    [item setState:[_windowController displaysListMetadata]];
+	    item.state = _windowController.displaysListMetadata;
 	  else if (sel == @selector(toggleImageMetadata:))
-	    [item setState:[_windowController displaysImageMetadata]];
+	    item.state = _windowController.displaysImageMetadata;
 	  else if (sel == @selector(toggleShowsHiddenImages:))
-	    [item setState:[_windowController showsHiddenImages]];
+	    item.state = _windowController.showsHiddenImages;
 	}
     }
   else if (menu == _windowMenu)
     {
-      BOOL sidebarVisible = [_windowController isSidebarVisible];
+      BOOL sidebarVisible = _windowController.sidebarVisible;
 
-      for (NSMenuItem *item in [menu itemArray])
+      for (NSMenuItem *item in menu.itemArray)
 	{
-	  SEL sel = [item action];
+	  SEL sel = item.action;
 	  if (sel == @selector(toggleSidebarAction:))
-	    [item setHidden:[item tag] != sidebarVisible];
+	    item.hidden = item.tag != sidebarVisible;
 	}
     }
 }

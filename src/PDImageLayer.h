@@ -32,7 +32,7 @@
 
 @property(nonatomic, getter=isThumbnail) BOOL thumbnail;
 
-@property(nonatomic) CGColorSpaceRef colorSpace;
+@property(nonatomic, strong) __attribute__((NSObject)) CGColorSpaceRef colorSpace;
 
 - (void)invalidate;
 

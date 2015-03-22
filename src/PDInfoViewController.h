@@ -28,6 +28,10 @@
 
 @interface PDInfoViewController : PDViewController
 
+@property(nonatomic, weak) IBOutlet PDMetadataView *metadataView;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *popupButton;
+@property(nonatomic, strong) IBOutlet NSMenu *popupMenu;
+
 @property(nonatomic, copy) NSString *activeGroup;
 
 - (NSString *)localizedImagePropertyForKey:(NSString *)key;

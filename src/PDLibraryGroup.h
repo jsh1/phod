@@ -28,7 +28,7 @@
 
 @property(nonatomic, copy) NSString *name;
 @property(nonatomic, copy) NSString *identifier;
-@property(nonatomic, retain) NSImage *iconImage;
+@property(nonatomic, strong) NSImage *iconImage;
 
 @property(nonatomic, copy) NSArray *subitems;
 

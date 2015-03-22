@@ -32,7 +32,7 @@
 
 + (PDFileManager *)fileManagerWithPath:(NSString *)path
 {
-  return [[[PDLocalFileManager alloc] initWithPath:path] autorelease];
+  return [[PDLocalFileManager alloc] initWithPath:path];
 }
 
 + (PDFileManager *)fileManagerWithPropertyListRepresentation:(id)obj

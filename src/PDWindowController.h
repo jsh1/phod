@@ -64,13 +64,19 @@ enum PDWindowControllerRebuildImageListFlags
 
 @interface PDWindowController : NSWindowController <NSSplitViewDelegate>
 
+@property(nonatomic, weak) IBOutlet PDSplitView *splitView;
+@property(nonatomic, weak) IBOutlet NSSegmentedControl *sidebarControl;
+@property(nonatomic, weak) IBOutlet NSView *sidebarView;
+@property(nonatomic, weak) IBOutlet NSView *contentView;
+@property(nonatomic, weak) IBOutlet NSView *accessoryView;
+
 - (void)invalidate;
 
-@property(nonatomic) NSInteger sidebarMode;
-@property(nonatomic) NSInteger contentMode;
-@property(nonatomic) NSInteger accessoryMode;
+@property(nonatomic, assign) NSInteger sidebarMode;
+@property(nonatomic, assign) NSInteger contentMode;
+@property(nonatomic, assign) NSInteger accessoryMode;
 
-@property(nonatomic) BOOL showsHiddenImages;
+@property(nonatomic, assign) BOOL showsHiddenImages;
 
 - (BOOL)foreachImage:(void (^)(PDImage *, BOOL *stop))thunk;
 
@@ -86,12 +92,12 @@ enum PDWindowControllerRebuildImageListFlags
 
 @property(nonatomic, copy) NSPredicate *imagePredicate;
 
-@property(nonatomic) BOOL nilPredicateIncludesRejected;
+@property(nonatomic, assign) BOOL nilPredicateIncludesRejected;
 
-@property(nonatomic) int imageSortKey;
-@property(nonatomic, getter=isImageSortReversed) BOOL imageSortReversed;
+@property(nonatomic, assign) int imageSortKey;
+@property(nonatomic, assign, getter=isImageSortReversed) BOOL imageSortReversed;
 
-@property(nonatomic, readonly) NSArray *filteredImageList;
+@property(nonatomic, copy, readonly) NSArray *filteredImageList;
 
 /* Setting the sort key or image predicate does not change the result
    of filteredImageList, this method must be called explicitly. (But
@@ -101,7 +107,7 @@ enum PDWindowControllerRebuildImageListFlags
 - (void)rebuildImageListIfPreserving;
 
 @property(nonatomic, copy) NSIndexSet *selectedImageIndexes;
-@property NSInteger primarySelectionIndex;
+@property(nonatomic, assign) NSInteger primarySelectionIndex;
 - (void)setSelectedImageIndexes:(NSIndexSet *)set primary:(NSInteger)idx;
 
 /* Convenience wrappers for the index-based selection accessors. */
@@ -135,7 +141,7 @@ enum PDWindowControllerRebuildImageListFlags
 
 - (void)foreachSelectedImage:(void (^)(PDImage *))block;
 
-@property(nonatomic) BOOL importMode;
+@property(nonatomic, assign) BOOL importMode;
 
 - (void)setImportDestinationLibrary:(PDImageLibrary *)lib
     directory:(NSString *)dir;
@@ -150,7 +156,7 @@ enum PDWindowControllerRebuildImageListFlags
 - (void)applySavedWindowState;
 
 - (IBAction)toggleSidebarAction:(id)sender;
-- (BOOL)isSidebarVisible;
+@property(nonatomic, assign, readonly, getter=isSidebarVisible) BOOL sidebarVisible;
 
 - (IBAction)setSidebarModeAction:(id)sender;
 - (IBAction)cycleSidebarModeAction:(id)sender;
@@ -208,6 +214,6 @@ enum PDWindowControllerRebuildImageListFlags
 
 - (IBAction)reloadLibraries:(id)sender;
 
-@property(nonatomic, readonly, getter=isTrashEmpty) BOOL trashEmpty;
+@property(nonatomic, assign, readonly, getter=isTrashEmpty) BOOL trashEmpty;
 
 @end

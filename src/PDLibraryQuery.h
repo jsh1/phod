@@ -27,7 +27,7 @@
 @interface PDLibraryQuery : PDLibraryGroup
 
 @property(nonatomic, copy) NSPredicate *predicate;
-@property(nonatomic, getter=isTrashcan) BOOL trashcan;
-@property(nonatomic) BOOL nilPredicateIncludesRejected;
+@property(nonatomic, assign, getter=isTrashcan) BOOL trashcan;
+@property(nonatomic, assign) BOOL nilPredicateIncludesRejected;
 
 @end

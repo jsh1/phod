@@ -28,9 +28,8 @@
 #import "PDWindowController.h"
 
 @implementation PDLibraryView
-{
-  IBOutlet PDLibraryViewController *_controller;
-}
+
+@synthesize controller = _controller;
 
 - (void)keyDown:(NSEvent *)e
 {

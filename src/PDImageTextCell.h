@@ -26,6 +26,6 @@
 
 @interface PDImageTextCell : NSTextFieldCell
 
-@property(nonatomic, retain) NSImage *image;
+@property(nonatomic, strong) NSImage *image;
 
 @end

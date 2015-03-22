@@ -27,10 +27,6 @@
 NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidChange";
 
 @implementation PDLibraryItem
-{
-  PDLibraryItem *_parent;
-  BOOL _hidden;
-}
 
 @synthesize parent = _parent;
 @synthesize hidden = _hidden;
@@ -39,7 +35,7 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
 {
   BOOL matches = NO;
 
-  for (PDLibraryItem *item in [self subitems])
+  for (PDLibraryItem *item in self.subitems)
     {
       if ([item applySearchString:str])
 	matches = YES;
@@ -50,23 +46,23 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
 
 - (void)resetSearchState
 {
-  [self setHidden:NO];
+  self.hidden = NO;
 
-  for (PDLibraryItem *item in [self subitems])
+  for (PDLibraryItem *item in self.subitems)
     [item resetSearchState];
 }
 
 - (void)recursivelyClearHiddenState
 {
-  [self setHidden:NO];
+  self.hidden = NO;
 
-  for (PDLibraryItem *item in [self subitems])
+  for (PDLibraryItem *item in self.subitems)
     [item recursivelyClearHiddenState];
 }
 
 - (NSArray *)subitems
 {
-  return [NSArray array];
+  return @[];
 }
 
 - (BOOL)foreachSubitem:(void (^)(PDLibraryItem *item, BOOL *stop))thunk
@@ -76,7 +72,7 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
   if (stop)
     return NO;
 
-  for (PDLibraryItem *subitem in [self subitems])
+  for (PDLibraryItem *subitem in self.subitems)
     {
       if (![subitem foreachSubitem:thunk])
 	return NO;
@@ -87,9 +83,9 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
 
 - (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk
 {
-  for (PDLibraryItem *subitem in [self subitems])
+  for (PDLibraryItem *subitem in self.subitems)
     {
-      if (![subitem isHidden])
+      if (!subitem.hidden)
 	{
 	  if (![subitem foreachSubimage:thunk])
 	    return NO;
@@ -146,7 +142,7 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
 
 - (NSString *)identifier
 {
-  return [self titleString];
+  return self.titleString;
 }
 
 - (void)unmount
@@ -155,7 +151,7 @@ NSString * const PDLibraryItemSubimagesDidChange = @"PDLibraryItemSubimagesDidCh
 
 - (BOOL)isDescendantOf:(PDLibraryItem *)item
 {
-  for (PDLibraryItem *tem = self; tem != nil; tem = [tem parent])
+  for (PDLibraryItem *tem = self; tem != nil; tem = tem.parent)
     {
       if (tem == item)
 	return YES;

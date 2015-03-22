@@ -26,38 +26,16 @@
 
 @implementation PDLibraryGroup
 {
-  NSString *_name;
-  NSString *_identifier;
-  NSImage *_iconImage;
   NSMutableArray *_subitems;
 }
 
 @synthesize name = _name;
+@synthesize identifier = _identifier;
 @synthesize iconImage = _iconImage;
-
-- (void)dealloc
-{
-  [_name release];
-  [_iconImage release];
-  [_identifier release];
-  for (PDLibraryItem *item in _subitems)
-    [item setParent:nil];
-  [_subitems release];
-  [super dealloc];
-}
-
-- (void)setIdentifier:(NSString *)str
-{
-  if (_identifier != str)
-    {
-      [_identifier release];
-      _identifier = [str copy];
-    }
-}
 
 - (NSArray *)subitems
 {
-  return _subitems != nil ? _subitems : [NSArray array];
+  return _subitems == nil ? @[] : [_subitems copy];
 }
 
 - (void)setSubitems:(NSArray *)array
@@ -65,13 +43,12 @@
   if (_subitems != array)
     {
       for (PDLibraryItem *item in _subitems)
-	[item setParent:nil];
+	item.parent = nil;
 
-      [_subitems release];
       _subitems = [array mutableCopy];
 
       for (PDLibraryItem *item in _subitems)
-	[item setParent:self];
+	item.parent = self;
     }
 }
 
@@ -81,9 +58,9 @@
       || [_subitems indexOfObjectIdenticalTo:item] == NSNotFound)
     {
       if (_subitems == nil)
-	_subitems = [[NSMutableArray alloc] init];
+	_subitems = [NSMutableArray array];
       [_subitems addObject:item];
-      [item setParent:self];
+      item.parent = self;
     }
 }
 
@@ -93,13 +70,13 @@
       || [_subitems indexOfObjectIdenticalTo:item] == NSNotFound)
     {
       if (_subitems == nil)
-	_subitems = [[NSMutableArray alloc] init];
+	_subitems = [NSMutableArray array];
       if (idx < 0)
 	idx = 0;
       else if (idx > [_subitems count])
 	idx = [_subitems count];
       [_subitems insertObject:item atIndex:idx];
-      [item setParent:self];
+      item.parent = self;
     }
 }
 
@@ -110,7 +87,7 @@
       NSInteger idx = [_subitems indexOfObjectIdenticalTo:item];
       if (idx != NSNotFound)
 	{
-	  [item setParent:nil];
+	  item.parent = nil;
 	  [_subitems removeObjectAtIndex:idx];
 	}
     }

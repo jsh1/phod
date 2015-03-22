@@ -22,9 +22,22 @@
    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. */
 
+#if __has_feature(objc_arc)
+#error "Must be compiled with -fno-objc-arc"
+#endif
+
 #import "PDFoundationExtensions.h"
 
 #import "PDMacros.h"
+
+@implementation NSObject (PDFoundationExtensions)
+
+- (void)performVoidSelector:(SEL)sel withObject:(id)arg
+{
+  [self performSelector:sel withObject:arg];
+}
+
+@end
 
 @implementation NSArray (PDFoundationExtensions)
 

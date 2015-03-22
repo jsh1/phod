@@ -32,19 +32,18 @@
 #import "PDWindowController.h"
 
 @implementation PDImageListViewController
-{
-  IBOutlet NSScrollView *_scrollView;
-  IBOutlet PDImageGridView *_gridView;
-  IBOutlet NSPopUpButton *_sortButton;
-  IBOutlet NSMenu *_sortMenu;
-  IBOutlet NSTextField *_titleLabel;
-  IBOutlet NSSearchField *_searchField;
-  IBOutlet NSMenu *_searchMenu;
-  IBOutlet NSButton *_predicateButton;
-  IBOutlet NSButton *_rotateLeftButton;
-  IBOutlet NSButton *_rotateRightButton;
-  IBOutlet NSSlider *_scaleSlider;
-}
+
+@synthesize scrollView = _scrollView;
+@synthesize gridView = _gridView;
+@synthesize sortButton = _sortButton;
+@synthesize sortMenu = _sortMenu;
+@synthesize titleLabel = _titleLabel;
+@synthesize searchField = _searchField;
+@synthesize searchMenu = _searchMenu;
+@synthesize predicateButton = _predicateButton;
+@synthesize rotateLeftButton = _rotateLeftButton;
+@synthesize rotateRightButton = _rotateRightButton;
+@synthesize scaleSlider = _scaleSlider;
 
 + (NSString *)viewNibName
 {
@@ -80,13 +79,13 @@
 {
   [super viewDidLoad];
 
-  [_scrollView setBackgroundColor:[PDColor imageGridBackgroundColor]];
+  _scrollView.backgroundColor = [PDColor imageGridBackgroundColor];
 
   /* This is so we update when the scroll view scrolls. */
 
   [[NSNotificationCenter defaultCenter]
    addObserver:self selector:@selector(gridViewBoundsDidChange:)
-   name:NSViewBoundsDidChangeNotification object:[_gridView superview]];
+   name:NSViewBoundsDidChangeNotification object:_gridView.superview];
 
   /* This is so we update when the grid view changes size. */
 
@@ -95,14 +94,14 @@
    addObserver:self selector:@selector(gridViewBoundsDidChange:)
    name:NSViewFrameDidChangeNotification object:_gridView];
 
-  [_sortButton selectItemWithTag:[_controller imageSortKey]];
+  [_sortButton selectItemWithTag:_controller.imageSortKey];
 
-  [_titleLabel setTextColor:[PDColor controlTextColor]];
-  [_titleLabel setStringValue:@""];
+  _titleLabel.textColor = [PDColor controlTextColor];
+  _titleLabel.stringValue = @"";
 
-  [[_searchField cell] setBackgroundColor:[NSColor grayColor]];
+  [_searchField.cell setBackgroundColor:[NSColor grayColor]];
 
-  [_scaleSlider setDoubleValue:[_gridView scale]];
+  _scaleSlider.doubleValue = _gridView.scale;
 }
 
 - (void)viewDidAppear
@@ -117,64 +116,64 @@
 
 - (NSDictionary *)savedViewState
 {
-  return [NSDictionary dictionaryWithObjectsAndKeys:
-	  [NSNumber numberWithDouble:[_scaleSlider doubleValue]],
-	  @"Scale", nil];
+  return @{
+    @"Scale": @(_scaleSlider.doubleValue)
+  };
 }
 
 - (void)applySavedViewState:(NSDictionary *)state
 {
-  id value = [state objectForKey:@"Scale"];
+  id value = state[@"Scale"];
 
   if (value != nil)
     {
-      [_scaleSlider setDoubleValue:[value doubleValue]];
+      _scaleSlider.doubleValue = [value doubleValue];
       [self controlAction:_scaleSlider];
     }
 }
 
 - (void)imageListDidChange:(NSNotification *)note
 {
-  NSArray *images = [_controller filteredImageList];
+  NSArray *images = _controller.filteredImageList;
 
-  [_gridView setImages:images];
+  _gridView.images = images;
 
-  [_titleLabel setStringValue:[_controller imageListTitle]];
+  _titleLabel.stringValue = _controller.imageListTitle;
 }
 
 - (void)selectionDidChange:(NSNotification *)note
 {
-  [_gridView setPrimarySelection:[_controller primarySelectionIndex]];
-  [_gridView setSelection:[_controller selectedImageIndexes]];
+  _gridView.primarySelection = _controller.primarySelectionIndex;
+  _gridView.selection = _controller.selectedImageIndexes;
 
-  BOOL enabled = [[_controller selectedImageIndexes] count] != 0;
-  [_rotateLeftButton setEnabled:enabled];
-  [_rotateRightButton setEnabled:enabled];
+  BOOL enabled = [_controller.selectedImageIndexes count] != 0;
+  _rotateLeftButton.enabled = enabled;
+  _rotateRightButton.enabled = enabled;
 
-  [_sortButton selectItemWithTag:[_controller imageSortKey]];
+  [_sortButton selectItemWithTag:_controller.imageSortKey];
 }
 
 - (void)librarySelectionDidChange:(NSNotification *)note
 {
-  [_gridView scrollRectToVisible:NSMakeRect(0, 0, 1, 1) animated:NO];
+  [_gridView scrollRectToVisible:CGRectMake(0, 0, 1, 1) animated:NO];
 }
 
 - (void)imagePredicateDidChange:(NSNotification *)note
 {
-  NSString *str = [[_controller imagePredicate] predicateFormat];
+  NSString *str = _controller.imagePredicate.predicateFormat;
   if ([str length] == 0)
     str = @"";
-  [_searchField setStringValue:str];
+  _searchField.stringValue = str;
 }
 
 - (void)gridViewBoundsDidChange:(NSNotification *)note
 {
-  [_gridView setNeedsDisplay:YES];
+  _gridView.needsDisplay = YES;
 }
 
 - (void)imagePropertyDidChange:(NSNotification *)note
 {
-  PDImage *image = [note object];
+  PDImage *image = note.object;
   if (![_gridView imageMayBeVisible:image])
     return;
 
@@ -189,14 +188,14 @@
 
   /* FIXME: only update the layer of the image that has changed? */
 
-  NSString *key = [[note userInfo] objectForKey:@"key"];
+  NSString *key = note.userInfo[@"key"];
   if ([keys containsObject:key])
-    [_gridView setNeedsDisplay:YES];
+    _gridView.needsDisplay = YES;
 }
 
 - (BOOL)displaysMetadata
 {
-  return [_gridView displaysMetadata];
+  return _gridView.displaysMetadata;
 }
 
 - (void)setDisplaysMetadata:(BOOL)x
@@ -204,34 +203,34 @@
   if (_gridView == nil)
     [self loadView];
 
-  [_gridView setDisplaysMetadata:x];
+  _gridView.displaysMetadata = x;
 }
 
 - (IBAction)toggleMetadata:(id)sender
 {
-  [self setDisplaysMetadata:![self displaysMetadata]];
+  self.displaysMetadata = !self.displaysMetadata;
   [_gridView scrollToPrimaryAnimated:NO];
 }
 
-- (IBAction)sortKeyAction:(id)sender
+- (IBAction)sortKeyAction:(NSControl *)sender
 {
-  int key = [sender tag];
+  int key = sender.tag;
 
-  if ([_controller imageSortKey] != key)
+  if (_controller.imageSortKey != key)
     {
-      [_controller setImageSortKey:key];
+      _controller.imageSortKey = key;
       [_controller rebuildImageList:0];
       [_sortButton selectItemWithTag:key];
     }
 }
 
-- (IBAction)sortOrderAction:(id)sender
+- (IBAction)sortOrderAction:(NSControl *)sender
 {
-  BOOL reversed = [sender tag] != 0;
+  BOOL reversed = sender.tag != 0;
 
-  if ([_controller isImageSortReversed] != reversed)
+  if (_controller.imageSortReversed != reversed)
     {
-      [_controller setImageSortReversed:reversed];
+      _controller.imageSortReversed = reversed;
       [_controller rebuildImageList:0];
       [_sortButton selectItemWithTag:[_controller imageSortKey]];
     }
@@ -241,11 +240,11 @@
 {
   if (sender == _scaleSlider)
     {
-      [_gridView setScale:[sender doubleValue]];
+      _gridView.scale = [sender doubleValue];
     }
   else if (sender == _searchField)
     {
-      NSString *str = [[_searchField stringValue]
+      NSString *str = [_searchField.stringValue
 		       stringByTrimmingCharactersInSet:
 		       [NSCharacterSet whitespaceCharacterSet]];
 
@@ -259,13 +258,13 @@
 
 	  if (pred != nil)
 	    {
-	      [_controller setImagePredicate:pred];
+	      _controller.imagePredicate = pred;
 	      [_controller rebuildImageList:0];
 	    }
 	}
-      else if ([_controller imagePredicate] != nil)
+      else if (_controller.imagePredicate != nil)
 	{
-	  [_controller setImagePredicate:nil];
+	  _controller.imagePredicate = nil;
 	  [_controller rebuildImageList:0];
 	}
     }
@@ -282,16 +281,16 @@
 {
   if (menu == _sortMenu)
     {
-      int key = [_controller imageSortKey];
-      BOOL reversed = [_controller isImageSortReversed];
+      int key = _controller.imageSortKey;
+      BOOL reversed = _controller.imageSortReversed;
 
-      for (NSMenuItem *item in [menu itemArray])
+      for (NSMenuItem *item in menu.itemArray)
 	{
-	  SEL sel = [item action];
+	  SEL sel = item.action;
 	  if (sel == @selector(sortKeyAction:))
-	    [item setState:[item tag] == key];
+	    item.state = item.tag == key;
 	  else if (sel == @selector(sortOrderAction:))
-	    [item setState:[item tag] == reversed];
+	    item.state = item.tag == reversed;
 	}
     }
 }

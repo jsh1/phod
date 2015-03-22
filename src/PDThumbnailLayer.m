@@ -49,23 +49,22 @@ CA_HIDDEN
 @end
 
 @implementation PDThumbnailLayer
-{
-  PDImage *_image;
-  BOOL _selected;
-  BOOL _primary;
-  BOOL _displaysMetadata;
-}
+
+@synthesize image = _image;
+@synthesize selected = _selected;
+@synthesize primary = _primary;
+@synthesize displaysMetadata = _displaysMetadata;
 
 + (id)defaultValueForKey:(NSString *)key
 {
   if ([key isEqualToString:@"shadowOpacity"])
-    return [NSNumber numberWithDouble:.6];
+    return @.6;
   else if ([key isEqualToString:@"shadowOffset"])
-    return [NSValue valueWithSize:NSMakeSize(0, 3)];
+    return [NSValue valueWithSize:CGSizeMake(0, 3)];
   else if ([key isEqualToString:@"shadowRadius"])
-    return [NSNumber numberWithFloat:2];
+    return @2;
   else if ([key isEqualToString:@"shadowPathIsBounds"])
-    return [NSNumber numberWithBool:YES];
+    return @YES;
   else
     return [super defaultValueForKey:key];
 }
@@ -73,25 +72,21 @@ CA_HIDDEN
 - (id)init
 {
   self = [super init];
-  if (self == nil)
-    return nil;
-
-  _displaysMetadata = YES;
-
+  if (self != nil)
+    _displaysMetadata = YES;
   return self;
 }
 
 - (id)initWithLayer:(PDThumbnailLayer *)src
 {
   self = [super initWithLayer:src];
-  if (self == nil)
-    return nil;
-
-  _image = [src->_image retain];
-  _selected = src->_selected;
-  _primary = src->_primary;
-  _displaysMetadata = src->_displaysMetadata;
-
+  if (self != nil)
+    {
+      _image = src->_image;
+      _selected = src->_selected;
+      _primary = src->_primary;
+      _displaysMetadata = src->_displaysMetadata;
+    }
   return self;
 }
 
@@ -104,11 +99,6 @@ CA_HIDDEN
     }
 }
 
-- (BOOL)isSelected
-{
-  return _selected;
-}
-
 - (void)setPrimary:(BOOL)flag
 {
   if (_primary != flag)
@@ -116,11 +106,6 @@ CA_HIDDEN
       _primary = flag;
       [self setNeedsLayout];
     }
-}
-
-- (BOOL)isPrimary
-{
-  return _primary;
 }
 
 - (void)setDisplaysMetadata:(BOOL)flag
@@ -132,14 +117,9 @@ CA_HIDDEN
     }
 }
 
-- (BOOL)displaysMetadata
-{
-  return _displaysMetadata;
-}
-
 - (void)invalidate
 {
-  for (CALayer *sublayer in [self sublayers])
+  for (CALayer *sublayer in self.sublayers)
     {
       if ([sublayer isKindOfClass:[PDImageLayer class]])
 	[(PDImageLayer *)sublayer invalidate];
@@ -149,24 +129,13 @@ CA_HIDDEN
 - (void)dealloc
 {
   [self invalidate];
-
-  [_image release];
-
-  [super dealloc];
-}
-
-- (PDImage *)image
-{
-  return _image;
 }
 
 - (void)setImage:(PDImage *)im
 {
   if (_image != im)
     {
-      [_image release];
-      _image = [im retain];
-
+      _image = im;
       [self setNeedsLayout];
     }
 }
@@ -181,7 +150,7 @@ CA_HIDDEN
   PDImageRatingLayer *rating_layer = nil;
   PDThumbnailSelectionLayer *selection_layer = nil;
 
-  for (CALayer *sublayer in [self sublayers])
+  for (CALayer *sublayer in self.sublayers)
     {
       if ([sublayer isKindOfClass:[PDImageLayer class]])
 	image_layer = (PDImageLayer *)sublayer;
@@ -196,62 +165,62 @@ CA_HIDDEN
   if (image_layer == nil)
     {
       image_layer = [PDImageLayer layer];
-      [image_layer setThumbnail:YES];
-      [image_layer setDelegate:[self delegate]];
+      image_layer.thumbnail = YES;
+      image_layer.delegate = self.delegate;
       [self addSublayer:image_layer];
     }
 
-  CGRect bounds = [self bounds];
+  CGRect bounds = self.bounds;
 
-  [image_layer setImage:_image];
-  [image_layer setFrame:bounds];
-  [image_layer setContentsScale:[self contentsScale]];
+  image_layer.image = _image;
+  image_layer.frame = bounds;
+  image_layer.contentsScale = self.contentsScale;
 
   if (_displaysMetadata)
     {
       if (title_layer == nil)
 	{
 	  title_layer = [PDThumbnailTitleLayer layer];
-	  [title_layer setDelegate:[self delegate]];
+	  title_layer.delegate = self.delegate;
 	  [self addSublayer:title_layer];
 	}
 
       NSString *title = [_image title];
       if (title == nil)
 	title = [_image name];
-      [title_layer setString:title];
-      [title_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
-				       + bounds.size.height + TITLE_SPACING)];
-      [title_layer setContentsScale:[self contentsScale]];
+      title_layer.string = title;
+      title_layer.position =CGPointMake(bounds.origin.x, bounds.origin.y
+					+ bounds.size.height + TITLE_SPACING);
+      title_layer.contentsScale = self.contentsScale;
 
       CGSize title_size = [title_layer preferredFrameSize];
       title_size.width = MIN(title_size.width, bounds.size.width);
-      [title_layer setBounds:
-       CGRectMake(0, 0, title_size.width, title_size.height)];
+      title_layer.bounds =
+        CGRectMake(0, 0, title_size.width, title_size.height);
 
-      int rating = [[_image imagePropertyForKey:PDImage_Rating] intValue];
-      BOOL flagged = [[_image imagePropertyForKey:PDImage_Flagged] boolValue];
-      BOOL hidden = [[_image imagePropertyForKey:PDImage_Hidden] boolValue];
+      int rating = _image.rating;
+      BOOL flagged = _image.flagged;
+      BOOL hidden = _image.hidden;
 
       if ((rating != 0 || flagged || hidden) && rating_layer == nil)
 	{
 	  rating_layer = [PDImageRatingLayer layer];
-	  [rating_layer setDelegate:[self delegate]];
+	  rating_layer.delegate = self.delegate;
 	  [self addSublayer:rating_layer];
 	}
 
-      [rating_layer setRating:rating];
-      [rating_layer setFlagged:flagged];
-      [rating_layer setHiddenState:hidden];
-      [rating_layer setContentsScale:[self contentsScale]];
+      rating_layer.rating = rating;
+      rating_layer.flagged = flagged;
+      rating_layer.hiddenState = hidden;
+      rating_layer.contentsScale = self.contentsScale;
 
-      [rating_layer setPosition:CGPointMake(bounds.origin.x, bounds.origin.y
-					    + bounds.size.height)];
+      rating_layer.position = CGPointMake(bounds.origin.x, bounds.origin.y
+					  + bounds.size.height);
       CGSize rating_size = [rating_layer preferredFrameSize];
       rating_size.width = MIN(rating_size.width, bounds.size.width);
       rating_size.height = MAX(rating_size.height, MIN_RATING_HEIGHT);
-      [rating_layer setBounds:
-       CGRectMake(0, 0, rating_size.width, rating_size.height)];
+      rating_layer.bounds =
+        CGRectMake(0, 0, rating_size.width, rating_size.height);
     }
   else
     {
@@ -268,21 +237,21 @@ CA_HIDDEN
       CGFloat radius = _primary ? PRIMARY_SELECTION_RADIUS : SELECTION_RADIUS;
       CGFloat width = _primary ? PRIMARY_SELECTION_WIDTH : SELECTION_WIDTH;
 
-      CGRect selR = [image_layer frame];
+      CGRect selR = image_layer.frame;
       if (title_layer != nil)
-	selR = CGRectUnion(selR, [title_layer frame]);
+	selR = CGRectUnion(selR, title_layer.frame);
 
       if (selection_layer == nil)
 	{
 	  selection_layer = [PDThumbnailSelectionLayer layer];
-	  [selection_layer setDelegate:[self delegate]];
+	  selection_layer.delegate = self.delegate;
 	  [self addSublayer:selection_layer];
 	}
 
-      [selection_layer setFrame:CGRectInset(selR, inset, inset)];
-      [selection_layer setCornerRadius:radius];
-      [selection_layer setBorderWidth:width];
-      [selection_layer setHidden:NO];
+      selection_layer.frame = CGRectInset(selR, inset, inset);
+      selection_layer.cornerRadius = radius;
+      selection_layer.borderWidth = width;
+      selection_layer.hidden = NO;
     }
   else
     [selection_layer removeFromSuperlayer];
@@ -301,7 +270,7 @@ CA_HIDDEN
   else if ([key isEqualToString:@"truncationMode"])
     return @"start";
   else if ([key isEqualToString:@"anchorPoint"])
-    return [NSValue valueWithPoint:NSZeroPoint];
+    return [NSValue valueWithPoint:CGPointZero];
   else
     return [super defaultValueForKey:key];
 }

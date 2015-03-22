@@ -49,12 +49,11 @@
 {
   self = [super initWithNibName:[[self class] viewNibName]
 	  bundle:[NSBundle mainBundle]];
-  if (self == nil)
-    return nil;
-
-  _controller = controller;
-  _subviewControllers = [[NSMutableArray alloc] init];
-
+  if (self != nil)
+    {
+      _controller = controller;
+      _subviewControllers = [[NSMutableArray alloc] init];
+    }
   return self;
 }
 
@@ -69,10 +68,6 @@
 - (void)dealloc
 {
   [self invalidate];
-
-  [_subviewControllers release];
-
-  [super dealloc];
 }
 
 - (PDViewController *)viewControllerWithClass:(Class)cls
@@ -82,9 +77,9 @@
 
   for (PDViewController *obj in _subviewControllers)
     {
-      obj = [obj viewControllerWithClass:cls];
-      if (obj != nil)
-	return obj;
+      PDViewController *tem = [obj viewControllerWithClass:cls];
+      if (tem != nil)
+	return tem;
     }
 
   return nil;
@@ -97,7 +92,6 @@
 
 - (void)setSubviewControllers:(NSArray *)array
 {
-  [_subviewControllers release];
   _subviewControllers = [array mutableCopy];
 }
 
@@ -111,9 +105,7 @@
   NSInteger idx = [_subviewControllers indexOfObjectIdenticalTo:controller];
 
   if (idx != NSNotFound)
-    {
-      [_subviewControllers removeObjectAtIndex:idx];
-    }
+    [_subviewControllers removeObjectAtIndex:idx];
 }
 
 - (NSView *)initialFirstResponder
@@ -167,25 +159,22 @@
     {
       NSDictionary *sub = [controller savedViewState];
       if ([sub count] != 0)
-	[controllers setObject:sub forKey:[controller identifier]];
+	controllers[controller.identifier] = sub;
     }
 
-  return [NSDictionary dictionaryWithObjectsAndKeys:
-	  controllers, @"PDViewControllers",
-	  nil];
+  return @{
+    @"PDViewControllers": controllers
+  };
 }
 
 - (void)applySavedViewState:(NSDictionary *)state
 {
-  NSDictionary *dict, *sub;
-
-  dict = [state objectForKey:@"PDViewControllers"];
-
+  NSDictionary *dict = state[@"PDViewControllers"];
   if (dict != nil)
     {
       for (PDViewController *controller in _subviewControllers)
 	{
-	  sub = [dict objectForKey:[controller identifier]];
+	  NSDictionary *sub = dict[controller.identifier];
 	  if (sub != nil)
 	    [controller applySavedViewState:sub];
 	}
@@ -197,7 +186,7 @@
   NSView *view = [self view];
   assert([view superview] == nil);
 
-  [view setFrame:[superview bounds]];
+  view.frame = superview.bounds;
 
   [self viewWillAppear];
 
@@ -210,7 +199,7 @@
 {
   [self viewWillDisappear];
 
-  [[self view] removeFromSuperview];
+  [self.view removeFromSuperview];
 
   [self viewDidDisappear];
 }
@@ -219,7 +208,7 @@
 {
   PDAppDelegate *delegate = (id)[NSApp delegate];
 
-  BOOL state = [delegate backgroundActivity];
+  BOOL state = delegate.backgroundActivity;
 
   if (!state)
     {
@@ -236,7 +225,7 @@
 	    {
 	      _pendingProgressUpdate = NO;
 
-	      if ([delegate backgroundActivity])
+	      if (delegate.backgroundActivity)
 		[_progressIndicator startAnimation:self];
 	      else
 		[_progressIndicator stopAnimation:self];

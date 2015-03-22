@@ -33,7 +33,8 @@
 }
 
 + (NSString *)viewNibName;
-- (NSString *)identifier;
+
+@property(nonatomic, copy, readonly) NSString *identifier;
 
 - (id)initWithController:(PDWindowController *)controller;
 

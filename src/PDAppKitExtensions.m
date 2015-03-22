@@ -29,12 +29,12 @@
 /* -[NSView scrollRectToVisible:] seems to randomly pick animated or
    non-animated, I can't figure out how to control it.. */
 
-- (void)scrollRectToVisible:(NSRect)rect animated:(BOOL)flag
+- (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)flag
 {
-  NSScrollView *scrollView = [self enclosingScrollView];
-  NSClipView *clipView = [scrollView contentView];
+  NSScrollView *scrollView = self.enclosingScrollView;
+  NSClipView *clipView = scrollView.contentView;
 
-  NSRect bounds = [clipView bounds];
+  CGRect bounds = clipView.bounds;
 
   if (rect.origin.x < bounds.origin.x)
     bounds.origin.x = rect.origin.x;
@@ -49,18 +49,18 @@
   bounds = [clipView constrainBoundsRect:bounds];
 
   if (flag)
-    [[clipView animator] setBounds:bounds];
+    clipView.animator.bounds = bounds;
   else
-    [clipView setBounds:bounds];
+    clipView.bounds = bounds;
 
   [scrollView reflectScrolledClipView:clipView];
 }
 
 - (void)flashScrollersIfNeeded
 {
-  NSScrollView *scrollView = [self enclosingScrollView];
+  NSScrollView *scrollView = self.enclosingScrollView;
 
-  if ([self frame].size.height > [scrollView bounds].size.height)
+  if (self.frame.size.height > scrollView.bounds.size.height)
     [scrollView flashScrollers];
 }
 
@@ -89,7 +89,7 @@
 {
   NSIndexSet *rows = [NSIndexSet indexSetWithIndex:row];
   NSIndexSet *cols = [NSIndexSet indexSetWithIndexesInRange:
-		      NSMakeRange(0, [[self tableColumns] count])];
+		      NSMakeRange(0, [self.tableColumns count])];
 
   [self reloadDataForRowIndexes:rows columnIndexes:cols];
 }
@@ -100,7 +100,7 @@
 
 - (NSArray *)selectedItems
 {
-  NSIndexSet *sel = [self selectedRowIndexes];
+  NSIndexSet *sel = self.selectedRowIndexes;
 
   if ([sel count] == 0)
     return [NSArray array];
@@ -145,11 +145,11 @@
 
 - (void)callPreservingSelectedRows:(void (^)(void))thunk;
 {
-  NSArray *sel = [self selectedItems];
+  NSArray *sel = self.selectedItems;
 
   thunk();
 
-  [self setSelectedItems:sel];
+  self.selectedItems = sel;
 }
 
 - (void)reloadDataPreservingSelectedRows
@@ -201,10 +201,14 @@ PDImageWithName(NSInteger name)
 	    }
 
 	  if (imageName != nil)
-	    _images[name] = [[NSImage imageNamed:imageName] retain];
+	    {
+	      _images[name] = [NSImage imageNamed:imageName];
+	    }
 	  else if (typeCode != 0)
-	    _images[name] = [[[NSWorkspace sharedWorkspace] iconForFileType:
-			      NSFileTypeForHFSTypeCode(typeCode)] retain];
+	    {
+	      _images[name] = [[NSWorkspace sharedWorkspace] iconForFileType:
+			       NSFileTypeForHFSTypeCode(typeCode)];
+	    }
 	}
 
       return _images[name];

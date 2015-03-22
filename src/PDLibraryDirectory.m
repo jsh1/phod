@@ -35,16 +35,14 @@
 
 @implementation PDLibraryDirectory
 {
-  PDImageLibrary *_library;
-  NSString *_libraryDirectory;
-  NSArray *_subitems;
   NSMutableArray *_subimages;
   BOOL _subitemsNeedUpdate;
   BOOL _subimagesNeedUpdate;
-  BOOL _marked;
 }
 
 @synthesize library = _library;
+@synthesize libraryDirectory = _libraryDirectory;
+@synthesize subitems = _subitems;
 @synthesize marked = _marked;
 
 + (BOOL)flattensSubdirectories
@@ -55,31 +53,19 @@
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 {
   self = [super init];
-  if (self == nil)
-    return nil;
-
-  _library = [lib retain];
-  _libraryDirectory = [dir copy];
-  _subitemsNeedUpdate = YES;
-  _subimagesNeedUpdate = YES;
-
+  if (self != nil)
+    {
+      _library = lib;
+      _libraryDirectory = [dir copy];
+      _subitemsNeedUpdate = YES;
+      _subimagesNeedUpdate = YES;
+    }
   return self;
 }
 
 - (PDLibraryDirectory *)newItemForSubdirectory:(NSString *)dir
 {
   return [[[self class] alloc] initWithLibrary:_library directory:dir];
-}
-
-- (void)dealloc
-{
-  [_library release];
-  [_libraryDirectory release];
-  for (PDLibraryItem *item in _subitems)
-    [item setParent:nil];
-  [_subitems release];
-  [_subimages release];
-  [super dealloc];
 }
 
 - (NSString *)libraryDirectory
@@ -91,9 +77,7 @@
 {
   if (![_libraryDirectory isEqualToString:dir])
     {
-      [_libraryDirectory release];
       _libraryDirectory = [dir copy];
-
       [self setNeedsUpdate];
     }
 }
@@ -102,7 +86,7 @@
 {
   BOOL matches = [super applySearchString:str];
 
-  NSString *title = [self titleString];
+  NSString *title = self.titleString;
 
   if (title != nil)
     {
@@ -110,7 +94,7 @@
 	matches = YES;
     }
 
-  [self setHidden:!matches];
+  self.hidden = !matches;
 
   return matches;
 }
@@ -182,21 +166,15 @@
 
 	  dispatch_async(dispatch_get_main_queue(), ^
 	    {
-	      [_subimages release];
-	      _subimages = [local_subimages retain];
+	      _subimages = local_subimages;
 	      [[NSNotificationCenter defaultCenter] postNotificationName:
 	       PDLibraryItemSubimagesDidChange object:self];
 	    });
 	}
-
-      [local_subimages release];
     }]];
 
   if (update_immediately)
-    {
-      [_subimages release];
-      _subimages = [new_subimages retain];
-    }
+    _subimages = new_subimages;
 
   _subimagesNeedUpdate = NO;
 }
@@ -212,7 +190,7 @@
       /* Rebuild the subitems array nondestructively. */
 
       for (PDLibraryDirectory *item in new_subitems)
-	[item setMarked:YES];
+	item.marked = YES;
 
       [_library foreachSubdirectoryOfDirectory:_libraryDirectory
        handler:^(NSString *file)
@@ -225,7 +203,7 @@
 	    {
 	      if ([[item libraryDirectory] isEqualToString:subdir])
 		{
-		  [item setMarked:NO];
+		  item.marked = NO;
 		  found = YES;
 		  break;
 		}
@@ -237,9 +215,8 @@
 
 	      if (item != nil)
 		{
-		  [item setParent:self];
+		  item.parent = self;
 		  [new_subitems addObject:item];
-		  [item release];
 		}
 	    }
 	}];
@@ -247,11 +224,11 @@
       NSInteger count = [new_subitems count];
       for (NSInteger i = 0; i < count;)
 	{
-	  PDLibraryDirectory *item = [new_subitems objectAtIndex:i];
-	  if ([item isMarked])
+	  PDLibraryDirectory *item = new_subitems[i];
+	  if (item.marked)
 	    {
 	      [new_subitems removeObjectAtIndex:i];
-	      [item setParent:nil];
+	      item.parent = nil;
 	      count--;
 	    }
 	  else
@@ -266,9 +243,6 @@
       NSString *str2 = [(PDLibraryItem *)obj2 titleString];
       return [str1 compare:str2];
     }];
-  [_subitems retain];
-
-  [new_subitems release];
 
   _subitemsNeedUpdate = NO;
 }
@@ -312,7 +286,7 @@
 
 - (BOOL)isExpandable
 {
-  return [[self subitems] count] != 0;
+  return [self.subitems count] != 0;
 }
 
 - (BOOL)hasBadge
@@ -334,11 +308,11 @@
       || [_libraryDirectory isEqualToString:dir])
     return self;
 
-  for (PDLibraryDirectory *item in [self subitems])
+  for (PDLibraryDirectory *item in self.subitems)
     {
-      item = [item subitemContainingDirectory:dir];
-      if (item != nil)
-	return item;
+      PDLibraryDirectory *tem = [item subitemContainingDirectory:dir];
+      if (tem != nil)
+	return tem;
     }
 
   /* Not an exact match, but we don't have a subitem for the actual

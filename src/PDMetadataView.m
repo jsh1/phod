@@ -33,42 +33,27 @@
 #define Y_INSET 8
 
 @implementation PDMetadataView
-{
-  IBOutlet PDInfoViewController *_controller;
-}
 
-- (PDWindowController *)controller
-{
-  return (PDWindowController *)[[self window] windowController];
-}
-
-- (id)initWithFrame:(NSRect)frame
-{
-  self = [super initWithFrame:frame];
-  if (self == nil)
-    return nil;
-
-  return self;
-}
+@synthesize controller = _controller;
 
 - (NSArray *)imageProperties
 {
-  NSMutableArray *array = [[NSMutableArray alloc] init];
+  NSMutableArray *array = [NSMutableArray array];
 
-  for (PDMetadataItemView *item in [self subviews])
+  for (PDMetadataItemView *item in self.subviews)
     {
-      NSString *name = [item imageProperty];
+      NSString *name = item.imageProperty;
       if ([name length] != 0)
 	[array addObject:name];
     }
 
-  return [array autorelease];
+  return array;
 }
 
 - (void)setImageProperties:(NSArray *)array
 {
   NSMutableArray *old_subviews = [[self subviews] mutableCopy];
-  NSMutableArray *new_subviews = [[NSMutableArray alloc] init];
+  NSMutableArray *new_subviews = [NSMutableArray array];
 
   for (NSString *key in array)
     {
@@ -77,7 +62,7 @@
       NSInteger old_idx = 0;
       for (PDMetadataItemView *old_subview in old_subviews)
 	{
-	  if ([[old_subview imageProperty] isEqualToString:key])
+	  if ([old_subview.imageProperty isEqualToString:key])
 	    {
 	      new_subview = old_subview;
 	      [old_subviews removeObjectAtIndex:old_idx];
@@ -88,33 +73,29 @@
 
       if (new_subview == nil)
 	{
-	  new_subview = [[[PDMetadataItemView alloc]
-			  initWithFrame:NSZeroRect] autorelease];
-	  [new_subview setMetadataView:self];
-	  [new_subview setImageProperty:key];
-	  [new_subview setAutoresizingMask:NSViewWidthSizable];
+	  new_subview = [[PDMetadataItemView alloc] initWithFrame:NSZeroRect];
+	  new_subview.metadataView = self;
+	  new_subview.imageProperty = key;
+	  new_subview.autoresizingMask = NSViewWidthSizable;
 	}
 
       [new_subviews addObject:new_subview];
     }
 
-  [self setSubviews:new_subviews];
+  self.subviews = new_subviews;
 
-  [new_subviews release];
-  [old_subviews release];
-
-  NSRect frame = [self frame];
+  CGRect frame = self.frame;
   frame.size.height = [self heightForWidth:frame.size.width];
   [self setFrameSize:frame.size];
   [self layoutSubviews];
 
-  for (PDMetadataItemView *subview in [self subviews])
+  for (PDMetadataItemView *subview in self.subviews)
     [subview update];
 }
 
 - (void)update
 {
-  for (PDMetadataItemView *subview in [self subviews])
+  for (PDMetadataItemView *subview in self.subviews)
     [subview update];
 }
 
@@ -122,7 +103,7 @@
 {
   CGFloat h = 0;
 
-  for (PDMetadataItemView *item in [self subviews])
+  for (PDMetadataItemView *item in self.subviews)
     {
       if (h != 0)
 	h += ITEM_Y_SPACING;
@@ -134,18 +115,18 @@
 
 - (void)layoutSubviews
 {
-  NSRect bounds = NSInsetRect([self bounds], X_INSET, Y_INSET);
+  CGRect bounds = CGRectInset(self.bounds, X_INSET, Y_INSET);
   CGFloat y = 0;
 
-  for (PDMetadataItemView *item in [self subviews])
+  for (PDMetadataItemView *item in self.subviews)
     {
-      NSRect frame;
+      CGRect frame;
       CGFloat h = [item preferredHeight];
       frame.origin.x = bounds.origin.x;
       frame.origin.y = bounds.origin.y + y;
       frame.size.width = bounds.size.width;
       frame.size.height = h;
-      [item setFrame:frame];
+      item.frame = frame;
       [item layoutSubviews];
       y += h + ITEM_Y_SPACING;
     }

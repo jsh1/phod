@@ -30,21 +30,10 @@
 #import "PDWindowController.h"
 
 @implementation PDLibraryQuery
-{
-  NSPredicate *_predicate;
-  BOOL _trashcan;
-  BOOL _nilPredicateIncludesRejected;
-}
 
 @synthesize predicate = _predicate;
 @synthesize trashcan = _trashcan;
 @synthesize nilPredicateIncludesRejected = _nilPredicateIncludesRejected;
-
-- (void)dealloc
-{
-  [_predicate release];
-  [super dealloc];
-}
 
 - (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk
 {
@@ -54,7 +43,7 @@
   BOOL saw_all = [controller foreachImage:^(PDImage *im, BOOL *stop)
     {
       if (_predicate == nil
-	  || [_predicate evaluateWithObject:[im expressionValues]])
+	  || [_predicate evaluateWithObject:im.expressionValues])
 	{
 	  thunk(im, stop);
 	}

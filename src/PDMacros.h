@@ -55,6 +55,13 @@
    ? (type *)alloca(sizeof(type) * (count)) 	\
    : (type *)malloc(sizeof(type) * (count)))
 
+#if __has_feature(objc_arc)
+#define STACK_ALLOC_ARC(type, count) 		\
+  (sizeof(type) * (count) <= 4096 		\
+   ? (__unsafe_unretained type *)alloca(sizeof(type) * (count)) \
+   : (__unsafe_unretained type *)malloc(sizeof(type) * (count)))
+#endif
+
 #define STACK_FREE(type, count, ptr) 		\
   do {						\
     if (sizeof(type) * (count) > 4096)		\

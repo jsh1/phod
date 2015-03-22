@@ -40,20 +40,12 @@
 - (id)init
 {
   self = [super init];
-  if (self == nil)
-    return nil;
-
-  _imageUUIDs = [[NSMutableArray alloc] init];
-  _allUUIDs = [[NSMutableSet alloc] init];
-
+  if (self != nil)
+    {
+      _imageUUIDs = [[NSMutableArray alloc] init];
+      _allUUIDs = [[NSMutableSet alloc] init];
+    }
   return self;
-}
-
-- (void)dealloc
-{
-  [_imageUUIDs release];
-  [_allUUIDs release];
-  [super dealloc];
 }
 
 - (NSArray *)imageUUIDs
@@ -65,7 +57,6 @@
 {
   if (_imageUUIDs != obj)
     {
-      [_imageUUIDs release];
       _imageUUIDs = [obj mutableCopy];
 
       [_allUUIDs removeAllObjects];
@@ -93,7 +84,7 @@
 - (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk
 {
   PDWindowController *controller
-    = [(PDAppDelegate *)[NSApp delegate] windowController];
+    = ((PDAppDelegate *)[NSApp delegate]).windowController;
 
   BOOL saw_all = [controller foreachImage:^(PDImage *im, BOOL *stop) {
     NSUUID *uuid = [im UUIDIfDefined];

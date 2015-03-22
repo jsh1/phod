@@ -26,17 +26,17 @@
 
 #import "PDColor.h"
 #import "PDImage.h"
+#import "PDImageLibrary.h"
 #import "PDImageView.h"
 #import "PDWindowController.h"
 
 @implementation PDImageViewController
-{
-  IBOutlet NSTextField *_titleLabel;
-  IBOutlet PDImageView *_imageView;
-  IBOutlet NSButton *_rotateLeftButton;
-  IBOutlet NSButton *_rotateRightButton;
-  IBOutlet NSSlider *_scaleSlider;
-}
+
+@synthesize titleLabel = _titleLabel;
+@synthesize imageView = _imageView;
+@synthesize rotateLeftButton = _rotateLeftButton;
+@synthesize rotateRightButton = _rotateRightButton;
+@synthesize scaleSlider = _scaleSlider;
 
 + (NSString *)viewNibName
 {
@@ -46,49 +46,48 @@
 - (id)initWithController:(PDWindowController *)controller
 {
   self = [super initWithController:controller];
-  if (self == nil)
-    return nil;
-
-  [[NSNotificationCenter defaultCenter]
-   addObserver:self selector:@selector(imageListDidChange:)
-   name:PDImageListDidChange object:_controller];
-  [[NSNotificationCenter defaultCenter]
-   addObserver:self selector:@selector(selectionDidChange:)
-   name:PDSelectionDidChange object:_controller];
-  [[NSNotificationCenter defaultCenter]
-   addObserver:self selector:@selector(imagePropertyDidChange:)
-   name:PDImagePropertyDidChange object:nil];
-
+  if (self != nil)
+    {
+      [[NSNotificationCenter defaultCenter]
+       addObserver:self selector:@selector(imageListDidChange:)
+       name:PDImageListDidChange object:_controller];
+      [[NSNotificationCenter defaultCenter]
+       addObserver:self selector:@selector(selectionDidChange:)
+       name:PDSelectionDidChange object:_controller];
+      [[NSNotificationCenter defaultCenter]
+       addObserver:self selector:@selector(imagePropertyDidChange:)
+       name:PDImagePropertyDidChange object:nil];
+    }
   return self;
 }
 
 - (void)updateImage
 {
-  NSInteger idx = [_controller primarySelectionIndex];
-  NSArray *images = [_controller filteredImageList];
+  NSInteger idx = _controller.primarySelectionIndex;
+  NSArray *images = _controller.filteredImageList;
   NSInteger count = [images count];
 
   if (idx >= 0 && idx < count)
     {
-      PDImage *image = [images objectAtIndex:idx];
+      PDImage *image = images[idx];
 
-      if ([_imageView image] != image)
+      if (_imageView.image != image)
 	{
-	  [_imageView setImage:image];
+	  _imageView.image = image;
 
 	  /* Scale of zero will get replaced by -scaleToFitScale by
 	     -[PDImageView updateLayer]. Using zero here avoids issues
 	     if the view size changes before then. */
 
-	  [_imageView setImageScale:0];
+	  _imageView.imageScale = 0;
 	}
 
       /* Prefetch images either side of this one. */
 
       if (idx > 0)
-	[[images objectAtIndex:idx-1] startPrefetching];
+	[images[idx-1] startPrefetching];
       if (idx + 1 < count)
-	[[images objectAtIndex:idx+1] startPrefetching];
+	[images[idx+1] startPrefetching];
 
       static NSString *em_dash;
       if (em_dash == nil)
@@ -97,27 +96,27 @@
 	  em_dash = [[NSString alloc] initWithCharacters:&c length:1];
 	}
 
-      NSString *dir = [[image libraryDirectory] lastPathComponent];
+      NSString *dir = [image.libraryDirectory lastPathComponent];
       if ([dir length] == 0)
-	dir = [[image library] name];
+	dir = image.library.name;
       dir = [dir stringByReplacingOccurrencesOfString:@":" withString:@"/"];
 
-      NSString *title = [image title];
+      NSString *title = image.title;
       if (title == nil)
-	title = [image name];
+	title = image.name;
 
-      [_titleLabel setStringValue:
-       [NSString stringWithFormat:@"%@ %@ %@", dir, em_dash, title]];
+      _titleLabel.stringValue =
+        [NSString stringWithFormat:@"%@ %@ %@", dir, em_dash, title];
     }
   else
     {
-      [_imageView setImage:nil];
-      [_titleLabel setStringValue:@""];
+      _imageView.image = nil;
+      _titleLabel.stringValue = @"";
     }
 
-  BOOL enabled = [[_controller selectedImageIndexes] count] != 0;
-  [_rotateLeftButton setEnabled:enabled];
-  [_rotateRightButton setEnabled:enabled];
+  BOOL enabled = [_controller.selectedImageIndexes count] != 0;
+  _rotateLeftButton.enabled = enabled;
+  _rotateRightButton.enabled = enabled;
 }
 
 - (void)viewDidLoad
@@ -132,8 +131,8 @@
   [_imageView addObserver:self
    forKeyPath:@"imageScale" options:0 context:NULL];
 
-  [_titleLabel setTextColor:[PDColor controlTextColor]];
-  [_titleLabel setStringValue:@""];
+  _titleLabel.textColor = [PDColor controlTextColor];
+  _titleLabel.stringValue = @"";
 
   [self updateImage];
 }
@@ -160,13 +159,13 @@
 
 - (void)imageViewBoundsDidChange:(NSNotification *)note
 {
-  [_imageView setNeedsDisplay:YES];
+  _imageView.needsDisplay = YES;
 }
 
 - (void)imagePropertyDidChange:(NSNotification *)note
 {
-  PDImage *image = [note object];
-  if ([_imageView image] != image)
+  PDImage *image = note.object;
+  if (_imageView.image != image)
     return;
 
   static NSSet *keys;
@@ -178,14 +177,14 @@
 	    PDImage_Orientation, PDImage_ActiveType, nil];
   });
 
-  NSString *key = [[note userInfo] objectForKey:@"key"];
+  NSString *key = note.userInfo[@"key"];
   if ([keys containsObject:key])
     [_imageView setNeedsDisplay:YES];
 }
 
 - (BOOL)displaysMetadata
 {
-  return [_imageView displaysMetadata];
+  return _imageView.displaysMetadata;
 }
 
 - (void)setDisplaysMetadata:(BOOL)x
@@ -193,17 +192,17 @@
   if (_imageView == nil)
     [self loadView];
 
-  [_imageView setDisplaysMetadata:x];
+  _imageView.displaysMetadata = x;
 }
 
 - (IBAction)toggleMetadata:(id)sender
 {
-  [self setDisplaysMetadata:![self displaysMetadata]];
+  self.displaysMetadata = !self.displaysMetadata;
 }
 
 - (IBAction)zoomIn:(id)sender
 {
-  CGFloat scale = [_imageView imageScale];
+  CGFloat scale = _imageView.imageScale;
 
   CGFloat x;
   for (x = 2;; x = x + 1)
@@ -225,7 +224,7 @@
 
 - (IBAction)zoomOut:(id)sender
 {
-  CGFloat scale = [_imageView imageScale];
+  CGFloat scale = _imageView.imageScale;
 
   CGFloat x;
   for (x = 2;; x = x + 1)
@@ -247,9 +246,9 @@
 
 - (IBAction)zoomActualSize:(id)sender
 {
-  CGFloat scale = [_imageView imageScale];
-  CGFloat fitScale = [_imageView scaleToFitScale];
-  CGFloat actualScale = [_imageView scaleToActualScale];
+  CGFloat scale = _imageView.imageScale;
+  CGFloat fitScale = _imageView.scaleToFitScale;
+  CGFloat actualScale = _imageView.scaleToActualScale;
 
   scale = fabs(scale - fitScale) > .001 ? fitScale : actualScale;
 
@@ -258,15 +257,15 @@
 
 - (IBAction)zoomToFill:(id)sender
 {
-  [_imageView setImageScale:[_imageView scaleToFillScale] preserveOrigin:YES];
+  [_imageView setImageScale:_imageView.scaleToFillScale preserveOrigin:YES];
 }
 
 - (IBAction)controlAction:(id)sender
 {
   if (sender == _scaleSlider)
     {
-      CGFloat f = [_scaleSlider doubleValue];
-      CGFloat fitScale = [_imageView scaleToFitScale];
+      CGFloat f = _scaleSlider.doubleValue;
+      CGFloat fitScale = _imageView.scaleToFitScale;
       CGFloat scale = fitScale + (1 - fitScale) * f;
       [_imageView setImageScale:scale preserveOrigin:YES];
     }
@@ -278,12 +277,12 @@
   if (obj == _imageView && [path isEqualToString:@"imageScale"])
     {
       dispatch_async(dispatch_get_main_queue(), ^{
-	CGFloat scale = [_imageView imageScale];
-	CGFloat fitScale = [_imageView scaleToFitScale];
+	CGFloat scale = _imageView.imageScale;
+	CGFloat fitScale = _imageView.scaleToFitScale;
 	CGFloat f = (scale - fitScale) / (1 - fitScale);
-	[_scaleSlider setDoubleValue:f];
-	[_scaleSlider setToolTip:
-	 [NSString stringWithFormat:@"%d%%", (int) (scale*100)]];
+	_scaleSlider.doubleValue = f;
+	_scaleSlider.toolTip =
+	  [NSString stringWithFormat:@"%d%%", (int) (scale*100)];
       });
     }
 }

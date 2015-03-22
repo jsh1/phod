@@ -24,6 +24,14 @@
 
 #import <Foundation/Foundation.h>
 
+@interface NSObject (FoundationExtensions)
+
+/* Using this to avoid ARC warnings when calling -performSelector:. */
+
+- (void)performVoidSelector:(SEL)sel withObject:(id)arg;
+
+@end
+
 @interface NSArray (PDFoundationExtensions)
 
 - (NSArray *)mappedArray:(id (^)(id))f;

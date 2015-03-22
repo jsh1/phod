@@ -30,47 +30,36 @@
 NSString *const PDImageUUIDType = @"org.unfactored.Phod.PDImageUUID";
 
 @implementation PDImageUUID
-{
-  NSUUID *_uuid;
-}
 
 @synthesize UUID = _uuid;
 
 + (PDImageUUID *)imageUUIDWithUUID:(NSUUID *)uuid
 {
-  return [[[PDImageUUID alloc] initWithUUID:uuid] autorelease];
+  return [[PDImageUUID alloc] initWithUUID:uuid];
 }
 
 + (PDImageUUID *)imageUUIDWithPropertyList:(id)obj
 {
-  return [[[PDImageUUID alloc] initWithPropertyList:obj] autorelease];
+  return [[PDImageUUID alloc] initWithPropertyList:obj];
 }
 
 - (id)initWithUUID:(NSUUID *)uuid
 {
   self = [super init];
-  if (self == nil)
-    return nil;
-
-  _uuid = [uuid copy];
-
+  if (self != nil)
+    _uuid = [uuid copy];
   return self;
 }
 
 - (id)initWithPropertyList:(id)obj
 {
   self = [super init];
-  if (self == nil)
-    return nil;
-
-  if (![obj isKindOfClass:[NSString class]])
+  if (self != nil)
     {
-      [self release];
-      return nil;
+      if (![obj isKindOfClass:[NSString class]])
+	return nil;
+      _uuid = [[NSUUID alloc] initWithUUIDString:obj];
     }
-
-  _uuid = [[NSUUID alloc] initWithUUIDString:obj];
-
   return self;
 }
 
@@ -89,12 +78,12 @@ NSString *const PDImageUUIDType = @"org.unfactored.Phod.PDImageUUID";
 
 - (id)propertyList
 {
-  return [_uuid UUIDString];
+  return _uuid.UUIDString;
 }
 
 - (id)copyWithZone:(NSZone *)zone
 {
-  return [self retain];
+  return self;
 }
 
 // NSPasteboardWriting methods
@@ -132,9 +121,8 @@ NSString *const PDImageUUIDType = @"org.unfactored.Phod.PDImageUUID";
 {
   if ([type isEqualToString:PDImageUUIDType])
     return [self initWithPropertyList:obj];
-
-  [self release];
-  return nil;
+  else
+    return nil;
 }
 
 @end

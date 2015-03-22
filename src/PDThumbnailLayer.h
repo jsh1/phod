@@ -28,12 +28,12 @@
 
 @interface PDThumbnailLayer : CALayer
 
-@property(nonatomic, retain) PDImage *image;
+@property(nonatomic, strong) PDImage *image;
 
-@property(nonatomic, getter=isSelected) BOOL selected;
-@property(nonatomic, getter=isPrimary) BOOL primary;
+@property(nonatomic, assign, getter=isSelected) BOOL selected;
+@property(nonatomic, assign, getter=isPrimary) BOOL primary;
 
-@property(nonatomic) BOOL displaysMetadata;
+@property(nonatomic, assign) BOOL displaysMetadata;
 
 - (void)invalidate;
 

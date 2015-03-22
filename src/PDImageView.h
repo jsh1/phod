@@ -28,14 +28,16 @@
 
 @interface PDImageView : NSView
 
-@property(nonatomic, retain) PDImage *image;
-@property(nonatomic) CGFloat imageScale;
-@property(nonatomic) CGPoint imageOrigin;
-@property(nonatomic) BOOL displaysMetadata;
+@property(nonatomic, weak) IBOutlet PDImageViewController *controller;
 
-- (CGFloat)scaleToFitScale;
-- (CGFloat)scaleToFillScale;
-- (CGFloat)scaleToActualScale;
+@property(nonatomic, strong) PDImage *image;
+@property(nonatomic, assign) CGFloat imageScale;
+@property(nonatomic, assign) CGPoint imageOrigin;
+@property(nonatomic, assign) BOOL displaysMetadata;
+
+@property(nonatomic, assign, readonly) CGFloat scaleToFitScale;
+@property(nonatomic, assign, readonly) CGFloat scaleToFillScale;
+@property(nonatomic, assign, readonly) CGFloat scaleToActualScale;
 
 - (void)setImageScale:(CGFloat)scale preserveOrigin:(BOOL)flag;
 

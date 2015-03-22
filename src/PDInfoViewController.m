@@ -30,14 +30,14 @@
 
 @implementation PDInfoViewController
 {
-  IBOutlet PDMetadataView *_metadataView;
-  IBOutlet NSPopUpButton *_popupButton;
-  IBOutlet NSMenu *_popupMenu;
-
   NSDictionary *_metadataGroups;
   NSArray *_metadataGroupOrder;
   NSString *_activeGroup;
 }
+
+@synthesize metadataView = _metadataView;
+@synthesize popupButton = _popupButton;
+@synthesize popupMenu = _popupMenu;
 
 + (NSString *)viewNibName
 {
@@ -46,19 +46,7 @@
 
 - (id)initWithController:(PDWindowController *)controller
 {
-  self = [super initWithController:controller];
-  if (self == nil)
-    return nil;
-
-  return self;
-}
-
-- (void)dealloc
-{
-  [_metadataGroups release];
-  [_metadataGroupOrder release];
-  [_activeGroup release];
-  [super dealloc];
+  return [super initWithController:controller];
 }
 
 - (void)viewDidLoad
@@ -88,10 +76,9 @@
 	{
 	  NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:name
 		action:@selector(popupMenuAction:) keyEquivalent:@""];
-	  [item setTarget:self];
-	  [item setRepresentedObject:name];
+	  item.target = self;
+	  item.representedObject = name;
 	  [_popupMenu addItem:item];
-	  [item release];
 	}
 
       if (_activeGroup == nil)
@@ -108,10 +95,9 @@
 
 - (void)setActiveGroup:(NSString *)name
 {
-  [_activeGroup release];
   _activeGroup = [name copy];
 
-  [_metadataView setImageProperties:[_metadataGroups objectForKey:name]];
+  [_metadataView setImageProperties:_metadataGroups[name]];
 
   [_popupButton selectItemAtIndex:
    [_popupMenu indexOfItemWithRepresentedObject:name]];
@@ -124,7 +110,7 @@
 
 - (void)imagePropertyChanged:(NSNotification *)note
 {
-  if ([note object] == [_controller primarySelectedImage])
+  if (note.object == _controller.primarySelectedImage)
     [_metadataView update];
 }
 
@@ -138,30 +124,28 @@
 
 - (void)applySavedViewState:(NSDictionary *)dict
 {
-  id value = [dict objectForKey:@"ActiveGroup"];
+  id value = dict[@"ActiveGroup"];
   if (value != nil)
     [self setActiveGroup:value];
 }
 
 - (NSString *)localizedImagePropertyForKey:(NSString *)key
 {
-  return [[_controller primarySelectedImage]
-	  localizedImagePropertyForKey:key];
+  return [_controller.primarySelectedImage localizedImagePropertyForKey:key];
 }
 
 - (void)setLocalizedImageProperty:(NSString *)str forKey:(NSString *)key
 {
-  [[_controller primarySelectedImage]
-   setLocalizedImageProperty:str forKey:key];
+  [_controller.primarySelectedImage setLocalizedImageProperty:str forKey:key];
 }
 
 - (IBAction)controlAction:(id)sender
 {
 }
 
-- (IBAction)popupMenuAction:(id)sender
+- (IBAction)popupMenuAction:(NSMenuItem *)sender
 {
-  [self setActiveGroup:[sender representedObject]];
+  self.activeGroup = sender.representedObject;
 }
 
 @end

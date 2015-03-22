@@ -1,5 +1,4 @@
 /* -*- c-style: gnu -*-
-
    Copyright (c) 2013 John Harper <jsh@unfactored.org>
 
    Permission is hereby granted, free of charge, to any person
@@ -35,40 +34,24 @@
 @end
 
 @implementation PDImportViewController
-{
-  IBOutlet NSPopUpButton *_libraryButton;
-  IBOutlet NSTextField *_directoryField;
-  IBOutlet NSTextField *_nameField;
 
-  IBOutlet NSButton *_renameButton;
-  IBOutlet NSTextField *_renameField;
-  IBOutlet NSTextField *_renameFieldLabel;
-
-  IBOutlet NSPopUpButton *_importButton;
-  IBOutlet NSPopUpButton *_activeTypeButton;
-
-  IBOutlet NSTextField *_keywordsField;
-
-  IBOutlet NSButton *_deleteAfterButton;
-
-  IBOutlet NSTextField *_descriptionLabel;
-
-  IBOutlet NSButton *_okButton;
-  IBOutlet NSButton *_cancelButton;
-}
+@synthesize libraryButton = _libraryButton;
+@synthesize directoryField = _directoryField;
+@synthesize nameField = _nameField;
+@synthesize renameButton = _renameButton;
+@synthesize renameField = _renameField;
+@synthesize renameFieldLabel = _renameFieldLabel;
+@synthesize importButton = _importButton;
+@synthesize activeTypeButton = _activeTypeButton;
+@synthesize keywordsField = _keywordsField;
+@synthesize deleteAfterButton = _deleteAfterButton;
+@synthesize descriptionLabel = _descriptionLabel;
+@synthesize okButton = _okButton;
+@synthesize cancelButton = _cancelButton;
 
 + (NSString *)viewNibName
 {
   return @"PDImportView";
-}
-
-- (id)initWithController:(PDWindowController *)controller
-{
-  self = [super initWithController:controller];
-  if (self == nil)
-    return nil;
-
-  return self;
 }
 
 - (void)viewDidLoad
@@ -88,7 +71,7 @@
       localtime_r(&date, &tm);
       char buf[2048];
       strftime(buf, sizeof(buf), [format UTF8String], &tm);
-      [_nameField setStringValue:[NSString stringWithUTF8String:buf]];
+      _nameField.stringValue = [NSString stringWithUTF8String:buf];
     }
 }
 
@@ -100,18 +83,18 @@
 
 - (void)updateDescription
 {
-  if (![_okButton isEnabled])
+  if (!_okButton.enabled)
     {
-      [_descriptionLabel setStringValue:@""];
+      _descriptionLabel.stringValue = @"";
       return;
     }
 
-  NSInteger count = [[_controller selectedImageIndexes] count];
+  NSInteger count = [_controller.selectedImageIndexes count];
 
-  PDImageLibrary *lib = [[_libraryButton selectedItem] representedObject];
+  PDImageLibrary *lib = _libraryButton.selectedItem.representedObject;
 
-  NSString *folder = [_directoryField stringValue];
-  NSString *name = [_nameField stringValue];
+  NSString *folder = _directoryField.stringValue;
+  NSString *name = _nameField.stringValue;
 
   NSString *dir = [folder stringByAppendingPathComponent:name];
 
@@ -135,23 +118,23 @@
 - (void)updateControls
 {
   NSArray *all_libs = [PDImageLibrary allLibraries];
-  NSArray *current_libs = [[_libraryButton itemArray] mappedArray:
+  NSArray *current_libs = [_libraryButton.itemArray mappedArray:
 			   ^id (id obj) {
-			     return [(NSMenuItem *)obj representedObject];}];
+			     return ((NSMenuItem *)obj).representedObject;}];
 
   if (![current_libs isEqual:all_libs])
     {
       PDImageLibrary *selected_lib
-        = [[_libraryButton selectedItem] representedObject];
+        = _libraryButton.selectedItem.representedObject;
 
       [_libraryButton removeAllItems];
       for (PDImageLibrary *lib in all_libs)
 	{
-	  if (![lib isTransient])
+	  if (!lib.transient)
 	    {
-	      [_libraryButton addItemWithTitle:[lib name]];
-	      NSMenuItem *item = [_libraryButton lastItem];
-	      [item setRepresentedObject:lib];
+	      [_libraryButton addItemWithTitle:lib.name];
+	      NSMenuItem *item = _libraryButton.lastItem;
+	      item.representedObject = lib;
 	      if (lib == selected_lib)
 		[_libraryButton selectItem:item];
 	    }
@@ -167,18 +150,18 @@
   if (idx >= 0)
     {
       [_libraryButton selectItemAtIndex:idx];
-      [_directoryField setStringValue:dir];
+      _directoryField.stringValue = dir;
     }
 }
 
 - (void)doImport
 {
-  PDImageLibrary *lib = [[_libraryButton selectedItem] representedObject];
+  PDImageLibrary *lib = _libraryButton.selectedItem.representedObject;
   if (lib == nil)
     return;
 
-  NSString *dir = [_directoryField stringValue];
-  NSString *name = [_nameField stringValue];
+  NSString *dir = _directoryField.stringValue;
+  NSString *name = _nameField.stringValue;
   if ([dir length] != 0)
     dir = [dir stringByAppendingPathComponent:name];
   else
@@ -187,45 +170,45 @@
     return;
 
   NSMutableSet *types = [NSMutableSet set];
-  switch ([_importButton indexOfSelectedItem])
+  switch (_importButton.indexOfSelectedItem)
     {
     case 0:
-      [types addObject:(id)kUTTypeJPEG];
-      [types addObject:(id)PDTypeRAWImage];
+      [types addObject:(__bridge id)kUTTypeJPEG];
+      [types addObject:(__bridge id)PDTypeRAWImage];
       break;
     case 1:
-      [types addObject:(id)kUTTypeJPEG];
+      [types addObject:(__bridge id)kUTTypeJPEG];
       break;
     case 2:
-      [types addObject:(id)PDTypeRAWImage];
+      [types addObject:(__bridge id)PDTypeRAWImage];
       break;
     }
 
   NSString *active_type = nil;
-  switch ([_activeTypeButton indexOfSelectedItem])
+  switch (_activeTypeButton.indexOfSelectedItem)
     {
     case 0:
-      active_type = (id)kUTTypeJPEG;
+      active_type = (__bridge id)kUTTypeJPEG;
       break;
     case 1:
-      active_type = (id)PDTypeRAWImage;
+      active_type = (__bridge id)PDTypeRAWImage;
       break;
     }
 
   NSMutableDictionary *metadata = [NSMutableDictionary dictionary];
 
-  NSString *keywords_str = [_keywordsField stringValue];
+  NSString *keywords_str = _keywordsField.stringValue;
   if ([keywords_str length] != 0)
     {
       NSArray *keywords = [keywords_str componentsSeparatedByCharactersInSet:
 			   [NSCharacterSet whitespaceAndNewlineCharacterSet]];
       if ([keywords count] != 0)
-	[metadata setObject:keywords forKey:PDImage_Keywords];
+	metadata[PDImage_Keywords] = keywords;
     }
 
-  BOOL delete_sources = [_deleteAfterButton intValue] != 0;
+  BOOL delete_sources = _deleteAfterButton.intValue != 0;
 
-  [lib importImages:[_controller selectedImages] toDirectory:dir
+  [lib importImages:_controller.selectedImages toDirectory:dir
    fileTypes:types preferredType:active_type filenameMap:NULL
    properties:metadata deleteSourceImages:delete_sources];
 
@@ -234,7 +217,7 @@
 
 - (void)selectedImagesDidChange:(NSNotification *)note
 {
-  [_okButton setEnabled:[[_controller selectedImageIndexes] count] != 0];
+  _okButton.enabled = [_controller.selectedImageIndexes count] != 0;
 
   [self updateDescription];
 }
@@ -244,12 +227,12 @@
   if (sender == _okButton)
     {
       [self doImport];
-      [_controller setImportMode:NO];
+      _controller.importMode = NO;
       return;
     }
   else if (sender == _cancelButton)
     {
-      [_controller setImportMode:NO];
+      _controller.importMode = NO;
       return;
     }
 

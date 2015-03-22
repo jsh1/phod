@@ -20,7 +20,7 @@
 		5727CDA6184A3EC7007BF7E8 /* PDPredicatePanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5727CDA4184A3EC7007BF7E8 /* PDPredicatePanel.xib */; };
 		57403B93186740C000008A1A /* PDFileCatalog.m in Sources */ = {isa = PBXBuildFile; fileRef = 57403B92186740C000008A1A /* PDFileCatalog.m */; };
 		5744D74F1854CCDA0079F8CD /* PDLibraryDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 5744D74E1854CCDA0079F8CD /* PDLibraryDevice.m */; };
-		574B786E185917BC0095FC87 /* PDFoundationExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 574B786D185917BB0095FC87 /* PDFoundationExtensions.m */; };
+		574B786E185917BC0095FC87 /* PDFoundationExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 574B786D185917BB0095FC87 /* PDFoundationExtensions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		575167721852451800163CD8 /* PDImageLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = 575167711852451800163CD8 /* PDImageLibrary.m */; };
 		575B96811869D5EC0009625F /* PDFileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 575B96801869D5EC0009625F /* PDFileManager.m */; };
 		575B96841869D9820009625F /* PDLocalFileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 575B96831869D9820009625F /* PDLocalFileManager.m */; };
@@ -36,7 +36,7 @@
 		578F0FD4182D91FD001A5152 /* PDInfoView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCA182D91FD001A5152 /* PDInfoView.xib */; };
 		578F0FD5182D91FD001A5152 /* PDLibraryView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCC182D91FD001A5152 /* PDLibraryView.xib */; };
 		578F0FD6182D91FD001A5152 /* PDWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 578F0FCE182D91FD001A5152 /* PDWindow.xib */; };
-		57B1FAF9184FCBDB00FEF7DB /* PXSourceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAF6184FCBDB00FEF7DB /* PXSourceList.m */; settings = {COMPILER_FLAGS = "-Wno-deprecated"; }; };
+		57B1FAF9184FCBDB00FEF7DB /* PXSourceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAF6184FCBDB00FEF7DB /* PXSourceList.m */; settings = {COMPILER_FLAGS = "-Wno-deprecated -fno-objc-arc"; }; };
 		57B1FAFC184FCCFB00FEF7DB /* PDLibraryGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAFB184FCCFB00FEF7DB /* PDLibraryGroup.m */; };
 		57B1FAFF184FDA4900FEF7DB /* PDLibraryQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 57B1FAFE184FDA4900FEF7DB /* PDLibraryQuery.m */; };
 		57C18101182E9644002B8DB2 /* PDAppKitExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C18100182E9644002B8DB2 /* PDAppKitExtensions.m */; };
@@ -618,6 +618,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_OBJC_IMPLICIT_ATOMIC_PROPERTIES = YES;
 				CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS = YES;
 				COPY_PHASE_STRIP = NO;
@@ -641,6 +642,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_OBJC_IMPLICIT_ATOMIC_PROPERTIES = YES;
 				CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS = YES;
 				COPY_PHASE_STRIP = YES;

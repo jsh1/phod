@@ -54,9 +54,9 @@ property_map(void)
 	};
       const void *tiff_values[] =
 	{
-	  PDImage_CameraMake,
-	  PDImage_CameraModel,
-	  PDImage_CameraSoftware,
+	  (__bridge CFStringRef)PDImage_CameraMake,
+	  (__bridge CFStringRef)PDImage_CameraModel,
+	  (__bridge CFStringRef)PDImage_CameraSoftware,
 	};
 
       const void *exif_keys[] =
@@ -86,28 +86,28 @@ property_map(void)
  	};
       const void *exif_values[] =
 	{
-	  PDImage_Contrast,
+          (__bridge CFStringRef)PDImage_Contrast,
 	  kCFNull,			/* DigitizedDate */
-	  PDImage_ExposureBias,
-	  PDImage_ExposureLength,
-	  PDImage_ExposureMode,
-	  PDImage_ExposureProgram,
-	  PDImage_Flash,
-	  PDImage_FNumber,
-	  PDImage_FocalLength,
-	  PDImage_FocalLength35mm,
-	  PDImage_ISOSpeed,
+	  (__bridge CFStringRef)PDImage_ExposureBias,
+	  (__bridge CFStringRef)PDImage_ExposureLength,
+	  (__bridge CFStringRef)PDImage_ExposureMode,
+	  (__bridge CFStringRef)PDImage_ExposureProgram,
+	  (__bridge CFStringRef)PDImage_Flash,
+	  (__bridge CFStringRef)PDImage_FNumber,
+	  (__bridge CFStringRef)PDImage_FocalLength,
+	  (__bridge CFStringRef)PDImage_FocalLength35mm,
+	  (__bridge CFStringRef)PDImage_ISOSpeed,
 	  kCFNull,			/* ISOSpeedRatings */
-	  PDImage_LightSource,
-	  PDImage_MaxAperture,
-	  PDImage_MeteringMode,
+	  (__bridge CFStringRef)PDImage_LightSource,
+	  (__bridge CFStringRef)PDImage_MaxAperture,
+	  (__bridge CFStringRef)PDImage_MeteringMode,
 	  kCFNull,			/* OriginalDate */
-	  PDImage_Saturation,
-	  PDImage_SceneCaptureType,
-	  PDImage_SceneType,
-	  PDImage_SensitivityType,
-	  PDImage_Sharpness,
-	  PDImage_WhiteBalance,
+	  (__bridge CFStringRef)PDImage_Saturation,
+	  (__bridge CFStringRef)PDImage_SceneCaptureType,
+	  (__bridge CFStringRef)PDImage_SceneType,
+	  (__bridge CFStringRef)PDImage_SensitivityType,
+	  (__bridge CFStringRef)PDImage_Sharpness,
+	  (__bridge CFStringRef)PDImage_WhiteBalance,
 	};
 
       const void *exif_aux_keys[] =
@@ -117,8 +117,8 @@ property_map(void)
 	};
       const void *exif_aux_values[] =
 	{
-	  PDImage_FlashCompensation,
-	  PDImage_ImageStabilization,
+	  (__bridge CFStringRef)PDImage_FlashCompensation,
+	  (__bridge CFStringRef)PDImage_ImageStabilization,
 	};
 
       const void *iptc_keys[] =
@@ -128,8 +128,8 @@ property_map(void)
  	};
       const void *iptc_values[] =
 	{
-	  PDImage_Keywords,
-	  PDImage_Rating,
+	  (__bridge CFStringRef)PDImage_Keywords,
+	  (__bridge CFStringRef)PDImage_Rating,
 	};
 
       CFDictionaryRef tiff_map = CFDictionaryCreate(NULL, tiff_keys,
@@ -161,12 +161,12 @@ property_map(void)
 	};
       const void *values[] =
 	{
-	  PDImage_FileSize,
-	  PDImage_PixelWidth,
-	  PDImage_PixelHeight,
-	  PDImage_Orientation,
-	  PDImage_ColorModel,
-	  PDImage_ProfileName,
+	  (__bridge CFStringRef)PDImage_FileSize,
+	  (__bridge CFStringRef)PDImage_PixelWidth,
+	  (__bridge CFStringRef)PDImage_PixelHeight,
+	  (__bridge CFStringRef)PDImage_Orientation,
+	  (__bridge CFStringRef)PDImage_ColorModel,
+	  (__bridge CFStringRef)PDImage_ProfileName,
 	  tiff_map,
 	  exif_map,
 	  exif_aux_map,
@@ -189,7 +189,7 @@ property_map(void)
 struct map_closure
 {
   CFDictionaryRef map;
-  NSMutableDictionary *dict;
+  __unsafe_unretained NSMutableDictionary *dict;
 };
 
 static void
@@ -207,7 +207,7 @@ process_gps_dictionary(CFDictionaryRef gps_dict, NSMutableDictionary *dict)
       if (ptr != NULL && CFEqual(ptr, CFSTR("S")))
 	value = -value;
       id obj = [NSNumber numberWithDouble:value];
-      [dict setObject:obj forKey:PDImage_Latitude];
+      dict[PDImage_Latitude] = obj;
     }
       
   ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSLongitude);
@@ -218,7 +218,7 @@ process_gps_dictionary(CFDictionaryRef gps_dict, NSMutableDictionary *dict)
       if (ptr != NULL && CFEqual(ptr, CFSTR("W")))
 	value = -value;
       id obj = [NSNumber numberWithDouble:value];
-      [dict setObject:obj forKey:PDImage_Longitude];
+      dict[PDImage_Longitude] = obj;
     }
 
   ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSAltitude);
@@ -233,18 +233,17 @@ process_gps_dictionary(CFDictionaryRef gps_dict, NSMutableDictionary *dict)
 	  if (x == 1)
 	    value = -value;
 	}
-      id obj = [NSNumber numberWithDouble:value];
-      [dict setObject:obj forKey:PDImage_Altitude];
+      dict[PDImage_Altitude] = @(value);
     }
 
   ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSImgDirection);
   if (ptr != NULL && CFGetTypeID(ptr) == number_type)
     {
-      [dict setObject:(id)ptr forKey:PDImage_Direction];
+      dict[PDImage_Direction] = (__bridge id)ptr;
 
       ptr = CFDictionaryGetValue(gps_dict, kCGImagePropertyGPSImgDirectionRef);
       if (ptr != NULL)
-	[dict setObject:(id)ptr forKey:PDImage_DirectionRef];
+	dict[PDImage_DirectionRef] = (__bridge id)ptr;
     }
 }
 
@@ -275,22 +274,20 @@ map_property(const void *key, const void *value, void *ctx)
       if (CFEqual(key, kCGImagePropertyExifISOSpeedRatings)
 	  && CFGetTypeID(value) == CFArrayGetTypeID()
 	  && CFArrayGetCount(value) >= 1
-	  && [c->dict objectForKey:PDImage_ISOSpeed] == nil)
+	  && c->dict[PDImage_ISOSpeed] == nil)
 	{
-	  [c->dict setObject:CFArrayGetValueAtIndex(value, 0)
-	   forKey:PDImage_ISOSpeed];
+	  c->dict[PDImage_ISOSpeed] = (__bridge id)CFArrayGetValueAtIndex(value, 0);
 	}
       else if ((CFEqual(key, kCGImagePropertyExifDateTimeDigitized)
 		|| CFEqual(key, kCGImagePropertyExifDateTimeOriginal))
 	       && CFGetTypeID(value) == CFStringGetTypeID())
 	{
-	  time_t date = PDImageParseEXIFDateString_((NSString *)value);
+	  time_t date = PDImageParseEXIFDateString_((__bridge NSString *)value);
 	  if (date != 0)
 	    {
 	      NSString *k = CFEqual(key, kCGImagePropertyExifDateTimeDigitized)
 			    ? PDImage_DigitizedDate : PDImage_OriginalDate;
-	      [c->dict setObject:
-	       [NSNumber numberWithUnsignedLong:date] forKey:k];
+	      c->dict[k] = @(date);
 	    }
 	}
       else if (CFEqual(key, kCGImagePropertyGPSDictionary)
@@ -303,7 +300,7 @@ map_property(const void *key, const void *value, void *ctx)
     }
   else
     {
-      [c->dict setObject:(id)value forKey:(id)mapped_key];
+      c->dict[(__bridge NSString *)mapped_key] = (__bridge id)value;
     }
 }
 
@@ -314,16 +311,17 @@ PDImageSourceCopyProperties(CGImageSourceRef src)
   if (dict == NULL)
     return [[NSDictionary alloc] init];
 
-  struct map_closure c;
+  NSMutableDictionary *ret = [[NSMutableDictionary alloc] init];
 
+  struct map_closure c;
   c.map = property_map();
-  c.dict = [[NSMutableDictionary alloc] init];
+  c.dict = ret;
 
   CFDictionaryApplyFunction(dict, map_property, &c);
 
   CFRelease(dict);
 
-  return c.dict;
+  return ret;
 }
 
 
@@ -524,7 +522,7 @@ static const NSString *sensitivity_types[] = {nil,
   @"Standard Output Sensitivity, Recommended Exposure Index and ISO Speed"};
 
 static inline NSString *
-array_lookup(int idx, NSString **array, size_t nelts)
+array_lookup(int idx, NSString *const *array, size_t nelts)
 {
   NSString *str = idx >= 0 && idx < nelts ? array[idx] : nil;
   return str != nil ? str : @"Unknown";
@@ -595,7 +593,6 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
     {
       double x;
       const char *str;
-      NSDate *date;
 
     case type_bool:
       return [value intValue] != 0 ? @"True" : @"False";
@@ -666,9 +663,9 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
     case type_orientation:
       return lookup_enum_string(type, [value intValue]);
 
-    case type_unix_date:
-      date = [NSDate dateWithTimeIntervalSince1970:
-	      [value unsignedLongValue]];
+    case type_unix_date: {
+      NSDate *date = [NSDate dateWithTimeIntervalSince1970:
+		      [value unsignedLongValue]];
       if (date != nil)
 	{
 	  static NSDateFormatter *formatter;
@@ -682,7 +679,7 @@ PDImageLocalizedPropertyValue(NSString *key, id value, PDImage *im)
 
 	  return [formatter stringFromDate:date];
 	}
-      break;
+      break; }
 
     case type_string:
       return value;
@@ -735,10 +732,9 @@ PDImageUnlocalizedPropertyValue(NSString *key, NSString *str, PDImage *im)
 NSDictionary *
 PDImageExpressionValues(PDImage *im)
 {
-  PDImageExpressionObject *obj
-    = [[PDImageExpressionObject alloc] init];
-  obj->_image = [im retain];
-  return [obj autorelease];
+  PDImageExpressionObject *obj = [[PDImageExpressionObject alloc] init];
+  obj->_image = im;
+  return obj;
 }
 
 @implementation PDImageExpressionObject
@@ -857,9 +853,8 @@ predicate_compound_template(void)
 			     @(NSAndPredicateType),
 			     @(NSOrPredicateType)];
 
-  return [[[NSPredicateEditorRowTemplate alloc]
-	   initWithCompoundTypes:compound_types]
-	  autorelease];
+  return [[NSPredicateEditorRowTemplate alloc]
+	  initWithCompoundTypes:compound_types];
 }
 
 static NSPredicateEditorRowTemplate *
@@ -881,12 +876,11 @@ predicate_string_template(void)
 			  @(NSEndsWithPredicateOperatorType),
 			  @(NSContainsPredicateOperatorType)];
 
-  return [[[NSPredicateEditorRowTemplate alloc]
-	   initWithLeftExpressions:string_keys rightExpressionAttributeType:
-	   NSStringAttributeType modifier:NSDirectPredicateModifier
-	   operators:string_ops options:NSCaseInsensitivePredicateOption
-	   | NSDiacriticInsensitivePredicateOption]
-	  autorelease];
+  return [[NSPredicateEditorRowTemplate alloc]
+	  initWithLeftExpressions:string_keys rightExpressionAttributeType:
+	  NSStringAttributeType modifier:NSDirectPredicateModifier
+	  operators:string_ops options:NSCaseInsensitivePredicateOption
+	  | NSDiacriticInsensitivePredicateOption];
 }
 
 static NSPredicateEditorRowTemplate *
@@ -913,10 +907,9 @@ predicate_numeric_template(void)
 			   @(NSGreaterThanPredicateOperatorType),
 			   @(NSGreaterThanOrEqualToPredicateOperatorType)];
 
-  return [[[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:
-	   numeric_keys rightExpressionAttributeType:NSDoubleAttributeType
-	   modifier:NSDirectPredicateModifier operators:numeric_ops options:0]
-	  autorelease];
+  return [[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:
+	  numeric_keys rightExpressionAttributeType:NSDoubleAttributeType
+	  modifier:NSDirectPredicateModifier operators:numeric_ops options:0];
 }
 
 static NSPredicateEditorRowTemplate *
@@ -936,10 +929,9 @@ predicate_bool_template(void)
   NSArray *bool_ops = @[@(NSEqualToPredicateOperatorType),
 			   @(NSNotEqualToPredicateOperatorType)];
 
-  return [[[NSPredicateEditorRowTemplate alloc]
-	   initWithLeftExpressions:bool_keys rightExpressions:bool_values
-	   modifier:NSDirectPredicateModifier operators:bool_ops options:0]
-	  autorelease];
+  return [[NSPredicateEditorRowTemplate alloc]
+	  initWithLeftExpressions:bool_keys rightExpressions:bool_values
+	  modifier:NSDirectPredicateModifier operators:bool_ops options:0];
 }
 
 static NSPredicateEditorRowTemplate *
@@ -959,11 +951,10 @@ predicate_date_template(void)
 			@(NSGreaterThanPredicateOperatorType),
 			@(NSGreaterThanOrEqualToPredicateOperatorType)];
 
-  return [[[NSPredicateEditorRowTemplate alloc]
-	   initWithLeftExpressions:date_keys rightExpressionAttributeType:
-	   NSDateAttributeType modifier:NSDirectPredicateModifier
-	   operators:date_ops options:0]
-	  autorelease];
+  return [[NSPredicateEditorRowTemplate alloc]
+	  initWithLeftExpressions:date_keys rightExpressionAttributeType:
+	  NSDateAttributeType modifier:NSDirectPredicateModifier
+	  operators:date_ops options:0];
 }
 
 static NSPredicateEditorRowTemplate *
@@ -981,15 +972,14 @@ predicate_string_array_template(void)
 			  @(NSEndsWithPredicateOperatorType),
 			  @(NSContainsPredicateOperatorType)];
 
-  return [[[NSPredicateEditorRowTemplate alloc]
-	   initWithLeftExpressions:array_keys rightExpressionAttributeType:
-	   NSStringAttributeType modifier:NSAnyPredicateModifier
-	   operators:string_ops options:0]
-	  autorelease];
+  return [[NSPredicateEditorRowTemplate alloc]
+	  initWithLeftExpressions:array_keys rightExpressionAttributeType:
+	  NSStringAttributeType modifier:NSAnyPredicateModifier
+	  operators:string_ops options:0];
 }
 
 static NSPredicateEditorRowTemplate *
-predicate_enum_template(NSString *key, NSString **array, size_t nelts)
+predicate_enum_template(NSString *key, NSString *const *array, size_t nelts)
 {
   NSExpression *enum_key = [NSExpression expressionForKeyPath:key];
 
@@ -1007,10 +997,9 @@ predicate_enum_template(NSString *key, NSString **array, size_t nelts)
   NSArray *enum_ops = @[@(NSEqualToPredicateOperatorType),
 			@(NSNotEqualToPredicateOperatorType)];
 
-  return [[[NSPredicateEditorRowTemplate alloc]
-	   initWithLeftExpressions:@[enum_key] rightExpressions:enum_values
-	   modifier:NSDirectPredicateModifier operators:enum_ops options:0]
-	  autorelease];
+  return [[NSPredicateEditorRowTemplate alloc]
+	  initWithLeftExpressions:@[enum_key] rightExpressions:enum_values
+	  modifier:NSDirectPredicateModifier operators:enum_ops options:0];
 }
 
 #define ENUM(x, y) predicate_enum_template(PDImage_##x, y, N_ELEMENTS(y))
@@ -1041,7 +1030,6 @@ PDImagePredicateEditorRowTemplates(void)
       ENUM(Orientation, orientation_type),
       ENUM(WhiteBalance, white_balance)
     ];
-    [templates retain];
   });
 
   return templates;

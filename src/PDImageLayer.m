@@ -34,9 +34,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
 @implementation PDImageLayer
 {
-  PDImage *_image;
   BOOL _imageUsesRAW;
-  BOOL _thumbnail;
   CGColorSpaceRef _colorSpace;
 
   BOOL _addedImageHost;
@@ -44,6 +42,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   OSSpinLock _imageLock;
 }
 
+@synthesize image = _image;
 @synthesize thumbnail = _thumbnail;
 
 + (id)defaultValueForKey:(NSString *)key
@@ -57,13 +56,12 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 - (id)initWithLayer:(PDImageLayer *)src
 {
   self = [super initWithLayer:src];
-  if (self == nil)
-    return nil;
-
-  _image = [src->_image retain];
-  _thumbnail = src->_thumbnail;
-  _colorSpace = CGColorSpaceRetain(src->_colorSpace);
-
+  if (self != nil)
+    {
+      _image = src->_image;
+      _thumbnail = src->_thumbnail;
+      _colorSpace = CGColorSpaceRetain(src->_colorSpace);
+    }
   return self;
 }
 
@@ -80,21 +78,13 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 {
   [self invalidate];
 
-  [self setSublayers:[NSArray array]];
+  self.sublayers = @[];
 }
 
 - (void)dealloc
 {
   [self invalidate];
-  [_image release];
   CGColorSpaceRelease(_colorSpace);
-
-  [super dealloc];
-}
-
-- (PDImage *)image
-{
-  return _image;
 }
 
 - (void)setImage:(PDImage *)im
@@ -118,16 +108,14 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
       if (_image != im)
 	{
 	  old_image = _image;
-	  _image = [im retain];
+	  _image = im;
 	}
 
       _imageUsesRAW = usesRAW;
 
       OSSpinLockUnlock(&_imageLock);
 
-      [old_image release];
-
-      [[[self sublayers] firstObject] setContents:nil];
+      ((CALayer *)[self.sublayers firstObject]).contents = nil;
       [self setNeedsLayout];
     }
 }
@@ -151,13 +139,13 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   if (_image == nil)
     return;
 
-  CGRect bounds = [self bounds];
-  CGFloat scale = [self contentsScale];
+  CGRect bounds = self.bounds;
+  CGFloat scale = self.contentsScale;
 
   CGSize size = CGSizeMake(ceil(bounds.size.width * scale),
 			   ceil(bounds.size.height * scale));
 
-  unsigned int orientation = [_image orientation];
+  unsigned int orientation = _image.orientation;
 
   if (orientation > 4)
     {
@@ -170,12 +158,12 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
      orientation transform to it, without the owner of this layer
      needing to care. */
 
-  CALayer *image_layer = [[self sublayers] firstObject];
+  CALayer *image_layer = [self.sublayers firstObject];
 
   if (image_layer == nil)
     {
       image_layer = [PDImageLayerLayer layer];
-      [image_layer setDelegate:[self delegate]];
+      image_layer.delegate = self.delegate;
       [self addSublayer:image_layer];
     }
 
@@ -218,31 +206,28 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   else
     m = CGAffineTransformIdentity;
 
-  [image_layer setAffineTransform:m];
-  [image_layer setFrame:bounds];
-  [image_layer setContentsScale:scale];
+  image_layer.affineTransform = m;
+  image_layer.frame = bounds;
+  image_layer.contentsScale = scale;
 }
 
 - (NSDictionary *)imageHostOptions
 {
   NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 
-  [dict setObject:[NSValue valueWithSize:_imageSize] forKey:PDImageHost_Size];
+  dict[PDImageHost_Size] = [NSValue valueWithSize:_imageSize];
 
   if (_thumbnail)
-    [dict setObject:[NSNumber numberWithBool:YES] forKey:PDImageHost_Thumbnail];
+    dict[PDImageHost_Thumbnail] = @YES;
 
   if (_colorSpace != NULL)
-    [dict setObject:(id)_colorSpace forKey:PDImageHost_ColorSpace];
+    dict[PDImageHost_ColorSpace] = (__bridge id)_colorSpace;
 
   if (!_thumbnail)
     {
-      CALayer *image_layer = [[self sublayers] firstObject];
-      if ([image_layer contents] != nil)
-	{
-	  [dict setObject:[NSNumber numberWithBool:YES]
-	   forKey:PDImageHost_NoPreview];
-	}
+      CALayer *image_layer = [self.sublayers firstObject];
+      if (image_layer.contents != nil)
+	dict[PDImageHost_NoPreview] = @YES;
     }
 
   return dict;
@@ -261,8 +246,8 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
 
   if (_image == image)
     {
-      CALayer *image_layer = [[self sublayers] firstObject];
-      [image_layer setContents:(id)im];
+      CALayer *image_layer = [self.sublayers firstObject];
+      image_layer.contents = (__bridge id)im;
     }
 
   OSSpinLockUnlock(&_imageLock);
@@ -277,7 +262,7 @@ CA_HIDDEN @interface PDImageLayerLayer : CALayer
   if ([key isEqualToString:@"magnificationFilter"])
     return kCAFilterNearest;
   else if ([key isEqualToString:@"edgeAntialiasingMask"])
-    return [NSNumber numberWithInt:0];
+    return @0;
   else
     return [super defaultValueForKey:key];
 }

@@ -28,11 +28,13 @@
 
 @interface PDImageGridView : NSView <NSDraggingSource>
 
+@property(nonatomic, weak) IBOutlet PDImageListViewController *controller;
+
 @property(nonatomic, copy) NSArray *images;
-@property(nonatomic) NSInteger primarySelection;
+@property(nonatomic, assign) NSInteger primarySelection;
 @property(nonatomic, copy) NSIndexSet *selection;
-@property(nonatomic) CGFloat scale;
-@property(nonatomic) BOOL displaysMetadata;
+@property(nonatomic, assign) CGFloat scale;
+@property(nonatomic, assign) BOOL displaysMetadata;
 
 - (NSRect)boundingRectOfItemAtIndex:(NSInteger)idx;
 

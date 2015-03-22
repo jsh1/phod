@@ -43,15 +43,9 @@
   return [super initWithLibrary:lib directory:@"DCIM"];
 }
 
-- (void)dealloc
-{
-  [_icon release];
-  [super dealloc];
-}
-
 - (NSString *)titleString
 {
-  return [[self library] name];
+  return self.library.name;
 }
 
 - (BOOL)hasTitleImage
@@ -63,10 +57,9 @@
 {
   if (_icon == nil)
     {
-      _icon = [[self library] iconImage];
+      _icon = self.library.iconImage;
       if (_icon == nil)
 	_icon = PDImageWithName(PDImage_GenericRemovableDisk);
-      [_icon retain];
     }
 
   return _icon;
@@ -79,7 +72,7 @@
 
 - (void)unmount
 {
-  [[self library] unmount];
+  [self.library unmount];
 }
 
 @end

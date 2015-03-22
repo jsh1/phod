@@ -28,7 +28,7 @@
 
 @interface PDMetadataItemView : NSView <NSTextFieldDelegate>
 
-@property(nonatomic, assign) PDMetadataView *metadataView;
+@property(nonatomic, weak) PDMetadataView *metadataView;
 
 @property(nonatomic, copy) NSString *imageProperty;
 

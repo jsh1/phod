@@ -27,4 +27,7 @@
 @class PDLibraryViewController;
 
 @interface PDLibraryView : PXSourceList
+
+@property(nonatomic, weak) IBOutlet PDLibraryViewController *controller;
+
 @end

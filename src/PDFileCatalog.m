@@ -59,11 +59,9 @@
 		JSONObjectWithData:data options:0 error:nil];
 
       if ([obj isKindOfClass:[NSDictionary class]])
-	_dict[0] = [[obj objectForKey:@"catalog"] mutableCopy];
+	_dict[0] = [obj[@"catalog"] mutableCopy];
 
-      _lastFileId = [[obj objectForKey:@"lastFileId"] unsignedIntValue];
-
-      [data release];
+      _lastFileId = [obj[@"lastFileId"] unsignedIntValue];
     }
 
   return self;
@@ -71,29 +69,24 @@
 
 - (void)invalidate
 {
-  if (_queue != NULL)
+  if (_queue != nil)
     {
       dispatch_sync(_queue, ^{});
-      dispatch_release(_queue);
-      _queue = NULL;
+      _queue = nil;
     }
 
-  [_dict[0] release];
   _dict[0] = nil;
-
-  [_dict[1] release];
   _dict[1] = nil;
 }
 
 - (void)dealloc
 {
   [self invalidate];
-  [super dealloc];
 }
 
 - (void)synchronizeWithContentsOfFile:(NSString *)path
 {
-  if (_queue == NULL)
+  if (_queue == nil)
     return;
 
   /* _dirty is only set when files are renamed or new ids are added to
@@ -105,8 +98,10 @@
     {
       if (_dirty || [_dict[0] count] != 0)
 	{
-	  NSDictionary *obj = @{@"catalog": _dict[1],
-				@"lastFileId": @(_lastFileId)};
+	  NSDictionary *obj = @{
+	    @"catalog": _dict[1],
+	    @"lastFileId": @(_lastFileId)
+	  };
 
 	  NSData *data = [NSJSONSerialization
 			  dataWithJSONObject:obj options:0 error:nil];
@@ -114,8 +109,6 @@
 	  if ([data writeToFile:path atomically:YES])
 	    {
 	      _dirty = NO;
-
-	      [_dict[0] release];
 	      _dict[0] = nil;
 	    }
 	  else
@@ -161,15 +154,12 @@
 		{
 		  NSString *new_key = [newName stringByAppendingPathComponent:
 				       [key substringFromIndex:old_len + 1]];
-		  [catalog setObject:[catalog objectForKey:key]
-		   forKey:new_key];
+		  catalog[new_key] = catalog[key];
 		  [catalog removeObjectForKey:key];
 		}
 
 	      _dirty = YES;
 	    }
-
-	  [matches release];
 	}
     });
 }
@@ -185,10 +175,10 @@
 	{
 	  NSMutableDictionary *catalog = _dict[pass];
 
-	  id value = [catalog objectForKey:oldName];
+	  id value = catalog[oldName];
 	  if (value != nil)
 	    {
-	      [catalog setObject:value forKey:newName];
+	      catalog[newName] = value;
 	      [catalog removeObjectForKey:oldName];
 	    }
 	}
@@ -206,7 +196,7 @@
 	{
 	  NSMutableDictionary *catalog = _dict[pass];
 
-	  if (!_dirty && [catalog objectForKey:path] != nil)
+	  if (!_dirty && catalog[path] != nil)
 	    _dirty = YES;
 
 	  [catalog removeObjectForKey:path];
@@ -225,11 +215,11 @@
 
   dispatch_sync(_queue, ^
     {
-      NSNumber *obj = [_dict[1] objectForKey:path];
+      NSNumber *obj = _dict[1][path];
 
       if (obj == nil)
 	{
-	  obj = [_dict[0] objectForKey:path];
+	  obj = _dict[0][path];
 
 	  /* We place the deserialized dictionary in _dict[0], and the
 	     current dictionary in _dict[1]. We know that all extant
@@ -240,7 +230,7 @@
 
 	  if (obj != nil)
 	    {
-	      [_dict[1] setObject:obj forKey:path];
+	      _dict[1][path] = obj;
 	      [_dict[0] removeObjectForKey:path];
 	    }
 	}
@@ -273,7 +263,7 @@
 
       for (int i = 0; i < 2; i++)
 	for (NSString *key in _dict[i])
-	  [catalog addIndex:[[_dict[i] objectForKey:key] unsignedIntValue]];
+	  [catalog addIndex:[_dict[i][key] unsignedIntValue]];
 
       ret = catalog;
     });

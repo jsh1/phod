@@ -27,18 +27,17 @@
 #import "PDAppDelegate.h"
 #import "PDImage.h"
 #import "PDImageProperty.h"
+#import "PDWindowController.h"
 
 NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
 @implementation PDPredicatePanelController
-{
-  IBOutlet NSPredicateEditor *_predicateEditor;
-  IBOutlet NSButton *_addSmartFolderButton;
-  IBOutlet NSButton *_cancelButton;
-  IBOutlet NSButton *_okButton;
 
-  NSPredicate *_predicate;
-}
+@synthesize predicateEditor = _predicateEditor;
+@synthesize addSmartFolderButton = _addSmartFolderButton;
+@synthesize cancelButton = _cancelButton;
+@synthesize okButton = _okButton;
+@synthesize predicate = _predicate;
 
 - (NSString *)windowNibName
 {
@@ -48,20 +47,13 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 - (id)init
 {
   self = [super initWithWindow:nil];
-  if (self == nil)
-    return nil;
-
-  _predicate = [[NSCompoundPredicate andPredicateWithSubpredicates:
-		@[[NSPredicate predicateWithFormat:@"%K >= %@",
-		   PDImage_Rating, @0]]] retain];
-
+  if (self != nil)
+    {
+      _predicate = [NSCompoundPredicate andPredicateWithSubpredicates:
+		    @[[NSPredicate predicateWithFormat:@"%K >= %@",
+		       PDImage_Rating, @0]]];
+    }
   return self;
-}
-
-- (void)dealloc
-{
-  [_predicate release];
-  [super dealloc];
 }
 
 - (void)windowDidLoad
@@ -70,11 +62,6 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
   [_predicateEditor setRowTemplates:PDImagePredicateEditorRowTemplates()];
   [_predicateEditor setObjectValue:_predicate];
-}
-
-- (NSPredicate *)predicate
-{
-  return _predicate;
 }
 
 - (void)setPredicate:(NSPredicate *)obj
@@ -88,9 +75,7 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
   if (_predicate != obj)
     {
-      [_predicate release];
       _predicate = [obj copy];
-
       [_predicateEditor setObjectValue:obj];
     }
 }
@@ -122,9 +107,7 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 {
   if (sender == _predicateEditor)
     {
-      [_predicate release];
       _predicate = [[_predicateEditor objectValue] copy];
-
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDPredicateDidChange object:self];
     }
@@ -134,7 +117,6 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
     }
   else if (sender == _cancelButton)
     {
-      [_predicate release];
       _predicate = nil;
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDPredicateDidChange object:self];

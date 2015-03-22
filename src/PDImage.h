@@ -24,8 +24,8 @@
 
 #import <Foundation/Foundation.h>
 
-extern CFStringRef PDTypeRAWImage;	/* public.camera-raw-image */
-extern CFStringRef PDTypePhodMetadata;	/* org.unfactored.phod-metadata */
+extern const CFStringRef PDTypeRAWImage;	/* public.camera-raw-image */
+extern const CFStringRef PDTypePhodMetadata;	/* org.unfactored.phod-metadata */
 
 extern NSString *const PDImagePropertyDidChange;
 
@@ -67,9 +67,9 @@ typedef int PDImageCompareKey;
 - (id)initWithLibrary:(PDImageLibrary *)lib directory:(NSString *)dir
     properties:(NSDictionary *)dict;
 
-@property(nonatomic, readonly) PDImageLibrary *library;
+@property(nonatomic, strong, readonly) PDImageLibrary *library;
 
-@property(nonatomic, readonly) NSString *libraryDirectory;
+@property(nonatomic, copy, readonly) NSString *libraryDirectory;
 
 /* Most-primitive property access. */
 
@@ -99,34 +99,34 @@ typedef int PDImageCompareKey;
    new persistent identifier when first called, -UUIDIfDefined doesn't
    ever allocate an identifier. */
 
-- (NSUUID *)UUID;
+@property(nonatomic, copy, readonly) NSUUID *UUID;
 - (NSUUID *)UUIDIfDefined;
 
 /* Convience for ActiveType and FileTypes properties. */
 
-@property(nonatomic) BOOL usesRAW;
+@property(nonatomic, assign) BOOL usesRAW;
 
 - (BOOL)supportsUsesRAW:(BOOL)flag;
 
 /* This automatically maps to the currently active file type. */
 
-@property(nonatomic, readonly) NSString *imageFile;
+@property(nonatomic, copy, readonly) NSString *imageFile;
 
 /* Convenience accessors for misc image properties. */
 
 @property(nonatomic, copy) NSString *name;
 @property(nonatomic, copy) NSString *title;
 @property(nonatomic, copy) NSString *caption;
-@property(nonatomic) unsigned int orientation;
+@property(nonatomic, assign) unsigned int orientation;
 
-@property(nonatomic, getter=isHidden) BOOL hidden;
-@property(nonatomic, getter=isDeleted) BOOL deleted;
-@property(nonatomic, getter=isFlagged) BOOL flagged;
-@property(nonatomic) int rating;
+@property(nonatomic, assign, getter=isHidden) BOOL hidden;
+@property(nonatomic, assign, getter=isDeleted) BOOL deleted;
+@property(nonatomic, assign, getter=isFlagged) BOOL flagged;
+@property(nonatomic, assign) int rating;
 
-@property(nonatomic, readonly) NSDate *date;
-@property(nonatomic, readonly) CGSize pixelSize;
-@property(nonatomic, readonly) CGSize orientedPixelSize;
+@property(nonatomic, strong, readonly) NSDate *date;
+@property(nonatomic, assign, readonly) CGSize pixelSize;
+@property(nonatomic, assign, readonly) CGSize orientedPixelSize;
 
 /* Delete all files owned by the receiver. */
 
@@ -134,7 +134,7 @@ typedef int PDImageCompareKey;
 
 /* True iff the images files have been removed by -removeFiles: */
 
-@property(nonatomic, readonly, getter=isRemoved) BOOL removed;
+@property(nonatomic, assign, readonly, getter=isRemoved) BOOL removed;
 
 /* Move within the library, self is updated to reflect the new
    location. */

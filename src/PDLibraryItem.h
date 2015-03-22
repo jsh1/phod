@@ -30,9 +30,9 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 
 @interface PDLibraryItem : NSObject
 
-@property(nonatomic, assign) PDLibraryItem *parent;
+@property(nonatomic, weak) PDLibraryItem *parent;
 
-@property(nonatomic, getter=isHidden) BOOL hidden;
+@property(nonatomic, assign, getter=isHidden) BOOL hidden;
 
 /* Returns true if item or any subitem matches 'str'. */
 
@@ -53,22 +53,22 @@ extern NSString * const PDLibraryItemSubimagesDidChange;
 
 - (BOOL)foreachSubimage:(void (^)(PDImage *im, BOOL *stop))thunk;
 
-@property(nonatomic, readonly, getter=isTrashcan) BOOL trashcan;
-@property(nonatomic, readonly) BOOL nilPredicateIncludesRejected;
+@property(nonatomic, assign, readonly, getter=isTrashcan) BOOL trashcan;
+@property(nonatomic, assign, readonly) BOOL nilPredicateIncludesRejected;
 
 @property(nonatomic, copy, readonly) NSString *titleString;
 
-@property(nonatomic, retain, readonly) NSImage *titleImage;
+@property(nonatomic, strong, readonly) NSImage *titleImage;
 
-@property(nonatomic, readonly) BOOL hasTitleImage;
+@property(nonatomic, assign, readonly) BOOL hasTitleImage;
 
-@property(nonatomic, readonly, getter=isExpandable)  BOOL expandable;
+@property(nonatomic, assign, readonly, getter=isExpandable)  BOOL expandable;
 
-@property(nonatomic, readonly) BOOL hasBadge;
+@property(nonatomic, assign, readonly) BOOL hasBadge;
 
-@property(nonatomic, readonly) NSInteger badgeValue;
+@property(nonatomic, assign, readonly) NSInteger badgeValue;
 
-@property(nonatomic, readonly) BOOL badgeValueIsNumberOfSubimages;
+@property(nonatomic, assign, readonly) BOOL badgeValueIsNumberOfSubimages;
 
 /* For saving view state. */
 

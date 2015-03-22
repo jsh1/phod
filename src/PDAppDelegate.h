@@ -30,7 +30,11 @@ extern NSString *const PDBackgroundActivityDidChange;
 
 @interface PDAppDelegate : NSObject <NSApplicationDelegate, NSMenuDelegate>
 
-@property(nonatomic, readonly) PDWindowController *windowController;
+@property(nonatomic, strong) IBOutlet PDWindowController *windowController;
+
+@property(nonatomic, weak) IBOutlet NSMenu *photosMenu;
+@property(nonatomic, weak) IBOutlet NSMenu *viewMenu;
+@property(nonatomic, weak) IBOutlet NSMenu *windowMenu;
 
 - (IBAction)showWindow:(id)sender;
 

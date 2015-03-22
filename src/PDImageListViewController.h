@@ -30,6 +30,18 @@
 
 @property(nonatomic) BOOL displaysMetadata;
 
+@property(nonatomic, weak) IBOutlet NSScrollView *scrollView;
+@property(nonatomic, weak) IBOutlet PDImageGridView *gridView;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *sortButton;
+@property(nonatomic, weak) IBOutlet NSMenu *sortMenu;
+@property(nonatomic, weak) IBOutlet NSTextField *titleLabel;
+@property(nonatomic, weak) IBOutlet NSSearchField *searchField;
+@property(nonatomic, weak) IBOutlet NSMenu *searchMenu;
+@property(nonatomic, weak) IBOutlet NSButton *predicateButton;
+@property(nonatomic, weak) IBOutlet NSButton *rotateLeftButton;
+@property(nonatomic, weak) IBOutlet NSButton *rotateRightButton;
+@property(nonatomic, weak) IBOutlet NSSlider *scaleSlider;
+
 - (IBAction)toggleMetadata:(id)sender;
 
 - (IBAction)sortKeyAction:(id)sender;

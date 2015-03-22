@@ -34,7 +34,6 @@
 {
   NSString *_path;
   NSFileManager *_manager;
-  id<PDFileManagerDelegate> _delegate;
 }
 
 @synthesize delegate = _delegate;
@@ -42,26 +41,22 @@
 - (id)initWithPath:(NSString *)path
 {
   self = [super init];
-  if (self == nil)
-    return nil;
-
-  _path = [[path stringByStandardizingPath] copy];
-  _manager = [[NSFileManager defaultManager] retain];
-
+  if (self != nil)
+    {
+      _path = [[path stringByStandardizingPath] copy];
+      _manager = [NSFileManager defaultManager];
+    }
   return self;
 }
 
 - (id)initWithPropertyListRepresentation:(id)obj
 {
-  NSString *path = [obj objectForKey:@"PDLocalFileManager.path"];
-  if (path != nil)
-    {
-      path = [path stringByExpandingTildeInPath];
-      return [self initWithPath:path];
-    }
-
-  [[super init] release];
-  return nil;
+  NSDictionary *dict = obj;
+  NSString *path = dict[@"PDLocalFileManager.path"];
+  if (path == nil)
+    return nil;
+  path = [path stringByExpandingTildeInPath];
+  return [self initWithPath:path];
 }
 
 - (id)propertyListRepresentation
@@ -77,7 +72,8 @@
 
 - (BOOL)isEqualToPropertyListRepresentation:(id)obj
 {
-  NSString *path = [obj objectForKey:@"PDLocalFileManager.path"];
+  NSDictionary *dict = obj;
+  NSString *path = dict[@"PDLocalFileManager.path"];
 
   if (path != nil)
     return [self isEqualToPath:[path stringByExpandingTildeInPath]];
@@ -92,9 +88,6 @@
 - (void)dealloc
 {
   [self invalidate];
-  [_path release];
-  [_manager release];
-  [super dealloc];
 }
 
 - (NSString *)name

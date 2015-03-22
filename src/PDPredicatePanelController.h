@@ -30,7 +30,12 @@ extern NSString * const PDPredicateDidChange;
 
 - (id)init;
 
-@property(nonatomic, retain) NSPredicate *predicate;
+@property(nonatomic, weak) IBOutlet NSPredicateEditor *predicateEditor;
+@property(nonatomic, weak) IBOutlet NSButton *addSmartFolderButton;
+@property(nonatomic, weak) IBOutlet NSButton *cancelButton;
+@property(nonatomic, weak) IBOutlet NSButton *okButton;
+
+@property(nonatomic, copy) NSPredicate *predicate;
 
 - (NSPredicate *)predicateWithFormat:(NSString *)str, ...;
 - (NSPredicate *)predicateWithFormat:(NSString *)str argv:(va_list)args;

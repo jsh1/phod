@@ -28,6 +28,8 @@
 
 @interface PDMetadataView : NSView
 
+@property(nonatomic, weak) IBOutlet PDInfoViewController *controller;
+
 @property(nonatomic, copy) NSArray *imageProperties;
 
 - (void)update;

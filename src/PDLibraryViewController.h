@@ -39,6 +39,14 @@ extern NSString *const PDLibrarySelectionDidChange;
 
 - (void)selectLibrary:(PDImageLibrary *)lib directory:(NSString *)dir;
 
+@property(nonatomic, weak) IBOutlet PXSourceList *outlineView;
+@property(nonatomic, weak) IBOutlet PDImageTextCell *normalCell;
+@property(nonatomic, weak) IBOutlet NSSearchField *searchField;
+@property(nonatomic, weak) IBOutlet NSButton *addButton;
+@property(nonatomic, weak) IBOutlet NSButton *removeButton;
+@property(nonatomic, weak) IBOutlet NSButton *importButton;
+@property(nonatomic, weak) IBOutlet NSButton *actionButton;
+
 - (IBAction)nextLibraryItemAction:(id)sender;
 - (IBAction)previousLibraryItemAction:(id)sender;
 - (IBAction)parentLibraryItemAction:(id)sender;

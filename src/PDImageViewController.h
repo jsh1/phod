@@ -30,6 +30,12 @@
   
 @property(nonatomic) BOOL displaysMetadata;
 
+@property(nonatomic, weak) IBOutlet NSTextField *titleLabel;
+@property(nonatomic, weak) IBOutlet PDImageView *imageView;
+@property(nonatomic, weak) IBOutlet NSButton *rotateLeftButton;
+@property(nonatomic, weak) IBOutlet NSButton *rotateRightButton;
+@property(nonatomic, weak) IBOutlet NSSlider *scaleSlider;
+
 - (IBAction)toggleMetadata:(id)sender;
 
 - (IBAction)zoomIn:(id)sender;

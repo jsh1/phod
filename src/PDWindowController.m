@@ -48,42 +48,32 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
 
 @implementation PDWindowController
 {
-  IBOutlet PDSplitView *_splitView;
-  IBOutlet NSSegmentedControl *_sidebarControl;
-  IBOutlet NSView *_sidebarView;
-  IBOutlet NSView *_contentView;
-  IBOutlet NSView *_accessoryView;
-
   PDPredicatePanelController *_predicatePanelController;
 
   NSMutableArray *_viewControllers;
 
-  NSInteger _sidebarMode;
-  NSInteger _contentMode;
-  NSInteger _accessoryMode;
-
-  BOOL _showsHiddenImages;
-
-  int _imageSortKey;
-  BOOL _imageSortReversed;
-
-  NSArray *_imageList;
-  NSString *_imageListTitle;
-
-  NSPredicate *_imagePredicate;
-
-  NSArray *_filteredImageList;
   BOOL _filteredImageListIsPreservingImages;
-
-  BOOL _nilPredicateIncludesRejected;
-
-  NSIndexSet *_selectedImageIndexes;
-  NSInteger _primarySelectionIndex;
-
-  BOOL _importMode;
 }
 
+@synthesize splitView = _splitView;
+@synthesize sidebarControl = _sidebarControl;
+@synthesize sidebarView = _sidebarView;
+@synthesize contentView = _contentView;
+@synthesize accessoryView = _accessoryView;
+@synthesize sidebarMode = _sidebarMode;
+@synthesize contentMode = _contentMode;
+@synthesize accessoryMode = _accessoryMode;
+@synthesize showsHiddenImages = _showsHiddenImages;
+@synthesize imageList = _imageList;
+@synthesize imageListTitle = _imageListTitle;
+@synthesize imagePredicate = _imagePredicate;
+@synthesize imageSortKey = _imageSortKey;
+@synthesize imageSortReversed = _imageSortReversed;
 @synthesize nilPredicateIncludesRejected = _nilPredicateIncludesRejected;
+@synthesize filteredImageList = _filteredImageList;
+@synthesize selectedImageIndexes = _selectedImageIndexes;
+@synthesize primarySelectionIndex = _primarySelectionIndex;
+@synthesize importMode = _importMode;
 
 - (NSString *)windowNibName
 {
@@ -97,9 +87,9 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
 
   for (PDViewController *obj in _viewControllers)
     {
-      obj = [obj viewControllerWithClass:cls];
-      if (obj != nil)
-	return obj;
+      PDViewController *tem = [obj viewControllerWithClass:cls];
+      if (tem != nil)
+	return tem;
     }
 
   return nil;
@@ -120,8 +110,8 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
   _imageSortKey = PDImageCompare_Date;
   _imageSortReversed = NO;
 
-  _imageList = [[NSArray alloc] init];
-  _filteredImageList = [_imageList retain];
+  _imageList = @[];
+  _filteredImageList = @[];
 
   _primarySelectionIndex = -1;
   _selectedImageIndexes = [[NSIndexSet alloc] init];
@@ -137,7 +127,6 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
       if (controller != nil)
 	{
 	  [_viewControllers addObject:controller];
-	  [controller release];
 	}
     }
 
@@ -156,33 +145,23 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
 - (void)dealloc
 {
   [self invalidate];
-
-  [_predicatePanelController release];
-  [_viewControllers release];
-  [_imageList release];
-  [_imageListTitle release];
-  [_imagePredicate release];
-  [_filteredImageList release];
-  [_selectedImageIndexes release];
-
-  [super dealloc];
 }
 
 - (void)windowDidLoad
 {
-  NSWindow *window = [self window];
+  NSWindow *window = self.window;
 
-  [window setBackgroundColor:[PDColor windowBackgroundColor]];
+  window.backgroundColor = [PDColor windowBackgroundColor];
 
-  [_splitView setIndexOfResizableSubview:1];
+  _splitView.indexOfResizableSubview = 1;
 
   // make sure we're in viewer mode before trying to restore view state
 
-  [self setSidebarMode:PDSidebarMode_Library];
-  [self setContentMode:PDContentMode_List];
+  self.sidebarMode = PDSidebarMode_Library;
+  self.contentMode = PDContentMode_List;
 
   _accessoryMode = -1;
-  [self setAccessoryMode:PDAccessoryMode_Nil];
+  self.accessoryMode = PDAccessoryMode_Nil;
 
   [self applySavedWindowState];
 
@@ -190,11 +169,11 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
    addObserver:self selector:@selector(windowWillClose:)
    name:NSWindowWillCloseNotification object:window];
 
-  [window setInitialFirstResponder:
+  window.initialFirstResponder =
    [[self viewControllerWithClass:[PDLibraryViewController class]]
-    initialFirstResponder]];
+    initialFirstResponder];
 
-  [window makeFirstResponder:[window initialFirstResponder]];
+  [window makeFirstResponder:window.initialFirstResponder];
 }
 
 - (void)windowWillClose:(NSNotification *)note
@@ -218,7 +197,7 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
 
 - (void)saveWindowState
 {
-  if (![self isWindowLoaded] || [self window] == nil)
+  if (!self.windowLoaded || self.window == nil)
     return;
 
   NSMutableDictionary *controllers = [NSMutableDictionary dictionary];
@@ -227,7 +206,7 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
     {
       NSDictionary *sub = [controller savedViewState];
       if ([sub count] != 0)
-	[controllers setObject:sub forKey:[controller identifier]];
+	controllers[controller.identifier] = sub;
     }
 
   NSDictionary *dict = @{
@@ -246,18 +225,18 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
   if (state == nil)
     return;
 
-  NSDictionary *dict = [state objectForKey:@"PDViewControllers"];
+  NSDictionary *dict = state[@"PDViewControllers"];
   if (dict != nil)
     {
       for (PDViewController *controller in _viewControllers)
 	{
-	  NSDictionary *sub = [dict objectForKey:[controller identifier]];
+	  NSDictionary *sub = dict[controller.identifier];
 	  if (sub != nil)
 	    [controller applySavedViewState:sub];
 	}
     }
 
-  dict = [state objectForKey:@"PDSplitViewState"];
+  dict = state[@"PDSplitViewState"];
   if (dict != nil)
     [_splitView applySavedViewState:dict];
 }
@@ -307,15 +286,10 @@ accessoryClassForMode(enum PDAccessoryMode mode)
 static BOOL
 wasFirstResponder(NSView *view)
 {
-  NSResponder *first = [[view window] firstResponder];
+  NSResponder *first = view.window.firstResponder;
 
   return ([first isKindOfClass:[NSView class]]
 	  && [(NSView *)first isDescendantOf:view]);
-}
-
-- (NSInteger)sidebarMode
-{
-  return _sidebarMode;
 }
 
 - (void)setSidebarMode:(NSInteger)mode
@@ -328,7 +302,7 @@ wasFirstResponder(NSView *view)
       cls = sidebarClassForMode(_sidebarMode);
       controller = [self viewControllerWithClass:cls];
 
-      BOOL wasFirst = wasFirstResponder([controller view]);
+      BOOL wasFirst = wasFirstResponder(controller.view);
 
       [controller removeFromContainer];
 
@@ -341,13 +315,8 @@ wasFirstResponder(NSView *view)
       [_sidebarControl selectSegmentWithTag:_sidebarMode];
 
       if (wasFirst)
-	[[self window] makeFirstResponder:[controller initialFirstResponder]];
+	[self.window makeFirstResponder:controller.initialFirstResponder];
     }
-}
-
-- (NSInteger)contentMode
-{
-  return _contentMode;
 }
 
 - (void)setContentMode:(NSInteger)mode
@@ -360,7 +329,7 @@ wasFirstResponder(NSView *view)
       cls = contentClassForMode(_contentMode);
       controller = [self viewControllerWithClass:cls];
 
-      BOOL wasFirst = wasFirstResponder([controller view]);
+      BOOL wasFirst = wasFirstResponder(controller.view);
 
       [controller removeFromContainer];
 
@@ -371,13 +340,8 @@ wasFirstResponder(NSView *view)
       [controller addToContainerView:_contentView];
 
       if (wasFirst)
-	[[self window] makeFirstResponder:[controller initialFirstResponder]];
+	[self.window makeFirstResponder:controller.initialFirstResponder];
     }
-}
-
-- (NSInteger)accessoryMode
-{
-  return _accessoryMode;
 }
 
 - (void)setAccessoryMode:(NSInteger)mode
@@ -390,7 +354,7 @@ wasFirstResponder(NSView *view)
       cls = accessoryClassForMode(_accessoryMode);
       controller = [self viewControllerWithClass:cls];
 
-      BOOL wasFirst = wasFirstResponder([controller view]);
+      BOOL wasFirst = wasFirstResponder(controller.view);
 
       [controller removeFromContainer];
 
@@ -402,22 +366,17 @@ wasFirstResponder(NSView *view)
 
       [_accessoryView setHidden:controller == nil];
 
-      NSRect aframe = [_accessoryView frame];
+      CGRect aframe = _accessoryView.frame;
       CGFloat llx = aframe.origin.x;
       CGFloat urx = llx + aframe.size.width;
 
-      NSRect cframe = [_contentView frame];
+      CGRect cframe = _contentView.frame;
       cframe.size.width = (mode == PDAccessoryMode_Nil ? urx : llx) - cframe.origin.x;
-      [_contentView setFrame:cframe];
+      _contentView.frame = cframe;
 
       if (wasFirst && controller != nil)
-	[[self window] makeFirstResponder:[controller initialFirstResponder]];
+	[self.window makeFirstResponder:controller.initialFirstResponder];
     }
-}
-
-- (BOOL)importMode
-{
-  return _importMode;
 }
 
 - (void)setImportMode:(BOOL)flag
@@ -444,13 +403,13 @@ wasFirstResponder(NSView *view)
   PDViewController *controller = [self viewControllerWithClass:
 				  contentClassForMode(_contentMode)];
 
-  NSView *view = [controller initialFirstResponder];
+  NSView *view = controller.initialFirstResponder;
 
   if (view != nil)
     {
-      if (flag && ([e modifierFlags] & (NSShiftKeyMask|NSCommandKeyMask)) == 0)
+      if (flag && (e.modifierFlags & (NSShiftKeyMask|NSCommandKeyMask)) == 0)
 	{
-	  [[self window] makeFirstResponder:view];
+	  [self.window makeFirstResponder:view];
 	}
 
       [view keyDown:e];
@@ -464,7 +423,7 @@ wasFirstResponder(NSView *view)
       _predicatePanelController = [[PDPredicatePanelController alloc] init];
 
       if (_imagePredicate != nil)
-	[_predicatePanelController setPredicate:_imagePredicate];
+	_predicatePanelController.predicate = _imagePredicate;
 
       [[NSNotificationCenter defaultCenter] addObserver:self
        selector:@selector(predicateDidChange:)
@@ -476,7 +435,7 @@ wasFirstResponder(NSView *view)
 
 - (void)predicateDidChange:(NSNotification *)note
 {
-  [self setImagePredicate:[_predicatePanelController predicate]];
+  self.imagePredicate = _predicatePanelController.predicate;
   [self rebuildImageList:PDWindowController_StopPreservingImages];
 }
 
@@ -484,11 +443,6 @@ wasFirstResponder(NSView *view)
 {
   return [(PDLibraryViewController *)[self viewControllerWithClass:
 	  [PDLibraryViewController class]] foreachImage:thunk];
-}
-
-- (BOOL)showsHiddenImages
-{
-  return _showsHiddenImages;
 }
 
 - (void)setShowsHiddenImages:(BOOL)flag
@@ -502,30 +456,18 @@ wasFirstResponder(NSView *view)
     }
 }
 
-- (NSArray *)imageList
-{
-  return _imageList;
-}
-
 - (void)setImageList:(NSArray *)array
 {
   if (![_imageList isEqual:array])
     {
-      [_imageList release];
       _imageList = [array copy];
     }
-}
-
-- (NSString *)imageListTitle
-{
-  return _imageListTitle;
 }
 
 - (void)setImageListTitle:(NSString *)str
 {
   if (_imageListTitle != str)
     {
-      [_imageListTitle release];
       _imageListTitle = [str copy];
     }
 }
@@ -535,7 +477,7 @@ wasFirstResponder(NSView *view)
   va_list args;
   va_start(args, str);
 
-  NSPredicate *ret = [[self predicatePanelController]
+  NSPredicate *ret = [self.predicatePanelController
 		      predicateWithFormat:str argv:args];
 
   va_end(args);
@@ -544,31 +486,20 @@ wasFirstResponder(NSView *view)
 
 - (NSPredicate *)imagePredicateWithFormat:(NSString *)str argv:(va_list)args
 {
-  return [[self predicatePanelController] predicateWithFormat:str argv:args];
-}
-
-- (NSPredicate *)imagePredicate
-{
-  return _imagePredicate;
+  return [self.predicatePanelController predicateWithFormat:str argv:args];
 }
 
 - (void)setImagePredicate:(NSPredicate *)pred
 {
   if (_imagePredicate != pred)
     {
-      [_imagePredicate release];
       _imagePredicate = [pred copy];
 
-      [_predicatePanelController setPredicate:_imagePredicate];
+      _predicatePanelController.predicate = _imagePredicate;
 
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDImagePredicateDidChange object:self];
     }
-}
-
-- (int)imageSortKey
-{
-  return _imageSortKey;
 }
 
 - (void)setImageSortKey:(int)key
@@ -582,11 +513,6 @@ wasFirstResponder(NSView *view)
     }
 }
 
-- (BOOL)isImageSortReversed
-{
-  return _imageSortReversed;
-}
-
 - (void)setImageSortReversed:(BOOL)flag
 {
   if (_imageSortReversed != flag)
@@ -598,15 +524,10 @@ wasFirstResponder(NSView *view)
     }
 }
 
-- (NSArray *)filteredImageList
-{
-  return _filteredImageList;
-}
-
 - (void)rebuildImageList:(uint32_t)flags
 {
-  NSArray *selected_images = [[self selectedImages] copy];
-  PDImage *primary_image = [[self primarySelectedImage] retain];
+  NSArray *selected_images = [self.selectedImages copy];
+  PDImage *primary_image = self.primarySelectedImage;
 
   NSMutableArray *array = [NSMutableArray array];
 
@@ -621,8 +542,8 @@ wasFirstResponder(NSView *view)
       /* Implicit predicate is "rating >= 0" (i.e. not-rejected). */
 
       BOOL included = (_imagePredicate != nil
-	  ? [_imagePredicate evaluateWithObject:[image expressionValues]]
-	  : (_nilPredicateIncludesRejected ? YES : [image rating] >= 0));
+	  ? [_imagePredicate evaluateWithObject:image.expressionValues]
+	  : (_nilPredicateIncludesRejected ? YES : image.rating >= 0));
 
       if (!included && (flags & PDWindowController_PreserveSelectedImages)
 	  && [selected_images indexOfObjectIdenticalTo:image] != NSNotFound)
@@ -644,7 +565,6 @@ wasFirstResponder(NSView *view)
 
   if (![array isEqual:_filteredImageList])
     {
-      [_filteredImageList release];
       _filteredImageList = [array copy];
 
       [[NSNotificationCenter defaultCenter]
@@ -652,9 +572,6 @@ wasFirstResponder(NSView *view)
 
       [self setSelectedImages:selected_images primary:primary_image];
     }
-
-  [selected_images release];
-  [primary_image release];
 }
 
 - (void)rebuildImageListIfPreserving
@@ -692,11 +609,6 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
     return abs(after - idx) < abs(before - idx) ? after : before;
 }
 
-- (NSInteger)primarySelectionIndex
-{
-  return _primarySelectionIndex;
-}
-
 - (void)setPrimarySelectionIndex:(NSInteger)idx
 {
   idx = closestIndexInSetToIndex(_selectedImageIndexes, idx);
@@ -710,16 +622,10 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
     }
 }
 
-- (NSIndexSet *)selectedImageIndexes
-{
-  return _selectedImageIndexes;
-}
-
 - (void)setSelectedImageIndexes:(NSIndexSet *)set
 {
   if (_selectedImageIndexes != set)
     {
-      [_selectedImageIndexes release];
       _selectedImageIndexes = [set copy];
 
       _primarySelectionIndex
@@ -736,7 +642,6 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
 
   if (_selectedImageIndexes != set || _primarySelectionIndex != idx)
     {
-      [_selectedImageIndexes release];
       _selectedImageIndexes = [set copy];
 
       _primarySelectionIndex = idx;
@@ -750,7 +655,7 @@ static PDImage *
 convert_index_to_image(NSInteger idx, NSArray *image_list)
 {
   if (idx >= 0 && idx < [image_list count])
-    return [image_list objectAtIndex:idx];
+    return image_list[idx];
   else
     return nil;
 }
@@ -772,7 +677,7 @@ convert_index_set_to_array(NSIndexSet *set, NSArray *image_list)
        idx = [set indexGreaterThanIndex:idx])
     {
       if (idx >= 0 && idx < count)
-	[array addObject:[image_list objectAtIndex:idx]];
+	[array addObject:image_list[idx]];
     }
 
   return array;
@@ -839,7 +744,7 @@ convert_array_to_index_set(NSArray *array, NSArray *image_list)
 
       NSInteger primary = _primarySelectionIndex;
 
-      unsigned int modifiers = [e modifierFlags];
+      unsigned int modifiers = e.modifierFlags;
 
       if (modifiers & NSCommandKeyMask)
 	{
@@ -876,7 +781,6 @@ convert_array_to_index_set(NSArray *array, NSArray *image_list)
 	}
 
       [self setSelectedImageIndexes:sel primary:primary];
-      [sel release];
     }
   else
     [self deselectAll:nil];
@@ -895,7 +799,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
     }
   else
     {
-      NSMutableIndexSet *set = [[sel mutableCopy] autorelease];
+      NSMutableIndexSet *set = [sel mutableCopy];
       NSInteger i0 = oldIdx < newIdx ? oldIdx : newIdx;
       NSInteger i1 = oldIdx < newIdx ? newIdx : oldIdx;
       [set addIndexesInRange:NSMakeRange(i0, i1 - i0 + 1)];
@@ -1028,43 +932,43 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (IBAction)nextLibraryItemAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)previousLibraryItemAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)parentLibraryItemAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)firstLibraryChildItemAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)expandLibraryItemAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)collapseLibraryItemAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)expandCollapseLibraryItemAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (void)foreachSelectedImage:(void (^)(PDImage *))block
@@ -1075,7 +979,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   /* Not using _selectedImageIndexes in case it changes while
      iterating. */
 
-  for (PDImage *image in [self selectedImages])
+  for (PDImage *image in self.selectedImages)
     {
       block(image);
     }
@@ -1083,46 +987,46 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
 - (IBAction)toggleSidebarAction:(id)sender
 {
-  NSView *view = [_sidebarView superview];
+  NSView *view = _sidebarView.superview;
 
-  [_splitView setSubview:view collapsed:![view isHidden]];
+  [_splitView setSubview:view collapsed:!view.hidden];
 }
 
 - (BOOL)isSidebarVisible
 {
-  NSView *view = [_sidebarView superview];
+  NSView *view = _sidebarView.superview;
 
-  return ![view isHidden];
+  return !view.hidden;
 }
 
-- (IBAction)setSidebarModeAction:(id)sender
+- (IBAction)setSidebarModeAction:(NSControl *)sender
 {
-  if (![self isSidebarVisible])
+  if (!self.sidebarVisible)
     [self toggleSidebarAction:sender];
 
   if (sender == _sidebarControl)
     {
-      [self setSidebarMode:[[_sidebarControl cell] tagForSegment:
-			    [_sidebarControl selectedSegment]]];
+      self.sidebarMode = [_sidebarControl.cell tagForSegment:
+			  _sidebarControl.selectedSegment];
     }
   else
-    [self setSidebarMode:[sender tag]];
+    self.sidebarMode = sender.tag;
 }
 
 - (IBAction)cycleSidebarModeAction:(id)sender
 {
-  if (![self isSidebarVisible])
+  if (!self.sidebarVisible)
     [self toggleSidebarAction:sender];
 
   NSInteger idx = _sidebarMode + 1;
   if (idx > PDSidebarMode_Adjustments)
     idx = PDSidebarMode_Library;
-  [self setSidebarMode:idx];
+  self.sidebarMode = idx;
 }
 
-- (IBAction)setContentModeAction:(id)sender
+- (IBAction)setContentModeAction:(NSControl *)sender
 {
-  [self setContentMode:[sender tag]];
+  self.contentMode = sender.tag;
 }
 
 - (IBAction)cycleContentModeAction:(id)sender
@@ -1130,7 +1034,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   NSInteger idx = _contentMode + 1;
   if (idx > PDContentMode_Image)
     idx = PDContentMode_List;
-  [self setContentMode:idx];
+  self.contentMode = idx;
 }
 
 - (IBAction)toggleListMetadata:(id)sender
@@ -1159,12 +1063,12 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
 - (IBAction)toggleShowsHiddenImages:(id)sender
 {
-  [self setShowsHiddenImages:![self showsHiddenImages]];
+  self.showsHiddenImages = !self.showsHiddenImages;
 }
 
 - (IBAction)showPredicatePanel:(id)sender
 {
-  [[self predicatePanelController] showWindow:self];
+  [self.predicatePanelController showWindow:self];
 }
 
 - (IBAction)performFindPanelAction:(id)sender
@@ -1172,9 +1076,9 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   [self showPredicatePanel:sender];
 }
 
-- (IBAction)setImageRatingAction:(id)sender
+- (IBAction)setImageRatingAction:(NSControl *)sender
 {
-  NSNumber *rating = [NSNumber numberWithInt:[sender tag]];
+  NSNumber *rating = @(sender.tag);
 
   [self foreachSelectedImage:^(PDImage *image) {
     [image setImageProperty:rating forKey:PDImage_Rating];
@@ -1193,10 +1097,10 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   }];
 }
 
-- (IBAction)setRatingPredicateAction:(id)sender
+- (IBAction)setRatingPredicateAction:(NSControl *)sender
 {
   NSPredicate *pred = nil;
-  int arg = [sender tag];
+  int arg = sender.tag;
 
   switch (arg)
     {
@@ -1229,7 +1133,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
       break;
     }
 
-  [self setImagePredicate:pred];
+  self.imagePredicate = pred;
   [self rebuildImageList:PDWindowController_StopPreservingImages];
 }
 
@@ -1259,7 +1163,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (IBAction)toggleHiddenAction:(id)sender
 {
   [self foreachSelectedImage:^(PDImage *image) {
-    [image setHidden:![image isHidden]];
+    image.hidden = !image.hidden;
   }];
 }
 
@@ -1268,7 +1172,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   __block BOOL all_set = YES, all_clear = YES;
 
   [self foreachSelectedImage:^(PDImage *image) {
-    if ([image isHidden])
+    if (image.hidden)
       all_clear = NO;
     else
       all_set = NO;
@@ -1295,13 +1199,13 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (IBAction)delete:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)toggleDeletedAction:(id)sender
 {
   [self foreachSelectedImage:^(PDImage *image) {
-    [image setDeleted:![image isDeleted]];
+    image.deleted = !image.deleted;
   }];
 }
 
@@ -1310,7 +1214,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   __block BOOL all_set = YES, all_clear = YES;
 
   [self foreachSelectedImage:^(PDImage *image) {
-    if ([image isDeleted])
+    if (image.deleted)
       all_clear = NO;
     else
       all_set = NO;
@@ -1322,7 +1226,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (IBAction)toggleRawAction:(id)sender
 {
   [self foreachSelectedImage:^(PDImage *image) {
-    [image setUsesRAW:![image usesRAW]];
+    image.usesRAW = !image.usesRAW;
   }];
 }
 
@@ -1331,7 +1235,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   __block BOOL all_set = YES, all_clear = YES;
 
   [self foreachSelectedImage:^(PDImage *image) {
-    if ([image usesRAW])
+    if (image.usesRAW)
       all_clear = NO;
     else
       all_set = NO;
@@ -1345,7 +1249,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   __block BOOL supported = NO;
 
   [self foreachSelectedImage:^(PDImage *image) {
-    if ([image supportsUsesRAW:![image usesRAW]])
+    if ([image supportsUsesRAW:!image.usesRAW])
       supported = YES;
   }];
 
@@ -1357,7 +1261,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   if (_contentMode == PDContentMode_Image)
     {
       [[self viewControllerWithClass:[PDImageViewController class]]
-       performSelector:_cmd withObject:sender];
+       performVoidSelector:_cmd withObject:sender];
     }
 }
 
@@ -1366,7 +1270,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   if (_contentMode == PDContentMode_Image)
     {
       [[self viewControllerWithClass:[PDImageViewController class]]
-       performSelector:_cmd withObject:sender];
+       performVoidSelector:_cmd withObject:sender];
     }
 }
 
@@ -1375,7 +1279,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   if (_contentMode == PDContentMode_Image)
     {
       [[self viewControllerWithClass:[PDImageViewController class]]
-       performSelector:_cmd withObject:sender];
+       performVoidSelector:_cmd withObject:sender];
     }
 }
 
@@ -1384,20 +1288,18 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
   if (_contentMode == PDContentMode_Image)
     {
       [[self viewControllerWithClass:[PDImageViewController class]]
-       performSelector:_cmd withObject:sender];
+       performVoidSelector:_cmd withObject:sender];
     }
 }
 
 - (void)rotateUsingMap:(const int *)map
 {
   [self foreachSelectedImage:^(PDImage *image) {
-    int orientation = [[image imagePropertyForKey:
-			PDImage_Orientation] intValue];
+    int orientation = image.orientation;
     if (orientation >= 1 && orientation <= 8)
       {
 	orientation = map[orientation-1];
-	[image setImageProperty:
-	 [NSNumber numberWithInt:orientation] forKey:PDImage_Orientation];
+	[image setImageProperty:@(orientation) forKey:PDImage_Orientation];
       }
   }];
 }
@@ -1421,28 +1323,28 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 - (IBAction)addLibraryAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)newFolderAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)newAlbumAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)newSmartAlbumAction:(id)sender
 {
-  NSPredicate *pred = [[self predicatePanelController] predicate];
+  NSPredicate *pred = self.predicatePanelController.predicate;
   if (pred == nil)
     return;
 
-  NSString *format = [pred predicateFormat];
+  NSString *format = pred.predicateFormat;
 
   [(PDLibraryViewController *)[self viewControllerWithClass:
    [PDLibraryViewController class]] addSmartAlbum:format predicate:pred];
@@ -1451,7 +1353,7 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 - (IBAction)importAction:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (IBAction)emptyTrashAction:(id)sender
@@ -1461,7 +1363,7 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
   [self foreachImage:^
     (PDImage *image, BOOL *stop)
     {
-      if ([image isDeleted])
+      if (image.deleted)
 	[images addObject:image];
     }];
 
@@ -1470,7 +1372,7 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
       [PDImageLibrary removeImages:images];
 
       NSArray *removed = [images filteredArray:^BOOL (id obj) {
-	return [(PDImage *)obj isRemoved];}];
+	return ((PDImage *)obj).removed;}];
 
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDTrashWasEmptied object:self
@@ -1481,7 +1383,7 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 - (BOOL)isTrashEmpty
 {
   return [self foreachImage:^(PDImage *image, BOOL *stop) {
-    if ([image isDeleted])
+    if (image.deleted)
       *stop = YES;
   }];
 }
@@ -1489,12 +1391,12 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 - (IBAction)reloadLibraries:(id)sender
 {
   [[self viewControllerWithClass:[PDLibraryViewController class]]
-   performSelector:_cmd withObject:sender];
+   performVoidSelector:_cmd withObject:sender];
 }
 
 - (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem
 {
-  SEL sel = [anItem action];
+  SEL sel = anItem.action;
 
   if (sel == @selector(zoomIn:)
       || sel == @selector(zoomOut:)
@@ -1533,7 +1435,7 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 
 - (CGFloat)splitView:(PDSplitView *)view minimumSizeOfSubview:(NSView *)subview
 {
-  if (subview == [_sidebarView superview])
+  if (subview == _sidebarView.superview)
     return 250;
   else
     return 500;
@@ -1553,7 +1455,7 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 - (CGFloat)splitView:(NSSplitView *)view constrainMinCoordinate:(CGFloat)p
     ofSubviewAt:(NSInteger)idx
 {
-  NSView *subview = [[view subviews] objectAtIndex:idx];
+  NSView *subview = view.subviews[idx];
   CGFloat min_size = [(PDSplitView *)view minimumSizeOfSubview:subview];
 
   return p + min_size;
@@ -1562,7 +1464,7 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 - (CGFloat)splitView:(NSSplitView *)view constrainMaxCoordinate:(CGFloat)p
     ofSubviewAt:(NSInteger)idx
 {
-  NSView *subview = [[view subviews] objectAtIndex:idx+1];
+  NSView *subview = view.subviews[idx+1];
   CGFloat min_size = [(PDSplitView *)view minimumSizeOfSubview:subview];
 
   return p - min_size;

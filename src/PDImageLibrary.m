@@ -79,14 +79,14 @@ cache_root(void)
 		    (NSCachesDirectory, NSUserDomainMask, YES));
 
   return [[[paths lastObject] stringByAppendingPathComponent:
-	   [[NSBundle mainBundle] bundleIdentifier]]
+	   [NSBundle mainBundle].bundleIdentifier]
 	  stringByAppendingPathComponent:@"library"];
 }
 
 static NSString *
 catalog_path(PDImageLibrary *self)
 {
-  return [[self cachePath] stringByAppendingPathComponent:@CATALOG_FILE];
+  return [self.cachePath stringByAppendingPathComponent:@CATALOG_FILE];
 }
 
 + (void)removeInvalidLibraries
@@ -118,7 +118,7 @@ catalog_path(PDImageLibrary *self)
 + (NSArray *)allLibraries
 {
   if (_allLibraries == nil)
-    return [NSArray array];
+    return @[];
   else
     return _allLibraries;
 }
@@ -144,7 +144,7 @@ catalog_path(PDImageLibrary *self)
 
   for (PDImageLibrary *lib in _allLibraries)
     {
-      if ([lib libraryId] == lid)
+      if (lib.libraryId == lid)
 	return lib;
     }
 
@@ -174,9 +174,11 @@ catalog_path(PDImageLibrary *self)
   if (manager == nil)
     return nil;
 
-  NSDictionary *dict = @{@"fileManager": manager};
+  NSDictionary *dict = @{
+    @"fileManager": manager
+  };
 
-  return [[[self alloc] initWithDictionary:dict] autorelease];
+  return [[self alloc] initWithDictionary:dict];
 }
 
 + (PDImageLibrary *)libraryWithPropertyListRepresentation:(id)obj
@@ -184,7 +186,8 @@ catalog_path(PDImageLibrary *self)
   if (![obj isKindOfClass:[NSDictionary class]])
     return nil;
 
-  id manager = [obj objectForKey:@"fileManager"];
+  NSDictionary *dict = obj;
+  id manager = dict[@"fileManager"];
   if (manager != nil)
     {
       if (_allLibraries != nil)
@@ -197,7 +200,7 @@ catalog_path(PDImageLibrary *self)
 	}
     }
 
-  return [[[self alloc] initWithDictionary:obj] autorelease];
+  return [[self alloc] initWithDictionary:obj];
 }
 
 - (id)initWithDictionary:(NSDictionary *)dict
@@ -206,25 +209,24 @@ catalog_path(PDImageLibrary *self)
   if (self == nil)
     return nil;
 
-  id manager = [dict objectForKey:@"fileManager"];
+  id manager = dict[@"fileManager"];
   if (![manager isKindOfClass:[PDFileManager class]])
     {
       manager = [PDFileManager
 		 fileManagerWithPropertyListRepresentation:manager];
       if (![manager isKindOfClass:[PDFileManager class]])
 	{
-	  [self release];
 	  return nil;
 	}
     }
 
-  _manager = [manager retain];
+  _manager = manager;
 
-  _name = [[dict objectForKey:@"name"] copy];
+  _name = [dict[@"name"] copy];
   if (_name == nil)
-    _name = [[_manager name] copy];
+    _name = [_manager.name copy];
 
-  _libraryId = [[dict objectForKey:@"libraryId"] unsignedIntValue];
+  _libraryId = [dict[@"libraryId"] unsignedIntValue];
 
   if (_libraryId == 0)
     {
@@ -234,7 +236,7 @@ catalog_path(PDImageLibrary *self)
 	goto again;
       for (PDImageLibrary *lib in _allLibraries)
 	{
-	  if (_libraryId == [lib libraryId])
+	  if (_libraryId == lib.libraryId)
 	    goto again;
 	}
     }
@@ -242,11 +244,8 @@ catalog_path(PDImageLibrary *self)
     {
       for (PDImageLibrary *lib in _allLibraries)
 	{
-	  if (_libraryId == [lib libraryId])
-	    {
-	      [self release];
-	      return [lib retain];
-	    }
+	  if (_libraryId == lib.libraryId)
+	    return lib;
 	}
     }
 
@@ -285,16 +284,13 @@ catalog_path(PDImageLibrary *self)
   [self waitForImportsToComplete];
 
   [_catalog invalidate];
-  [_catalog release];
   _catalog = nil;
 
   [_ioQueue removeObserver:self forKeyPath:@"operationCount"];
   [_ioQueue waitUntilAllOperationsAreFinished];
-  [_ioQueue release];
   _ioQueue = nil;
 
   [_manager invalidate];
-  [_manager release];
   _manager = nil;
 
   [(PDAppDelegate *)[NSApp delegate] removeBackgroundActivity:self];
@@ -307,15 +303,6 @@ catalog_path(PDImageLibrary *self)
 - (void)dealloc
 {
   [self invalidate];
-
-  [_name release];
-  [_manager release];
-  [_cachePath release];
-  [_catalog release];
-  [_ioQueue release];
-  [_activeImports release];
-
-  [super dealloc];
 }
 
 - (NSImage *)iconImage
@@ -396,10 +383,10 @@ convert_hexdigit(int c)
 
   @autoreleasepool
     {
-      NSString *dir = [self cachePath];
+      NSString *dir = self.cachePath;
       NSFileManager *fm = [NSFileManager defaultManager];
 
-      NSIndexSet *catalogIds = [_catalog allFileIds];
+      NSIndexSet *catalogIds = _catalog.allFileIds;
 
       unsigned int i;
       for (i = 0; i < (1U << CACHE_BITS); i++)
@@ -411,7 +398,7 @@ convert_hexdigit(int c)
 
 	  for (NSString *file in [fm contentsOfDirectoryAtPath:path error:nil])
 	    {
-	      const char *str = [file UTF8String];
+	      const char *str = file.UTF8String;
 	      const char *end = strchr(str, CACHE_SEP);
 
 	      BOOL delete = NO;
@@ -443,11 +430,7 @@ convert_hexdigit(int c)
   if (_cachePath != nil)
     {
       [[NSFileManager defaultManager] removeItemAtPath:_cachePath error:nil];
-
-      [_cachePath release];
       _cachePath = nil;
-
-      [_catalog release];
       _catalog = [[PDFileCatalog alloc] init];
     }
 }
@@ -500,7 +483,7 @@ convert_hexdigit(int c)
     {
       dispatch_async(dispatch_get_main_queue(), ^
 	{
-	  NSInteger count = [_ioQueue operationCount];
+	  NSInteger count = _ioQueue.operationCount;
 	  PDAppDelegate *delegate = (id)[NSApp delegate];
 	  if (count != 0)
 	    [delegate addBackgroundActivity:self];
@@ -524,7 +507,7 @@ convert_hexdigit(int c)
 
   while (i < count)
     {
-      NSOperation *op = [_activeImports objectAtIndex:i];
+      NSOperation *op = _activeImports[i];
       if ([op isFinished])
 	{
 	  [_activeImports removeObjectAtIndex:i];
@@ -665,13 +648,13 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 	  NSString *stem = [file stringByDeletingPathExtension];
 	  NSString *ext = [file pathExtension];
 
-	  NSMutableArray *exts = [groups objectForKey:stem];
+	  NSMutableArray *exts = groups[stem];
 	  if (exts != nil)
 	    [exts addObject:ext];
 	  else
 	    {
 	      exts = [NSMutableArray arrayWithObject:ext];
-	      [groups setObject:exts forKey:stem];
+	      groups[stem] = exts;
 	    }
 	}
 
@@ -682,11 +665,11 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 	  PDImage *image = nil;
 	  NSMutableDictionary *image_types = nil;
 
-	  for (NSString *ext in [groups objectForKey:stem])
+	  for (NSString *ext in groups[stem])
 	    {
 	      CFStringRef type = UTTypeCreatePreferredIdentifierForTag(
-						kUTTagClassFilenameExtension,
-						(CFStringRef)ext, NULL);
+					kUTTagClassFilenameExtension,
+					(__bridge CFStringRef)ext, NULL);
 	      if (type == NULL)
 		continue;
 
@@ -701,7 +684,7 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 		  if (image_types == nil)
 		    image_types = [NSMutableDictionary dictionary];
 		  NSString *file = [stem stringByAppendingPathExtension:ext];
-		  [image_types setObject:file forKey:(id)type];
+		  image_types[(__bridge id)type] = file;
 		}
 
 	      CFRelease(type);
@@ -717,10 +700,7 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 	    }
 
 	  if (image != nil)
-	    {
-	      block(image);
-	      [image release];
-	    }
+	    block(image);
 	}
     }
 }
@@ -735,7 +715,7 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
       if (![image removeFiles:&err])
 	break;
 
-      PDImageLibrary *lib = [image library];
+      PDImageLibrary *lib = image.library;
       NSMutableSet *set = [table objectForKey:lib];
       if (set == nil)
 	{
@@ -791,11 +771,11 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 
   for (PDImage *image in images)
     {
-      PDImageLibrary *src_lib = [image library];
+      PDImageLibrary *src_lib = image.library;
 
       if (src_lib == self)
 	{
-	  NSString *src_dir = [image libraryDirectory];
+	  NSString *src_dir = image.libraryDirectory;
 
 	  if ([src_dir isEqualToString:dir])
 	    continue;
@@ -803,8 +783,8 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 	  if (![image moveToDirectory:dir error:&err])
 	    break;
 
-	  if ([image isDeleted])
-	    [image setDeleted:NO];
+	  if (image.deleted)
+	    image.deleted = NO;
 
 	  [[NSNotificationCenter defaultCenter]
 	   postNotificationName:PDImageLibraryDirectoryDidChange
@@ -979,7 +959,6 @@ error:
     {
       dispatch_async(dispatch_get_main_queue(), ^
 	{
-	  [error release];
 	  error = [err copy];
 	});
     };
@@ -987,7 +966,7 @@ error:
   NSMutableSet *all_libraries = [NSMutableSet set];
   [all_libraries addObject:self];
   for (PDImage *src_im in images)
-    [all_libraries addObject:[src_im library]];
+    [all_libraries addObject:src_im.library];
 
   NSMutableArray *dest_files = [NSMutableArray array];
 
@@ -1018,7 +997,6 @@ error:
 
 	      NSAlert *alert = [NSAlert alertWithError:error];
 	      [alert runModal];
-	      [error release];
 	    }
 
 	  for (PDImageLibrary *lib in all_libraries)
@@ -1030,7 +1008,7 @@ error:
 
   for (PDImage *src_im in images)
     {
-      NSString *name = [[src_im imageFile] stringByDeletingPathExtension];
+      NSString *name = [src_im.imageFile stringByDeletingPathExtension];
       if (f != NULL)
 	name = f(src_im, name);
       if (name == nil)
@@ -1050,10 +1028,10 @@ error:
 
 	  for (NSString *req_type in types)
 	    {
-	      if (UTTypeConformsTo((CFStringRef)src_type,
-				   (CFStringRef)req_type))
+	      if (UTTypeConformsTo((__bridge CFStringRef)src_type,
+				   (__bridge CFStringRef)req_type))
 		{
-		  NSString *src_dir = [src_im libraryDirectory];
+		  NSString *src_dir = src_im.libraryDirectory;
 		  NSString *src_file = [src_types objectForKey:src_type];
 		  src_path = [src_dir stringByAppendingPathComponent:src_file];
 		  break;
@@ -1079,7 +1057,7 @@ error:
 	      [dst_types setObject:dst_file forKey:src_type];
 	      [dst_paths addObject:dst_path];
 
-	      PDImageLibrary *src_lib = [src_im library];
+	      PDImageLibrary *src_lib = src_im.library;
 
 	      NSOperation *op = [NSBlockOperation blockOperationWithBlock:^
 		{
@@ -1101,8 +1079,8 @@ error:
 	      [all_ops addObject:op];
 
 	      if (main_op == nil
-		  || UTTypeConformsTo((CFStringRef)src_type,
-				      (CFStringRef)active_type))
+		  || UTTypeConformsTo((__bridge CFStringRef)src_type,
+				      (__bridge CFStringRef)active_type))
 		{
 		  main_op = op;
 		}
@@ -1122,22 +1100,21 @@ error:
 			      PDImage_FileTypes, PDImage_ActiveType, nil];
 	    });
 
-	  NSDictionary *src_props = [src_im explicitProperties];
+	  NSDictionary *src_props = src_im.explicitProperties;
 	  for (NSString *key in src_props)
 	    {
 	      if (![ignored_keys containsObject:key])
-		[dst_props setObject:[src_props objectForKey:key] forKey:key];
+		dst_props[key] = src_props[key];
 	    }
 
 	  if (dict != nil)
 	    [dst_props addEntriesFromDictionary:dict];
 
-	  [dst_props setObject:name forKey:PDImage_Name];
-
-	  [dst_props setObject:dst_types forKey:PDImage_FileTypes];
+	  dst_props[PDImage_Name] = name;
+	  dst_props[PDImage_FileTypes] = dst_types;
 
 	  NSString *dst_active = active_type;
-	  if ([dst_types objectForKey:dst_active] == nil)
+	  if (dst_types[dst_active] == nil)
 	    {
 	      for (NSString *key in dst_types)
 		{
@@ -1146,11 +1123,11 @@ error:
 		}
 	    }
 
-	  [dst_props setObject:dst_active forKey:PDImage_ActiveType];
+	  dst_props[PDImage_ActiveType] = dst_active;
 
 	  NSMutableDictionary *json_dict = [NSMutableDictionary dictionary];
 
-	  [json_dict setObject:dst_props forKey:@"Properties"];
+	  json_dict[@"Properties"] = dst_props;
 
 	  NSString *json_path = [dir stringByAppendingPathComponent:
 				 [name stringByAppendingPathExtension:
@@ -1182,12 +1159,12 @@ error:
 	  for (NSOperation *op in all_ops)
 	    {
 	      if (op != main_op)
-		[op setQueuePriority:NSOperationQueuePriorityLow];
+		op.queuePriority = NSOperationQueuePriorityLow;
 	      [io_queue addOperation:op];
 	      [final_op addDependency:op];
 	    }
 
-	  [json_op setQueuePriority:NSOperationQueuePriorityHigh];
+	  json_op.queuePriority = NSOperationQueuePriorityHigh;
 	  if (main_op != nil)
 	    [json_op addDependency:main_op];
 	  [io_queue addOperation:json_op];

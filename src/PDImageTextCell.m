@@ -36,23 +36,23 @@
 
 - (CGFloat)imageWidthForHeight:(CGFloat)h
 {
-  NSSize size = [_image size];
+  CGSize size = _image.size;
   return size.width * (h / size.height);
 }
 
-- (NSSize)cellSize
+- (CGSize)cellSize
 {
-  NSSize size = [super cellSize];
+  CGSize size = [super cellSize];
   if (_image != nil)
     size.width += BORDER + [self imageWidthForHeight:size.height] + SPACING;
   return size;
 }
 
-- (void)drawWithFrame:(NSRect)frame inView:(NSView *)view
+- (void)drawWithFrame:(CGRect)frame inView:(NSView *)view
 {
   if (_image != nil)
     {
-      NSRect imageFrame = frame;
+      CGRect imageFrame = frame;
       CGFloat width = [self imageWidthForHeight:frame.size.height];
       imageFrame.origin.x += BORDER;
       imageFrame.size.width = fmin(width, imageFrame.size.width);

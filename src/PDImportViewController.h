@@ -31,6 +31,20 @@
 - (void)setImportDestinationLibrary:(PDImageLibrary *)lib
     directory:(NSString *)dir;
 
+@property(nonatomic, weak) IBOutlet NSPopUpButton *libraryButton;
+@property(nonatomic, weak) IBOutlet NSTextField *directoryField;
+@property(nonatomic, weak) IBOutlet NSTextField *nameField;
+@property(nonatomic, weak) IBOutlet NSButton *renameButton;
+@property(nonatomic, weak) IBOutlet NSTextField *renameField;
+@property(nonatomic, weak) IBOutlet NSTextField *renameFieldLabel;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *importButton;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *activeTypeButton;
+@property(nonatomic, weak) IBOutlet NSTextField *keywordsField;
+@property(nonatomic, weak) IBOutlet NSButton *deleteAfterButton;
+@property(nonatomic, weak) IBOutlet NSTextField *descriptionLabel;
+@property(nonatomic, weak) IBOutlet NSButton *okButton;
+@property(nonatomic, weak) IBOutlet NSButton *cancelButton;
+
 - (IBAction)controlAction:(id)sender;
 
 @end

@@ -37,8 +37,6 @@
 
 @implementation PDMetadataItemView
 {
-  PDMetadataView *_metadataView;
-
   NSTextField *_labelField;
   NSTextField *_valueField;
 
@@ -47,7 +45,7 @@
 
 @synthesize metadataView = _metadataView;
 
-- (id)initWithFrame:(NSRect)frame
+- (id)initWithFrame:(CGRect)frame
 {
   self = [super initWithFrame:frame];
   if (self == nil)
@@ -58,49 +56,43 @@
 
   _labelField = [[NSTextField alloc] initWithFrame:
 		 NSMakeRect(0, LABEL_Y_OFFSET, LABEL_WIDTH, LABEL_HEIGHT)];
-  [_labelField setTarget:self];
-  [_labelField setAction:@selector(controlAction:)];
-  [_labelField setDelegate:self];
-  [_labelField setDrawsBackground:NO];
-  [_labelField setEditable:NO];
-  [_labelField setAlignment:NSRightTextAlignment];
-  [_labelField setAutoresizingMask:NSViewMaxXMargin];
-  [[_labelField cell] setBordered:NO];
-  [[_labelField cell] setFont:font];
-  [[_labelField cell] setTextColor:[PDColor controlTextColor]];
+  _labelField.target = self;
+  _labelField.action = @selector(controlAction:);
+  _labelField.delegate = self;
+  _labelField.drawsBackground = NO;
+  _labelField.editable = NO;
+  _labelField.alignment = NSRightTextAlignment;
+  _labelField.autoresizingMask = NSViewMaxXMargin;
+  NSTextFieldCell *label_cell = _labelField.cell;
+  label_cell.bordered = NO;
+  label_cell.font = font;
+  label_cell.textColor = [PDColor controlTextColor];
   [self addSubview:_labelField];
-  [_labelField release];
 
   _valueField = [[NSTextField alloc] initWithFrame:
 		 NSMakeRect(LABEL_WIDTH + SPACING, 0, frame.size.width
 			    - LABEL_WIDTH, CONTROL_HEIGHT)];
-  [_valueField setTarget:self];
-  [_valueField setAction:@selector(controlAction:)];
-  [_valueField setDelegate:self];
-  [_valueField setEditable:NO];
-  [_valueField setSelectable:YES];
-  [_valueField setAutoresizingMask:NSViewWidthSizable];
-  [[_valueField cell] setBordered:NO];
-  [[_valueField cell] setBezeled:YES];
-  [[_valueField cell] setFont:font1];
-  [[_valueField cell] setTextColor:[PDColor controlTextColor]];
-  [[_valueField cell] setBackgroundColor:[PDColor controlBackgroundColor]];
-  [_valueField setAction:@selector(controlAction:)];
-  [_valueField setTarget:self];
+  _valueField.target = self;
+  _valueField.action = @selector(controlAction:);
+  _valueField.delegate = self;
+  _valueField.editable = NO;
+  _valueField.selectable = YES;
+  _valueField.autoresizingMask = NSViewWidthSizable;
+  NSTextFieldCell *value_cell = _valueField.cell;
+  value_cell.bordered = NO;
+  value_cell.bezeled = YES;
+  value_cell.font = font1;
+  value_cell.textColor = [PDColor controlTextColor];
+  value_cell.backgroundColor = [PDColor controlBackgroundColor];
   [self addSubview:_valueField];
-  [_valueField release];
 
   return self;
 }
 
 - (void)dealloc
 {
-  [_labelField setDelegate:nil];
-  [_valueField setDelegate:nil];
-
-  [_imageProperty release];
-
-  [super dealloc];
+  _labelField.delegate = nil;
+  _valueField.delegate = nil;
 }
 
 - (NSString *)imageProperty
@@ -113,22 +105,20 @@
   BOOL editable = [PDImage imagePropertyIsEditableInUI:_imageProperty];
   NSString *label = [PDImage localizedNameOfImageProperty:_imageProperty];
 
-  [_labelField setStringValue:label];
-  [[_labelField cell] setTruncatesLastVisibleLine:YES];
+  _labelField.stringValue = label;
+  ((NSTextFieldCell *)_labelField.cell).truncatesLastVisibleLine = YES;
 
-  [_valueField setEditable:editable];
-  [_valueField setDrawsBackground:editable];
-  [[_valueField cell] setBezeled:editable];
-  [[_valueField cell] setTruncatesLastVisibleLine:YES];
+  _valueField.editable = editable;
+  _valueField.drawsBackground = editable;
+  ((NSTextFieldCell *)_valueField.cell).bezeled = editable;
+  ((NSTextFieldCell *)_valueField.cell).truncatesLastVisibleLine = YES;
 }
 
 - (void)setImageProperty:(NSString *)name
 {
   if (_imageProperty != name)
     {
-      [_imageProperty release];
       _imageProperty = [name copy];
-
       [self _updateImageProperty];
     }
 }
@@ -158,34 +148,34 @@
 
   [self _updateImageProperty];
 
-  NSString *value = [self fieldString];
+  NSString *value = self.fieldString;
   if (value == nil)
     value = @"";
 
-  [_valueField setStringValue:value];
+  _valueField.stringValue = value;
 }
 
 - (CGFloat)preferredHeight
 {
-  return [_valueField isEditable] ? CONTROL_HEIGHT : LABEL_HEIGHT;
+  return _valueField.editable ? CONTROL_HEIGHT : LABEL_HEIGHT;
 }
 
 - (void)layoutSubviews
 {
-  NSRect bounds = [self bounds];
-  NSRect frame = bounds;
-  BOOL editable = [_valueField isEditable];
+  CGRect bounds = self.bounds;
+  CGRect frame = bounds;
+  BOOL editable = _valueField.editable;
 
   if (editable)
     frame.origin.y += LABEL_Y_OFFSET;
   frame.size.width = LABEL_WIDTH;
-  [_labelField setFrame:frame];
+  _labelField.frame = frame;
 
   frame.origin.x += frame.size.width + SPACING;
   frame.origin.y = bounds.origin.y;
   frame.size.width = bounds.size.width - frame.origin.x;
   frame.size.height = editable ? CONTROL_HEIGHT : LABEL_HEIGHT;
-  [_valueField setFrame:frame];
+  _valueField.frame = frame;
 }
 
 - (IBAction)controlAction:(id)sender
@@ -193,7 +183,7 @@
   if (sender == _valueField)
     {
       [_metadataView setLocalizedImageProperty:
-       [_valueField stringValue] forKey:_imageProperty];
+       _valueField.stringValue forKey:_imageProperty];
     }
 }
 
