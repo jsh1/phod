@@ -296,8 +296,8 @@ static NSOperationQueue *_narrowQueue;
   if ([path isEqualToString:@"operationCount"])
     {
       dispatch_async(dispatch_get_main_queue(), ^{
-	NSInteger count = ([_wideQueue operationCount]
-			   + [_narrowQueue operationCount]);
+	NSInteger count = (_wideQueue.operationCount
+			   + _narrowQueue.operationCount);
 	PDAppDelegate *delegate = (id)[NSApp delegate];
 	if (count != 0)
 	  [delegate addBackgroundActivity:self];
@@ -358,7 +358,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
   NSDictionary *file_types = _properties[PDImage_FileTypes];
   NSString *active_type = _properties[PDImage_ActiveType];
 
-  if ([file_types count] == 0)
+  if (file_types.count == 0)
     return nil;
 
   if (active_type == nil || file_types[active_type] == nil)
@@ -386,7 +386,7 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
 	  name = [file_types[key] stringByDeletingPathExtension];
 	  break;
 	}
-      if ([name length] != 0)
+      if (name.length != 0)
 	_properties[PDImage_Name] = name;
     }
 
@@ -1423,8 +1423,8 @@ find_unique_path(PDImageLibrary *lib, NSString *path)
 - (void)stopPrefetching
 {
   if (_prefetchOp != nil
-      && !([_prefetchOp isExecuting] || [_prefetchOp isFinished])
-      && [[_prefetchOp dependencies] count] == 0)
+      && !(_prefetchOp.executing || _prefetchOp.finished)
+      && _prefetchOp.dependencies.count == 0)
     {
       [_prefetchOp cancel];
       _prefetchOp = nil;

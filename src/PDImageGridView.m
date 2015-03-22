@@ -127,7 +127,7 @@
   CGFloat ideal = IMAGE_MIN_SIZE + _scale * (IMAGE_MAX_SIZE - IMAGE_MIN_SIZE);
 
   _columns = fmax(1, floor(width / ideal));
-  _rows = ([_images count] + (_columns - 1)) / _columns;
+  _rows = (_images.count + (_columns - 1)) / _columns;
   _size = floor((width - GRID_SPACING * (_columns - 1)) / _columns);
 
   CGFloat v_spacing = GRID_SPACING + (_displaysMetadata ? TITLE_HEIGHT : 0);
@@ -155,7 +155,7 @@
 
   CGFloat backing_scale = self.window.backingScaleFactor;
 
-  NSInteger count = [_images count];
+  NSInteger count = _images.count;
 
   CALayer *layer = self.layer;
   NSMutableArray *old_sublayers = [layer.sublayers mutableCopy];
@@ -495,7 +495,7 @@ copy_layer_snapshot(CALayer *layer)
 {
   NSString *chars = [e charactersIgnoringModifiers];
 
-  if ([chars length] == 1)
+  if (chars.length == 1)
     {
       switch ([chars characterAtIndex:0])
 	{

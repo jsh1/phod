@@ -330,7 +330,7 @@
 {
   NSString *chars = [e charactersIgnoringModifiers];
 
-  if ([chars length] == 1)
+  if (chars.length == 1)
     {
       switch ([chars characterAtIndex:0])
 	{

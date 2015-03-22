@@ -205,7 +205,7 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
   for (PDViewController *controller in _viewControllers)
     {
       NSDictionary *sub = [controller savedViewState];
-      if ([sub count] != 0)
+      if (sub.count != 0)
 	controllers[controller.identifier] = sub;
     }
 
@@ -587,7 +587,7 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
 {
   /* In case 'set' is nil. */
 
-  if ([set count] == 0)
+  if (set.count == 0)
     return -1;
 
   if ([set containsIndex:idx])
@@ -654,7 +654,7 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
 static PDImage *
 convert_index_to_image(NSInteger idx, NSArray *image_list)
 {
-  if (idx >= 0 && idx < [image_list count])
+  if (idx >= 0 && idx < image_list.count)
     return image_list[idx];
   else
     return nil;
@@ -670,7 +670,7 @@ static NSArray *
 convert_index_set_to_array(NSIndexSet *set, NSArray *image_list)
 {
   NSMutableArray *array = [NSMutableArray array];
-  NSInteger count = [image_list count];
+  NSInteger count = image_list.count;
 
   NSInteger idx;
   for (idx = [set firstIndex]; idx != NSNotFound;
@@ -686,7 +686,7 @@ convert_index_set_to_array(NSIndexSet *set, NSArray *image_list)
 static NSIndexSet *
 convert_array_to_index_set(NSArray *array, NSArray *image_list)
 {
-  if ([array count] == 0)
+  if (array.count == 0)
     return [NSIndexSet indexSet];
   else
     {
@@ -758,7 +758,7 @@ convert_array_to_index_set(NSArray *array, NSArray *image_list)
 	}
       else if (modifiers & NSShiftKeyMask)
 	{
-	  if ([sel count] > 0 && primary >= 0)
+	  if (sel.count > 0 && primary >= 0)
 	    {
 	      NSInteger i0 = idx < primary ? idx : primary;
 	      NSInteger i1 = idx < primary ? primary : idx;
@@ -812,7 +812,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (void)movePrimarySelectionRight:(NSInteger)delta
     byExtendingSelection:(BOOL)extend
 {
-  NSInteger count = [_filteredImageList count];
+  NSInteger count = _filteredImageList.count;
   if (count == 0)
     return;
 
@@ -839,7 +839,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 - (void)movePrimarySelectionDown:(NSInteger)delta rows:(NSInteger)rows
     columns:(NSInteger)cols byExtendingSelection:(BOOL)extend
 {
-  NSInteger count = [_filteredImageList count];
+  NSInteger count = _filteredImageList.count;
   if (count == 0)
     return;
 
@@ -873,7 +873,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
 - (void)selectAll:(id)sender
 {
-  NSInteger count = [_filteredImageList count];
+  NSInteger count = _filteredImageList.count;
   if (count == 0)
     return;
 
@@ -894,7 +894,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
 - (void)selectFirstByExtendingSelection:(BOOL)extend
 {
-  NSInteger count = [_filteredImageList count];
+  NSInteger count = _filteredImageList.count;
   if (count == 0)
     return;
 
@@ -909,7 +909,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
 - (void)selectLastByExtendingSelection:(BOOL)extend
 {
-  NSInteger count = [_filteredImageList count];
+  NSInteger count = _filteredImageList.count;
   if (count == 0)
     return;
 
@@ -973,7 +973,7 @@ extendSelection(NSIndexSet *sel, NSInteger oldIdx,
 
 - (void)foreachSelectedImage:(void (^)(PDImage *))block
 {
-  if ([_selectedImageIndexes count] == 0)
+  if (_selectedImageIndexes.count == 0)
     return;
 
   /* Not using _selectedImageIndexes in case it changes while
@@ -1367,7 +1367,7 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
 	[images addObject:image];
     }];
 
-  if ([images count] != 0)
+  if (images.count != 0)
     {
       [PDImageLibrary removeImages:images];
 
@@ -1415,17 +1415,17 @@ static const int rotate_right_map[8] = {6, 7, 8, 5, 2, 3, 4, 1};
       || sel == @selector(rotateLeft:)
       || sel == @selector(rotateRight:))
     {
-      return [_selectedImageIndexes count] != 0;
+      return _selectedImageIndexes.count != 0;
     }
 
   if (sel == @selector(toggleRawAction:))
     {
-      return [self isToggleRawSupported];
+      return self.toggleRawSupported;
     }
 
   if (sel == @selector(emptyTrashAction:))
     {
-      return ![self isTrashEmpty];
+      return !self.trashEmpty;
     }
 
   return YES;

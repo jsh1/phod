@@ -150,7 +150,7 @@
 
 - (NSDictionary *)savedViewState
 {
-  if ([_subviewControllers count] == 0)
+  if (_subviewControllers.count == 0)
     return [NSDictionary dictionary];
 
   NSMutableDictionary *controllers = [NSMutableDictionary dictionary];
@@ -158,7 +158,7 @@
   for (PDViewController *controller in _subviewControllers)
     {
       NSDictionary *sub = [controller savedViewState];
-      if ([sub count] != 0)
+      if (sub.count != 0)
 	controllers[controller.identifier] = sub;
     }
 

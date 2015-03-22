@@ -93,7 +93,7 @@ NSString * const PDPredicateDidChange = @"PDPredicateDidChange";
 
 - (NSPredicate *)predicateWithFormat:(NSString *)str argv:(va_list)args
 {
-  if ([str length] == 0)
+  if (str.length == 0)
     return nil;
 
   @try {

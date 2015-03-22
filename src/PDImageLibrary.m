@@ -503,12 +503,12 @@ convert_hexdigit(int c)
 
 - (void)_reclaimImportBlocks
 {
-  NSInteger i = 0, count = [_activeImports count];
+  NSInteger i = 0, count = _activeImports.count;
 
   while (i < count)
     {
       NSOperation *op = _activeImports[i];
-      if ([op isFinished])
+      if (op.finished)
 	{
 	  [_activeImports removeObjectAtIndex:i];
 	  count--;
@@ -544,7 +544,7 @@ find_unique_path(PDImageLibrary *self, NSString *path)
       NSString *tem;
       if (i == 0)
 	tem = path;
-      else if ([ext length] == 0)
+      else if (ext.length == 0)
 	tem = [NSString stringWithFormat:@"%@-%d", rest, i];
       else
 	tem = [NSString stringWithFormat:@"%@-%d.%@", rest, i, ext];
@@ -693,7 +693,7 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 		break;
 	    }
 
-	  if (image == nil && [image_types count] != 0)
+	  if (image == nil && image_types.count != 0)
 	    {
 	      image = [[PDImage alloc] initWithLibrary:self directory:dir
 		       properties:@{PDImage_FileTypes: image_types}];
@@ -722,7 +722,7 @@ copy_item_atomically(PDImageLibrary *self, NSString *dst_path,
 	  set = [NSMutableSet set];
 	  [table setObject:set forKey:lib];
 	}
-      [set addObject:[image libraryDirectory]];
+      [set addObject:image.libraryDirectory];
     }
 
   for (PDImageLibrary *lib in table)
@@ -909,7 +909,7 @@ error:
     filenameMap:(NSString *(^)(PDImage *src, NSString *name))f
     properties:(NSDictionary *)dict deleteSourceImages:(BOOL)delete_sources
 {
-  if ([images count] == 0)
+  if (images.count == 0)
     return;
 
   BOOL new_dir = NO;
@@ -1087,7 +1087,7 @@ error:
 	    }
 	}
 
-      if ([dst_types count] != 0)
+      if (dst_types.count != 0)
 	{
 	  NSMutableDictionary *dst_props = [NSMutableDictionary dictionary];
 

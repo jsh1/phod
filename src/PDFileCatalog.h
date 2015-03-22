@@ -46,9 +46,9 @@
 
 - (uint32_t)fileIdForPath:(NSString *)path;
 
-/* Returns the set of all ids currently stored in the catalog. */
+/* The set of all ids currently stored in the catalog. */
 
-- (NSIndexSet *)allFileIds;
+@property(nonatomic, strong, readonly) NSIndexSet *allFileIds;
 
 /* Calling these methods is preferred but optional. If files are moved
    around and these methods are not called, new ids will be created for

@@ -68,7 +68,7 @@
   _metadataGroupOrder = [[[NSUserDefaults standardUserDefaults]
 			  objectForKey:@"PDMetadataGroupOrder"] copy];
 
-  if ([_metadataGroupOrder count] > 0)
+  if (_metadataGroupOrder.count > 0)
     {
       [_popupMenu removeAllItems];
 

@@ -43,7 +43,7 @@
 
 - (NSArray *)mappedArray:(id (^)(id))f
 {
-  NSInteger count = [self count];
+  NSInteger count = self.count;
   if (count == 0)
     return [NSArray array];
 
@@ -62,7 +62,7 @@
 
 - (NSArray *)filteredArray:(BOOL (^)(id))f
 {
-  NSInteger count = [self count];
+  NSInteger count = self.count;
   if (count == 0)
     return [NSArray array];
   
@@ -93,8 +93,8 @@
 
 - (BOOL)hasPathPrefix:(NSString *)path
 {
-  NSInteger l1 = [self length];
-  NSInteger l2 = [path length];
+  NSInteger l1 = self.length;
+  NSInteger l2 = path.length;
 
   if (l2 == 0)
     return YES;
@@ -108,8 +108,8 @@
 
 - (NSString *)stringByRemovingPathPrefix:(NSString *)path
 {
-  NSInteger l1 = [self length];
-  NSInteger l2 = [path length];
+  NSInteger l1 = self.length;
+  NSInteger l2 = path.length;
 
   if (l2 == 0)
     return self;

@@ -43,7 +43,7 @@
   for (PDMetadataItemView *item in self.subviews)
     {
       NSString *name = item.imageProperty;
-      if ([name length] != 0)
+      if (name.length != 0)
 	[array addObject:name];
     }
 

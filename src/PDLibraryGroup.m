@@ -73,8 +73,8 @@
 	_subitems = [NSMutableArray array];
       if (idx < 0)
 	idx = 0;
-      else if (idx > [_subitems count])
-	idx = [_subitems count];
+      else if (idx > _subitems.count)
+	idx = _subitems.count;
       [_subitems insertObject:item atIndex:idx];
       item.parent = self;
     }
@@ -110,7 +110,7 @@
 
 - (BOOL)isExpandable
 {
-  return [_subitems count] != 0;
+  return _subitems.count != 0;
 }
 
 - (NSString *)identifier

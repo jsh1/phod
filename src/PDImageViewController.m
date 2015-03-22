@@ -65,7 +65,7 @@
 {
   NSInteger idx = _controller.primarySelectionIndex;
   NSArray *images = _controller.filteredImageList;
-  NSInteger count = [images count];
+  NSInteger count = images.count;
 
   if (idx >= 0 && idx < count)
     {
@@ -97,7 +97,7 @@
 	}
 
       NSString *dir = [image.libraryDirectory lastPathComponent];
-      if ([dir length] == 0)
+      if (dir.length == 0)
 	dir = image.library.name;
       dir = [dir stringByReplacingOccurrencesOfString:@":" withString:@"/"];
 
@@ -114,7 +114,7 @@
       _titleLabel.stringValue = @"";
     }
 
-  BOOL enabled = [_controller.selectedImageIndexes count] != 0;
+  BOOL enabled = _controller.selectedImageIndexes.count != 0;
   _rotateLeftButton.enabled = enabled;
   _rotateRightButton.enabled = enabled;
 }

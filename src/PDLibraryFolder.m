@@ -58,8 +58,8 @@
 
 - (NSString *)identifier
 {
-  return ([self.libraryDirectory length] == 0
-	  ? [NSString stringWithFormat:@"%08x", [self.library libraryId]]
+  return (self.libraryDirectory.length == 0
+	  ? [NSString stringWithFormat:@"%08x", self.library.libraryId]
 	  : [self.libraryDirectory lastPathComponent]);
 }
 

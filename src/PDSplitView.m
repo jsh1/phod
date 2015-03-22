@@ -81,9 +81,9 @@
   NSArray *data = dict[@"values"];
 
   NSArray *subviews = self.subviews;
-  NSInteger count = [subviews count];
+  NSInteger count = subviews.count;
 
-  if ([data count] != count * 3)
+  if (data.count != count * 3)
     return;
 
   CGRect bounds = self.bounds;
@@ -134,14 +134,14 @@
   NSArray *subviews = self.subviews;
 
   if (_indexOfResizableSubview < 0
-      || _indexOfResizableSubview >= [subviews count])
+      || _indexOfResizableSubview >= subviews.count)
     {
       [self adjustSubviews];
       return;
     }
 
   CGRect bounds = self.bounds;
-  NSInteger count = [subviews count];
+  NSInteger count = subviews.count;
   BOOL vertical = self.vertical;
   CGFloat thick = self.dividerThickness;
   CGFloat p = vertical ? bounds.origin.x : bounds.origin.y;
@@ -152,7 +152,7 @@
       if (view.hidden)
 	continue;
 
-      CGRect frame = [view frame];
+      CGRect frame = view.frame;
 
       if (vertical)
 	frame.origin.y = bounds.origin.y, frame.size.height=bounds.size.height;

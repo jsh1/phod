@@ -64,7 +64,7 @@
 
   NSString *format = [[NSUserDefaults standardUserDefaults]
 		      stringForKey:@"PDImportProjectNameTemplate"];
-  if ([format length] != 0)
+  if (format.length != 0)
     {
       time_t date = time(NULL);
       struct tm tm = {0};
@@ -89,7 +89,7 @@
       return;
     }
 
-  NSInteger count = [_controller.selectedImageIndexes count];
+  NSInteger count = _controller.selectedImageIndexes.count;
 
   PDImageLibrary *lib = _libraryButton.selectedItem.representedObject;
 
@@ -105,7 +105,7 @@
   else
     [desc appendFormat:@"Import %d images", (int)count];
 
-  if ([dir length] == 0)
+  if (dir.length == 0)
     [desc appendString:@" into root"];
   else
     [desc appendFormat:@" into folder \"%@\"", dir];
@@ -162,11 +162,11 @@
 
   NSString *dir = _directoryField.stringValue;
   NSString *name = _nameField.stringValue;
-  if ([dir length] != 0)
+  if (dir.length != 0)
     dir = [dir stringByAppendingPathComponent:name];
   else
     dir = name;
-  if ([dir length] == 0)
+  if (dir.length == 0)
     return;
 
   NSMutableSet *types = [NSMutableSet set];
@@ -198,11 +198,11 @@
   NSMutableDictionary *metadata = [NSMutableDictionary dictionary];
 
   NSString *keywords_str = _keywordsField.stringValue;
-  if ([keywords_str length] != 0)
+  if (keywords_str.length != 0)
     {
       NSArray *keywords = [keywords_str componentsSeparatedByCharactersInSet:
 			   [NSCharacterSet whitespaceAndNewlineCharacterSet]];
-      if ([keywords count] != 0)
+      if (keywords.count != 0)
 	metadata[PDImage_Keywords] = keywords;
     }
 
@@ -217,7 +217,7 @@
 
 - (void)selectedImagesDidChange:(NSNotification *)note
 {
-  _okButton.enabled = [_controller.selectedImageIndexes count] != 0;
+  _okButton.enabled = _controller.selectedImageIndexes.count != 0;
 
   [self updateDescription];
 }

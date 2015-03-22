@@ -89,7 +89,7 @@
 {
   NSIndexSet *rows = [NSIndexSet indexSetWithIndex:row];
   NSIndexSet *cols = [NSIndexSet indexSetWithIndexesInRange:
-		      NSMakeRange(0, [self.tableColumns count])];
+		      NSMakeRange(0, self.tableColumns.count)];
 
   [self reloadDataForRowIndexes:rows columnIndexes:cols];
 }
@@ -102,7 +102,7 @@
 {
   NSIndexSet *sel = self.selectedRowIndexes;
 
-  if ([sel count] == 0)
+  if (sel.count == 0)
     return [NSArray array];
 
   NSMutableArray *array = [NSMutableArray array];
@@ -119,7 +119,7 @@
 
 - (void)setSelectedItems:(NSArray *)array
 {
-  if ([array count] == 0)
+  if (array.count == 0)
     {
       [self selectRowIndexes:[NSIndexSet indexSet] byExtendingSelection:NO];
       return;

@@ -194,7 +194,8 @@ enum PDWindowControllerRebuildImageListFlags
 
 - (IBAction)toggleRawAction:(id)sender;
 - (NSInteger)rawState;
-- (BOOL)isToggleRawSupported;
+
+@property(nonatomic, assign, readonly, getter=isToggleRawSupported) BOOL toggleRawSupported;
 
 - (IBAction)zoomIn:(id)sender;
 - (IBAction)zoomOut:(id)sender;

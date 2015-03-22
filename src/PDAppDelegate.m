@@ -68,15 +68,15 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
 
 - (BOOL)backgroundActivity
 {
-  return [_backgroundActivity count] != 0;
+  return _backgroundActivity.count != 0;
 }
 
 - (void)addBackgroundActivity:(NSString *)name
 {
   if (_backgroundActivity == nil)
-    _backgroundActivity = [[NSMutableSet alloc] init];
+    _backgroundActivity = [NSMutableSet set];
 
-  NSInteger count = [_backgroundActivity count];
+  NSInteger count = _backgroundActivity.count;
 
   [_backgroundActivity addObject:name];
 
@@ -92,11 +92,11 @@ NSString *const PDBackgroundActivityDidChange = @"PDBackgroundActivityDidChange"
   if (_backgroundActivity == nil)
     return;
 
-  NSInteger count = [_backgroundActivity count];
+  NSInteger count = _backgroundActivity.count;
 
   [_backgroundActivity removeObject:name];
 
-  if (count != 0 && [_backgroundActivity count] == 0)
+  if (count != 0 && _backgroundActivity.count == 0)
     {
       [[NSNotificationCenter defaultCenter]
        postNotificationName:PDBackgroundActivityDidChange object:self];

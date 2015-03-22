@@ -336,8 +336,8 @@ invalidate_library(PDImageLibrary *lib)
 
   _removeButton.enabled = can_delete;
   _actionButton.enabled = NO;
-  _importButton.state = [_controller importMode];
-  _importButton.enabled = [_devicesGroup.subitems count] != 0;
+  _importButton.state = _controller.importMode;
+  _importButton.enabled = _devicesGroup.subitems.count != 0;
 }
 
 - (BOOL)foreachImage:(void (^)(PDImage *im, BOOL *stop))thunk
@@ -358,7 +358,7 @@ invalidate_library(PDImageLibrary *lib)
 
 - (void)updateImageList:(uint32_t)flags
 {
-  if ([_selectedItems count] == 0)
+  if (_selectedItems.count == 0)
     {
       _controller.imageListTitle = @"";
       _controller.imageList = @[];
@@ -405,11 +405,11 @@ invalidate_library(PDImageLibrary *lib)
 	  if (need_title)
 	    {
 	      NSString *item_title = item.titleString;
-	      if ([item_title length] != 0)
+	      if (item_title.length != 0)
 		{
 		  if (count < MAX_TITLE_STRINGS)
 		    {
-		      if ([title length] != 0)
+		      if (title.length != 0)
 			[title appendString:@" & "];
 		      [title appendString:item_title];
 		    }
@@ -534,7 +534,7 @@ invalidate_library(PDImageLibrary *lib)
 	[items removeObject:item];
     }
 
-  if ([items count] != 0)
+  if (items.count != 0)
     {
       for (PDLibraryDevice *item in items)
 	{
@@ -543,7 +543,7 @@ invalidate_library(PDImageLibrary *lib)
 	}
     }
 
-  [_devicesGroup setHidden:[_devicesGroup.subitems count] == 0];
+  [_devicesGroup setHidden:_devicesGroup.subitems.count == 0];
   [_outlineView reloadDataPreservingSelectedRows];
 }
 
@@ -606,7 +606,7 @@ invalidate_library(PDImageLibrary *lib)
 
   if (changed)
     {
-      [_devicesGroup setHidden:[_devicesGroup.subitems count] == 0];
+      [_devicesGroup setHidden:_devicesGroup.subitems.count == 0];
       [_outlineView reloadDataPreservingSelectedRows];
 
       /* FIXME: why is this necessary? */
@@ -648,7 +648,7 @@ library_group_description(PDLibraryGroup *item)
   dict[@"name"] = item.name;
 
   NSArray *subitems = item.subitems;
-  if ([subitems count] != 0)
+  if (subitems.count != 0)
     {
       dict[@"subitems"] = [subitems mappedArray:^(id obj) {
 	return library_group_description(obj);}];
@@ -720,7 +720,7 @@ library_group_description(PDLibraryGroup *item)
 
 - (IBAction)newFolderAction:(id)sender
 {
-  if ([_selectedItems count] != 1)
+  if (_selectedItems.count != 1)
     {
       NSBeep();
       return;
@@ -869,9 +869,9 @@ reload_item(PDLibraryItem *item)
 
 - (IBAction)searchAction:(id)sender
 {
-  NSString *str = [_searchField stringValue];
+  NSString *str = _searchField.stringValue;
 
-  if ([str length] != 0)
+  if (str.length != 0)
     [_foldersGroup applySearchString:str];
   else
     [_foldersGroup resetSearchState];
@@ -904,7 +904,7 @@ reload_item(PDLibraryItem *item)
 	    [import_items addObject:item];
 	}
 
-      if ([import_items count] == 0)
+      if (import_items.count == 0)
 	{
 	  [_outlineView expandItem:_devicesGroup];
 
@@ -913,7 +913,7 @@ reload_item(PDLibraryItem *item)
 	    [import_items addObject:item];
 	}
 
-      if ([import_items count] != 0)
+      if (import_items.count != 0)
 	{
 	  _selectedItems = [import_items copy];
 
@@ -1038,7 +1038,7 @@ reload_item(PDLibraryItem *item)
 	}
     }
 
-  if ([items count] != 0)
+  if (items.count != 0)
     {
       for (PDLibraryItem *item in items)
 	{
@@ -1074,7 +1074,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
 
       NSInteger row = [_outlineView rowForItem:subitem];
       if (row >= 0)
-	[_outlineView setSelectedRow:row];
+	_outlineView.selectedRow = row;
     }
 }
 
@@ -1083,7 +1083,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
   NSIndexSet *sel = [_outlineView selectedRowIndexes];
 
   NSInteger row;
-  if ([sel count] == 0)
+  if (sel.count == 0)
     row = 0;
   else
     row = [sel lastIndex] + 1;
@@ -1095,7 +1095,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
     row++;
 
   if (row < count)
-    [_outlineView setSelectedRow:row];
+    _outlineView.selectedRow = row;
 }
 
 - (IBAction)previousLibraryItemAction:(id)sender
@@ -1103,7 +1103,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
   NSIndexSet *sel = _outlineView.selectedRowIndexes;
 
   NSInteger row;
-  if ([sel count] == 0)
+  if (sel.count == 0)
     row = _outlineView.numberOfRows - 1;
   else
     row = [sel firstIndex] - 1;
@@ -1120,7 +1120,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
 {
   NSIndexSet *sel = _outlineView.selectedRowIndexes;
 
-  if ([sel count] != 1)
+  if (sel.count != 1)
     {
       NSBeep();
       return;
@@ -1129,14 +1129,14 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
   NSInteger row = [_outlineView rowForItem:
 		   [[_outlineView itemAtRow:[sel firstIndex]] parent]];
   if (row >= 0)
-    [_outlineView setSelectedRow:row];
+    _outlineView.selectedRow = row;
 }
 
 - (IBAction)firstLibraryChildItemAction:(id)sender
 {
   NSIndexSet *sel = _outlineView.selectedRowIndexes;
 
-  if ([sel count] != 1)
+  if (sel.count != 1)
     {
       NSBeep();
       return;
@@ -1155,14 +1155,14 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
 
   NSInteger row = [_outlineView rowForItem:subitem];
   if (row >= 0)
-    [_outlineView setSelectedRow:row];
+    _outlineView.selectedRow = row;
 }
 
 - (IBAction)expandLibraryItemAction:(id)sender
 {
   NSIndexSet *sel = _outlineView.selectedRowIndexes;
 
-  if ([sel count] != 1)
+  if (sel.count != 1)
     {
       NSBeep();
       return;
@@ -1177,7 +1177,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
 {
   NSIndexSet *sel = _outlineView.selectedRowIndexes;
 
-  if ([sel count] != 1)
+  if (sel.count != 1)
     {
       NSBeep();
       return;
@@ -1192,7 +1192,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
 {
   NSIndexSet *sel = _outlineView.selectedRowIndexes;
 
-  if ([sel count] != 1)
+  if (sel.count != 1)
     {
       NSBeep();
       return;
@@ -1269,7 +1269,7 @@ expand_item_recursively(NSOutlineView *view, PDLibraryItem *item)
   if (pred != nil)
     opts[@"imagePredicate"] = pred.predicateFormat;
 
-  if ([opts count] == 0)
+  if (opts.count == 0)
     opts = nil;
 
   for (PDLibraryItem *item in _selectedItems)
@@ -1295,7 +1295,7 @@ path_for_item(PDLibraryItem *item)
   for (; item != nil; item = item.parent)
     {
       NSString *ident = item.identifier;
-      if ([ident length] == 0)
+      if (ident.length == 0)
 	break;
       struct node *node = alloca(sizeof(*node));
       node->next = lst;
@@ -1346,7 +1346,7 @@ item_for_path(NSArray *items, NSArray *path)
 - (void)addItem:(PDLibraryItem *)item viewState:(NSMutableDictionary *)state
 {
   NSString *ident = item.identifier;
-  if ([ident length] == 0)
+  if (ident.length == 0)
     return;
 
   BOOL expanded = [_outlineView isItemExpanded:item];
@@ -1361,19 +1361,19 @@ item_for_path(NSArray *items, NSArray *path)
 
   if (expanded)
     dict[@"expanded"] = @YES;
-  if ([opts count] != 0)
+  if (opts.count != 0)
     dict[@"viewState"] = opts;
-  if ([subdict count] != 0)
+  if (subdict.count != 0)
     dict[@"subitems"] = subdict;
 
-  if ([dict count] != 0)
+  if (dict.count != 0)
     state[ident] = dict;
 }
 
 - (void)applyItem:(PDLibraryItem *)item viewState:(NSDictionary *)dict
 {
   NSString *ident = item.identifier;
-  if ([ident length] == 0)
+  if (ident.length == 0)
     return;
 
   NSDictionary *state = dict[ident];
@@ -1384,7 +1384,7 @@ item_for_path(NSArray *items, NSArray *path)
     [_outlineView expandItem:item];
 
   NSDictionary *view_state = state[@"viewState"];
-  if ([view_state count] != 0)
+  if (view_state.count != 0)
     [_itemViewState setObject:view_state forKey:item];
 
   NSDictionary *sub_state = state[@"subitems"];
@@ -1457,7 +1457,7 @@ item_for_path(NSArray *items, NSArray *path)
 	}
     }
 
-  if ([sel count] != 0)
+  if (sel.count != 0)
     {
       [_outlineView selectRowIndexes:sel byExtendingSelection:NO];
       [_outlineView scrollRowToVisible:[sel firstIndex]];
@@ -1469,7 +1469,7 @@ item_for_path(NSArray *items, NSArray *path)
 - (void)scrollSelectionToVisible
 {
   NSIndexSet *sel = _outlineView.selectedRowIndexes;
-  if ([sel count] == 0)
+  if (sel.count == 0)
     return;
 
   CGRect rect = CGRectNull;
@@ -1771,7 +1771,7 @@ item_for_path(NSArray *items, NSArray *path)
 
 	  NSInteger row = [_outlineView rowForItem:item];
 	  if (row >= 0)
-	    [_outlineView setSelectedRow:row];
+	    _outlineView.selectedRow = row;
 
 	  return YES;
 	}
@@ -1854,9 +1854,9 @@ item_for_path(NSArray *items, NSArray *path)
 		}
 	    }];
 
-	  if ([move_images count] != 0)
+	  if (move_images.count != 0)
 	    [dest_lib moveImages:move_images toDirectory:dest_dir];
-	  if ([copy_images count] != 0)
+	  if (copy_images.count != 0)
 	    [dest_lib copyImages:move_images toDirectory:dest_dir];
 	}
 
@@ -1920,11 +1920,10 @@ item_for_path(NSArray *items, NSArray *path)
       [self updateImageList:PDWindowController_StopPreservingImages];
       [self updateControls];
 
-      if ([_controller.filteredImageList count] > 0
-	  && [_controller.selectedImageIndexes count] == 0)
+      if (_controller.filteredImageList.count > 0
+	  && _controller.selectedImageIndexes.count == 0)
 	{
-	  [_controller setSelectedImageIndexes:
-	   [NSIndexSet indexSetWithIndex:0]];
+	  _controller.selectedImageIndexes = [NSIndexSet indexSetWithIndex:0];
 	}
 
       [[NSNotificationCenter defaultCenter]

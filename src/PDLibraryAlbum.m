@@ -116,7 +116,7 @@
 
 - (NSInteger)badgeValue
 {
-  return [_imageUUIDs count];
+  return _imageUUIDs.count;
 }
 
 @end

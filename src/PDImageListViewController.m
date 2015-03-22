@@ -146,7 +146,7 @@
   _gridView.primarySelection = _controller.primarySelectionIndex;
   _gridView.selection = _controller.selectedImageIndexes;
 
-  BOOL enabled = [_controller.selectedImageIndexes count] != 0;
+  BOOL enabled = _controller.selectedImageIndexes.count != 0;
   _rotateLeftButton.enabled = enabled;
   _rotateRightButton.enabled = enabled;
 
@@ -161,7 +161,7 @@
 - (void)imagePredicateDidChange:(NSNotification *)note
 {
   NSString *str = _controller.imagePredicate.predicateFormat;
-  if ([str length] == 0)
+  if (str.length == 0)
     str = @"";
   _searchField.stringValue = str;
 }
@@ -248,7 +248,7 @@
 		       stringByTrimmingCharactersInSet:
 		       [NSCharacterSet whitespaceCharacterSet]];
 
-      if ([str length] != 0)
+      if (str.length != 0)
 	{
 	  NSPredicate *pred = [_controller imagePredicateWithFormat:str];
 

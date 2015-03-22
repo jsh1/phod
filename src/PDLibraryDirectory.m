@@ -148,7 +148,7 @@
       [_library loadImagesInSubdirectory:_libraryDirectory
        recursively:[[self class] flattensSubdirectories] handler:add_image];
 
-      if (update_immediately && [local_subimages count] != 0)
+      if (update_immediately && local_subimages.count != 0)
 	{
 	  /* Push remainder to the UI. */
 
@@ -221,7 +221,7 @@
 	    }
 	}];
 
-      NSInteger count = [new_subitems count];
+      NSInteger count = new_subitems.count;
       for (NSInteger i = 0; i < count;)
 	{
 	  PDLibraryDirectory *item = new_subitems[i];
@@ -273,12 +273,12 @@
 
 - (NSString *)titleString
 {
-  if ([_libraryDirectory length] == 0)
-    return [_library name];
+  if (_libraryDirectory.length == 0)
+    return _library.name;
 
   NSString *title = [_libraryDirectory lastPathComponent];
 
-  if ([title length] == 0)
+  if (title.length == 0)
     title = _libraryDirectory;
 
   return [title stringByReplacingOccurrencesOfString:@":" withString:@"/"];
@@ -286,7 +286,7 @@
 
 - (BOOL)isExpandable
 {
-  return [self.subitems count] != 0;
+  return self.subitems.count != 0;
 }
 
 - (BOOL)hasBadge

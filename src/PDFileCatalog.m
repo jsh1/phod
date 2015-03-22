@@ -35,35 +35,31 @@
 - (id)init
 {
   self = [super init];
-  if (self == nil)
-    return nil;
-
-  _queue = dispatch_queue_create("PDFileCatalog",
-					DISPATCH_QUEUE_SERIAL);
-
-  _dict[1] = [[NSMutableDictionary alloc] init];
-
+  if (self != nil)
+    {
+      _queue = dispatch_queue_create("PDFileCatalog", DISPATCH_QUEUE_SERIAL);
+      _dict[1] = [[NSMutableDictionary alloc] init];
+    }
   return self;
 }
 
 - (id)initWithContentsOfFile:(NSString *)path
 {
   self = [self init];
-  if (self == nil)
-    return nil;
-
-  NSData *data = [[NSData alloc] initWithContentsOfFile:path];
-  if (data != nil)
+  if (self != nil)
     {
-      id obj = [NSJSONSerialization
-		JSONObjectWithData:data options:0 error:nil];
-
-      if ([obj isKindOfClass:[NSDictionary class]])
-	_dict[0] = [obj[@"catalog"] mutableCopy];
-
-      _lastFileId = [obj[@"lastFileId"] unsignedIntValue];
+      NSData *data = [[NSData alloc] initWithContentsOfFile:path];
+      if (data != nil)
+	{
+	  id obj = [NSJSONSerialization JSONObjectWithData:data
+		    options:0 error:nil];
+	  if ([obj isKindOfClass:[NSDictionary class]])
+	    {
+	      _dict[0] = [obj[@"catalog"] mutableCopy];
+	      _lastFileId = [obj[@"lastFileId"] unsignedIntValue];
+	    }
+	}
     }
-
   return self;
 }
 
@@ -96,7 +92,7 @@
 
   dispatch_sync(_queue, ^
     {
-      if (_dirty || [_dict[0] count] != 0)
+      if (_dirty || _dict[0].count != 0)
 	{
 	  NSDictionary *obj = @{
 	    @"catalog": _dict[1],
@@ -129,7 +125,7 @@
 
   dispatch_async(_queue, ^
     {
-      NSInteger old_len = [oldName length];
+      NSInteger old_len = oldName.length;
 
       for (int pass = 0; pass < 2; pass++)
 	{
@@ -148,7 +144,7 @@
 		[matches addObject:key];
 	    }
 
-	  if ([matches count] != 0)
+	  if (matches.count != 0)
 	    {
 	      for (NSString *key in matches)
 		{
