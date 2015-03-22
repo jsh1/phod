@@ -186,7 +186,7 @@ CA_HIDDEN
 	}
 
       NSString *title = [_image title];
-      if (title == nil)
+      if (title.length == 0)
 	title = [_image name];
       title_layer.string = title;
       title_layer.position =CGPointMake(bounds.origin.x, bounds.origin.y

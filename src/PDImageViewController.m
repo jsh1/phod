@@ -102,7 +102,7 @@
       dir = [dir stringByReplacingOccurrencesOfString:@":" withString:@"/"];
 
       NSString *title = image.title;
-      if (title == nil)
+      if (title.length == 0)
 	title = image.name;
 
       _titleLabel.stringValue =
