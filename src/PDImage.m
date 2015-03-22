@@ -623,14 +623,14 @@ file_conforming_to(NSDictionary *file_types, CFStringRef type)
     }
 }
 
-- (id)objectForKeyedSubscript:(id <NSCopying>)key
+- (id)objectForKeyedSubscript:(NSString *)key
 {
-  return [self imagePropertyForKey:(NSString *)key];
+  return [self imagePropertyForKey:key];
 }
 
-- (void)setObject:(id)obj forKeyedSubscript:(id <NSCopying>)key
+- (void)setObject:(id)obj forKeyedSubscript:(NSString *)key
 {
-  [self setImageProperty:obj forKey:(NSString *)key];
+  [self setImageProperty:obj forKey:key];
 }
 
 + (BOOL)imagePropertyIsEditableInUI:(NSString *)key

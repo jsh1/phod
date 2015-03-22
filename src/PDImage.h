@@ -78,8 +78,8 @@ typedef int PDImageCompareKey;
 
 /* Object subscripting is equivalent to -imagePropertyForKey: etc. */
 
-- (id)objectForKeyedSubscript:(id <NSCopying>)key;
-- (void)setObject:(id)obj forKeyedSubscript:(id <NSCopying>)key;
+- (id)objectForKeyedSubscript:(NSString *)key;
+- (void)setObject:(id)obj forKeyedSubscript:(NSString *)key;
 
 + (BOOL)imagePropertyIsEditableInUI:(NSString *)key;
 
