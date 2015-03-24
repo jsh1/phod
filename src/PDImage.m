@@ -1381,6 +1381,9 @@ find_unique_path(PDImageLibrary *lib, NSString *path)
 
       _prefetchOp = [NSBlockOperation blockOperationWithBlock:^
 	{
+	  if (_prefetchOp == nil) // cancelled?
+	    return;
+
 	  CGImageSourceRef src = [lib copyImageSourceAtPath:image_rel_path];
 	  if (src == NULL)
 	    return;
@@ -1519,8 +1522,14 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
   if (thumb && !cache_is_valid)
     {
-      NSOperation *thumb_op = [NSBlockOperation blockOperationWithBlock:^
+      NSBlockOperation *thumb_op = [[NSBlockOperation alloc] init];
+      __weak NSOperation *thumb_ref = thumb_op;
+
+      [thumb_op addExecutionBlock:^
 	{
+	  if (thumb_ref.cancelled)
+	    return;
+
 	  CGImageSourceRef src = [lib copyImageSourceAtPath:image_rel_path];
 	  if (src != NULL)
 	    {
@@ -1566,8 +1575,14 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
   if (thumb ? !cache_is_valid : (cache_is_valid && !no_preview))
     {
-      NSOperation *cache_op = [NSBlockOperation blockOperationWithBlock:^
+      NSBlockOperation *cache_op = [[NSBlockOperation alloc] init];
+      __weak NSOperation *cache_ref = cache_op;
+
+      [cache_op addExecutionBlock:^
 	{
+	  if (cache_ref.cancelled)
+	    return;
+
 	  CGImageSourceRef src = create_image_source_from_path(type_path);
 	  if (src != NULL)
 	    {
@@ -1614,13 +1629,20 @@ setHostedImage(PDImage *self, id<PDImageHost> obj, CGImageRef im)
 
   if (need_scaled_op)
     {
-      NSOperation *full_op = [NSBlockOperation blockOperationWithBlock:^
+      NSBlockOperation *full_op = [[NSBlockOperation alloc] init];
+      NSOperation *full_ref = full_op;
+
+      [full_op addExecutionBlock:^
 	{
+	  if (full_ref.cancelled)
+	    return;
+
 	  CGImageSourceRef src;
 	  if (max_size > type_size || !cache_is_valid)
 	    src = [lib copyImageSourceAtPath:image_rel_path];
 	  else
 	    src = create_image_source_from_path(type_path);
+
 	  if (src != NULL)
 	    {
 	      CGImageRef src_im
