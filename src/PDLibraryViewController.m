@@ -1885,7 +1885,7 @@ item_for_path(NSArray *items, NSArray *path)
       if (_importCell == nil)
 	{
 	  _importCell = [_normalCell copy];
-	  _importCell.image = PDImageWithName(PDImage_ImportFolder);
+	  _importCell.iconImage = PDImageWithName(PDImage_ImportFolder);
 	}
 
       return _importCell;

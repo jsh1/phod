@@ -28,29 +28,26 @@
 #define SPACING 2
 
 @implementation PDImageTextCell
-{
-  NSImage *_image;
-}
 
-@synthesize image = _image;
+@synthesize iconImage = _iconImage;
 
 - (CGFloat)imageWidthForHeight:(CGFloat)h
 {
-  CGSize size = _image.size;
+  CGSize size = _iconImage.size;
   return size.width * (h / size.height);
 }
 
 - (CGSize)cellSize
 {
   CGSize size = [super cellSize];
-  if (_image != nil)
+  if (_iconImage != nil)
     size.width += BORDER + [self imageWidthForHeight:size.height] + SPACING;
   return size;
 }
 
 - (void)drawWithFrame:(CGRect)frame inView:(NSView *)view
 {
-  if (_image != nil)
+  if (_iconImage != nil)
     {
       CGRect imageFrame = frame;
       CGFloat width = [self imageWidthForHeight:frame.size.height];
@@ -58,7 +55,7 @@
       imageFrame.size.width = fmin(width, imageFrame.size.width);
       frame.origin.x += BORDER + width + SPACING;
       frame.size.width -= width + SPACING;
-      [_image drawInRect:imageFrame fromRect:NSZeroRect operation:
+      [_iconImage drawInRect:imageFrame fromRect:NSZeroRect operation:
        NSCompositeSourceOver fraction:1 respectFlipped:YES hints:nil];
     }
 

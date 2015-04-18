@@ -247,14 +247,14 @@ sidebarClassForMode(enum PDSidebarMode mode)
 {
   switch (mode)
     {
-    case PDSidebarMode_Nil:
-      return nil;
     case PDSidebarMode_Library:
       return [PDLibraryViewController class];
     case PDSidebarMode_Info:
       return [PDInfoViewController class];
     case PDSidebarMode_Adjustments:
       return [PDAdjustmentsViewController class];
+    default:
+      return nil;
     }
 }
 
@@ -263,12 +263,12 @@ contentClassForMode(enum PDContentMode mode)
 {
   switch (mode)
     {
-    case PDContentMode_Nil:
-      return nil;
     case PDContentMode_List:
       return [PDImageListViewController class];
     case PDContentMode_Image:
       return [PDImageViewController class];
+    default:
+      return nil;
     }
 }
 
@@ -277,10 +277,10 @@ accessoryClassForMode(enum PDAccessoryMode mode)
 {
   switch (mode)
     {
-    case PDAccessoryMode_Nil:
-      return nil;
     case PDAccessoryMode_Import:
       return [PDImportViewController class];
+    default:
+      return nil;
     }
 }
 
@@ -607,7 +607,7 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
   else if (before == NSNotFound)
     return after;
   else
-    return abs(after - idx) < abs(before - idx) ? after : before;
+    return labs(after - idx) < labs(before - idx) ? after : before;
 }
 
 - (void)setPrimarySelectionIndex:(NSInteger)idx

@@ -195,7 +195,7 @@
       NSInteger idx1 = [subviews indexOfObjectIdenticalTo:_collapsingSubview];
       NSInteger idx2 = [subviews indexOfObjectIdenticalTo:subview];
 
-      if (abs(idx1 - idx2) > 1)
+      if (labs(idx1 - idx2) > 1)
 	return NO;
     }
 
