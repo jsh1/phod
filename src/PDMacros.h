@@ -37,7 +37,7 @@
 #define CLAMP(a, b, c) MIN(MAX(a, b), c)
 
 #undef ABS
-#define ABS(x) ((a) > 0 ? (a) : -(a))
+#define ABS(a) ((a) > 0 ? (a) : -(a))
 
 #undef MIX
 #define MIX(a, b, c) ((a) + ((b) - (a)) * (f))

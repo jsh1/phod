@@ -29,25 +29,24 @@
 
 @implementation PDImageTextCell
 
-@synthesize iconImage = _iconImage;
-
 - (CGFloat)imageWidthForHeight:(CGFloat)h
 {
-  CGSize size = _iconImage.size;
+  CGSize size = self.image.size;
   return size.width * (h / size.height);
 }
 
 - (CGSize)cellSize
 {
   CGSize size = [super cellSize];
-  if (_iconImage != nil)
+  if (self.image != nil)
     size.width += BORDER + [self imageWidthForHeight:size.height] + SPACING;
   return size;
 }
 
 - (void)drawWithFrame:(CGRect)frame inView:(NSView *)view
 {
-  if (_iconImage != nil)
+  NSImage *image = self.image;
+  if (image != nil)
     {
       CGRect imageFrame = frame;
       CGFloat width = [self imageWidthForHeight:frame.size.height];
@@ -55,7 +54,7 @@
       imageFrame.size.width = fmin(width, imageFrame.size.width);
       frame.origin.x += BORDER + width + SPACING;
       frame.size.width -= width + SPACING;
-      [_iconImage drawInRect:imageFrame fromRect:NSZeroRect operation:
+      [image drawInRect:imageFrame fromRect:NSZeroRect operation:
        NSCompositeSourceOver fraction:1 respectFlipped:YES hints:nil];
     }
 

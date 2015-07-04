@@ -520,6 +520,11 @@ invalidate_library(PDImageLibrary *lib)
 
   NSMutableSet *items = [NSMutableSet setWithArray:_devicesGroup.subitems];
 
+  /* FIXME: it's not clear what the alternatives to these are. */
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
+
   for (NSString *path in [workspace mountedLocalVolumePaths])
     {
       PDLibraryDevice *item = [self addVolumeAtPath:path];
@@ -533,6 +538,8 @@ invalidate_library(PDImageLibrary *lib)
       if (item != nil)
 	[items removeObject:item];
     }
+
+#pragma clang diagnostic pop
 
   if (items.count != 0)
     {
@@ -1885,7 +1892,7 @@ item_for_path(NSArray *items, NSArray *path)
       if (_importCell == nil)
 	{
 	  _importCell = [_normalCell copy];
-	  _importCell.iconImage = PDImageWithName(PDImage_ImportFolder);
+	  _importCell.image = PDImageWithName(PDImage_ImportFolder);
 	}
 
       return _importCell;

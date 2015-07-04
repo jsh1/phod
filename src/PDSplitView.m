@@ -24,6 +24,8 @@
 
 #import "PDSplitView.h"
 
+#import "PDMacros.h"
+
 @implementation PDSplitView
 {
   NSInteger _indexOfResizableSubview;
@@ -195,7 +197,7 @@
       NSInteger idx1 = [subviews indexOfObjectIdenticalTo:_collapsingSubview];
       NSInteger idx2 = [subviews indexOfObjectIdenticalTo:subview];
 
-      if (labs(idx1 - idx2) > 1)
+      if (ABS(idx1 - idx2) > 1)
 	return NO;
     }
 

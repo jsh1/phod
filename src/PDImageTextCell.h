@@ -26,6 +26,4 @@
 
 @interface PDImageTextCell : NSTextFieldCell
 
-@property(nonatomic, strong) NSImage *iconImage;
-
 @end

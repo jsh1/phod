@@ -607,7 +607,7 @@ closestIndexInSetToIndex(NSIndexSet *set, NSInteger idx)
   else if (before == NSNotFound)
     return after;
   else
-    return labs(after - idx) < labs(before - idx) ? after : before;
+    return ABS(after - idx) < ABS(before - idx) ? after : before;
 }
 
 - (void)setPrimarySelectionIndex:(NSInteger)idx
