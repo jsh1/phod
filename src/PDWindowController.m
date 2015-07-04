@@ -152,8 +152,6 @@ NSString *const PDTrashWasEmptied = @"PDTrashWasEmptied";
 {
   NSWindow *window = self.window;
 
-  window.backgroundColor = [PDColor windowBackgroundColor];
-
   _splitView.indexOfResizableSubview = 1;
 
   // make sure we're in viewer mode before trying to restore view state

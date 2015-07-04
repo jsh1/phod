@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13A603" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8121.17" systemVersion="15A204h" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8121.17"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PDImageViewController">
@@ -16,7 +17,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customView id="9tm-7j-KTe">
             <rect key="frame" x="0.0" y="0.0" width="569" height="495"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -24,6 +25,7 @@
                 <customView id="yb1-Hk-xBt" customClass="PDImageView">
                     <rect key="frame" x="0.0" y="30" width="569" height="435"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    <animations/>
                     <connections>
                         <outlet property="_controller" destination="-2" id="fJ9-Bg-7ik"/>
                     </connections>
@@ -31,10 +33,12 @@
                 <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="0b1-GF-tR0">
                     <rect key="frame" x="59" y="7" width="16" height="16"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <animations/>
                 </progressIndicator>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="skE-zB-OXB">
                     <rect key="frame" x="134" y="473" width="300" height="14"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                    <animations/>
                     <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingMiddle" sendsActionOnEndEditing="YES" alignment="center" title="Title" id="9pN-Ef-RTj">
                         <font key="font" metaFont="smallSystemBold"/>
                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -44,7 +48,8 @@
                 <button toolTip="Rotate image left — [" verticalHuggingPriority="750" id="OoR-lL-5Jc">
                     <rect key="frame" x="5" y="4" width="23" height="23"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" title="↺" bezelStyle="smallSquare" image="FD8376B3-911A-42F7-8EBF-90E5AAF73A59" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="BFh-cd-gKh">
+                    <animations/>
+                    <buttonCell key="cell" type="smallSquare" title="↺" bezelStyle="smallSquare" image="77A04654-4FDF-41F5-B3A7-A5D142EDD107" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="BFh-cd-gKh">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" size="24" name="AppleSymbols"/>
                     </buttonCell>
@@ -55,7 +60,8 @@
                 <button toolTip="Rotate image right — ]" verticalHuggingPriority="750" id="heS-sk-CBW">
                     <rect key="frame" x="30" y="4" width="23" height="23"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="smallSquare" title="↻" bezelStyle="smallSquare" image="FD8376B3-911A-42F7-8EBF-90E5AAF73A59" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="YKC-3q-XLg">
+                    <animations/>
+                    <buttonCell key="cell" type="smallSquare" title="↻" bezelStyle="smallSquare" image="77A04654-4FDF-41F5-B3A7-A5D142EDD107" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="YKC-3q-XLg">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" size="24" name="AppleSymbols"/>
                     </buttonCell>
@@ -66,16 +72,18 @@
                 <slider verticalHuggingPriority="750" id="RhE-7O-uC8">
                     <rect key="frame" x="439" y="7" width="120" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                    <animations/>
                     <sliderCell key="cell" controlSize="small" continuous="YES" state="on" alignment="left" maxValue="1" doubleValue="0.5" tickMarkPosition="above" sliderType="linear" id="re7-X3-hGr"/>
                     <connections>
                         <action selector="controlAction:" target="-2" id="wgP-sN-10V"/>
                     </connections>
                 </slider>
             </subviews>
+            <animations/>
         </customView>
     </objects>
     <resources>
-        <image name="FD8376B3-911A-42F7-8EBF-90E5AAF73A59" width="1" height="1">
+        <image name="77A04654-4FDF-41F5-B3A7-A5D142EDD107" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw

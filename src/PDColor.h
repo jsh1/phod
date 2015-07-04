@@ -26,8 +26,6 @@
 
 @interface PDColor : NSColor
 
-+ (NSColor *)windowBackgroundColor;
-
 + (NSColor *)controlTextColor;
 + (NSColor *)disabledControlTextColor;
 + (NSColor *)controlTextColor:(BOOL)disabled;

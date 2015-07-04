@@ -28,11 +28,6 @@
 
 @implementation PDColor
 
-+ (NSColor *)windowBackgroundColor
-{
-  return [NSColor colorWithDeviceWhite:.85 alpha:1];
-}
-
 + (NSColor *)controlTextColor
 {
   static NSColor *color;

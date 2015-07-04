@@ -35,7 +35,7 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-#define IMAGE_MARGIN 10
+#define FIT_MARGIN 10
 #define MIN_RATING_HEIGHT 24
 
 #define DRAG_MASK (NSLeftMouseDraggedMask | NSLeftMouseUpMask)
@@ -100,8 +100,8 @@
 
   CGRect bounds = self.bounds;
 
-  CGFloat sx = (bounds.size.width - IMAGE_MARGIN*2) / pixelSize.width;
-  CGFloat sy = (bounds.size.height - IMAGE_MARGIN*2) / pixelSize.height;
+  CGFloat sx = (bounds.size.width - (FIT_MARGIN)*2) / pixelSize.width;
+  CGFloat sy = (bounds.size.height - (FIT_MARGIN)*2) / pixelSize.height;
 
   CGFloat scale = sx < sy ? sx : sy;
 
@@ -117,8 +117,8 @@
 
   CGRect bounds = self.bounds;
 
-  CGFloat sx = (bounds.size.width - IMAGE_MARGIN*2) / pixelSize.width;
-  CGFloat sy = (bounds.size.height - IMAGE_MARGIN*2) / pixelSize.height;
+  CGFloat sx = bounds.size.width / pixelSize.width;
+  CGFloat sy = bounds.size.height / pixelSize.height;
 
   CGFloat scale = sx > sy ? sx : sy;
 
@@ -221,37 +221,32 @@
       CGSize scaledSize = self.scaledImageSize;
       CGRect bounds = self.bounds;
 
-      CGRect clipR;
-      clipR.origin.x = IMAGE_MARGIN;
-      clipR.origin.y = IMAGE_MARGIN;
-      clipR.size.width = bounds.size.width - IMAGE_MARGIN*2;
-      clipR.size.height = bounds.size.height - IMAGE_MARGIN*2;
-      _clipLayer.frame = clipR;
+      _clipLayer.frame = bounds;
 
-      if (scaledSize.width < clipR.size.width)
+      if (scaledSize.width < bounds.size.width)
 	{
 	  _imageOrigin.x = floor((scaledSize.width
-				  - clipR.size.width) * (CGFloat).5);
+				  - bounds.size.width) * (CGFloat).5);
 	}
       else
 	{
 	  if (_imageOrigin.x < 0)
 	    _imageOrigin.x = 0;
-	  else if (_imageOrigin.x > scaledSize.width - clipR.size.width)
-	    _imageOrigin.x = scaledSize.width - clipR.size.width;
+	  else if (_imageOrigin.x > scaledSize.width - bounds.size.width)
+	    _imageOrigin.x = scaledSize.width - bounds.size.width;
 	}
 
-      if (scaledSize.height < clipR.size.height)
+      if (scaledSize.height < bounds.size.height)
 	{
 	  _imageOrigin.y = floor((scaledSize.height
-				  - clipR.size.height) * (CGFloat).5);
+				  - bounds.size.height) * (CGFloat).5);
 	}
       else
 	{
 	  if (_imageOrigin.y < 0)
 	    _imageOrigin.y = 0;
-	  else if (_imageOrigin.y > scaledSize.height - clipR.size.height)
-	    _imageOrigin.y = scaledSize.height - clipR.size.height;
+	  else if (_imageOrigin.y > scaledSize.height - bounds.size.height)
+	    _imageOrigin.y = scaledSize.height - bounds.size.height;
 	  else
 	    _imageOrigin.y = _imageOrigin.y;
 	}
