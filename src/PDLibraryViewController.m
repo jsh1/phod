@@ -527,6 +527,8 @@ invalidate_library(PDImageLibrary *lib)
 
   for (NSString *path in [workspace mountedLocalVolumePaths])
     {
+      if ([path isEqualToString:@"/net"]) // often hangs
+	continue;
       PDLibraryDevice *item = [self addVolumeAtPath:path];
       if (item != nil)
 	[items removeObject:item];
